@@ -720,6 +720,11 @@ The rows below are adaptation policies for a fixed encoder, ordered by the amoun
 
 **Why the table has a “policy plus architecture” structure rather than a single ranking.** A single ranking would have to assume a fixed label count, a fixed device and a fixed shift, which is exactly the information a practitioner lacks at the start. The two-table structure lets a reader enter at the constraint that binds and leave with a shortlist, which is the usable form of the answer.
 
+**A worked contrast between two rows that look similar.** Consider “last-block fine-tune” and “progressive unfreezing” on the same 4,200-image set. Both eventually move most of the network, so their parameter counts at the final epoch are similar. They differ in the order of exposure: last-block fine-tune commits to a small hypothesis space and expands only if the gate fails, while progressive unfreezing expands on a schedule regardless of the gate. With 4,200 labels the first is cheaper because it can stop early and still produce a defensible model; with 42,000 the second is cheaper because the schedule is amortised over a run that will succeed either way. The deciding variable is label volume, not architecture.
+
+**What the table deliberately does not rank.** It does not rank the policies by final accuracy, because no such ordering is stable across datasets. It does not rank the architecture families by accuracy either. What it ranks is the evidence each option requires before its result can be trusted, which is the only ordering that survives contact with a real deadline.
+
+
 
 ## 8. Failure Modes & Edge Cases
 
@@ -835,6 +840,14 @@ Prevention: report per-class recall for every architecture compared, not just th
 
 **Edge case — checkpoint licence and vocabulary.** A checkpoint's label vocabulary and its preprocessing are part of the artefact. Reusing the weights but remapping the label order without remapping the head produces a model that is wrong in a way no accuracy metric at the class level will reveal until confusion is inspected by name.
 
+**Edge case — a head trained on pooled features cannot localise.** Global average pooling discards position by construction, so a classifier built on it has no spatial output. If a downstream consumer needs a location, the model must expose a dense stage or a separate head; adding attention visualisation to a pooled model produces a plausible-looking map that is not the model's decision path.
+
+**Edge case — resolution below the patch grid.** A patch-based model at an input smaller than the patch size produces fewer tokens than the positional table expects, and frameworks vary between interpolating and raising. A pipeline that resizes to a fixed side will silently mask this until a camera delivers a small crop.
+
+**Edge case — an all-zero or all-constant input batch.** A batch of padded regions in a detection pipeline can be entirely constant, which makes the batch variance zero and the normalisation divide by zero. Clamping the variance hides the symptom; masking the padding before normalisation fixes it.
+
+**Edge case — fine-tuning a model whose pretraining crop policy differs from yours.** A checkpoint pretrained on aggressive random crops sees objects at partial extent, so its features are tuned for partial views. Training on whole objects at full extent is therefore a distribution change for the encoder, not only for the head, and the first epochs can look worse than a frozen probe before recovering.
+
 ## 9. Complexity & Cost Analysis
 
 **Four cost axes, not one.** Parameters determine storage and, weakly, capacity. MACs determine the arithmetic lower bound on latency. Activations determine training memory, which usually binds before weights. Data-collection cost determines whether the plan is feasible at all. A design review that cites only one of the four is incomplete by construction.
@@ -869,6 +882,8 @@ Prevention: report per-class recall for every architecture compared, not just th
 **Data-side cost that dominates.** At 12,000 images and a 25% audit, the audit is 29% of the labelling bill by the constructed rates in this section. Add the cost of re-auditing after a guideline change, which resets the audit on all affected images, and the data side can exceed the compute side entirely. This is why the label budget argument in §5 Step 6 is framed as a curve rather than a total.
 
 **Marginal analysis of the whole plan.** Compare three plans on the same evidence: (a) fine-tune the pretrained residual model on all 12,000 images; (b) probe, then fine-tune the last block on 4,000; (c) train a small convolutional model from scratch on 12,000. Plan (a) costs the most compute and the most labelling, plan (b) costs about a third of the labelling if the audit is scoped to the probe set, and plan (c) avoids the licence question but pays full labelling. The decision criterion is which plan first produces a per-camera recall that clears the gate; any plan whose expected cost of the *first falsifying measurement* is high is the wrong plan to start.
+
+**A second marginal comparison on the augmentation axis.** Augmentation is the cheapest capacity control available and the most frequently mis-set. A plan that adds a 4.8M-parameter block to fix overfitting costs months of latency budget forever; a plan that adds a crop-and-flip policy costs one configuration line and no inference cost. The ordering is therefore: augmentation first, then capacity reduction, then architecture change. Only the third changes the geometry sheet, and any change to the geometry sheet invalidates every comparison made before it.
 
 **Throughput headroom as a safety margin.** A model that uses 60% of the latency budget at nominal load has no headroom for a busier host, a thermal-throttled device, or a larger input from a new camera at higher resolution. A 2x resolution change quadruples MACs and activation bytes, so a model at 60% of budget at 224 becomes infeasible at 448. Record the resolution headroom explicitly: the maximum input side at which the budget is still met, which for a MAC-dominated model scales as the square root of the budget ratio.
 
@@ -935,12 +950,14 @@ The table is the arithmetic behind F-05 and F-13: at B = 2, the normalised activ
 
 **Which of these results a design document should quote.** Quote R3, R8, R9 and R10, because they set the geometry, the numerical stability, the cost and the transfer expectation respectively. Quote R16 in the form of a curve, not a sentence. Do not quote R2 or R12 as support for any decision; they are scope-setting statements whose misuse is the most common way an architecture argument becomes unfalsifiable.
 
+**A scope note on the pretraining literature.** Results about pretraining scale are reported on corpora and label vocabularies that are usually not the reader's. A checkpoint's published accuracy is therefore an upper bound on what a practitioner can expect only if the target distribution overlaps; where it does not, the published number is a statement about a different problem. This is why the screening experiment in §4.2 uses the reader's own 300 held-out examples rather than a published table: the published table cannot know the shift.
+
 ## 11. Interview / Exam Questions
 
 **Q1. An input of 227 x 227 passes through a 11 x 11 kernel with stride 4 and no padding. What is the output side, and what changes if padding is 2?**
 Answer: (227 - 11)/4 + 1 = 54 + 1 = 55. With padding 2: (227 + 4 - 11)/4 + 1 = 220/4 + 1 = 55 + 1 = 56. The output moves by exactly one placement because the added padding is a whole multiple of the stride.
 Why asked: tests whether the candidate uses the counting formula or a memorised halving rule.
-Follow-up: what padding would be needed for stride 2 to halve exactly from 227? Answer: any padding making the numerator even; with k=11 and s=2 the numerator is 227+2p-11 = 216+2p, which is even for every p, so both p=1 and p=2 halve to 114 and 115 respectively — the candidate must actually compute rather than generalise.
+Follow-up: with k = 11 and s = 2, what does p = 1 give and what does p = 2 give? The numerator is 227 + 2p - 11 = 216 + 2p. At p = 1 it is 218, so H' = 109 + 1 = 110; at p = 2 it is 220, so H' = 110 + 1 = 111. Two extra pixels of padding add only one placement, which is the general form of the “padding is not free” lesson.
 
 **Q2. A stage takes 56 x 56 x 128 input and produces 28 x 28 x 256 output with a 3 x 3 convolution. Give stride, padding and parameter count.**
 Answer: stride 2 is required for the halving. Numerator must satisfy 56 + 2p - 2 - 1 = 53 + 2p ≡ 0 mod 2 with floor to 28, so p = 1 works: (56 + 2 - 3)/2 + 1 = 27 + 1 = 28. Parameters: 9·128·256 + 256 = 294,912 + 256 = 295,168.

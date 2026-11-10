@@ -190,9 +190,11 @@ WHERE: b_w, b_g, b_m, b_v are bytes per trainable scalar for weights, gradients 
        allocator slack; all terms are live at the same instant on the same device.
 CONSTRAINT: Co-residency. Summing maxima measured at different times overstates the peak.
 NUMERICAL EXAMPLE: P = 36,831,232, b = (4,4,4,4) gives 589,299,712 B = 562.0 MiB, against
-       a bf16 base of 10.807 GiB and a batch-2, 8192-token activation peak near 4.000 GiB.
-INTERPRETATION: The adapter is 4.9% of the base and about 13% of the activation term; a
-       memory investigation that starts with rank is starting with the smallest lever.
+       a bf16 base of 10.807 GiB and a 4.000 GiB lower bound on the activation peak at batch 2
+       and 8192 tokens.
+INTERPRETATION: The adapter is 5.08% of the bf16 base and 18.7% of the 3.000 GiB
+       checkpointed activation term; a memory investigation that starts with rank is
+       starting with the smallest lever.
 ```
 
 **Four-bit storage including scales, because "4-bit means half of bf16" is false.**
@@ -282,12 +284,14 @@ WHERE: T is the microbatch times sequence length in tokens; act_per_token is ret
        n_kv is key/value width per layer; L is layer count.
 CONSTRAINT: The KV term applies to generation and to cached evaluation, not to a training
        step unless the step caches.
-NUMERICAL EXAMPLE (a smaller configuration than Section 5's): N*b_base = 10.807 GiB;
-       P*b_state = 0.549 GiB; activations 4.000 GiB at batch 2 and 8192 tokens; KV 128 KiB
-       per token so 1.000 GiB for 8192 tokens of one sequence; 10% allocator slack adds
-       1.636 GiB on a live total of 16.356 GiB.
-INTERPRETATION: A 16 GiB device cannot hold base plus activation peak plus slack; the run
-       must shorten sequences, checkpoint, or move the base out of the step's device set.
+NUMERICAL EXAMPLE (Section 5's configuration): N*b_base = 3.039 GiB (4-bit with fp32
+       scales); P*b_state = 0.549 GiB; retained network input 1.000 GiB plus 2.000 GiB of
+       recompute transient under checkpointing; live total 6.588 GiB, or 7.247 GiB with 10%
+       slack. Adding the KV term for 8192 cached tokens puts it at 7.247 + 1.000 = 8.247 GiB.
+INTERPRETATION: An 8 GiB device fails and a 24 GiB device passes with room to spare; the
+       same configuration on a bf16 base adds 7.768 GiB (10.807 minus 3.039), taking the
+       8.247 GiB total to 16.015 GiB and consuming most of a 24 GiB device. Base precision
+       and sequence length, not rank, decide feasibility.
 ```
 
 **Generalised count with mixed ranks and an extra trainable module.**
@@ -361,11 +365,12 @@ FORMULA [C12]: for dimension pairs below index k, keep theta_i unchanged; for pa
 WHERE: k selects how many of the d_head/2 pairs are stretched; k = d_head/2 is full PI.
 CONSTRAINT: The choice must match the trained configuration; a mismatch at inference is
        silent because shapes are identical.
-NUMERICAL EXAMPLE: d_head = 128, k = 32 keeps wavelengths of 6.28 to 628.32 tokens intact
-       and stretches only pairs with wavelengths above 628.32 tokens.
-INTERPRETATION: Short-wavelength pairs are responsible for local order; stretching them
-       degrades short-range behaviour while rarely helping long range, which is why partial
-       schemes exist. The failure signature is a model that is fine at 4k and incoherent at 32k.
+NUMERICAL EXAMPLE: d_head = 128, k = 32 keeps pair indices 0..31 unchanged, i.e.
+       wavelengths from 6.28 to 544.10 tokens, and stretches only pairs whose wavelength
+       is 628.32 tokens or longer.
+INTERPRETATION: Short-wavelength pairs encode local order; stretching them degrades
+       short-range behaviour while rarely helping long range, which is why partial schemes
+       exist. The failure signature is a model that is fine at 4k and incoherent at 32k.
 ```
 
 **Validity condition for 4.3.** C10 requires more than one distinct reward in the group. C11 requires the scale
@@ -374,9 +379,11 @@ models with identical tensor shapes can use different bands.
 
 ### 4.4 Limits and counterexamples
 
-**Limit 1: the count is not the cost.** A 36.8M-scalar adapter that is 0.63% of the base is 5.2% of the base's
-*training state* because trainable scalars carry four fp32 tensors while frozen bf16 weights carry one bf16 value.
-Dividing two parameter counts and calling the result a cost ratio is the single most common error in this unit.
+**Limit 1: the count is not the cost.** A 36,831,232-scalar adapter is 0.635% of the base in parameter count. In
+storage it is 562.0 MiB of trainable state against 10.807 GiB of frozen bf16 weights, i.e. 5.08% of the base's storage —
+an eightfold larger share — because each trainable scalar carries 16 bytes across weights, gradients, master copy and
+two moments while each frozen scalar carries two. Dividing two parameter counts and calling the result a cost ratio
+understates the storage share by 8x and says nothing at all about step time.
 
 **Limit 2: an exact algebraic identity does not survive a dtype change.** `(W + sBA)x = Wx + sB(Ax)` holds in real
 arithmetic. In bf16 the two orders round differently, and after dequantization and requantization the difference can
@@ -443,29 +450,40 @@ total trainable     : 589,299,712 B   = 562.0 MiB
 
 ```text
 tokens per step     : 4 * 8 * 4,096 = 131,072 tokens
-retained per block  : 131,072 * 4,096 * 2 B (bf16, one tensor per block) = 1,073,741,824 B
-32 blocks           : 32 * 1,073,741,824 B = 34,359,738,368 B = 32.000 GiB
+one width-4096 tensor: 131,072 * 4,096 * 2 B (bf16) = 1,073,741,824 B = 1.000 GiB
+retained per block  : at least one such tensor per block, and in practice four to six
+                      (projections, attention scores, MLP hidden), so 4.000 to 6.000 GiB
+32 blocks           : 128.000 to 192.000 GiB, i.e. far beyond the device
 ```
 
-Thirty-two GiB of a single activation tensor exceeds the entire device, which is why gradient checkpointing is not
-optional at this configuration. With checkpointing the retained subset is the block input only:
+The lower bound alone exceeds a 24 GiB card by more than 5x, which is why checkpointing is not optional here. With
+every block recomputed, only the network input is retained and one block's internals exist at a time:
 
 ```text
-retained           : 131,072 * 4,096 * 2 B = 1.000 GiB
-recomputed         : the same 32.000 GiB, transiently, block by block
-peak per block     : about 1.000 GiB / 32 + one block's internals, which fits
+retained (network input across segments): 1.000 GiB
+transient per block during recompute    : about 2.000 GiB (two such tensors)
 ```
+
+So the activation term falls from at least 128.000 GiB to roughly 3.000 GiB, at the cost of a second forward pass. The
+1 GiB network input is not avoidable by checkpointing; only shorter sequences or smaller microbatches reduce it.
 
 **Step 4: live total with checkpointing.**
 
 ```text
 base                : 3.039 GiB
 trainable state     : 0.549 GiB (562.0 MiB)
-retained activations: 1.000 GiB
-workspace/allocator : 10% of live total
-live before slack   : 4.588 GiB ; with 10% slack about 5.05 GiB
-headroom on 24 GiB  : about 18.9 GiB
+retained input      : 1.000 GiB
+recompute transient : 2.000 GiB
+live before slack   : 6.588 GiB
+allocator slack 10% : 0.659 GiB
+live total          : 7.247 GiB
+headroom on 24 GiB  : 16.753 GiB
 ```
+
+Recheck: `3.039 + 0.549 + 1.000 + 2.000 = 6.588`, and `6.588 * 1.10 = 7.247`. The headroom is what the run has left for
+longer sequences, a larger microbatch, or fragmentation, and it is the number to quote when someone asks whether the
+configuration is safe. It is not a licence to raise the sequence length by 2x: doubling the token count doubles both the
+1.000 GiB retained term and the 2.000 GiB transient, consuming 3.000 GiB of the 16.753 GiB headroom.
 
 **Step 5: optimisation schedule and what the token budget buys.**
 
@@ -476,8 +494,9 @@ steps               : 76,800,000 / 131,072 = 585.94, so 585 full steps plus a pa
 tokens per parameter: 76,800,000 / 5,801,771,008 = 0.0132
 ```
 
-0.0132 tokens per parameter is a fact worth stating plainly: adapter tuning at this budget is three orders of magnitude
-below the token-per-parameter ratios associated with continued pretraining. A run at this budget can change behaviour;
+0.0132 tokens per parameter is a fact worth stating plainly: it is 1,500x below even the low end of the 20-to-2,000
+tokens-per-parameter range usually associated with continued pretraining or from-scratch training
+(`20 / 0.0132 = 1,511`). Adapter tuning at this budget can change behaviour and cannot add much knowledge. A run at this budget can change behaviour;
 it cannot add much knowledge. This is the arithmetic behind CI-30.
 
 **Step 6: packing utilisation.**
@@ -500,11 +519,13 @@ per-item success rate p = 0.80, 95% interval
 n = 400  : se 0.02000, half-width 3.92 pp
 n = 1,000: se 0.01265, half-width 2.48 pp
 n = 4,000: se 0.00632, half-width 1.24 pp
-required for a 2 pp claim: n >= (1.96/0.01)^2 * 0.16 = 6,146 items per arm
+a 2 pp effect is distinguishable only if the half-width is <= 1.00 pp:
+n >= z^2 * p(1-p) / 0.01^2 = 3.8416 * 0.16 / 0.0001 = 6,146.6 items per arm
 ```
 
-Recompute the last line: a half-width of 1.00 pp requires `n = (1.96^2 * 0.16)/(0.01^2) = 6,146.6`. A team that
-evaluates 400 items and reports a 2 pp win has an interval three times wider than the claim, which is CI-25.
+Recompute: `1.96^2 = 3.8416`, times `0.8 * 0.2 = 0.16` gives 0.614656, divided by `0.01^2 = 0.0001` gives 6,146.6. A
+team that evaluates 400 items and reports a 2 pp win has a half-width of 3.92 pp, i.e. an interval about twice as wide
+as the effect it claims, which is CI-25.
 
 **Step 8: the proxy-versus-target divergence, constructed.**
 
@@ -515,7 +536,8 @@ k = 0 : P = 1.000, G = 1.000
 k = 2 : P = 1.336, G = 1.200
 k = 5 : P = 1.750, G = 1.200
 k = 10: P = 2.200, G = 0.400
-k = 20: P = 2.200, G = -4.200  (the proxy saturates, the target collapses)
+k = 15: P = 2.350, G = -1.400  (proxy maximum: dP/dk = 0.18 - 0.012k = 0)
+k = 20: P = 2.200, G = -4.200  (the proxy declines, the target has already collapsed)
 ```
 
 The proxy peaks at `k = 15` (`dP/dk = 0`), the target peaks at `k = 3.5` (`dG/dk = 0`). Beyond `k = 3.5` every unit of
@@ -527,8 +549,8 @@ also shows that the ratio is independent of `N` at fixed group size — a useful
 the same 28.125% ratio.
 
 **Sensitivity note.** Four levers, in order of effect on feasibility: sequence length (linear in activation and cache),
-group size in the quantizer (0.0625 B per weight at 64, 0.03125 B at 128), checkpointing (about 32x on retained
-activation), and rank (linear in 0.635% of the parameter count). A team that reaches for rank first is pulling the lever
+group size in the quantizer (0.0625 B per weight at 64, 0.03125 B at 128), checkpointing (about 42x on the total
+activation term here: 128 to 3 GiB), and rank (linear in 0.635% of the parameter count). A team that reaches for rank first is pulling the lever
 with the smallest mechanical advantage.
 
 **Takeaway:** The budget is decided by activations and context, not by the adapter; and the evaluation plan, not the
@@ -537,17 +559,20 @@ training run, determines whether any of it can be measured.
 ## 6. Visual / Geometric Intuition
 
 ```text
-     memory scale, logarithmic, one device
- 1 GiB |##                                       adapter weights (0.14)
- 3 GiB |######                                   quantized base (3.04)
- 4 GiB |#######                                  KV cache, one 32k sequence (4.00)
- 5 GiB |########                                 trainable state (0.55)
-32 GiB |######################################## activations without checkpointing
+     memory, GiB, one device, 24 GiB card marked by the dotted line
+ 0.14 |.                                        adapter weights
+ 0.55 |#                                        trainable state, fp32
+ 1.00 |##                                       retained input, checkpointed
+ 2.00 |####                                     recompute transient, per block
+ 3.04 |######                                   quantized base
+ 4.00 |########                                 KV cache, one 32k sequence
+128.00 |######################################## activations, no checkpointing (lower bound)
+    24 |---------- budget --------------------------------------------
 ```
 
-Reading the bar chart: the two terms a team usually tunes (adapter weights, trainable state) are the two smallest bars.
-The two terms that decide whether the run fits are the base and the activations. Nothing about the adapter's rank changes
-the width of the bottom bar.
+Reading the chart: the two terms a team usually tunes (adapter weights, trainable state) are the two smallest, together
+1.4% of the budget. The dotted line is where the card runs out, and only the bottom bar crosses it. Nothing about the
+adapter's rank moves the bottom bar; only sequence length, microbatch and checkpointing do.
 
 ```text
       rank and effective scale, alpha = 32
@@ -676,12 +701,16 @@ fused `qkv_proj` attaches to one of them; a pattern that matches nothing attache
 frozen model that looks like it is training. The reported count is then a clean multiple of the intended one, which is
 why "the number is a third of what I computed" is the signature.
 
-**Arithmetic that localises it.** The intended count for the reference model at rank 16 is 36,831,232. Suppose the run
-reports 13,631,488. Divide by 32 blocks to get 425,984 per block, then match that against C1: the four attention targets
-are `2*131,072 + 2*81,920 = 425,984` and the three MLP targets are `3*241,664 = 724,992`, so the run targeted attention
-only and the MLP pairs were never attached. A quotient of 28,442,624 would be the mirror case: q and o missing, MLP and
-k/v present. The quotient, not the total, identifies the missing family, because every per-block count in C1 is a
-distinct sum of distinct integers and the mapping from quotient to target set is unique at rank 16.
+**Arithmetic that localises it.** The intended count for the reference model at rank 16 is 36,831,232, which is
+1,150,976 per block. Suppose the run reports 13,631,488. Divide by 32 blocks to get 425,984 per block and match that
+against C1: the four attention targets are `2*131,072 + 2*81,920 = 425,984` while the three MLP targets are
+`3*241,664 = 724,992`, so the run targeted attention only and the MLP pairs were never attached. The complement,
+`1,150,976 - 425,984 = 724,992`, is the missing term, which is the arithmetic form of the diagnosis.
+
+The quotient narrows the family but does not identify the tensor: over the seven target shapes there are 128 subsets
+but only 36 distinct per-block sums, because q and o share a shape at 131,072 and k and v at 81,920. So a per-block
+quotient of 212,992 is consistent with `q + v`, with `o + k`, and with other combinations that happen to sum alike.
+The name list separates those; the count never will.
 
 **Why the wrong fix recurs.** The obvious response is to lower the rank so that the reported count matches the plan.
 That makes the numbers agree while the model stays unadapted, and it converts a configuration defect into an evaluation
@@ -830,8 +859,9 @@ continuations.
 **Check.** Decode one packed batch with boundaries marked and inspect what each boundary token can attend to. A canary
 token in example A that changes example B's loss proves contamination.
 
-**Trade-off.** Packing raises utilisation from 9.28% to about 100% on the reference data, which is a ninefold compute
-saving; that is why the isolation bug is worth fixing rather than abandoning packing.
+**Trade-off.** Packing raises utilisation from 9.28% to about 100% on the reference data, which is a 10.8x compute
+saving per token of sequence (`4096/380 = 10.78`); that is why the isolation bug is worth fixing rather than abandoning
+packing.
 
 ### CI-14 — truncation removed the behaviour
 
@@ -1061,7 +1091,8 @@ compares logits costs seconds. The expected value calculation is not close: run 
 **Where the run time actually goes.** For adapter training on a quantized base, the step is dominated by dequantization
 and the frozen matrix products, then by the input-gradient backward through those matrices, then by the adapter's own
 small products, then by optimizer work on 36.8M scalars. The adapter's arithmetic share is 0.635%; its optimizer share is
-larger relative to its size but still small; its memory share is 562 MiB of a footprint near 5 GiB with checkpointing.
+larger relative to its size but still small; its memory share is 562 MiB of a footprint near 7.2 GiB with
+checkpointing.
 
 **The arithmetic of the Amdahl bound, restated for cost planning.**
 
@@ -1176,14 +1207,17 @@ population.
 ## 11. Interview / Exam Questions
 
 ### Q1. A run reports 12,277,077 trainable parameters where you computed 36,831,232. What is the ratio, and what does it suggest?
-**Answer:** 3.0 exactly, which suggests one target family is missing per block rather than a rank error.
-**Reasoning:** `36,831,232 / 3 = 12,277,077.33`; the small remainder is a rounding artefact of the intended figure, so
-the observed count is one third of plan. A rank error would produce a ratio equal to the rank ratio, and a duplicate
-count would produce a ratio above one. Dividing by the block count gives 383,658 per block, which is close to the
-attention family alone at 425,984 minus the two key/value pairs at 81,920 each, i.e. `425,984 - 163,840 = 262,144`,
-which does not match either; the point is that the quotient narrows the target set and the exact match identifies it.
+**Answer:** exactly 3 in round terms, which no integer rank can produce, so the run is not a rank error alone; dividing by
+the block count is what shows a second discrepancy.
+**Reasoning:** `36,831,232 / 12,277,077 = 3.0000001`, i.e. a factor of three. A rank change would have to be
+`16 / 3 = 5.33`, which is not an integer, so a pure rank error is ruled out. But dividing by 32 blocks gives
+383,658.66, which is not an integer either, so the run cannot be "a subset of the seven named shapes at a constant
+rank" over 32 blocks. The nearest attainable per-block sums are 372,736 and 405,504, so the observed configuration
+differs from the intended one in at least two places — a target-set omission and a block-count or rank discrepancy.
+Two simultaneous defects are the normal case, and this is exactly why the count check must print per-block detail
+rather than a single total.
 **Trap:** Halving the rank to make the numbers agree.
-**Follow-up:** Which single print statement settles it? The list of `requires_grad` tensors with names and shapes.
+**Follow-up:** Which single print statement settles it? The list of `requires_grad` tensors with names and shapes, grouped by block index.
 
 ### Q2. The count is right and quality after merging is 1.5 pp below the unmerged pair. Give the two leading causes and the check that separates them.
 **Answer:** Requantization after the merge, or a transposed target on a rectangular projection.

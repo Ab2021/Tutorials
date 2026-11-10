@@ -1,6 +1,6 @@
 ---
 title: "Graph data-model patterns"
-topic: "Graph data-model patterns: typed multigraphs, edge tables, RDF triples, adjacency/CSR layouts, bitemporal facts and projection"
+topic: "Graph data-model patterns: typed multigraphs, edge tables, triple tables, CSR layouts, bitemporal facts, partitioning and lossy projection"
 collection: "Part 03 — Machine learning optimisation and intelligent retrieval"
 level: "core"
 evidence: "DERIVED"
@@ -11,1152 +11,2028 @@ content_status: "draft"
 
 # Graph data-model patterns
 
+> **Evidence:** every algebraic identity below is DERIVED and re-checked in Section 5. All node names,
+> amounts, timestamps and byte sizes are ILLUSTRATIVE constructions. Byte counts use documented
+> primitive widths (int32 = 4 B, int64/float64 = 8 B, uint8 = 1 B, UUID = 16 B) and are labelled
+> estimates. No vendor benchmark, production measurement or organisation-specific schema is claimed.
+
+A data model is a promise about what you will be able to ask later, and every promise is paid for three
+times: in bytes on disk, in milliseconds per hop, and in the information the representation cannot carry
+at all. The first two can be estimated before a single row is written. The third usually cannot be
+discovered until a decision is questioned, which is why it is the expensive one. This sheet organises the
+design space around that asymmetry: it derives the costs that are computable in advance, states the losses
+as bounded claims with explicit validity conditions, and treats every layout choice as a bet on which
+query shape will dominate.
+
+The recurring mistake is to treat "the graph" as one object with one schema. In any system that survives
+long enough to be audited there are at least four distinct artifacts. There is the **base fact store**: an
+append-only table of typed, timestamped relationships carrying provenance. There is the **identity layer**:
+a versioned, reversible map from source identifiers to resolved nodes. There is the **serving structure**:
+an adjacency array, an index, or a triple table optimised for one query shape at one latency. And there is
+the **training snapshot**: a frozen projection of the first three at a stated decision time. These four
+have different correctness rules, different lifecycles and different owners. Collapsing them into a single
+table is the root cause of most defects described in Section 8, because it forces one structure to be
+simultaneously complete, fast, reproducible and cheap.
+
+The order of sections follows the order a designer should work. Section 3 defines the fact, then the
+identity, then the time semantics, then the layout. Section 4 derives the four formulas that decide most
+arguments: the incidence identity that makes integrity checkable, the degree pair that distinguishes
+activity from reach, the storage formula whose terms name the trade, and the partition cost that predicts
+what a distributed deployment adds. Section 5 runs one small graph through all four so the arithmetic can
+be checked end to end. Section 8 catalogues sixteen failure mechanisms, each with the competing causes a
+symptom can have and the observation that separates them.
+
+Two conventions are worth fixing before anything is measured. First, **event time and availability time
+are distinct columns, not metadata**: event time answers when a thing happened, availability time answers
+when the system could first have known it. Any structure built without availability time cannot answer the
+only question a backtest actually poses, which is what the serving path saw at a given instant. Second,
+**every derived structure must be reconstructible** from the base facts plus a named identity version,
+with no undocumented input. A hand-edited edge added to satisfy a query breaks reconstructibility, because
+the rebuild path will silently drop it and two reports will thereafter disagree with no visible cause.
+
+The consequence of those two conventions is that a graph model is best understood as a stack of
+deliberately lossy projections over an append-only fact table. Choosing a layout is choosing which losses
+the decision downstream can survive. An adjacency array that discards relation types is legitimate if no
+query filters by type and no aggregate depends on it. The same array is a defect the moment a regulator
+asks whether a particular transfer edge existed, because the array cannot answer the question and the
+answer is not recoverable without a rebuild.
+
+**Takeaway:** A graph model is a set of lossy projections over an append-only typed fact table; the design
+work is naming the dominant query, computing its cost, and stating which loss the decision can survive.
+
 ## 1. File Header
 
-> **Purpose:** Choose, justify and cost the physical and logical representation of a relationship dataset — which facts become edges, which identifiers become nodes, which derived structure (adjacency list, CSR array, triple table, projection) is materialised — so that a downstream graph feature or traversal can be computed reproducibly at a stated decision time.
-> **Prerequisites:** Set and multiset reasoning, the handshake lemma, row-versus-column storage intuition, event-time versus availability-time discipline, and the distinction between a primary key and a resolved entity.
-> **Key outcome:** Given a candidate dataset and a decision latency budget, you can state the fact grain, pick a layout, compute its storage and traversal cost from first principles, name the information the layout destroys, and reject a layout whose loss breaks the decision.
-> **This file does NOT cover:** Cypher, Gremlin or SPARQL syntax; vendor feature lists; graph neural network architecture (see the GNN decision guide in this collection); centrality ranking (see the centrality sheet); ontology design at depth (see the knowledge-graph sheet).
-> **Level:** Core. Foundation material is the definitions in Section 3; advanced material is the counterexample analysis in Section 4.4 and the loss theorems in Section 10.
-> **Version / reviewed:** Draft 1.0, 2026-11-10. Independent review: not yet performed. Review trigger: any change to the fact grain, the time semantics, or the storage engine.
-> **Evidence:** All algebraic identities are DERIVED and re-checked in Section 5. All node names, amounts, timestamps and byte sizes are ILLUSTRATIVE constructions; no vendor benchmark, no production measurement and no organisation-specific schema is claimed. Byte counts assume documented primitive widths (int32 = 4 B, int64/float64 = 8 B) and are labelled as estimates, not measurements.
-> **Retrieval cue:** If a graph feature is cheap offline and expensive or wrong in production, read Section 4.4 first, then the failure entries on projection loss, supernode fan-out, and availability-time backdating.
+> **Purpose:** Given a candidate relationship dataset and a decision latency, state the fact grain, choose
+> the logical and physical representation, compute the storage and traversal cost from first principles,
+> name the information each structure destroys, and reject any layout whose loss breaks the decision.
+> **Prerequisites:** set and multiset reasoning, the handshake lemma, row-versus-column storage intuition,
+> event-time versus availability-time discipline, and the distinction between a primary key and a resolved
+> identity.
+> **Key outcome:** you can size three candidate layouts for the same fact set, show the ratio between them,
+> predict which query each makes expensive, and write the assertions that fail loudly when a loader change
+> breaks the model.
+> **This file does NOT cover:** Cypher, Gremlin or SPARQL syntax, vendor feature lists, graph neural
+> network architecture, centrality and community detection, ontology design at depth, and entity
+> resolution algorithm detail. Those are separate sheets in this collection.
+> **Level:** Core. The foundation layer is Section 3; the advanced layer is the loss analysis in Section
+> 4.4, the partition arithmetic in Section 4.3, and the scale transitions in Section 9.1.
+> **Version / reviewed:** Draft 1.0, 2026-11-10. Independent review: not yet performed. Review trigger:
+> any change to the fact grain, the time semantics, the identity rule, or the storage engine.
+> **Evidence:** DERIVED identities re-checked in Section 5; ILLUSTRATIVE inputs throughout. Byte counts
+> are arithmetic on declared primitive widths, not measurements of any engine's on-disk format, which
+> includes page headers, fill factors and compression that this sheet deliberately excludes so that the
+> ratios stay interpretable.
+> **Retrieval cue:** if a graph feature is cheap offline and slow or wrong in production, read Section 4.4
+> first, then the failure entries on projection loss (F-04), supernode fan-out (F-06) and availability-time
+> backdating (F-02).
 
-A data model is a promise about what you will be able to ask later. Every promise has a price: bytes on disk, milliseconds per hop, and — the part that is usually unaccounted — information that the representation cannot carry at all. The three cheapest decisions to make early are also the three most expensive to reverse: the grain of a fact, the identity of a node, and whether time is a column or an afterthought. This sheet treats those three as the primary design surface and everything else as a consequence.
+Three numbers frame the whole problem and are worth memorising before the derivations. A million-edge
+graph is small. A billion-edge graph is not, and it is the size at which the row store and the compressed
+array differ by a factor of eight in bytes and by a factor of twenty in build time. Between those two
+points, the binding constraint silently changes from total work to the largest single node's degree, which
+is why a design that was correct at the smaller size can fail at the larger one with no algorithmic change.
 
-The recurring trap is to treat "the graph" as a single object. In practice there are at least four distinct artifacts. There is the **base fact store**: an append-only table of typed, timestamped relationships with provenance. There is the **identity layer**: the mapping from raw source identifiers to resolved nodes, versioned and reversible. There is the **serving structure**: an adjacency array, an index, or a triple table optimised for a specific query shape at a specific latency. And there is the **training snapshot**: a frozen projection of the first three at one decision time, used to build features and labels. These four have different correctness rules, different lifecycles and different owners, and collapsing them into one is the root cause of most "the graph says X but the report says Y" incidents.
+The second framing number is the ratio of the two degree definitions. On the toy graph of Section 5 the
+occurrence degree sums to 18 and the distinct-neighbour degree sums to 12, a surplus of 6 that exists
+because five transfers between two accounts and one merchant repeat the same pairs. Every aggregate that
+does not declare which definition it uses is ambiguous by that surplus, and the ambiguity grows with
+transaction volume since multiplicity is exactly what volume adds.
 
-This file therefore proceeds in the order a designer should: define the fact, define the identity, define the time, then choose a layout whose cost you can compute. Where a layout loses information, the loss is stated as a theorem with a validity condition rather than as an opinion. Where a number appears, the arithmetic is shown; where a number is constructed for teaching, it says ILLUSTRATIVE.
+The third is the projection multiplier. A bipartite structure over a hub of degree k yields C(k,2) pairs,
+which for k = 50,000 is 1.25 billion — more than the entire edge count of the graph it came from. A
+projection is therefore not a view in the database sense; it is an aggregation whose output can exceed its
+input by an unbounded factor, and it must be planned with a peak-size estimate rather than discovered.
 
-**Takeaway:** A graph model is a set of lossy projections over an append-only typed fact table; the design work is choosing which losses the decision can survive.
+**Takeaway:** Fix the grain, fix the two timestamps, fix the identity version, then choose a layout whose
+loss you can name — in that order, because each decision constrains the next.
 
 ## 2. Concept Map / Mental Model
 
 ```text
-                 RAW SOURCE RECORDS (immutable, per system)
-        payments | logins | device sightings | ownership declarations
-                            |
-                            | 1. FACT DESIGN
-                            |    choose grain, direction, relation type,
-                            |    value columns, event & availability time
-                            v
-        +-------------------------------------------------------+
-        |  BASE FACT TABLE  (append-only, typed, bitemporal)     |
-        |  edge_id | src_raw | rel | dst_raw | value | t_event | |
-        |          |         |     |         |       | t_avail | |
-        +-------------------------------------------------------+
-               |                                   |
-               | 2. IDENTITY RESOLUTION            | 4. AS-OF SELECT
-               |    raw id -> node id, versioned   |    t_avail <= t_decision
-               v                                   v
-        +---------------------+          +--------------------------+
-        | IDENTITY MAP        |          | SNAPSHOT at t_decision   |
-        | version, evidence,  |          | (immutable, addressable) |
-        | reversible merges   |          +--------------------------+
-        +---------------------+                     |
-               |                                    |
-               | 3. LAYOUT CHOICE                   | 5. PROJECTION
-               v                                    v
-   edge table | CSR/CSC array | triple table |   node-level table,
-   property graph store | hypergraph         bipartite 2-section,
-                                              motif counts
-               |                                    |
-               +----------------+-------------------+
-                                v
-                    feature / traversal / rank
-                                |
-                                v
-                    decision at t_decision
+   RAW SOURCE RECORDS  (immutable; identifiers are local to each source system)
+     payments | logins | device sightings | ownership declarations | case notes
+                              |
+        1. FACT DESIGN       grain, direction, relation type, value column,
+        |                    event time, availability time, provenance
+        v
+   +--------------------------------------------------------------------+
+   | BASE FACT TABLE   append-only, typed multigraph, bitemporal         |
+   |  edge_id | src_raw | rel | dst_raw | value | ccy | t_event | t_avail |
+   +--------------------------------------------------------------------+
+            |                                        |
+   2. IDENTITY RESOLUTION                    4. AS-OF SELECTION
+      raw id -> node id, versioned,             keep facts with
+      reversible, evidence attached             t_avail <= t_decision
+            |                                        |
+            v                                        v
+   +---------------------+                 +--------------------------+
+   | IDENTITY MAP        |                 | SNAPSHOT at t_decision   |
+   | version | evidence  |                 | immutable, addressable,  |
+   | merge log           |                 | reproducible byte for byte|
+   +---------------------+                 +--------------------------+
+            |                                        |
+            +------------------+---------------------+
+                               |
+        3. LAYOUT CHOICE       v
+        |            edge table | CSR/CSC array | triple table |
+        |            property graph | hypergraph incidence
+        v
+   +-------------------------------------------------------------------+
+   | SERVING STRUCTURE   one position per (node, occurrence) or per row |
+   +-------------------------------------------------------------------+
+                               |
+        5. PROJECTION           v
+        |            node features, pair table, motif counts,
+        |            bipartite 2-section, hypergraph star expansion
+        v
+   decision at t_decision  (score, authorise, escalate, report)
 ```
 
-Read the diagram as five separate transformation steps, not one pipeline. Each arrow is a place where information can be dropped, and each drop is only acceptable if the decision downstream is invariant to it. Step 1 decides what a fact is. Step 2 decides what an entity is. Step 3 decides how it is laid out. Step 4 decides what is visible. Step 5 decides what is aggregated. A defect at any step produces a symptom at the last step, which is why debugging graph features from the metric backwards usually misattributes the cause.
+Read the diagram as five transformations, not one pipeline. Each arrow is a place where information can be
+dropped, and each drop is acceptable only if the decision downstream is invariant to it. Step 1 decides
+what a fact is; step 2 decides what an entity is; step 3 decides how a fact is laid out; step 4 decides
+what is visible at the decision instant; step 5 decides what is aggregated. A defect at any step surfaces
+as a symptom at the last step, which is why debugging graph features backwards from the metric usually
+misattributes the cause to the model.
 
-The **central invariant** is reconstructibility: every derived structure must be reproducible from the base fact table plus the identity map, with no undocumented input. An adjacency array is legitimate because you can rebuild it. A hand-edited edge added to satisfy a query is not, because the rebuild will silently drop it and two reports will diverge. Reconstructibility is what makes the third and fifth steps safe to be lossy: any loss can be re-derived with a different setting when a decision changes.
+The diagram's most commonly skipped edge is the one from the identity map into the snapshot. A snapshot
+that names a date but not an identity version is not a snapshot; it is a query that will resolve to
+different bytes next week. The test is mechanical: two people running the same training job with the same
+snapshot identifier must produce identical features. If they do not, the identifier names a schedule
+rather than a state, and no backtest built on it is reproducible.
 
-The **second invariant** is that time is a property of the fact, stored as two distinct columns, not a metadata tag on the table. Event time answers "when did it happen"; availability time answers "when could we have known". Any structure built without availability time cannot answer the only question a backtest actually asks: what did the serving path see at 09:00 on the third of March? A dataset with only event time can produce a beautiful offline graph that no production system could have assembled, and the resulting model will look excellent until it is deployed.
+The second invariant in the picture is reconstructibility. Every derived structure must be reproducible
+from the base fact table plus one identity version, with no other input. This is what makes lossy steps
+safe: any loss can be re-derived with a different setting when the decision changes. It is also what
+distinguishes a serving replica, which is disposable and always rebuildable, from a store of record, which
+must be append-only and complete. A system that has one structure trying to be both will eventually lose
+history, because the cheapest way to make a serving structure fast is to update it in place.
 
-What varies across the layout families is only *which query shape is cheap*. A row-per-fact table makes arbitrary filtered scans cheap and multi-hop traversal expensive. A CSR adjacency array makes one-hop expansion cache-friendly and per-edge filtering impossible. A triple table makes predicate-specific patterns cheap and property-joining expensive. A property-graph store makes pointer-chasing natural and bulk analytics awkward. Nothing about the *facts* differs; the choice is a bet on which queries dominate, and that bet should be written down because it will be re-litigated.
+What varies across layout families is only which query shape is cheap. A row-per-fact table makes
+arbitrary filtered scans cheap and multi-hop traversal expensive. A CSR array makes one-hop expansion
+cache-friendly and per-edge filtering impossible without extra parallel arrays. A triple table makes
+predicate-first pattern matching cheap and property-joining expensive. A property-graph store makes
+pointer-chasing natural and bulk analytics awkward. Nothing about the facts differs between those four;
+the choice is a bet on the dominant query, and the bet should be written down because it will be
+re-litigated by whoever inherits the system.
 
-The boundary that matters most for machine learning is between the **base graph and the projected feature table**. The base graph is high-cardinality, multivalued and time-indexed: nine edges over six nodes in the worked example. The feature table is one row per entity per decision time with scalar columns: degree, distinct-neighbour count, weighted sum. Projection is where multiplicity becomes a statistic, and it is also where the single largest class of silent bias enters — an aggregate computed over all edges ever seen is not the aggregate the serving path could compute.
+The boundary that matters most for machine learning sits between the base graph and the projected feature
+table. The base graph is high-cardinality, multivalued and time-indexed: nine edge occurrences over six
+nodes in Section 5. The feature table is one row per entity per decision time with scalar columns. The
+projection is where multiplicity becomes a statistic, and therefore where the largest class of silent bias
+enters, because an aggregate computed over all edges ever seen is not the aggregate the serving path could
+compute at any particular instant.
 
 ```text
-Invariant ladder (each rung is a question a reviewer must be able to answer):
-
-  rung 1  what is one row of the fact table?          -> grain statement
-  rung 2  which identifiers are nodes, in what name?  -> namespace statement
-  rung 3  what two timestamps does each fact carry?   -> time statement
-  rung 4  which structures are materialised?          -> layout statement
-  rung 5  which of those are rebuilt, never edited?   -> rebuild statement
-  rung 6  what does each structure fail to represent? -> loss statement
+Invariant ladder — each rung is a question a reviewer must be able to answer before sign-off
+  rung 1  grain        what is one row? one fact per (src, rel, dst, t_event)?
+  rung 2  direction    is the relation symmetric, asymmetric, or directed with a type per direction?
+  rung 3  multiplicity is a repeated fact one row, a count column, or a collapsed edge?
+  rung 4  time         which column decides visibility at a decision instant?
+  rung 5  identity     which map version produced these node ids, and can a merge be undone?
+  rung 6  layout       which query is cheap, and which is now a scan?
+  rung 7  loss         what can this structure no longer answer, stated as a sentence?
+  rung 8  rebuild      what command recreates this structure, and what does it read?
 ```
 
-A model that cannot answer rung 6 is not wrong, only unaudited — and unaudited graph features tend to fail in the direction of overstating evidence, because a projection that merges multiplicity into a single boolean edge makes two accounts on one shared device look identical to two accounts on one device used once each.
+The ladder is short on purpose. A design review that answers all eight rungs in writing takes under an
+hour and prevents most of Section 8. A review that answers rung 6 by naming a storage engine has skipped
+rungs 1 through 5, which are the ones that determine whether the engine's cheap query is the query that
+matters.
 
-**Takeaway:** Separate fact, identity, layout, snapshot and projection; keep the first four reconstructible from the fact table and write down what the last one loses.
+**Takeaway:** Five lossy transformations, two invariants — reconstructibility and pinned identity — and an
+eight-rung checklist that turns a design argument into a set of written answers.
 
 ## 3. Foundational Definitions
 
+Every definition below carries its type or unit, because most disputes in this area are disputes about
+which definition was in force rather than about the algorithm.
+
 ### 3.1 The fact layer
 
-**Fact (edge record).** An immutable row asserting that at a stated event time a typed relationship held between a subject identifier and an object identifier, optionally carrying a value and a provenance reference. A fact is not a state; it is an event of assertion. "A1 transferred 250.00 USD to M1 at 09:00:00Z" is a fact. "A1 is a customer of M1" is a derived state that requires an aggregation rule over facts.
+**Fact.** One typed relationship assertion between two entities, with a value, an event time and an
+availability time. A fact is immutable once written; a correction is a new fact that supersedes an earlier
+one. The word is chosen deliberately over "edge", because an edge sounds like a graph object while a fact
+sounds like a record — and the record view is the one that survives audits.
 
-**Relation type (predicate).** The label that fixes the semantics of the edge: `TRANSFER`, `USED_DEVICE`, `OWNS_ACCOUNT`, `SHARES_ADDRESS`. Two edges with different types are not interchangeable even when they join the same pair of nodes, and the type must be in the primary key of the fact table rather than a nullable column, otherwise the same pair cannot hold two kinds of relationship simultaneously.
+**Grain.** The answer to "what is one row?" expressed with units. "One row per transfer per account pair"
+is ambiguous, because a transfer has two endpoints and appears once, while a pair can have many transfers.
+"One row per transfer instruction, with the debiting account as source and the crediting account as
+target" is a grain. The test is that a second reader can predict the row count from the business event
+count without asking a question.
 
-**Grain.** The answer to "what does one row mean". Three different grains can look alike: one row per event (multigraph), one row per distinct pair aggregated over a window (simple graph with a weight), one row per pair per relation (typed simple graph). Choosing the aggregated grain before deciding the feature destroys the ability to compute anything time-weighted later, and it destroys the ability to answer "how many transfers in the last seven days" at any cut-off other than the aggregation boundary.
+**Typed multigraph.** A graph whose edges carry a relation label and may repeat between the same ordered
+pair. The type matters because it partitions aggregates: counting all edges between two entities mixes a
+transfer with a device sighting, and the resulting number has no unit. The multigraph matters because
+multiplicity is signal — three transfers is not the same fact as one transfer.
 
-**Direction.** Whether the fact is ordered (subject → object) or unordered. Direction is semantic, not cosmetic: an ownership declaration points from person to account, while a co-occurrence on a shared device is symmetric. Storing a symmetric relation as one directed row forces every traversal to query both directions, which is correct but twice the work; storing a directed relation as one undirected row destroys the ability to ask who transferred to whom.
+**Direction.** Whether a fact is symmetric (a shared-device sighting, a joint-account membership) or
+directed (a transfer, an ownership declaration with an effective date). Direction is a property of the
+relation type, not of the storage, and a symmetric relation stored once must be traversed in both
+directions while a directed one stored once must be traversed in one, which are different code paths over
+the same bytes.
 
-**Value columns.** Numeric or categorical payload attached to the fact: amount and currency, session duration, channel, confidence score for an inferred edge. Values belong to the fact, not to the node, because the same pair of nodes can carry different amounts at different times. A model that pushes the value onto the edge type (`TRANSFER_SMALL`, `TRANSFER_LARGE`) has binned the data irreversibly and chosen the bin edges before seeing the distribution.
+**Value column and its unit.** The numeric payload of a fact, with an explicit unit and currency. A
+nullable value is normal and must be distinguished from zero by policy, not by default. The distinction is
+material: a null sighting and a zero-amount transfer are different facts, and coercing the first to a zero
+turns a count into a sum that mixes populations.
 
-**Provenance.** The reference that says where the fact came from: source system, extraction batch, record identifier, and the rule version that produced it if the edge is derived. Provenance is what lets an auditor distinguish an observed ownership declaration from an inferred one, and it is the only defence against the class of leak where a derived edge encodes a post-outcome decision.
+**Provenance.** The reference from a fact back to the source record that produced it, precise enough to
+re-read that record. Provenance is what makes a projection auditable, because a pair in a derived table
+can be traced to the device that caused it only if the edge carries the reference. Without provenance, a
+projection is a claim with no witness.
 
 ### 3.2 The identity layer
 
-**Node.** A typed entity within a declared namespace: `account:A1`, `device:D1`, `person:P1`. Types are part of the identity, so an account numbered 4471 and a merchant numbered 4471 are distinct nodes; joining them on the numeric coincidence is a defect that survives review because the joined graph still looks plausible.
+**Raw identifier.** The key a source system assigns, meaningful only inside that system. Two sources may
+use the same integer for different entities, so a raw identifier is never globally unique and must never be
+used as a node key without a namespace.
 
-**Raw identifier.** The string a source system emitted. Raw identifiers are unstable across systems (leading zeros, case, internal versus external numbering) and must never be used as join keys without a normalisation rule that is versioned alongside the identity map.
+**Namespace.** The source qualifier that makes a raw identifier globally unique, typically a short system
+code. Namespace collisions are the cheapest catastrophic defect in this area: two sources both numbering
+accounts from 1 produces a merged graph in which every account has a spurious twin, and the resulting
+degrees are too high by a factor near two.
 
-**Entity resolution.** The mapping from raw identifiers to resolved nodes, with evidence and version. Reversible means the pre-merge identifiers and the merge rule are retained, so a bad merge can be undone and its downstream features invalidated. Non-reversible resolution is the most expensive kind of technical debt in a graph system, because a merge error propagates into every aggregate that ever touched the merged node.
+**Resolved node.** The entity that a set of raw identifiers denotes, carrying a canonical identifier and,
+critically, a member count. The member count is what converts a single identity error into a predictable
+number of false facts, and it is cheap enough to materialise alongside the node.
 
-**Supernode (hub).** A node whose degree is orders of magnitude above the median, typically a shared device token, a corporate address, a payment processor or a sentinel value such as `UNKNOWN`. Supernodes are usually instrumentation artifacts rather than genuine structure: a device identifier that fails to populate collapses to a constant, and that constant acquires tens of thousands of edges with no relationship behind them.
+**Identity version.** An immutable handle naming the mapping, the match rule and the algorithm version. It
+is an input to every structure built from the graph, which is why it belongs in the snapshot identifier
+and in the feature definition rather than in a configuration file. A feature store that joins on date
+instead of version holds values computed under two different partitions sharing one label.
 
-**Namespace collision.** Two source systems using the same identifier space for different entities, or one system reusing identifiers after recycling. It is invisible in the graph and visible only as an implausible edge between entities that should be far apart, so it is detected by sampling edges and checking them against source records rather than by any structural statistic.
+**Reversibility.** The property that a merge can be undone without recomputing the whole partition. It
+requires a merge log, because a partition materialised as a single identifier column has discarded both
+the members and the order of the decisions. Reversibility is a correctness property, not a convenience:
+splits are requested for reasons unrelated to accuracy, including customer dispute, regulatory
+per-source reporting, and downstream contract.
 
 ### 3.3 The time layer
 
-**Event time.** When the source asserts the relationship occurred, in the source's own clock. Clocks skew, exporters batch, and time zones get applied twice; a device sighting stamped 23:50 local can be the same wall-clock instant as a payment stamped 22:50 UTC in a neighbouring system.
+**Event time (t_event).** When the fact happened in the world. It is a property of the source event and is
+usually the later of two timestamps in a well-instrumented system, because events are reported after they
+occur.
 
-**Availability time.** When the record became readable by the serving path. For an authorisation this is the commit that followed the ledger write; for a batch extract it is the load completion. Availability is always at or after event time, and the gap is the ingestion latency, which is heavy-tailed rather than constant.
+**Availability time (t_avail).** When the fact first became readable by the serving path. It includes
+ingestion, validation and any batch delay. It is the only column that can answer what a model could have
+known, and its absence is the most common cause of offline metrics that do not reproduce online.
 
-**Decision time.** The instant at which a score, an alert or a queue ordering must exist. It fixes the cut-off: a fact may enter a feature only if its availability time precedes the decision time. Decision time is a property of the workflow (a nightly batch boundary, a payment round trip), not of the data.
+**System time (also called processing time or validity time).** When the database believed a fact. It is
+distinct from availability because a fact can be available to a pipeline but not yet committed to the
+store that the model reads, and because corrections retroactively change belief without changing what was
+available.
 
-**Bitemporal fact.** A fact carrying both event time and availability time. Adding system-validity (when the row was written, when it was superseded) turns it into a four-timestamp fact. The four timestamps answer four different questions and substituting one for another is the single most common cause of an unreproducible backtest.
+**Bitemporal.** Storing both the event axis and the belief axis, which requires four timestamps per fact:
+event start, availability, system start, system end. The fourth is what permits reconstructing a past
+belief state without destroying the current one. Four columns are the schema; the semantics additionally
+require a write rule that permits at most one visible version per fact and belief instant.
 
-**Snapshot.** The set of facts visible at a decision time under a stated identity-map version and a stated relation filter. A snapshot is an addressable artifact: it has an identifier, and every feature in a training set should record which snapshot produced it. Without that identifier, "reproduce last quarter's model" is a request nobody can satisfy.
+**Decision time (t_decision).** The instant a decision is made, and therefore the cut-off for visibility:
+a fact is eligible iff t_avail <= t_decision. Substituting t_event for the filter is the defect that makes
+a backtest optimistic, and it is invisible in aggregate because the two timestamps agree on the majority of
+well-instrumented facts and diverge heavily in the tail that matters.
 
-**Late arrival and backfill.** A late arrival is a fact with an early event time and a late availability time; a backfill is a bulk load of such facts. Both are legitimate and both are poisonous to naive replay, because a naive replay keyed on event time will show the past gaining information it never had. The repair is not to discard them but to keep them with their true availability time and let the snapshot rule exclude them from earlier decisions.
+**Event-time window versus processing-time window.** A window defined on event time is stable under
+reprocessing and answers a question about the world. A window defined on processing time changes whenever
+a batch is delayed and answers a question about the pipeline. Features must state which, because the two
+produce different values for the same nominal period and both are defensible for different questions.
 
 ### 3.4 The layout layer
 
-**Adjacency list.** For each node, the list of its neighbours. Natural for pointer-chasing traversal, compact when neighbour lists are short, and pathological when one node holds a million neighbours because the list is a single contiguous allocation that must be scanned.
+**Edge table (row store).** One physical row per fact, with all columns present. Every query is expressible,
+filtering is applied before any join, and the cost is the byte width of a row times the number of rows
+scanned. It is the natural store of record.
 
-**CSR (compressed sparse row).** Two arrays: an offset array of length n+1 and a target array of length m, where the neighbours of node i occupy positions `offset[i]` to `offset[i+1]-1`. Optional parallel arrays carry weights, relation codes or timestamps. CSR is the default in-memory layout for analytics because one-hop expansion is a contiguous scan and the whole structure is two integers per position.
+**Adjacency list.** One list per node holding its neighbours. Insertion is cheap, traversal is pointer-
+chasing, and memory locality is poor because a list's elements are scattered by the allocator.
 
-**CSC (compressed sparse column).** The transpose of CSR. Needed when the query direction is reversed — in-neighbours rather than out-neighbours — and building it is the cheapest way to serve "who sent to this account" without scanning every edge.
+**CSR (compressed sparse row).** Two parallel arrays: an offset array of length n+1, where offset[i] to
+offset[i+1] bounds node i's positions, and a position array holding the neighbour identifiers (plus any
+parallel attribute arrays). One-hop expansion is a contiguous scan, which is why it is the layout of
+choice for batch analytics and for batching graph computations. Insertion in the middle renumbers
+everything after it, so a CSR is a snapshot, not a mutable table.
 
-**Triple table.** A three-column relation `(subject, predicate, object)` with optional extra columns, the natural form for RDF and for sparse, schema-flexible relationship stores. Cheap to extend with a new predicate, expensive to traverse because each hop is an indexed join rather than a pointer read.
+**CSC (compressed sparse column).** The transpose of CSR, grouping by destination. It makes reverse
+traversal cheap and is the prerequisite for any bidirectional search or any feature that needs in-edges.
 
-**Reification.** Turning a statement into a resource so that the statement itself can carry properties: `(edge:E1, hasSubject, A1)`, `(edge:E1, hasObject, M1)`, `(edge:E1, hasAmount, 250.00)`. Reification buys full expressiveness at a cost of roughly five rows per original statement; it is the right tool when edges carry provenance that must be queried, and the wrong tool when the graph is only ever traversed.
+**Triple table.** One row per statement of the form (subject, predicate, object). Every fact is a row,
+schema changes need no migration, and every aggregate becomes a join. Reification, the expression of an
+edge as a resource with its own properties, is natural here and costs extra rows.
 
-**Projection (2-section).** Replacing a set of facts by a node-level derived table or by a co-occurrence graph over one node type: all accounts that ever used any of the devices that A1 used. Projection is where the multiplicity of the fact layer is destroyed and where pair counts explode quadratically in the size of the shared node's neighbourhood.
+**Property graph.** Nodes and edges as first-class objects carrying key–value maps, traversed by pointer or
+index. Natural for interactive exploration and per-edge annotation; awkward for bulk aggregation because
+the engine's unit of work is a traversal rather than a scan.
 
-**Hyperedge.** A fact relating more than two identifiers, such as a joint account, a three-party settlement, or a group booking. Most storage layouts are binary, so a hyperedge is decomposed into a node plus binary edges (the star expansion) or replaced by a clique over its participants (the 2-section). Both are lossy in opposite directions: the star keeps the incident structure but adds artificial hubs, and the clique keeps pairwise adjacency but invents pairwise relationships that were never asserted.
+**Hypergraph.** A generalisation in which an edge may join any number of nodes, which is what a group event
+actually is: a joint account with four holders, a shared device used by three accounts, a meeting with
+seven attendees. Its two binary encodings are the star expansion (a node per hyperedge) and the 2-section
+(a clique per hyperedge), and they lose different things.
 
-**Degree (two meanings).** *Occurrence degree* counts edges incident to a node; *distinct-neighbour degree* counts distinct adjacent nodes. For a simple graph they coincide. For a multigraph they diverge, and every aggregate must state which it uses, because averaging an occurrence count over a node set whose multiplicity distribution is skewed measures behaviour intensity rather than connectivity.
+**Incidence structure.** The bipartite graph of nodes and facts. It is the representation that loses
+nothing, because every fact remains an object; the node-only graph is a projection of it.
+
+**Projection.** Any derived structure whose rows are not facts. Node-level features, pair tables and motif
+counts are projections. A projection is the only place multiplicity becomes a statistic, and therefore the
+place where the definition of the statistic must be written down.
 
 ### 3.5 The consumption layer
 
-The four definitions below are the ones a feature owner signs, and they are the ones most often left implicit. Each has a testable consequence.
+**Feature contract.** A written statement of numerator, denominator, population filter, time window, null
+policy, unit and refresh cadence for one column. It is a contract because a downstream rule may be written
+against it; changing the denominator without a version bump is a breaking change that no type system
+catches. The toy graph supplies an instance: numerator is the sum of transfer values over eligible facts,
+denominator is the count of those facts, null policy excludes entities with none rather than emitting
+zero.
 
-**Feature contract.** A written statement of numerator, denominator, population filter, time window, null policy, unit and refresh cadence for one feature column. It is a contract because a consumer may compute a business rule against it; changing the denominator without a version bump is a breaking change that no type system catches. The toy graph supplies an instance: numerator = sum of `value_usd` over eligible `TRANSFER` facts; denominator = count of those facts; null policy = exclude accounts with none, never emit 0.00.
+**Snapshot identifier.** An opaque handle naming a frozen fact set, an identity version and a relation
+filter. Its testable consequence is byte-identical features for two runs with the same handle. A date
+string fails that test whenever a late batch lands, because the date now resolves to different bytes.
 
-**Snapshot identifier.** An opaque handle that names a frozen set of facts, an identity-map version and a relation filter. Features and labels are joined on it. The testable consequence: two people running the same training job with the same snapshot identifier must produce byte-identical features, or the snapshot is not frozen. A snapshot identified only by a date string fails this test whenever a late batch lands, because the date now resolves to different bytes.
+**Scope.** The declared subset of facts a computation may read, expressed as tenant, purpose or
+jurisdiction. Scope is a legal control before it is a modelling one: a shared graph across tenants can
+disclose that one tenant's customer transacts with another's. Its testable consequence is that every
+structure carries a scope key and a query without a scope predicate is rejected at the interface rather
+than filtered later.
 
-**Scope (tenant, purpose, jurisdiction).** The declared subset of facts a computation may read. Scope is not a nicety: a shared graph across tenants can disclose that one tenant's customer transacts with another's, which is a legal problem before it is a modelling problem. The testable consequence is that every structure carries a scope key, and a query without a scope predicate is rejected at the interface rather than filtered later.
+**Retention and deletion.** The rule that decides when a fact stops being visible and how that propagates
+into every derived structure. Deletion is the hard case because a degree or a centrality encodes a fact
+without storing it, so deleting the row leaves a residue that no row-level audit can find. The remedy is
+lineage from published aggregates back to source fact identifiers.
 
-**Retention and deletion.** The rule that decides when a fact stops being visible, and how a deletion propagates into every derived structure. Deletion is the hard case, because a derived degree or centrality encodes a fact without storing it; a deletion that removes the row but not the aggregate leaves a residue that no row-level audit can find. The remedy is to record the source fact identifiers in the lineage of any published aggregate, so a deletion can invalidate the aggregates that touched it.
+**Cardinality constraint.** A declared bound on how many edges a node may hold, per relation type, used to
+catch instrumentation collapse. A device token with 50,000 accounts violates a sensible bound, which turns
+an invisible modelling problem into a rejected load. The constraint must be per relation type, because a
+merchant legitimately has many counterparties while a person does not legitimately hold thousands of
+accounts.
 
-**Cardinality constraint.** A declared bound on how many edges a node may hold, per relation type, used to catch instrumentation collapse. A device token with 50,000 accounts violates a sensible bound, so the constraint converts an invisible modelling problem into a rejected load. The constraint must be per relation type, because a merchant legitimately has many counterparties while a person does not legitimately hold thousands of accounts.
+**Serving replica versus store of record.** Two obligations on two copies of the same facts. The store of
+record is append-only, complete, bitemporal and slow. The replica is derived, filtered, fast and
+disposable. Confusing them produces the two classic failures: a replica promoted to truth, which loses
+history, and a store of record used for scoring, which loses latency.
 
-**Serving replica versus store of record.** Two different obligations on two different copies of the same facts. The store of record is append-only, complete, bitemporal and slow. The replica is derived, filtered, fast and disposable. Confusing them produces the two classic failures: a replica promoted to truth (history is lost) and a store of record used for scoring (latency is lost).
+### 3.6 Layout vocabulary that is routinely conflated
 
-### 3.6 Layout vocabulary that is often conflated
+**Index versus materialised view.** An index is a redundant structure maintained by the engine on writes; a
+materialised view is a redundant structure refreshed on a schedule. Both accelerate reads and both must be
+invalidated on deletion. The distinction matters because an index is usually transactional and a
+materialised view usually is not, so the latter can be stale in a way a latency budget must tolerate
+explicitly rather than discover.
 
-**Property graph versus triple store.** A property graph attaches key–value pairs to nodes and edges and is traversed by pointers; a triple store makes every statement a row and is queried by pattern. They can hold identical facts, and the choice is a query-language and storage-engine decision rather than a semantic one. The semantic difference appears only when a property itself needs properties, at which point the property graph either nests a map or reifies, and the triple store reifies naturally.
+**Vertex-centric versus edge-centric storage.** Vertex-centric stores group facts by source so one-hop
+expansion is local; edge-centric stores group them by relation or by time so filtered scans are local. A
+design needing both must duplicate or accept one slow path. There is no layout in which a per-node
+expansion and a per-relation time range are simultaneously contiguous, and claiming otherwise is a claim
+about caching rather than about structure.
 
-**Index versus materialised view.** An index is a redundant structure maintained by the engine on writes; a materialised view is a redundant structure refreshed on a schedule. Both accelerate reads and both must be invalidated on deletion. The distinction matters because an index is usually transactional and a materialised view usually is not, so the latter can be stale in a way that a latency budget must tolerate explicitly.
+**Sparse versus dense.** Sparse means storage proportional to the number of facts; dense means storage
+proportional to the square of the node count. Real relationship graphs have facts linear in nodes, so dense
+storage wastes a factor of n and is justified only for spectral work at small n or for dense subproblems
+such as a co-occurrence matrix over categories.
 
-**Vertex-centric versus edge-centric storage.** Vertex-centric stores group edges by source so that one-hop expansion is local; edge-centric stores group edges by relation or by time so that filtered scans are local. A design that needs both must either duplicate or accept one slow path; there is no layout in which both a per-node expansion and a per-relation time range scan are simultaneously contiguous.
+**Static versus dynamic.** A static graph is built once and read many times, which is what CSR assumes. A
+dynamic graph accepts insertions, and an insertion into the middle of an offset array is O(n). Dynamic
+graphs therefore use adjacency lists with per-node capacity, or a small mutable delta merged periodically.
+Choosing CSR for a graph with intraday inserts is the most common layout-level performance defect in this
+area, and it manifests as a rebuild that grows without bound.
 
-**Static versus dynamic graph.** A static graph is built once and read many times, so CSR is ideal. A dynamic graph accepts insertions, and every insertion into the middle of a CSR offset array is O(n). Dynamic graphs therefore use adjacency lists with per-node capacity, or a small mutable delta plus periodic merge. Choosing CSR for a graph with intraday inserts is the most common layout-level performance defect in this area, and it manifests as a rebuild that grows without bound.
+**Normalised versus denormalised attribute storage.** Normalised means relation attributes live in their
+own table and are joined; denormalised means each position carries its own copies. Denormalisation makes
+one-hop expansion cheap and makes a correction a rewrite of every copy, which is a correctness risk that
+must be accepted explicitly rather than inherited.
 
-**Takeaway:** The vocabulary that prevents most graph defects is small: grain, direction, two timestamps, two degree definitions, and the name of the loss each layout introduces.
+### 3.7 Cardinality, units and what a count means
+
+Every aggregate over a graph must state whether it counts occurrences, entities or pairs, because those
+three differ by the multiplicity surplus. On the toy graph of Section 5, occurrence degree sums to 18,
+distinct-neighbour degree sums to 12, and distinct pairs number 6. The three numbers answer three different
+questions: how much activity happened, how many entities were reached, and how many relationships exist.
+Reporting one while a reader assumes another is the most common unit error in graph features.
+
+The second unit question is whether a value is per entity or per entity per period. A sum of transfers
+over a 90-day window and a mean of daily sums over the same window differ by a factor of 90 in magnitude
+and are both called "average transfer volume" in practice. The fix is to write the denominator into the
+column name, which is cheap and prevents the error permanently.
+
+The third is whether a rate's denominator is the eligible population or the observed population. An
+entity with no eligible facts has no rate, and emitting zero for it asserts a rate of zero rather than an
+absence. The two populations differ by exactly the entities that are newest or most dormant, which is
+usually the subpopulation the analysis cares about most.
+
+### 3.8 Loss statements as first-class design artifacts
+
+A loss statement is one sentence of the form "this structure can no longer answer whether X", written
+next to the structure's definition. It is the single highest-value artifact in this sheet, because every
+layout in Section 7 loses something and the only question is whether the loss matters.
+
+Three loss statements for the common structures read as follows. A CSR of neighbour identifiers without
+parallel arrays cannot answer which relation type a position carries. A 2-section projection cannot answer
+which group two co-members shared. A snapshot filtered to a decision time cannot answer what a later
+revision changed, because revisions after the cut-off are excluded by construction.
+
+The test for whether a loss statement is adequate is that it names a question the structure cannot answer
+rather than a column it does not have. "It has no relation column" is a schema observation, and schema
+observations invite the response that the column can be added. "It cannot distinguish a transfer from a
+device sighting, so any aggregate over it mixes units" is a loss statement, and it forces the design
+question that the schema observation defers.
+
+**Takeaway:** The vocabulary that prevents most graph defects is small: grain, direction, two timestamps,
+two degree definitions, and the loss statement attached to each layout.
 
 ## 4. Core Formulas with Full Derivation
 
-### 4.1 Base case: incidence identity and per-edge storage
+Each result uses the same anatomy: the formula, its symbols with units, the constraint that makes it
+valid, a numerical example with intermediate values shown, and an interpretation that names the decision
+the number supports. Every block ends with an explicit validity condition.
+
+### 4.1 Base case: the incidence identity and per-edge storage
 
 ```text
 FORMULA
   sum over nodes of occurrence degree  =  2 * m
-  where m is the number of undirected edge occurrences, counted with multiplicity.
+  where m is the number of undirected edge occurrences counted with multiplicity.
 
 WHERE
-  d_v   = occurrence degree of node v, dimensionless count, integer >= 0
-  m     = number of edge occurrences, integer >= 0
-  The identity holds for any multigraph with no self-loops.
+  d_v = occurrence degree of node v, dimensionless count, integer >= 0
+  m   = number of edge occurrences in the snapshot, integer >= 0
+  the identity holds per snapshot and per relation filter, not across them
 
 CONSTRAINT
-  Each undirected edge occurrence contributes exactly one to the degree of each of
-  its two endpoints. Summing degrees therefore counts every occurrence twice. The
-  identity holds per snapshot, so it is a cheap integrity assertion: recompute the
-  degree column and compare against 2m for the same as-of filter.
-  With self-loops the count per loop is 2 rather than 1, so the identity becomes
-  sum d_v = 2m_external + 2*m_loop and a naive check will report a false alarm.
+  Each undirected occurrence contributes exactly one to the degree of each endpoint,
+  so summing degrees counts every occurrence twice. Self-loops are the exception:
+  a loop contributes 2 to its node's degree in the standard convention, so the
+  identity still holds, but a loader that counts a loop once produces a sum of
+  2m - L where L is the loop count.
 
-NUMERICAL EXAMPLE (ILLUSTRATIVE toy graph of Section 5, m = 9)
-  degrees: A1=5, A2=4, M1=5, D1=2, D2=1, P1=1
-  sum   = 5 + 4 + 5 + 2 + 1 + 1 = 18
-  2 * m = 2 * 9 = 18
-  match, so no edge is double-counted or orphaned in the fact table.
+NUMERICAL EXAMPLE (toy graph, 9 occurrences over 6 nodes)
+  E1 A1->M1   E2 A2->M1   E3 A1->M1   E4 A2->M1   E5 A1->M1
+  E6 A1--D1   E7 A2--D1   E8 A1--D2   E9 A2--D3
+  degrees: A1 = 5 (E1,E3,E5,E6,E8)
+           A2 = 4 (E2,E4,E7,E9)
+           M1 = 5 (E1..E5)
+           D1 = 2 (E6,E7)
+           D2 = 1 (E8)
+           D3 = 1 (E9)
+  sum = 5 + 4 + 5 + 2 + 1 + 1 = 18 = 2 * 9                      identity holds
+  after excluding E9 (as-of snapshot): m = 8, sum = 16 = 2 * 8    identity holds
 
 INTERPRETATION
-  The identity converts a modelling question into an assertion. If the degree column
-  disagrees with the fact count, the disagreement is a bug in the projection or in
-  the as-of filter, not a property of the network, and it should block publication
-  of the feature table rather than be explained away.
+  The identity is an exact assertion, so any mismatch is mechanical rather than
+  statistical: a filter applied to one side, a deduplication applied to the other,
+  a loop counted once, or a null degree from an outer join. It costs one pass over
+  the edge column and should run on every snapshot build.
+
+VALIDITY
+  Holds for any finite multigraph, with or without loops, provided loops are counted
+  with degree contribution 2 and the same filter is applied to both sides.
 ```
 
-The same identity is the basis of the storage estimate, because per-edge bytes can be attributed exactly once the layout is named. A row-store table with seven columns costs a row header plus the payload; a CSR array costs offsets amortised over edges plus fixed-width arrays per edge. Neither number is a benchmark; both are computable before any code exists, and computing them is what stops a design that needs 176 GB from being discovered in production.
+The identity's value is that it localises defects without knowing anything about the data. A team that
+finds a sum of 17 against m = 9 knows three things immediately: the fact is mechanical, the defect is
+either in the degree column or in the edge count, and the difference is exactly one. What it does not say
+is which — but recomputing degrees from the fact table grouped by node and diffing the two columns answers
+that in one query, and the differing nodes are the localisation.
+
+The storage formula below is the second-most-used piece of arithmetic in this area, and its terms are worth
+reading one at a time because each is a separate decision.
 
 ```text
 FORMULA
-  B_CSR(m, n) = 4*(n+1) + m*(4 + w + 1 + t)
-  B_row(m)    = m * r
+  B_csr(n, m) = 4 * (n + 1) + m * w_pos
+  w_pos       = 4 (int32 neighbour) + 8 (float64 weight) + 1 (uint8 relation)
+                + optional parallel arrays
 
 WHERE
-  n = node count            (integer, >= 1)
-  m = edge occurrences      (integer, >= 0)
-  w = bytes per value       (8 for float64, 0 if no weight)
-  t = bytes per timestamp   (8 if a timestamp is stored per edge, 0 if not)
-  1 = bytes per relation code (uint8 suffices for <= 256 relation types)
-  r = bytes per stored row  (ILLUSTRATIVE 176 for a seven-column heap row plus
-                             two secondary indexes, page overhead included)
+  n     = number of nodes in the snapshot, count
+  m     = number of positions = edge occurrences (2m for an undirected fact
+          materialised in both directions), count
+  w_pos = bytes per position, B
+  B_csr = total bytes, B
 
 CONSTRAINT
-  Assumes 32-bit node identifiers: valid only while n < 2^31 - 1. Above that the
-  offset and target arrays must widen to 8 bytes and the estimate changes by
-  roughly (8-4)*(n+1) + (8-4)*m bytes. Assumes the arrays are dense and exactly
-  sized; a growable vector with 1.5x over-allocation costs up to 50% more.
+  int32 neighbour identifiers limit n to 2^31 - 1 = 2,147,483,647 nodes, which is
+  a real ceiling and not a theoretical one: at n = 1e8 the identifier space is used
+  to 4.7%, and an expected collision count of n^2 / (2 * 2^32) = 1.16e6 makes int32
+  unusable without a checked allocator. Adding a per-edge timestamp adds 8 B to
+  w_pos, which is a 38% increase on a 21 B position and is the most commonly
+  underestimated term.
 
-NUMERICAL EXAMPLE (toy graph: n = 6, m = 9, w = 8, t = 8)
-  offsets      = 4 * 7              =  28 B
-  targets      = 9 * 4              =  36 B
-  weights      = 9 * 8              =  72 B
-  rel codes    = 9 * 1              =   9 B
-  timestamps   = 9 * 8              =  72 B
-  total        = 28 + 36 + 72 + 9 + 72 = 217 B
-  per edge     = 217 / 9            = 24.11 B
-  row store    = 9 * 176            = 1584 B
-  ratio        = 1584 / 217         = 7.30x
-  without the per-edge timestamp: 145 B total, 16.11 B per edge, ratio 10.92x
+NUMERICAL EXAMPLE (three layouts over the same toy fact set)
+  layout L1  neighbour + relation          5 B/position
+             offsets 4*7 = 28 B; positions 9*5 = 45 B;  total 73 B  (8.11 B/edge)
+  layout L2  + weight + event time        21 B/position
+             offsets 28 B; positions 9*21 = 189 B;      total 217 B (24.11 B/edge)
+  layout L3  + availability time          29 B/position
+             offsets 28 B; positions 9*29 = 261 B;      total 289 B (32.11 B/edge)
+  layout L4  + two system-time stamps     45 B/position
+             offsets 28 B; positions 9*45 = 405 B;      total 433 B (48.11 B/edge)
+  row store  176 B per row (derived in 4.3): 9 * 176 = 1,584 B (176 B/edge)
+  ratios to the row store: 1584/73 = 21.7x, 1584/217 = 7.30x,
+                           1584/289 = 5.48x, 1584/433 = 3.66x
 
 INTERPRETATION
-  At one billion edge occurrences the same arithmetic gives 24.1 GB for CSR and
-  176 GB for the row store. The ratio is not a constant of nature: it narrows as
-  the value payload grows, because a row can hold many columns for one header,
-  while CSR pays per parallel array. The comparison is therefore valid only for
-  the stated column set, and a design review must restate the column set when it
-  restates the estimate.
+  The ratio between layout families is not a constant; it is set by how many columns
+  the compressed layout must carry. A team that quotes "8x smaller than a row store"
+  is quoting L2 with three attribute columns, and the same team at L4 is 3.7x. The
+  honest statement is the formula plus the column set, never the ratio alone.
+
+VALIDITY
+  Assumes fixed-width columns and no compression, no page overhead and no index on
+  the array. A columnar engine with delta encoding on sorted timestamps can beat these
+  figures substantially, which is why the formula is for comparing layouts to each
+  other rather than for predicting a deployment's footprint.
 ```
 
-### 4.2 General case: multigraph degree, distinct neighbours and projection size
+The 21 B position deserves comment because it is the figure most often quoted and the one most often
+misapplied. It contains no time. Adding the availability timestamp takes it to 29 B, a 38% increase, and
+adding the two system-time stamps takes it to 45 B, which is 114% above the base. A design review that
+approves "CSR for the serving layer" without stating which of the four column sets is meant has approved
+four designs whose storage differs by a factor of 2.1 and whose query capabilities differ by the ability
+to answer what was believed at a past instant.
+
+### 4.2 General case: the degree pair, multiplicity surplus and projection size
+
+The second identity is the one that separates activity from reach, and it is where most aggregate
+ambiguity originates.
 
 ```text
 FORMULA
-  d_occ(v)   = number of incident edge occurrences
-  d_dist(v)  = |{ u : an edge occurrence exists between v and u }|
-  d_dist(v) <= d_occ(v),  with equality iff no pair is repeated
+  d_occ(v)   = number of occurrences incident to v (with multiplicity)
+  d_dist(v)  = number of distinct neighbours of v
+  d_occ(v)   >= d_dist(v), with equality iff no pair repeats at v
+  surplus(v) = d_occ(v) - d_dist(v) = sum over neighbours u of (c(v,u) - 1)
+  where c(v,u) is the number of occurrences between v and u
 
 WHERE
-  d_occ, d_dist integers >= 0, per node per snapshot.
-  The gap g(v) = d_occ(v) - d_dist(v) is the number of repeated pair occurrences
-  incident to v, i.e. the multiplicity surplus.
+  all three quantities are dimensionless counts per node, per snapshot
+  c(v,u) is an integer >= 1 for adjacent pairs
 
 CONSTRAINT
-  The inequality is the definition, not an empirical finding, so it cannot be
-  violated by data; it can only be destroyed by a layout. A layout that stores one
-  row per distinct pair has already collapsed d_occ into presence and cannot
-  report d_occ at all. Any feature that divides by degree must therefore declare
-  which degree it uses, and the two produce different normalisations on identical
-  data.
+  Requires that the snapshot be simple in the sense of direction, i.e. that a
+  symmetric relation be stored once and counted once per endpoint. Storing both
+  directions doubles d_occ without changing d_dist, which doubles the surplus and
+  makes the two definitions incomparable across layouts.
 
 NUMERICAL EXAMPLE (toy graph)
-  A1: d_occ = 5 (E1,E2,E3 to M1; E6 to D1; E9 from P1)
-      d_dist = 3 (M1, D1, P1)          g = 2
-  A2: d_occ = 4 (E4,E5 to M1; E7 to D1; E8 to D2)
-      d_dist = 3 (M1, D1, D2)          g = 1
-  M1: d_occ = 5, d_dist = 2            g = 3
-  total d_occ = 18, total d_dist = 12, total surplus = 6
-  cross-check: repeated pairs are A1-M1 (3 occurrences, surplus 2) and
-  A2-M1 (2 occurrences, surplus 1); each surplus is counted at both endpoints,
-  so 2*(2+1) = 6, matching the degree surplus.
+  A1: d_occ = 5, neighbours {M1, D1, D2}, d_dist = 3, surplus = 2
+      c(A1,M1) = 3 so 3-1 = 2; c(A1,D1) = 1 and c(A1,D2) = 1 contribute 0
+  A2: d_occ = 4, neighbours {M1, D1, D3}, d_dist = 3, surplus = 1
+  M1: d_occ = 5, neighbours {A1, A2},       d_dist = 2, surplus = 3
+  D1: d_occ = 2, neighbours {A1, A2},       d_dist = 2, surplus = 0
+  totals: sum d_occ = 18, sum d_dist = 12, total surplus = 6
+  distinct pairs = 6, and sum d_dist = 12 = 2 * 6                identity holds
 
 INTERPRETATION
-  On this graph a weighted mean over neighbours and an unweighted mean over
-  neighbours differ for every node that touches M1. If the feature is "mean
-  neighbour risk" and M1 is a merchant with many transfers, the weighted variant
-  is dominated by transfer count while the unweighted variant is dominated by
-  merchant identity. Both are defensible; only one is documented, and the
-  undocumented switch is undetectable downstream because both produce a number in
-  the same range.
+  M1 has the largest surplus (3) with the smallest reach (2), which is the signature
+  of a collection point: many facts, few counterparties. Normalising a propagation
+  feature by d_occ lets one busy counterparty absorb mass repeatedly; normalising by
+  d_dist divides mass among neighbours. The choice is a modelling decision, and the
+  surplus is the size of the error introduced by getting it wrong.
+
+VALIDITY
+  d_occ >= d_dist always holds for a snapshot without double-counted directions.
+  Equality holds exactly on snapshots where no pair repeats, which is why a test
+  fixture built from distinct pairs never exercises the distinction.
 ```
 
-Projection is the second place where the two degrees diverge, and it is where cost explodes. Projecting a bipartite structure onto one side manufactures a clique per shared node, so the projected edge count is quadratic in neighbourhood size and independent of how many pairs are genuinely interesting.
+The projection formula is the third identity and the one with the widest range of practical consequences,
+because its output can exceed its input without bound.
 
 ```text
 FORMULA
-  pairs produced by projecting a shared node of degree k   = k*(k-1)/2
-  total projected pairs over a node set S                  = sum_{s in S} k_s*(k_s-1)/2
+  pairs(S) = C(k_S, 2) = k_S * (k_S - 1) / 2      per shared node S of degree k_S
+  P        = sum over S of C(k_S, 2)              total projected pairs, before dedup
+  marginal = C(k+1, 2) - C(k, 2) = k              pairs added by one new member
 
 WHERE
-  k_s = number of neighbours of shared node s (integer >= 0)
-  S   = shared nodes used for the projection (devices, addresses, merchants)
-  Output counts unordered pairs; use k*(k-1) if ordered pairs are materialised.
+  S  = a node of the bipartite side being projected away (a device, a merchant,
+       a group), k_S = its degree in the incidence structure
+  P  = number of unordered pairs emitted, count, before deduplication
+  the marginal identity is exact for adding one member to a clique of size k
 
 CONSTRAINT
-  Assumes the projection is a full clique. Any pruning rule (only pairs sharing at
-  least two attributes, only pairs above a similarity threshold) changes the count
-  and must be stated, because a pruned projection is no longer a function of the
-  graph alone. Assumes pairs are materialised rather than computed on demand; an
-  on-demand join has the same output cardinality and a different cost profile.
+  The full 2-section emits every pair inside every group, so P is quadratic in the
+  largest group and can exceed the incidence edge count by an unbounded factor. Any
+  pruning rule (minimum group size, hub exclusion, sampling) destroys the closed
+  form: the pruned count depends on the data, so it must be measured rather than
+  derived, and a report that quotes the closed form for a pruned projection is wrong
+  in the direction of optimism.
 
-NUMERICAL EXAMPLE
-  toy graph: M1 has k = 2 -> 1 pair; D1 has k = 2 -> 1 pair; total 2 pairs.
-  a hub device with k = 50,000 -> 50,000*49,999/2 = 1,249,975,000 pairs.
-  at 100 ns per pair emitted (ILLUSTRATIVE constant), 1.25e9 pairs = 125 s of
-  pure emission for one hub, before any downstream aggregation.
-  k = 100,000 gives 4,999,950,000 pairs, a 4x increase for a 2x degree increase.
+NUMERICAL EXAMPLE (m = 1e9 incidence edges; one hub of k = 50,000 and 1e5 groups of k = 100)
+  hub          C(50,000, 2) = 50,000 * 49,999 / 2      = 1,249,975,000
+  other groups 1e5 * C(100, 2) = 1e5 * 4,950           =   495,000,000
+  total P                                              = 1,744,975,000
+  P / m                                                = 1.745
+  marginal for the hub: one more member adds k = 50,000 pairs, since
+  (C(50,001,2) - C(50,000,2) = 1,250,025,000 - 1,249,975,000 = 50,000)
+  removing one member removes k - 1 = 49,999 pairs
+  (C(50,000,2) - C(49,999,2) = 1,249,975,000 - 1,249,925,001 = 49,999)
 
 INTERPRETATION
-  Quadratic growth in hub degree is the mechanical reason supernodes must be
-  handled by a policy, not by a bigger machine. The cost of a projection is set by
-  the largest k in S, not by the mean, which is why a mean-based capacity estimate
-  for a projection pipeline is systematically optimistic.
+  The projection is 1.745x the edge count here, and 71.6% of it comes from one hub.
+  That concentration means the projection's cost is a property of a single node, so
+  capacity planning must use the maximum degree, not the mean. The marginal identity
+  is the useful diagnostic: one new member of the hub costs 50,000 pairs, so a
+  projection whose pair count jumps by an exact multiple of a degree is reporting a
+  hub membership change rather than a general growth.
+
+VALIDITY
+  Exact for a full 2-section over an undirected incidence structure without dedup.
+  Deduplication across groups reduces P by the number of pairs that co-occur in more
+  than one group, which is data-dependent and typically small for sparse graphs.
 ```
+
+The marginal identity corrects a mistake that appears in otherwise careful analyses: the difference
+C(k,2) − C(k−1,2) is k − 1, not 2k − 1, and the difference C(k+1,2) − C(k,2) is k. So a projection that
+grows by 49 pairs from an unknown cause indicates a member added to a group of degree 49, and a
+projection that shrinks by 24 indicates a member removed from a group of degree 25. Getting this
+arithmetic backwards by a factor of two sends an investigation to the wrong node size.
 
 ### 4.3 Variants
 
-**Variant A — reified facts.** Expressing each edge as a node with property statements multiplies row count by the number of properties carried plus two structural statements.
+**Variant A — reification of a fact as a resource.** Expressing each fact as an object with property
+statements multiplies the row count by the number of properties plus two structural statements.
 
 ```text
 FORMULA
-  rows_reified(edge) = 2 + p
-  where p = number of properties stored on the edge (value, currency, timestamps,
-  provenance reference). Structural statements are hasSubject and hasObject.
+  rows(fact) = 2 + p
+  bytes(fact) = (2 + p) * w_stmt
+  multiplier  = (2 + p) * w_stmt / w_row
+
+WHERE
+  p       = number of properties stored on the fact (value, currency, event time,
+            availability time, provenance), count
+  w_stmt  = bytes per statement row, B
+  w_row   = bytes per flattened fact row, B
 
 CONSTRAINT
-  Each statement is a row; a triple store may pack several statements per row, in
-  which case the row multiplier is lower but the logical count is unchanged.
-  Cost comparison is only valid between layouts storing the same property set.
+  Compares logical row counts. A triple store may pack several statements into one
+  physical row, which lowers the physical multiplier while leaving the logical count
+  unchanged; comparing a packed store's bytes to a flattened table's bytes therefore
+  answers a different question from comparing their row counts.
 
 NUMERICAL EXAMPLE (p = 3: value, event time, availability time)
-  rows per edge = 5; at 56 B per triple row (ILLUSTRATIVE), 280 B per edge
-  versus 176 B for the flattened row: ratio 280/176 = 1.59x
-  for m = 9: 2520 B versus 1584 B.
+  rows   = 5 per fact
+  bytes  = 5 * 56 B = 280 B per fact, against 176 B flattened
+  ratio  = 280 / 176 = 1.59x
+  toy    = 9 * 280 = 2,520 B against 9 * 176 = 1,584 B
 
 INTERPRETATION
-  Reification is priced at roughly 1.6x on this property set, and that price buys
-  the ability to attach a new property to an existing edge without migrating the
-  table. Buy it when edges are audited individually; skip it when edges are only
-  ever aggregated, because the aggregate cannot see the difference and the
-  traversal pays for the extra hops.
+  Reification is priced at roughly 1.6x for a three-property fact. The price buys the
+  ability to attach a property to an existing fact without migrating a schema, and it
+  buys per-fact provenance queries. Skip it when facts are only ever aggregated: the
+  aggregate cannot see the difference and the traversal pays for the extra hops.
+
+VALIDITY
+  Assumes one statement per row and a 56 B statement width including subject,
+  predicate, object and overhead. A store with dictionary encoding can reduce w_stmt
+  by more than half on repeated predicates, which moves the multiplier below 1.
 ```
 
-**Variant B — bitemporal widening.** Adding system-validity timestamps to event time and availability time gives four temporal columns.
+**Variant B — bitemporal widening.** Adding the belief axis to the event axis.
 
 ```text
 FORMULA
-  B_bitemporal(m) = B_layout(m) + m * 4 * b_ts
-  where b_ts = 8 bytes per int64 timestamp and 4 timestamps are stored
-  (event, availability, row-insert, row-supersede; the last is nullable but
-  still occupies its slot in a fixed-width row).
+  w_pos(bitemporal) = w_pos(base) + 4 * 8 = w_pos(base) + 32 B
+  B_bitemporal(m)   = 4 * (n + 1) + m * (w_pos(base) + 32)
+
+WHERE
+  four int64 stamps are event start, availability, system start and system end;
+  system end is nullable but occupies its fixed-width slot in a row store
+  w_pos(base) = 13 B for neighbour, weight and relation in the toy layout
 
 CONSTRAINT
-  Assumes fixed-width columns. A columnar store with dictionary or delta encoding
-  can compress monotone timestamps heavily, so the 32 B per edge is an upper bound
-  for a row-oriented layout and an overestimate for a sorted columnar one.
+  The storage cost is arithmetic; the semantic cost is not. Four columns do not
+  provide bitemporal semantics unless the write path enforces at most one visible
+  version per (fact, system time), and a bulk load that bypasses the write path
+  breaks the invariant while the schema still looks correct.
 
-NUMERICAL EXAMPLE (toy graph, m = 9, layout = CSR without per-edge timestamps)
-  145 B + 9*32 = 145 + 288 = 433 B total, 48.11 B per edge.
-  at 1e9 edges: 48.1 GB versus 16.1 GB for a single-timestamp layout, 3.0x.
+NUMERICAL EXAMPLE
+  toy: 4*7 + 9*45 = 28 + 405               = 433 B, 48.11 B per edge
+       against 4*7 + 9*29  = 289 B, 32.11 B per edge   -> 1.50x on the toy
+  scale: n = 1e8, m = 1e9, base 21 B
+       4*(1e8+1) + 1e9*21  = 0.4 GB + 21.0 GB  = 21.4 GB
+       4*(1e8+1) + 1e9*45  = 0.4 GB + 45.0 GB  = 45.4 GB
+       ratio 2.12x; a 30-snapshot retention at 3 replicas:
+       21.4 * 30 = 642 GB, * 3 = 1.93 TB versus 4.09 TB
 
 INTERPRETATION
-  The four-timestamp fact is the only form in which "what did we believe on
-  Tuesday about what happened on Monday" is answerable. Paying 3x storage for it
-  is usually correct for the base fact table and usually wrong for the serving
-  structure, which is why the recommended pattern is bitemporal base, monotemporal
-  snapshot, and no timestamps at all in the CSR used for scoring.
+  The 2.12x figure is the price of answering "what did we believe on Tuesday about
+  what happened on Monday". That price is usually correct for the base fact table and
+  wrong for the serving structure, which is why the recommended shape is bitemporal
+  base, monotemporal snapshot, and no timestamps at all in the array used for scoring.
+
+VALIDITY
+  Assumes fixed-width columns. A sorted columnar store with delta encoding compresses
+  monotone timestamps heavily, so 32 B per fact is an upper bound for a row-oriented
+  layout and an overestimate for a well-ordered columnar one.
 ```
 
-**Variant C — directed storage of a symmetric relation.** A symmetric relation stored once must be traversed in both directions; stored twice it occupies two rows and can diverge.
+**Variant C — partitioning a snapshot across hosts.** The cost of distribution is measured in copied
+positions and boundary fetches, and both are computable before deployment.
 
 ```text
 FORMULA
-  storage factor = 1 row per fact (single-direction storage, bidirectional query)
-                 = 2 rows per fact (both directions materialised, one query path)
+  vertex partition, p parts, hash on one endpoint:
+    E[positions stored] = m * (2 - 1/p)          both directions materialised
+    E[positions stored] = m * (1 + 1/p)          one direction, boundary copies added
+    boundary fetches    = m * (1 - 1/p)
+  edge-cut variant, node of degree d replicated across parts:
+    E[copies of a node] = p * (1 - (1 - 1/p)^d)
+
+WHERE
+  p = number of partitions, integer >= 2
+  m = edge occurrences, count
+  d = node degree, count
+  the expectations assume a uniform hash on the partition key, independent of degree
 
 CONSTRAINT
-  Materialising both directions is safe only if the write path is atomic across
-  the two rows. A partial write leaves one direction present and the other absent,
-  producing an asymmetric graph that fails the symmetry assertion
-  A[i][j] == A[j][i] for exactly the interrupted writes.
+  The vertex formula is exact in expectation for a random hash and a graph whose
+  degrees are independent of the partition key. Real partition keys are correlated
+  with degree — the largest tenants are the ones with the most edges — so the
+  maximum partition is larger than the mean by a factor that grows with skew, and a
+  p99 latency budget must be sized against the maximum rather than the expectation.
 
-NUMERICAL EXAMPLE (toy graph)
-  symmetric facts: USED_DEVICE (E6, E7, E8) = 3, co-occurrence none.
-  directed facts: TRANSFER (E1..E5) = 5, OWNS_ACCOUNT (E9) = 1.
-  single-direction storage: 9 rows, every undirected query needs an OR on both
-  endpoints; double-direction storage: 9 + 3 = 12 rows, a 33% growth that buys a
-  single-direction query path for the symmetric relation only.
+NUMERICAL EXAMPLE (p = 16, m = 1e9, 21 B per position)
+  one direction with boundary copies: 1e9 * (1 + 1/16) = 1.0625e9 positions
+                                      = 22.31 GB stored, 1.0625x the single copy
+  both directions materialised:       1e9 * (2 - 1/16) = 1.9375e9 positions
+                                      = 40.69 GB stored, 1.9375x
+  per-partition share (both dirs):    40.69 / 16     = 2.54 GB
+  boundary fetches:                   1e9 * (15/16)  = 9.375e8 per full scan
+  edge-cut copies at d = 100:         16 * (1 - (15/16)^100) = 16 * 0.9984 = 15.97
+                                      i.e. a degree-100 node is on essentially every host
 
 INTERPRETATION
-  The choice is a query-shape bet with a correctness clause attached: doubling is
-  fine, partial doubling is not. If the write path cannot be atomic, store once
-  and pay the OR in the query, because a silently asymmetric graph corrupts every
-  symmetric aggregate and is invisible in row counts.
+  A vertex partition costs 1.94x storage and 0.94 boundary fetches per edge, which is
+  affordable; an edge-cut partition replicates a high-degree node onto nearly every
+  host, which is not. The asymmetry explains the standard practice: partition by one
+  endpoint and accept the boundary traffic, because the alternative is a hot node
+  present everywhere and updated everywhere.
+
+VALIDITY
+  Expectation under hash independence. With a tenant key and a skewed tenant-size
+  distribution, the largest partition can exceed the mean by an order of magnitude,
+  so the formula sizes the average and the latency budget must be sized separately.
 ```
 
-**Variant D — delta plus base layout.** A mutable graph is served as a small adjacency-list delta merged into an immutable CSR base on a schedule.
+**Variant D — dense storage at small node counts.** The dense matrix is correct for spectral work and
+wrong for everything else, and the boundary is arithmetic.
 
 ```text
 FORMULA
-  query cost = O(d_base(v) + d_delta(v))
-  merge cost = O(n + m_base + m_delta) amortised over k merges
-  memory     = base arrays + delta structures + one spare copy during merge
+  B_dense(n) = n^2 * b_cell         b_cell = 8 B for float64
+  B_csr(n, m) = 4 * (n + 1) + m * w_pos
+  ratio        = B_dense / B_csr
+
+WHERE
+  n = node count, count; m = edge count, count; w_pos = bytes per position, B
+  b_cell = bytes per matrix cell, B (4 for float32)
 
 CONSTRAINT
-  Correct only if every fact appears in exactly one of base or delta, which requires
-  the merge to be atomic with respect to reads. A read that observes the base after
-  it has been rewritten but the delta before it has been cleared sees each delta
-  fact twice; a read in the opposite order sees none.
+  The dense form is required by algorithms that need the full matrix (eigendecomposition,
+  matrix products, some spectral clustering variants). It is not required by traversal,
+  and using it for traversal converts a sparse problem into a memory problem whose
+  failure appears only when n grows.
 
-NUMERICAL EXAMPLE (m_base = 1e9, m_delta = 1e6, merges every 6 hours)
-  query overhead: delta lists add at most the delta degree, which for a hub-free
-  graph is a handful of positions, so the p99 query cost is essentially unchanged.
-  merge cost: (1e8 + 1e9 + 1e6) operations ≈ 1.1e9, at 1e8 ops/s = 11 s per merge,
-  44 s per day, 4.4e-4 of a day.
-  memory: base 13.4 GB + delta ~13 MB + spare 13.4 GB during merge = 26.8 GB peak.
+NUMERICAL EXAMPLE
+  n = 1e4, m = 2e4, w_pos = 21 B
+    dense = 1e8 cells * 8 B                  = 800,000,000 B = 800 MB
+    csr   = 4 * 10,001 + 2e4 * 21 = 40,004 + 420,000 = 460,004 B
+    ratio = 800,000,000 / 460,004            = 1,739x
+  n = 1e6, m = 2e6
+    dense = 1e12 cells * 8 B                 = 8 TB
+    csr   = 4 * 1,000,001 + 2e6 * 21         = 46 MB
+    ratio = 8e12 / 4.6e7                     = 173,913x
 
 INTERPRETATION
-  The delta pattern is what makes CSR compatible with a graph that changes, and its
-  hidden cost is the spare copy: peak memory doubles during a merge, so a host sized
-  to hold the base exactly will fail at the first merge. Either size for 2x or merge
-  into a partitioned base one shard at a time.
+  The ratio grows as n^2 / (n + m), so it is unbounded in n and bounded below by about
+  n/2 for a sparse graph. At n = 10,000 anything under a gigabyte is acceptable; at
+  n = 1,000,000 the dense form is not a choice at all. The numeric boundary is
+  therefore n ~ 1e4 for a workstation and n ~ 1e3 for an edge device, and it moves with
+  b_cell rather than with the algorithm.
+
+VALIDITY
+  Assumes a graph stored as an adjacency matrix of weights. A binary dense matrix at
+  1 bit per cell is 64x smaller and moves the boundary by a factor of 8 in n, which is
+  why bitset representations are a separate row in Section 7.
 ```
 
-**Variant E — partitioned layout by tenant or component.** Splitting the graph into independent sub-structures changes the cost from "one big build" to "many small builds plus a boundary".
+**Variant E — symmetric relations stored once versus twice.** The cheapest variant to get wrong, because
+the two forms differ by a factor of two in storage and by an assertion in correctness.
 
 ```text
 FORMULA
-  B_partitioned = sum over partitions p of B_CSR(m_p, n_p) + boundary arrays
-  boundary arrays cost O(m_cross) for the edges whose endpoints are in different
-  partitions, which must be stored separately because neither partition owns both.
+  storage factor = 1 row per fact, both directions traversed by the query layer
+                 = 2 rows per fact, one traversal direction per row
+  symmetry assertion: A[i][j] == A[j][i] for every symmetric relation
+  partial-write exposure = 2 rows that must be written atomically
+
+WHERE
+  A is the adjacency structure for a symmetric relation type
+  the assertion is exact and costs O(m) to check on a snapshot
 
 CONSTRAINT
-  Correct only when the query never needs an unbounded path across a boundary. A
-  two-hop query that crosses the boundary needs the cross arrays plus a join, and a
-  k-hop query with k large degenerates to the full graph.
+  Materialising both directions is safe only if the write is atomic across the pair.
+  A partial write leaves one direction present and the other absent, producing an
+  asymmetric structure that fails the assertion for exactly the interrupted writes,
+  which is a pattern an operator can recognise rather than a random corruption.
 
-NUMERICAL EXAMPLE (m = 1e9 split into 20 tenant partitions of 5e7 edges each,
-n = 1e8 so 5e6 nodes each, cross edges 2% = 2e7)
-  per partition: 4*(5e6+1) + 5e7*13 = 20 MB + 650 MB = 670 MB
-  twenty partitions: 13.4 GB, identical to the unpartitioned estimate, as expected
-  boundary: 2e7 edges * 13 B = 260 MB, plus an index on endpoint pairs
-  peak during a single-partition rebuild: 670 MB, not 13.4 GB
+NUMERICAL EXAMPLE (toy graph, symmetric SIGHTING relation only)
+  stored once:  4 occurrences (E6..E9) -> 4 rows, 4 positions
+  stored twice: 8 rows, 8 positions; sum of degrees 16 against 2m = 8 for the
+                undirected reading, so the identity must be restated for the stored
+                form or the assertion fires on a correct graph
+  storage delta: 4 * 21 B = 84 B on the toy, 5e8 * 21 B = 10.5 GB at 5e8 sightings
 
 INTERPRETATION
-  Partitioning does not reduce total storage; it reduces the peak working set and
-  enables per-tenant rebuilds. That is the actual benefit, and it is worth paying a
-  2% storage overhead in boundary arrays to get a 20x smaller rebuild unit.
+  Store symmetric relations once and traverse both directions in the query layer,
+  because the alternative doubles storage and adds an atomicity requirement that a
+  batch loader will eventually violate. The exception is a serving structure whose
+  latency budget forbids a reverse index; then store twice, and make the symmetry
+  assertion part of the load gate rather than part of a report.
+
+VALIDITY
+  The storage factor is exactly 2 for a fully symmetric relation and 1 for a fully
+  directed one. Mixed schemas produce a factor between them, and the factor should be
+  computed per relation type rather than quoted for the graph as a whole.
+```
+
+**Variant F — the hypergraph and its two binary encodings.** Group facts do not reduce to pairs without a
+loss, and the two standard encodings lose different things.
+
+```text
+FORMULA
+  star expansion:   nodes + hyperedges, incidence edges = sum of group sizes
+  2-section:        nodes only, clique edges = sum of C(s_g, 2)
+  inflation factor  = sum C(s_g,2) / sum s_g
+  a group of size s contributes s incidence edges or C(s,2) clique edges
+
+WHERE
+  s_g = size of group g, count >= 2
+  inflation is the ratio of clique edges to incidence edges, dimensionless
+
+CONSTRAINT
+  The 2-section preserves pairwise adjacency and destroys group identity: after the
+  expansion, the statement "these two were in a group together" survives, and the
+  statement "these four were in the same group" does not. The star expansion
+  preserves both, at the cost of a node whose degree is the group size and which is
+  not an entity of the domain.
+
+NUMERICAL EXAMPLE
+  s = 4: incidence 4 edges, clique 6 edges, inflation 1.5x
+  s = 100: incidence 100 edges, clique 4,950 edges, inflation 49.5x
+  s = 2: incidence 2, clique 1, inflation 0.5x, and the two encodings answer the same
+         question, which is why the defect is invisible in tests built from pairs
+
+INTERPRETATION
+  Inflation is quadratic in group size, so the choice of encoding is a cost decision
+  as well as a semantic one. Choose the 2-section for pairwise similarity features and
+  the star for anything that must answer which group; a system that needs both should
+  keep the incidence structure as the base and derive each expansion as a projection.
+
+VALIDITY
+  Exact for groups disjoint within a hyperedge set. Overlapping groups (a person in two
+  households) make the clique edges deduplicate, so the realised inflation is below
+  the formula and the group-identity loss is worse, because a pair can now share more
+  than one group and the clique records only that they share at least one.
 ```
 
 ### 4.4 Limits and counterexamples
 
-The formulas above are exact under their constraints. Each breaks in a specific, predictable way, and the break is more informative than the identity.
+**The handshake identity fails when the two sides are filtered differently.** A snapshot built with
+`t_avail <= t_decision` on the edge table and a degree column materialised at a different cut-off will
+violate the identity by exactly the number of facts that arrived between the two cuts. The failure looks
+like a data-quality problem and is a scheduling problem, so the assertion should carry the snapshot
+identifier so that the two sides can be shown to share it.
 
-**Counterexample 1 — the dense limit of an adjacency matrix.** An adjacency matrix costs n² cells regardless of m, so its storage is independent of sparsity and becomes absurd immediately. At n = 1,000,000 with float64, the matrix is 1e12 cells × 8 B = 8 TB even if the graph has a thousand edges. The formula's validity condition is density, not size: the matrix is the right structure only when m is a non-trivial fraction of n², which for real relationship data almost never holds. The counterexample matters because dense matrix operations are the fastest available primitive, so the temptation to densify a sparse graph is strong and the failure is a memory wall rather than a wrong answer.
+**The degree-pair inequality fails when directions are double-counted.** If a symmetric relation is
+materialised in both directions and the degree aggregate counts positions rather than neighbours, d_occ
+doubles while d_dist does not, and the surplus doubles. The inequality still holds, which is the problem:
+a defect that preserves the assertion is invisible to it. The discriminating check is to compare the
+sum of positions against 2m and the sum of distinct neighbours against 2x the distinct pair count.
 
-**Counterexample 2 — supernode fan-out in a two-hop traversal.** The identity "two-hop cost ≈ mean degree squared" assumes independence between the degree of a node and the degree of its neighbours, which is false in every real network with hubs. A node with 50 neighbours whose neighbours average 200 each yields 10,000 second-hop visits; if one of those neighbours is a hub with 50,000 edges, that single branch contributes 50,000 visits and dominates the cost. The mean-based estimate is not merely imprecise, it is structurally biased low, because the quantity that governs cost is the maximum neighbour degree on the frontier, not the average.
+**The projection formula fails under deduplication and pruning.** A pair that co-occurs in three groups is
+emitted three times before dedup and once after, so P overstates the deduplicated table by the number of
+multi-group pairs. A pruned projection has no closed form at all, because the pruning rule depends on the
+data. The boundary is measurable: compute P by formula, compute the realised row count, and report both;
+a gap larger than a few percent means the formula is no longer describing the artifact.
 
-**Counterexample 3 — projection loss under a threshold.** A projection that keeps only pairs sharing two or more attributes is no longer the 2-section of the graph; it is a different graph whose edges depend on the threshold. Two facts follow. First, the projected edge count is no longer computable from k alone, so the cost formula does not apply. Second, and worse, the projection is no longer monotone in the data: adding a true edge can *remove* a projected pair if the pruning compares a ratio, which means a snapshot cannot be incrementally updated and the feature is not reproducible from the base table without re-running the pruning rule at its original threshold.
+**The storage formula fails on compressed storage, in both directions.** A columnar store with delta
+encoding on a sorted timestamp column can use far less than 8 B per value, making the formula an
+overestimate. A row store with page fill factor 70% and a 24 B page header uses more than the formula,
+making it an underestimate. The formula is for comparing layouts to each other under one assumption set,
+and quoting its absolute figure as a deployment prediction is the misuse.
 
-**Counterexample 4 — bitemporal storage without a supersede rule.** Adding four timestamp columns does not by itself produce bitemporal semantics; it produces four columns. If a correction is written as a new row without marking the superseded row, both rows remain visible at every decision time and the aggregate double-counts. The invariant that must hold is: for any (edge_id, system-time range), at most one row is visible. That is a constraint enforced by the write path, not a consequence of the schema, and it is the reason bitemporal tables need a uniqueness assertion rather than a convention.
+**The partition formula fails under skew, and the failure is not small.** A tenant-keyed partition with a
+heavy-tailed tenant-size distribution produces a maximum partition several times the mean, so a p99
+latency computed from the expectation is optimistic by that factor. The check is cheap: compute the
+partition sizes and report max/mean. A ratio above about 3 means the partition key is correlated with
+size and the deployment needs either a salt or a split of the largest tenant.
 
-**Counterexample 5 — the null-model ceiling for motif counts.** A motif count is a property of the graph, not evidence of association, because a star of five accounts on one device is guaranteed by the degree sequence alone if the device has degree five. Any claim of the form "these accounts form an unusual structure" requires a comparison against a null model preserving the degrees; without that comparison, motif counts measure the degree distribution and nothing else. The formula boundary is therefore the claim boundary: a count can be computed exactly and still be uninformative.
+**The dense-matrix ratio fails when the graph is genuinely dense.** A co-occurrence matrix over 2,000
+categories is dense by construction, so the 1,739x ratio at n = 1e4 does not apply and the dense form is
+correct. The counterexample is worth stating because it marks the boundary: the formula's ratio is a
+statement about sparse graphs, and a graph with m near n^2/2 has no sparse advantage to lose.
 
-**Takeaway:** Every layout identity is exact only inside its density, independence and monotonicity assumptions; the counterexamples mark where a correct formula yields a useless answer.
+**The reification multiplier fails when statements are packed.** A store that writes several statements per
+physical row, or that dictionary-encodes repeated predicates, can land below the 1.6x figure and even below
+the flattened table. The formula compares logical counts, and it should be labelled that way, because the
+physical comparison depends on the engine's encoding rather than on the model.
+
+**Takeaway:** Every formula in this section is an inequality or an expectation under stated assumptions;
+the counterexamples are those assumptions failing, so the review question is which assumption is closest
+to breaking rather than whether the formula is right.
 
 ## 5. Worked Numerical Example
 
-The example is a six-node typed multigraph built to be small enough to check by hand. All identifiers, amounts and timestamps are ILLUSTRATIVE.
+The example carries one nine-fact graph through all four formulas so that each stage's arithmetic can be
+checked against the previous stage's output. Every input is ILLUSTRATIVE.
 
 ### 5.1 The fact table
 
-| edge_id | src  | rel          | dst  | value_usd | t_event            | t_avail            | source    |
-|---------|------|--------------|------|-----------|--------------------|--------------------|-----------|
-| E1      | A1   | TRANSFER     | M1   | 250.00    | 2026-03-01T09:00Z  | 2026-03-01T09:00:02Z | ledger_1 |
-| E2      | A1   | TRANSFER     | M1   | 90.00     | 2026-03-02T11:30Z  | 2026-03-02T11:30:03Z | ledger_1 |
-| E3      | A1   | TRANSFER     | M1   | 40.00     | 2026-03-04T08:15Z  | 2026-03-04T08:15:02Z | ledger_1 |
-| E4      | A2   | TRANSFER     | M1   | 600.00    | 2026-03-01T09:05Z  | 2026-03-01T09:05:02Z | ledger_1 |
-| E5      | A2   | TRANSFER     | M1   | 15.00     | 2026-03-03T19:45Z  | 2026-03-03T19:45:09Z | ledger_1 |
-| E6      | A1   | USED_DEVICE  | D1   | null      | 2026-02-20T07:00Z  | 2026-02-20T07:00:31Z | sdk_telemetry |
-| E7      | A2   | USED_DEVICE  | D1   | null      | 2026-02-21T22:10Z  | 2026-02-21T22:10:30Z | sdk_telemetry |
-| E8      | A2   | USED_DEVICE  | D2   | null      | 2026-03-05T06:00Z  | 2026-03-05T06:00:04Z | sdk_telemetry |
-| E9      | P1   | OWNS_ACCOUNT | A1   | null      | 2025-11-02T00:00Z  | 2025-11-02T00:00:01Z | onboard_batch |
+```text
+fact_id  src  dst  rel       value    t_event              t_avail
+E1       A1   M1   TRANSFER  380.00   2026-03-02 09:14:00  2026-03-02 09:14:41
+E2       A2   M1   TRANSFER  615.00   2026-03-02 11:02:00  2026-03-02 11:02:38
+E3       A1   M1   TRANSFER  120.00   2026-03-03 08:41:00  2026-03-03 08:41:52
+E4       A2   M1   TRANSFER   90.00   2026-03-03 16:20:00  2026-03-03 16:21:14
+E5       A1   M1   TRANSFER   45.00   2026-03-04 07:03:00  2026-03-04 07:03:29
+E6       A1   D1   SIGHTING  (null)   2026-03-04 07:05:00  2026-03-04 07:05:31
+E7       A2   D1   SIGHTING  (null)   2026-03-04 07:41:00  2026-03-04 07:41:44
+E8       A1   D2   SIGHTING  (null)   2026-03-04 19:12:00  2026-03-04 19:12:36
+E9       A2   D3   SIGHTING  (null)   2026-03-05 06:30:00  2026-03-05 06:31:02
 
-Nine rows, six nodes, three relation types, two value-bearing column families and one null-bearing one. The nulls are informative: a device sighting has no amount, and a schema that forces 0.00 into `value_usd` for it has invented a transfer of zero that any average will silently absorb. This is the first modelling decision in the example and it is made by choosing nullable columns plus a relation discriminator rather than a typed table per relation.
+nodes: A1, A2 (accounts), M1 (merchant), D1, D2, D3 (devices)
+m = 9 occurrences; 6 distinct unordered pairs; 2 relation types; 5 non-null values
+
+availability lag per fact (seconds): 41, 38, 52, 74, 29, 31, 44, 36, 62
+mean lag = (41+38+52+74+29+31+44+36+62) / 9 = 407 / 9 = 45.2 s
+max lag = 74 s (E4), min lag = 29 s (E5)
+
+decision time for the snapshot: 2026-03-04 23:59:59
+eligible facts: t_avail <= decision time -> E1..E8 (8 facts); E9 is excluded
+```
+
+The lag column is the reason the example carries both timestamps. The mean lag of 45.2 seconds looks
+negligible against a daily feature, and it is, until a decision time falls inside the lag window: a
+decision at 2026-03-05 06:30:30 would see E9's event time but not its availability, and a snapshot filtered
+on event time would include a fact the serving path could not have had. That is the entire mechanism
+behind F-02, and the toy graph contains one instance of it.
+
+The nullable value column is the second deliberate feature. Four of nine facts have no value, and the null
+is structural rather than missing: a sighting has no amount. Any aggregate that computes a mean over the
+value column must decide whether the denominator counts nine facts or five transfer facts, and the two
+choices produce 138.89 and 250.00 respectively.
 
 ### 5.2 Step 1 — degrees under both definitions
 
-| node | occurrence degree | distinct-neighbour degree | surplus | neighbours   |
-|------|-------------------|---------------------------|---------|--------------|
-| A1   | 5                 | 3                         | 2       | M1, D1, P1   |
-| A2   | 4                 | 3                         | 1       | M1, D1, D2   |
-| M1   | 5                 | 2                         | 3       | A1, A2       |
-| D1   | 2                 | 2                         | 0       | A1, A2       |
-| D2   | 1                 | 1                         | 0       | A2           |
-| P1   | 1                 | 1                         | 0       | A1           |
-| sum  | 18                | 12                        | 6       |              |
-
-Check one: 2m = 18, matching the occurrence sum. Check two: the surplus column sums to 6, and the repeated pairs A1-M1 and A2-M1 contribute 2 and 1 at each endpoint, so 2(2)+2(1) = 6. Check three: the distinct-neighbour sum 12 equals twice the number of distinct unordered pairs, which is 6 — and 6 pairs are visible in the neighbour column: A1-M1, A1-D1, A1-P1, A2-M1, A2-D1, A2-D2.
-
-### 5.3 Step 2 — the as-of snapshot at a decision time
-
-Take decision time t = 2026-03-05T00:00:00Z. The eligible set is every fact whose availability time precedes t. E8 becomes available at 06:00Z on the fifth of March, four hours after the decision, so it is excluded even though its event time is also after t. A naive event-time filter would give the same answer here and a different one a day later, which is precisely why the two filters must be tested on a case where they disagree.
-
-| edge | t_avail        | eligible at t | reason                     |
-|------|----------------|---------------|----------------------------|
-| E1   | 03-01T09:00:02 | yes           | before t                   |
-| E2   | 03-02T11:30:03 | yes           | before t                   |
-| E3   | 03-04T08:15:02 | yes           | before t                   |
-| E4   | 03-01T09:05:02 | yes           | before t                   |
-| E5   | 03-03T19:45:09 | yes           | before t                   |
-| E6   | 02-20T07:00:31 | yes           | before t                   |
-| E7   | 02-21T22:10:30 | yes           | before t                   |
-| E8   | 03-05T06:00:04 | no            | availability after t       |
-| E9   | 2025-11-02T00:00:01 | yes       | before t                   |
-
-Eight of nine facts are eligible: selectivity 8/9 = 0.8889. Degrees recomputed on the snapshot: A1 = 5, A2 = 3, M1 = 5, D1 = 2, D2 = 0, P1 = 1, summing to 16 = 2 × 8. Note that D2 is present as a node with degree zero — it exists because the identity layer knows about the device even though no eligible fact references it. Whether zero-degree nodes appear in the serving structure is a schema decision (keep the row, drop the entry) and it changes the denominator of any per-node average.
-
-### 5.4 Step 3 — CSR construction for the snapshot
-
-Order the nodes A1, A2, M1, D1, D2, P1 (indices 0–5). Each undirected fact contributes twice, once per endpoint; the directed facts are stored in the direction asserted. For a purely analytic adjacency view all eight edges are stored as undirected, giving 16 positions.
-
 ```text
-adjacency (undirected view, as-of snapshot), sorted by (relation, target)
-  index 0  A1  ->  M1(E1), M1(E2), M1(E3), D1(E6), P1(E9)          count 5
-  index 1  A2  ->  M1(E4), M1(E5), D1(E7)                          count 3
-  index 2  M1  ->  A1(E1), A1(E2), A1(E3), A2(E4), A2(E5)          count 5
-  index 3  D1  ->  A1(E6), A2(E7)                                  count 2
-  index 4  D2  ->  (none)                                          count 0
-  index 5  P1  ->  A1(E9)                                          count 1
-  total positions 16
+occurrence degree (all 9 facts)
+  A1: E1, E3, E5, E6, E8  = 5
+  A2: E2, E4, E7, E9      = 4
+  M1: E1, E2, E3, E4, E5  = 5
+  D1: E6, E7              = 2
+  D2: E8                  = 1
+  D3: E9                  = 1
+  sum = 18 = 2 * 9                                            identity check 1
 
-CSR arrays
-  offset = [0, 5, 8, 13, 15, 15, 16]          length n+1 = 7
-  target = [2,2,2,3,5, 2,2,3, 0,0,0,1,1, 0,1, 0]   length 16
-  weight = [250,90,40,0,0, 600,15,0, 250,90,40,600,15, 0,0, 0]
+distinct-neighbour degree
+  A1: {M1, D1, D2} = 3      A2: {M1, D1, D3} = 3
+  M1: {A1, A2}     = 2      D1: {A1, A2}     = 2
+  D2: {A1}         = 1      D3: {A2}         = 1
+  sum = 12 = 2 * 6 distinct pairs                            identity check 2
+
+surplus per node: A1 2, A2 1, M1 3, D1 0, D2 0, D3 0; total 6
+verification: 18 - 12 = 6 and sum over nodes = 2 + 1 + 3 = 6
 ```
 
-Three checks on the arrays. First, `offset` is non-decreasing and ends at 16, the position count. Second, the difference vector is `[5,3,5,2,0,1]`, which matches the snapshot degree column exactly. Third, the target array is symmetric under the offset ranges: A1's list contains M1 and M1's list contains A1 the same number of times, which is the assertion that the undirected view was built consistently.
+The surplus concentrated on M1 is the quantitative version of the observation that a merchant is a
+collection point. A1 also carries a surplus of 2 because it made three transfers to the same merchant,
+which is ordinary behaviour and not an artifact. The check that separates ordinary multiplicity from an
+instrumentation problem is whether the repeated pair has distinct event times: three transfers on three
+dates is behaviour, three identical facts on one timestamp is a duplicate load.
 
-### 5.5 Step 4 — cost of the snapshot in each layout
-
-```text
-per-edge storage, snapshot m = 8, n = 6, w = 8 (float64), t = 8 (int64)
-  offsets      4 * 7            =  28 B
-  targets      8 * 4            =  32 B
-  weights      8 * 8            =  64 B
-  rel codes    8 * 1            =   8 B
-  timestamps   8 * 8            =  64 B
-  total                           196 B     -> 24.50 B per edge
-  without timestamps              132 B     -> 16.50 B per edge
-
-row store, 8 rows * 176 B        = 1408 B     -> ratio 7.18x
-reified (p = 3), 5 rows * 56 B   = 2240 B     -> 11.43x
-adjacency matrix 6*6*8 B         =  288 B     -> denser than CSR at this size
-```
-
-The matrix is cheaper here, and that is the honest result: at six nodes the dense encoding wins because the offset array is overhead. The crossover is a function of density, not of principle. With n = 6 the matrix has 36 cells for 16 stored positions; with n = 1,000,000 it has 1e12 cells for maybe 5e6 positions and loses by five orders of magnitude. A design note that says "CSR is faster" without the node count is not a finding.
-
-### 5.6 Step 5 — projection and one feature
-
-Project the bipartite device structure onto accounts. M1 and P1 are not devices, so the projection universe is {D1, D2}. D1 has k = 2 (A1, A2) and produces 1 pair; D2 has k = 1 and produces none. The projected graph therefore has one account pair (A1, A2), which is a much weaker statement than "A1 and A2 are related": one shared device, observed twice within 24 hours, in a population where a device token can be a kiosk.
-
-Compute a weighted mean transfer value per account on the snapshot, using occurrence multiplicity:
+### 5.3 Step 2 — the as-of snapshot
 
 ```text
-A1 transfers: E1 250.00, E2 90.00, E3 40.00  -> sum 380.00 over 3 occurrences = 126.67
-A2 transfers: E4 600.00, E5 15.00            -> sum 615.00 over 2 occurrences = 307.50
-unweighted-by-occurrence mean over distinct transfer partners:
-A1 partner {M1} -> 250+90+40 = 380.00 / 1 partner? no: per-partner mean is 380.00
-   the two answers differ because one divides by occurrence count and the other
-   by distinct-partner count; both are labelled and neither is "the" mean.
+decision time 2026-03-04 23:59:59 -> eligible E1..E8, m_snap = 8
+
+occurrence degrees in the snapshot
+  A1: E1, E3, E5, E6, E8 = 5
+  A2: E2, E4, E7         = 3
+  M1: E1..E5             = 5
+  D1: E6, E7             = 2
+  D2: E8                 = 1
+  D3: (none)             = 0
+  sum = 16 = 2 * 8                                            identity check 3
+
+distinct neighbours in the snapshot
+  A1: {M1, D1, D2} = 3   A2: {M1, D1} = 2   D3: {} = 0
+  M1: {A1, A2}     = 2   D1: {A1, A2} = 2   D2: {A1} = 1
+  sum = 10 = 2 * 5 distinct pairs in the snapshot              identity check 4
+
+difference from the full graph: one fact (E9) removed, A2 4->3, D3 1->0,
+distinct pairs 6->5, occurrence sum 18->16, distinct sum 12->10
 ```
 
-The arithmetic is trivial; the point is that the same three numbers produce 126.67 or 380.00 depending on a denominator choice made in a feature definition, and no downstream metric can tell which was used. The feature contract must state: numerator = sum of `value_usd` over eligible TRANSFER facts incident to the account in the window; denominator = count of eligible TRANSFER facts; null policy = exclude accounts with zero eligible transfers rather than emitting 0.00.
+The snapshot is where the arithmetic becomes operational, because it is the object the features are
+actually computed from. Note that an entity can exist in the snapshot with degree zero: D3 is a known
+device with no eligible facts, and whether it appears as a row with zero or is absent entirely is a
+denormalisation decision that changes every mean computed over the node table. Both are defensible and
+only one can be tested by a fixture, which is why the choice belongs in the feature contract.
 
-### 5.7 Independent re-check and sensitivity
-
-Six independent checks: (i) 2m = 16 equals the snapshot degree sum; (ii) CSR offset differences equal the degree vector; (iii) the target array is symmetric in count; (iv) the distinct-pair count 6 equals half the distinct-neighbour sum 12; (v) the projected pair count 1 equals C(2,2) for D1; (vi) the row-store ratio 7.18x is consistent with 176/24.50 = 7.18. Each check is arithmetic on the same table, so agreement does not prove the table is right — it proves the transforms are internally consistent, which is a different and still necessary claim.
-
-Sensitivity. Move the decision time forward four hours to 2026-03-05T06:00:01Z. E8 becomes eligible and the edge count rises from 8 to 9, a 12.5% change in m. A2's degree rises from 3 to 4 and D2 from 0 to 1. Any feature normalised by degree or by total edge count shifts for reasons that have nothing to do with behaviour, which is why features must be compared at a fixed snapshot identifier rather than at "the latest data". Move the decision time back to 2026-03-04T08:00:00Z and E3 drops out, changing A1's mean transfer value from 126.67 to (250+90)/2 = 170.00 — a 34% swing from a four-hour cut-off change on the same account.
-
-### 5.8 Production-scale reading of the same arithmetic
-
-At one billion edge occurrences and one hundred million nodes the numbers from Section 4.1 dominate: 24.1 GB for the CSR without timestamps and 32.8 GB with them, against 176 GB for the row store. Two consequences follow that a toy example cannot show. First, the snapshot cannot be rebuilt per request; it must be materialised and versioned, because rebuilding 24 GB of arrays inside a latency budget is not a thing that happens. Second, the hub policy determines whether the build completes at all: one node with 50,000 edges contributes 1.25e9 projected pairs, which is larger than the entire edge count and would be emitted as a projection before any pruning.
-
-### 5.9 Identity-version sensitivity
-
-The example so far has used one identity map. Change it: suppose version 7 merged P1 and A1 into a single person node `P1` with the account as an attribute, while version 6 kept them separate. The facts do not change; the node count does, and three derived numbers change with it.
+### 5.4 Step 3 — CSR construction and cost for the snapshot
 
 ```text
-version 6: nodes = 6, A1 degree 5, P1 degree 1, m = 9, sum degree 18
-version 7: nodes = 5 (A1 absorbed into P1), P1 degree 6,
-           m = 9, sum degree 18 (unchanged, because merging does not move edges)
-           E9 becomes a self-loop if the account is retained as a node and P1 also
-           owns it; if the account is absorbed, E9 disappears and m = 8,
-           sum degree = 16, distinct pairs = 5
+node ordering by first appearance: A1=0, A2=1, M1=2, D1=3, D2=4, D3=5
+
+positions in the layout L3 (29 B each)
+  A1: M1, M1, M1, D1, D2   (5 positions; three separate TRANSFER positions to M1)
+  A2: M1, M1, D1           (3)
+  M1: A1, A2, A1, A2, A1   (5)
+  D1: A1, A2               (2)
+  D2: A1                   (1)
+  D3: -                    (0)
+
+offset array (n+1 = 7 entries, 4 B each)
+  offset[0]=0  offset[1]=5  offset[2]=8  offset[3]=13  offset[4]=15  offset[5]=16
+  offset[6]=16
+  monotonicity: 0 <= 5 <= 8 <= 13 <= 15 <= 16 <= 16        holds
+  last entry equals the position count 16                  holds
+
+bytes
+  offsets   4 * 7             =  28 B
+  positions 16 * 29 B         = 464 B
+  total                       = 492 B        (30.75 B per occurrence)
+  same snapshot as L2 (21 B): 28 + 16*21 = 364 B
+  same snapshot as L1 (5 B):  28 + 16*5  = 108 B
+  row store: 8 * 176          = 1,408 B      ratio to L3 = 2.86x
+
+per-node locality check
+  A1's positions occupy bytes 28 .. 28+5*29-1, i.e. 145 contiguous bytes, one cache line
+  of 64 B does not cover them, so a hub's expansion touches several lines but no page
+  D1's positions are the two entries at index 13..14, i.e. 58 bytes
 ```
 
-Two lessons are arithmetic and one is procedural. The arithmetic lesson is that a merge can create or destroy self-loops depending on whether the merged node keeps the account as an entity, so the edge count is not merge-invariant even though the fact table is untouched. The procedural lesson is that any feature table must record the identity version, because the same row key `P1` now refers to different entities and a label joined across versions attaches to the wrong population. The check is a join from the feature table to the identity map on the recorded version; a missing node proves skew.
+Two structural checks appear in the block and both are worth running on every build. Offset monotonicity
+catches a merge that appends out of order. The last-offset equality catches a loader that allocated
+positions and failed to write them, which is the defect that produces a graph with silent zero-degree
+nodes. Neither check needs the fact table, so both can run in the build that produces the array.
 
-### 5.10 Rebuilding the snapshot for a second decision time
+The per-node locality reading is where the layout's advantage actually lives. A1's five positions are 145
+contiguous bytes; the same five facts in a row store are five rows scattered across 880 bytes at whatever
+locations the insert order produced. The difference is not the byte count, which is a factor of 2.9, but
+the number of cache lines and the predictability of the access pattern, which is a factor that shows up in
+latency but not in `du` output.
 
-For a training set, many snapshots are needed. Rebuilding from scratch per decision time costs O(n + m) each; with weekly snapshots over two years that is 104 rebuilds of a 24 GB structure, or 2.5 TB of transient work. The alternative is one base build plus incremental filters, which works only if the filter is a monotone time predicate and the graph is append-only. Concretely:
+### 5.5 Step 4 — the projection and one feature
 
 ```text
-full rebuild per snapshot    104 * (n + m) = 104 * 1.1e9 = 1.14e11 ops
-                              at 1e8 ops/s = 1140 s = 19 minutes per snapshot
-                              times 104 = 32.9 hours of build time per training run
-incremental (append-only)    one build + 104 * delta where delta = facts per week
-                              at 1e7 facts/week the delta work is 104 * 1e7 = 1.04e9
-                              ops, about 10 s in total, provided offsets can be
-                              patched rather than rebuilt
+projection: accounts over shared devices (SIGHTING relation only), snapshot 5 facts
+  D1 has accounts {A1, A2}     -> C(2,2) = 1 pair (A1, A2)
+  D2 has accounts {A1}         -> C(1,2) = 0
+  D3 has accounts {}           -> 0
+  projected pairs = 1
+  channels supporting that pair = 1 (D1)
+  marginal check: the pair exists once; adding a third account to D1 would add
+                  2 pairs (C(3,2) - C(2,2) = 3 - 1 = 2 = k for k = 2)
+
+feature: mean transfer value per account, snapshot 5 transfer facts, null policy exclude
+  transfers: E1 380.00, E2 615.00, E3 120.00, E4 90.00, E5 45.00
+  denominator = 5 transfer facts (not 8 snapshot facts, not 9 total facts)
+  sum = 380 + 615 = 995; 995 + 120 = 1,115; 1,115 + 90 = 1,205; 1,205 + 45 = 1,250
+  mean = 1,250 / 5 = 250.00 USD per transfer
+  wrong version A: sum / snapshot facts = 1,250 / 8 = 156.25
+  wrong version B: sum / all facts      = 1,250 / 9 = 138.89
+  spread between correct and wrong B    = 250.00 - 138.89 = 111.11, i.e. 44.4% low
+
+feature: distinct-device count per account
+  A1: {D1, D2} = 2      A2: {D1} = 1 (D3 excluded by the snapshot)      A2 full graph = 2
+  the snapshot changes A2's feature from 2 to 1, which is correct at the decision time
 ```
 
-The incrementality condition is what makes the difference, and it fails in two common ways. If the identity map changes between snapshots, the edge endpoint identifiers change and the CSR must be rebuilt rather than patched. If facts are corrected in place rather than superseded, the delta cannot express the removal. Both are reasons the bitemporal base is a prerequisite for incremental snapshots and not an optional refinement.
+The two wrong versions of the mean are included because both are produced by real code. Version A divides
+by the snapshot's fact count, which mixes transfers with sightings and therefore drifts with logging
+volume: a device-sighting outage lowers the feature. Version B divides by all facts including those after
+the cut-off, which mixes two time windows and drifts with the freshness of the load. The correct version
+divides by the count of facts in its own relation and window, which is the only denominator that is stable
+under changes to unrelated pipelines.
 
-### 5.11 What the example deliberately does not model
+### 5.6 Independent re-check of every number
 
-The toy graph has no parallel edges between the same pair in different relations, no self-loops, no hyperedges, no deleted facts and no node with degree above 5. Each omission hides a class of defect that the failure catalogue covers but the arithmetic does not exercise. A teaching example that included all of them would be unreadable; a production schema review that assumed the clean case is how the defects get shipped. The practical response is to keep the toy graph for reasoning about identities and to keep a deliberately adversarial fixture — one hub, one self-loop, one repeated pair, one late fact, one unresolved identifier — for testing the load path.
+```text
+check 1 — incidence by a second route
+  sum of degrees computed from the edge list: for each fact, +1 to each endpoint.
+  9 facts * 2 endpoints = 18 increments; the degree vector sums to 18.   consistent
 
-**Takeaway:** The same nine facts support three different degree numbers, two different mean values and four different storage estimates; each must be named at the point of use, not inferred later.
+check 2 — distinct pairs by enumeration
+  pairs: (A1,M1) (A2,M1) (A1,D1) (A2,D1) (A1,D2) (A2,D3) = 6
+  sum of distinct degrees = 2 * 6 = 12.                                 consistent
+
+check 3 — snapshot identity by subtraction
+  removing E9 removes one incidence from A2 and one from D3:
+  occurrence sum 18 - 2 = 16 = 2 * 8.   distinct sum 12 - 2 = 10 = 2 * 5 pairs. consistent
+
+check 4 — CSR bytes by the closed form
+  4*(n+1) + positions*w_pos = 4*7 + 16*29 = 28 + 464 = 492 B.        consistent
+  positions = sum of degrees = 16, which is the array length the builder wrote. consistent
+
+check 5 — row-store width by column sum
+  edge_id 8 + src 16 + dst 16 + rel 1 + value 8 + ccy 3 + t_event 8 + t_avail 8
+  + ingest_batch 8 + provenance 4 = 80 B of columns
+  + 24 B tuple header + 3 index pointers of 24 B = 72 B
+  total = 80 + 24 + 72 = 176 B per row; 8 rows = 1,408 B.               consistent
+
+check 6 — projection marginal
+  C(3,2) - C(2,2) = 3 - 1 = 2 = k for k = 2, matching the "adds k pairs" rule.
+  C(4,2) - C(3,2) = 6 - 3 = 3 = k for k = 3.                            consistent
+```
+
+The six checks are deliberately of different kinds: two count by enumeration, two recompute by closed
+form, one derives a width from a column list, and one tests an identity on small cases. A model whose
+numbers survive checks of different kinds is far more likely to be right than one that survives the same
+check repeated, which is the failure mode of validating a formula against its own implementation.
+
+### 5.7 Sensitivity
+
+| Parameter moved | Baseline | Variant | Effect on the number | Reading |
+|---|---|---|---|---|
+| Snapshot cut-off | 2026-03-04 23:59:59 | 2026-03-05 12:00:00 | m 8 -> 9, occurrence sum 16 -> 18 | one late fact raises every degree it touches by 1 |
+| Availability lag filter | none | exclude lag > 60 s | E4 excluded from a backtest at that instant | the longest-lag fact is the one a strict filter removes |
+| Value null policy | exclude nulls | coerce to zero | mean 250.00 -> 138.89 | the denominator change, not the numerator, drives it |
+| Position width | 29 B | 21 B (drop t_avail) | snapshot 492 B -> 364 B, -26.0% | one timestamp is a quarter of the position |
+| Position width | 29 B | 45 B (add system times) | snapshot 492 B -> 748 B, +52.0% | the belief axis is the largest single addition |
+| Node count at fixed m | n = 1e8 | n = 1e6 | offset array 0.4 GB -> 4 MB | the offset term is negligible until n ~ 1e7 |
+| Projection hub degree | 50,000 | 25,000 | C(k,2) 1.25e9 -> 3.12e8, -75.0% | halving one degree quarters one term |
+| Partition count | p = 16 | p = 64 | stored 1.0625x -> 1.0156x, boundary 0.9375 -> 0.9844 | more parts reduce duplication and raise boundary traffic |
+| Reification properties | p = 3 | p = 8 | 280 B -> 560 B per fact, 3.18x the row | the multiplier is linear in the property count |
+
+Two readings deserve comment because they invert an intuition. First, raising the partition count reduces
+duplication while increasing boundary traffic per edge, so the two costs move in opposite directions and
+the optimum depends on whether the workload is compute-bound or network-bound; the table's p = 64 row has
+1.6% duplication and 98.4% boundary fetches, which is a network problem dressed as a storage win. Second,
+the offset array is negligible until the node count approaches the edge count: at n = 1e6 and m = 1e9 the
+offset term is 4 MB against 21 GB, which is 0.02%, so a design review focused on reducing node count is
+optimising the wrong term.
+
+### 5.8 Reading the same arithmetic at production scale
+
+```text
+scale: n = 1e8 nodes, m = 1e9 occurrences, layout L2 (21 B per position)
+
+  offsets     4 * (1e8 + 1)               = 0.400 GB
+  positions   1e9 * 21                    = 21.000 GB
+  total                                   = 21.400 GB
+  row store   1e9 * 176                   = 176.0 GB          ratio 8.22x
+  layout L3   0.4 + 1e9*29                = 29.400 GB          ratio to L2 1.374x
+  layout L4   0.4 + 1e9*45                = 45.400 GB          ratio to L2 2.121x
+  information ceiling log2 C(m+n-1, n-1)  = 4.834e8 bits
+                                          = 0.0604 GB          L2 is 354x above it
+
+  projection with one hub k = 50,000 and 1e5 groups k = 100
+    P = 1.249975e9 + 4.95e8 = 1.745e9 pairs = 1.745x m
+    at 8 B per pair (two int32)           = 13.96 GB materialised
+    emission at 1e7 pairs/s               = 174.5 s
+
+  nightly build comparison
+    CSR   allocate + write 21.4 GB        = 21.4 GB of writes
+          scan 1e9 predicates at 1e8/s    = 10 s
+          write 1e9 positions at 1e8/s    = 10 s
+          total ~ 20 s plus I/O for 21.4 GB = 10.7 s at 2 GB/s  -> ~31 s
+    row   read 176 GB at 2 GB/s           = 88 s
+          index build 1e9 * log2(1e9) = 1e9 * 29.9 comparisons = 2.99e10
+          at 1e8 comparisons/s            = 299 s
+          total dominated by the index build -> ~387 s
+```
+
+The information ceiling is the line worth keeping. The number of distinct configurations of 1e9 positions
+across 1e8 rows is C(m+n−1, n−1), so no encoding can use fewer than log of that many bits, which is 60 MB.
+The CSR uses 21.4 GB, 354x above the ceiling, because it stores explicit identifiers rather than structure.
+That is the correct trade for an access pattern that needs O(d_v) contiguous reads, and it is also the
+reason compressed variants exist — and the reason a designer should not assume 21 B per position is a floor.
+
+The build comparison shows a factor of 12.5 between the two layouts, and almost all of it is index
+maintenance rather than scanning. A team that measures the scan and concludes the row store is affordable
+has measured the smaller term; the index build is 299 of the 387 seconds, and it is the term that scales
+with log(m) while the scan scales with m. At 1e10 facts the log term grows by another 10%, while the scan
+grows by 10x, so the ratio narrows with scale — which is a reason to re-derive the comparison rather than
+inherit it.
+
+**Takeaway:** Derive the three numbers together — bytes, build time and projection peak — because a layout
+that wins on one of them frequently loses on the other two.
 
 ## 6. Visual / Geometric Intuition
 
 ### 6.1 The adjacency matrix as a picture of the model
 
-Write the snapshot as a 6×6 matrix with multiplicity in the cells, ordered A1, A2, M1, D1, D2, P1:
+Draw the node set on both axes and mark a cell for each adjacent pair. A sparse relationship graph is a
+nearly empty square with a thin diagonal pattern; a projection clique is a filled block whose side is the
+group size. The area of the square is n², and the marked area is at most 2m, so the ratio of ink to paper
+is the sparsity that justifies a sparse layout. At n = 1e6 the square has 1e12 cells and a typical graph
+marks 2e6 of them, one in 500,000.
 
-```text
-        A1   A2   M1   D1   D2   P1
-   A1 [  0    0    3    1    0    1 ]
-   A2 [  0    0    2    1    1    0 ]
-   M1 [  3    2    0    0    0    0 ]
-   D1 [  1    1    0    0    0    0 ]
-   D2 [  0    1    0    0    0    0 ]
-   P1 [  1    0    0    0    0    0 ]
-```
+The picture makes multiplicity invisible in a way worth noticing. A cell is marked or not, so a
+multigraph's three transfers and one transfer draw identically. Everything the multigraph knows lives in
+a weight attached to the cell, and a weight map drawn as colour is the only way to see it. This is
+precisely the collapse described in F-01: the matrix is the natural representation for presence, and
+presence is exactly the question a frequency feature is not asking.
 
-Non-zero cells: 18 of 36 = 0.50 density, symmetric across the diagonal. Three visual facts are immediate and each corresponds to a modelling statement. The multiplicity 3 and 2 in the M1 column is the repeated-pair structure that the simple-graph projection would erase. The block containing M1, D1, D2 has no edges inside it, because the graph is bipartite between accounts and non-account entities — a fact invisible in a node list and obvious in the matrix. And P1 has a single entry, marking it as peripheral in this snapshot regardless of how important the person is in reality.
+The picture also shows why symmetry assertions are visual. A symmetric relation draws a symmetric pattern,
+so a defect that breaks symmetry is visible as a mark without its mirror. On 6 nodes that is a glance; on
+1e6 nodes it is a sampled test, but the same check applies to a sampled submatrix and it localises to the
+rows sampled.
 
-The matrix also shows why the dense encoding is competitive at this size: 36 cells versus 16 positions is only a 2.25x overhead, while at a million nodes it is a 200,000x overhead. Density, not node count, is the quantity to reason with.
+### 6.2 The incidence view
 
-### 6.2 Incidence view: facts as the primary objects
+Instead of a square, draw the bipartite graph of nodes and facts: two columns of dots with a line per
+fact crossing between them. This is the representation that loses nothing, because each fact is an object
+with its own line and its own attributes. The node-only graph is what you get by squashing the fact column
+and joining lines that share a node.
 
-Transposing the perspective gives a 6×9 incidence matrix whose columns are the edges. Each column has exactly two non-zeros (or one for a self-loop), so the column sums are all 2 and the row sums are the occurrence degrees. This is the correct mental picture for the fact layer: edges are first-class, and nodes are an aggregation of the columns that mention them. It is also why the fact table is the right source of truth — a node-centric view has already lost the columns.
+Squashing is where the loss happens, and the geometric version of the loss is that lines crossing near a
+shared node merge into one thick line whose width is multiplicity. A reader of the node-only picture sees
+a thick line and cannot tell whether it means three facts or one fact with a weight of three. The
+incidence picture keeps that distinction, which is why the base store should be the incidence structure and
+every node-level graph should be derived.
 
-```text
-        E1 E2 E3 E4 E5 E6 E7 E8 E9
-   A1 [  1  1  1  0  0  1  0  0  0 ]
-   A2 [  0  0  0  1  1  0  1  1  0 ]
-   M1 [  1  1  1  1  1  0  0  0  0 ]
-   D1 [  0  0  0  0  0  1  1  0  0 ]
-   D2 [  0  0  0  0  0  0  0  1  0 ]
-   P1 [  0  0  0  0  0  0  0  0  1 ]
-   column sums all 2; row sums = [5,4,5,2,1,1]
-```
+The incidence view also explains the hypergraph encodings geometrically. A group of four is one dot in the
+fact column with four lines in the incidence view. The star expansion keeps that dot and calls it a node.
+The 2-section deletes the dot and draws lines between the four, which is six lines where there were four.
+The picture of the deletion is the picture of the loss: the dot is gone, so the question "which group" can
+no longer be pointed at.
 
-### 6.3 The projection as a geometric quotient
+### 6.3 The projection as a quotient
 
-Projecting the bipartite account–device structure is a quotient operation: two accounts are identified if they share a device. Geometrically it collapses each device into a clique among the accounts that touch it. With D1 of degree 2 the clique is a single line; with a hub of degree 50,000 the clique is a near-complete graph with 1.25e9 edges, which is why projection is the operation that turns a sparse dataset into a dense one and why the resulting dense object is almost never materialised in full.
+A projection is a map that identifies the facts of one type and joins the nodes they connect. Draw it as
+a folding of the incidence graph along the fact column: pairs of lines sharing a fact are glued together.
+The gluing is what creates C(k,2) edges from k lines, and it is also what makes the operation
+non-invertible — an unglued pair cannot be un-glued into the specific facts that joined it.
 
-A useful picture for reviewers: the projection's edge set is the union of cliques, one per device, and the union is where the two failure directions live. Too few devices retained and real pairs are missed; every device retained and kiosks create cliques over unrelated people. Neither failure is visible in an aggregate count, because both produce a plausible number of projected pairs.
+The geometric consequence is that a projection can only shorten distances between nodes of the retained
+type, never lengthen them, because every projected pair is adjacent by construction. A rule expressed as
+"within two hops" therefore means something strictly larger on the projection than on the base graph, and
+the difference is the folding. This is why a hop-distance feature computed on a projection and a hop-
+distance feature computed on the base graph are different features that share a name.
 
 ### 6.4 The temporal axis
 
-Draw the fact table as a plane with event time on the x-axis and availability time on the y-axis. Facts sit at or above the diagonal (availability never precedes event time). A decision time t is a horizontal line; the eligible set is everything below it. A naive event-time filter is a vertical line, and the region between the two lines — early event time, late availability — is exactly the late-arrival region where backtests leak.
+Draw time as a third dimension with the fact set as a stack of layers, one per availability instant. A
+snapshot is a horizontal slice through the stack, and a bitemporal store is the same stack with each
+fact carrying its own belief interval along a fourth axis. The picture makes two facts obvious that prose
+obscures. A snapshot at time t is an intersection, not a filter, so it is cheap if the layer boundaries are
+materialised and expensive if they must be computed by scanning. And a correction that arrives late
+retroactively changes the layer it belongs to on the belief axis while leaving the event axis fixed, which
+is why one timestamp cannot express both.
 
-```text
-   t_avail
-     ^
-     |                    * E8   <- late, excluded at t = 03-05T00:00
-     |        ------------------------------ t (decision)
-     |   *E1 *E2 *E4 *E3 *E5 *E6 *E7 *E9
-     |________________________________> t_event
-        region above the decision line but left of it in event time
-        = facts the vertical filter would wrongly include
-```
-
-E8 is the concrete instance: event time 03-05T06:00Z, availability 03-05T06:00:04Z. At a decision time of midnight, an event-time filter excludes it and so does an availability filter, so this fact does not discriminate. A discriminating fact is one with an early event time and a late availability time; the example deliberately includes a latency of 31 s (E6) and 30 s (E7) so that a decision time inside that window separates the two filters. Teaching examples that never exercise the discriminating case give false confidence.
+The picture also shows why retention multiplies storage: 30 daily snapshots of a 21.4 GB structure is
+642 GB before replication, and three replicas take it to 1.93 TB. A design that stores snapshots to make
+backtests reproducible pays that bill, and the alternative — recomputing a snapshot from the base facts —
+costs a build per backtest run rather than a byte per day.
 
 ### 6.5 The hub as a geometric distortion
 
-Draw the one-hop neighbourhood of an ordinary account and of a device hub at the same scale. The ordinary account's neighbourhood is a small disc; the hub's is a ring of 50,000 points, and the ring is wider than the entire rest of the graph. Any two-hop traversal that starts anywhere inside the hub's disc instantly gains the whole ring as its frontier, which is why a cost estimate built from the mean degree is wrong by orders of magnitude on exactly the queries that matter.
+A hub is a node whose row in the matrix is dense and whose column is dense, so it appears as a cross
+through the sparse square. Every pair in its neighbourhood is two hops apart through it, which means one
+node sets the distance between k² pairs. On the toy graph, M1 has distinct degree 2 and already makes A1
+and A2 adjacent at distance 2; a real merchant with 50,000 counterparties makes 1.25 billion pairs
+distance-2, which is why a "two hops" rule on a payment graph is a rule about merchants.
 
-```text
-mean-degree estimate for a 2-hop frontier
-  start node degree 50, neighbour degrees averaging 200 -> 50 * 200 = 10,000 nodes
+The distortion is geometric in the literal sense: the hub collapses the graph's diameter and concentrates
+its triangles. Any null model for a motif count that does not preserve the degree sequence will therefore
+attribute the hub's triangles to coordination, which is the most common invalid inference in this area.
 
-actual frontier when the start node is adjacent to one hub of degree 50,000
-  49 ordinary neighbours * 200 = 9,800
-  1 hub neighbour * 50,000     = 50,000
-  total                        = 59,800 nodes, 5.98x the estimate
+### 6.6 The sparse pattern in the incidence view
 
-if the start node is itself the hub
-  frontier = sum of neighbour degrees = at least 50,000 * median
-```
-
-The distortion is not a variance problem that more samples fix; it is a maximum-versus-mean problem, and the correct planning statistic is a high quantile of the neighbour-degree distribution, not its mean. A useful rule: size the traversal budget by the 99.9th percentile of neighbour degree, and cap the frontier explicitly with a stated selection rule so the cost bound is real rather than hoped for.
-
-### 6.6 Sparse pattern in the incidence view
-
-The incidence matrix of Section 6.2 has exactly two non-zeros per column. That is a stronger statement than "the matrix is sparse": it says every fact has exactly two endpoints, so the structure is a 2-uniform hypergraph. Hyperedges of size 3 or 4 break the column-sum invariant, and any code that assumes two endpoints per fact will either drop the extra participants or duplicate the row. The geometric picture is that the fact layer lives on a simplex of dimension two, and a size-4 hyperedge leaves that simplex. Recognising this is what tells a designer that a size-4 group event cannot be stored in a two-column table without a decomposition choice.
+A real incidence structure is not uniformly sparse: it has a small number of very dense rows (the hubs),
+a long tail of degree-1 and degree-2 nodes (devices seen once, accounts with one transfer), and a middle
+that carries most of the facts. Plotted as a histogram of row degrees on a log axis, the shape is
+characteristically heavy-tailed, and the two tails have different meanings. The upper tail is
+instrumentation and aggregation; the lower tail is sparsity and thin evidence. Features that treat both
+tails symmetrically — a mean degree, for instance — are dominated by the upper tail and unrepresentative
+of the middle.
 
 ### 6.7 The projection lattice
 
-Projections compose. Projecting accounts onto devices, then devices onto addresses, gives an account–address relation that is not the same as projecting accounts directly onto addresses. The composition loses the intermediate: after the first step you cannot tell which device produced an address link, so a later correction to a device merge cannot be propagated. The geometric statement is that projections form a lattice under composition, and each composition step reduces the rank of the recoverable lineage. A design that needs reversible projections must store the intermediate artifacts, which is a storage cost, not a query cost.
+Draw the layers as a lattice: raw facts at the bottom, the incidence structure above them, the node-level
+graph above that, the projection above that, and the feature table at the top. Each upward step loses
+something and each has a rebuild path downward. The lattice is the right mental picture because it makes
+the rebuild dependency explicit: a feature cannot be rebuilt without its snapshot, a snapshot without its
+identity version, and an identity version without the base facts. A system that stores only the top layer
+has no rebuild path and therefore no way to answer a question about the middle.
 
-**Takeaway:** The matrix shows multiplicity and bipartiteness, the incidence view shows that facts are primary, the quotient view shows where projection explodes, and the time plane shows which filter leaks.
+**Takeaway:** Four pictures carry the section — the sparse square, the incidence bipartite graph, the
+folding that creates a projection, and the time stack — and each answers a question that the formulas
+alone leave ambiguous.
 
 ## 7. Comparison / Selection Table
 
-| Pattern | Grain | Cheapest query | Expensive query | Information lost | Use when | Avoid when |
-|---|---|---|---|---|---|---|
-| Edge table (row store) | one fact per row, typed, bitemporal | filtered scan by time, type, node | multi-hop traversal | nothing, if all columns kept | base store of record; audit; corrections | latency-critical scoring at scale |
-| Edge table with composite index | one fact per row, indexed pairs | one-hop by either endpoint | three-hop paths | nothing | serving a small snapshot per request | graphs above roughly 1e7 edges |
-| CSR / CSC arrays | one position per (node, occurrence) | one-hop expansion, batch analytics | per-edge filtering, updates | relation-type and time filters unless parallel arrays added | nightly feature build, GNN batching | transactional writes, ad hoc predicates |
-| Adjacency list of lists | one list per node | pointer-chasing traversal, iterative sampling | vectorised scans, shared-memory parallelism | nothing, but allocator-bound | small graphs, rapid prototyping | hub-heavy graphs, memory-constrained hosts |
-| Adjacency matrix (dense) | n² cells | matrix products, spectral methods | anything sparse | nothing, wastes memory | n below a few thousand, spectral work | n above ~1e4 |
-| Triple table (RDF-style) | one statement per row | predicate-first pattern matching | multi-hop joins, aggregates | values need extra triples or reification | schema evolution, heterogeneous sources | analytics over homogeneous facts |
-| Reified property graph | edge as node with statements | per-edge provenance queries | bulk traversal | nothing | audited edges, per-edge annotations | high-volume aggregation |
-| Hypergraph (star expansion) | node per hyperedge | incidence queries | pairwise adjacency | pairwise co-membership | group events, joint accounts | pairwise-only analysis |
-| Hypergraph (2-section) | clique per hyperedge | pairwise adjacency | incidence, group identity | group identity, hyperedge count | pairwise similarity features | large hyperedges (quadratic) |
-| Materialised projection | one row per projected pair | downstream pair features | provenance of the pair | the fact layer entirely | fixed pair-level model with no audit need | any need to explain or revise pairs |
+### 7.1 Layout families
 
-Read the table as a set of bets, not a ranking. Three rows deserve explicit comment because they are commonly chosen for the wrong reason. The **adjacency matrix** row is chosen for spectral work, where the eigen-decomposition needs the dense form; choosing it to "simplify code" converts a sparse problem into a memory problem, and the failure appears only when the node count grows. The **materialised projection** row is chosen when a downstream model wants one row per pair; it is a legitimate choice, but it deletes the fact layer from the lineage, so an audit can no longer ask which device caused the pair. The **triple table** row is chosen for schema flexibility; the price is that every aggregate is a join, and joins on a flexible schema with an unconstrained predicate column are where query planners produce their worst plans.
+| Layout | Grain | Cheap query | Expensive query | Information lost | Choose when |
+|---|---|---|---|---|---|
+| Edge table, row store | one fact per row, all columns | filtered scan by time, type, node | multi-hop traversal | nothing if all columns are kept | base store of record, audit, corrections |
+| Edge table with composite index | one fact per row, indexed pairs | one-hop by either endpoint | three-hop paths at scale | nothing | serving small snapshots per request |
+| CSR array | one position per (node, occurrence) | one-hop expansion, batch analytics | per-edge filtering, mid-array insert | relation and time filters without parallel arrays | nightly feature builds, batched computation |
+| CSC array | one position per (destination, occurrence) | reverse traversal, in-edge features | forward expansion | as CSR | bidirectional search, predecessor features |
+| Adjacency list of lists | one list per node | iterative traversal, sampling | vectorised scans | nothing, but allocator-bound | small graphs, prototypes, dynamic graphs |
+| Dense adjacency matrix | n² cells | matrix products, spectral work | anything sparse | nothing, wastes memory | n below about 1e4, spectral algorithms |
+| Bitset adjacency | n² bits | set intersection, reachability closure | weighted aggregates | weights | n below about 1e5, reachability only |
+| Triple table | one statement per row | predicate-first matching | multi-hop joins, aggregates | values need extra statements | heterogeneous sources, schema evolution |
+| Reified property graph | fact as a resource | per-fact provenance queries | bulk aggregation | nothing | audited facts, per-fact annotations |
+| Hypergraph, star expansion | node per group | incidence queries | pairwise adjacency | nothing; adds non-domain nodes | group events, joint accounts, shared devices |
+| Hypergraph, 2-section | clique per group | pairwise adjacency | group identity, group count | group identity, hyperedge count | pairwise similarity features |
+| Materialised projection table | one row per projected pair | downstream pair features | provenance of the pair | the fact layer from the lineage | fixed pair-level model with no audit need |
 
-Two derived selection rules follow from the cost formulas and are worth stating as heuristics with their conditions attached. If the dominant query is one-hop expansion over a frozen snapshot and the graph has more than roughly a million edges, CSR wins on both memory and scan locality. If the dominant query is "which edges involve this node, filtered by type and time", the row store wins despite the byte overhead, because the filter is applied before the join rather than after the expansion — and the 7x storage penalty buys an index that prunes 90% of the scan.
+Read the table as a set of bets rather than a ranking, and note that only two rows lose information that a
+regulator would ask for: the materialised projection loses provenance, and the 2-section loses group
+identity. Every other loss is a column that can be added back with a parallel array, which is why those two
+rows deserve the most scrutiny in a design review.
 
-### 7.1 Selection procedure for a new dataset
+Three rows are commonly chosen for the wrong reason. The **dense matrix** row is chosen for spectral work,
+where the dense form is genuinely required; choosing it to simplify code converts a sparse problem into a
+memory problem whose failure appears only when n grows, and the arithmetic in 4.3(D) shows the ratio rising
+as n²/(n+m). The **materialised projection** row is chosen when a downstream model wants one row per pair,
+and it is legitimate there; the price is that the fact layer leaves the lineage, so an audit can no longer
+ask which device caused the pair. The **triple table** row is chosen for schema flexibility, and the price
+is that every aggregate is a join over a table whose join key is not constrained to be dense.
 
-The table above is a lookup; the procedure below is what produces a defensible choice when two rows look acceptable.
+Two selection rules follow from the cost formulas and are worth stating as heuristics with their conditions
+attached. If the dominant query is one-hop expansion over a frozen snapshot with more than roughly a
+million facts, CSR wins on both memory and scan locality, and the advantage grows with m. If the dominant
+query is "which facts involve this node, filtered by type and time", the row store wins despite its byte
+overhead, because the filter is applied before the join rather than after the expansion — and the 8.22x
+storage penalty at 1e9 facts buys an index that prunes most of the scan.
 
-1. Write the decision the graph serves, with its latency budget and its refresh cadence. A nightly queue and an authorisation decision differ by five orders of magnitude in latency and cannot share a serving layout.
-2. Write the fact grain explicitly. If the answer contains the word "per" twice, the grain is under-specified; for example "one row per transfer per account" is ambiguous about whether a transfer appears once or twice.
-3. Enumerate the queries that will run, with their filters. The dominant query determines the layout; the second and third determine whether a second copy is needed.
-4. Check every query against the loss column. If a query needs information the layout deletes, the layout is wrong regardless of speed.
-5. Compute the storage from the formula, then multiply by the number of retained snapshots and the replication factor. Both multipliers are commonly forgotten and each is typically 2 to 3.
-6. Name the rebuild path and its trigger. If there is no rebuild path, the layout is a store of record and must be append-only.
-7. Write the assertion set: degree identity, offset monotonicity, relation registry coverage, time monotonicity. These are the checks that fail loudly when someone changes the loader.
+### 7.2 Selection procedure for a new dataset
 
-Steps 1 and 3 are the ones that require talking to a consumer, and they are the steps most often skipped in favour of a benchmark. A benchmark answers "which is faster for the query I measured", which is a narrower question than "which is faster for the query that will dominate".
+1. Write the decision the graph serves, with its latency budget and refresh cadence. A nightly queue and
+   an authorisation decision differ by five orders of magnitude in latency and cannot share a serving
+   layout, no matter how similar their facts look.
+2. Write the fact grain in one sentence containing exactly one "per". If the sentence needs two "per"s,
+   the grain is under-specified: "one row per transfer per account" is ambiguous about whether a transfer
+   appears once or twice.
+3. Enumerate the queries that will run and the filter each applies. The dominant query determines the
+   layout; the second and third determine whether a second copy is warranted.
+4. Test each query against the loss column. If a query needs information a layout deletes, the layout is
+   wrong regardless of its speed, and the speed is a distraction from the answer.
+5. Compute storage from the formula, then multiply by retained snapshots and replication. Both multipliers
+   are routinely forgotten and each is typically between 2 and 30.
+6. Name the rebuild command and its trigger. A structure without a rebuild path is a store of record and
+   must be append-only, which is a much stronger requirement than it sounds.
+7. Write the assertion set: degree identity, offset monotonicity, relation registry coverage, distinct
+   degree sum, and symmetry for symmetric relations. These are the checks that fail when a loader changes.
 
-### 7.2 Two-layout architectures and when they are justified
+Steps 1 and 3 require talking to a consumer, and they are the steps most often replaced by a benchmark. A
+benchmark answers which layout is faster for the query that was measured, which is a narrower question
+than which is faster for the query that will dominate, and the difference between those two questions is
+where most of the cost of a redesign comes from.
 
-The dominant pattern in practice is two layouts: a row store as the store of record and a CSR as the analytic replica. It is justified by three conditions, all of which must hold. The first is that the analytic workload can tolerate staleness bounded by the rebuild interval. The second is that the replica's rebuild is deterministic, so a rerun produces identical bytes. The third is that deletion propagates, meaning a deleted fact invalidates the replica within the same bound rather than surviving in it indefinitely.
+### 7.3 Two-layout architectures
 
-When the third condition fails, the two-layout architecture becomes a correctness liability: the store of record and the replica disagree about whether a fact exists, and the replica is the one used for scoring. The failure is not detectable by row-count reconciliation unless deletions are counted separately, which is why deletion propagation deserves an explicit test and not a paragraph in a design document.
+The dominant production pattern is a row store as the store of record plus a CSR as the analytic replica.
+It is justified by three conditions, all of which must hold. First, the analytic workload tolerates
+staleness bounded by the rebuild interval. Second, the rebuild is deterministic, so a rerun produces
+identical bytes. Third, deletion propagates, so a deleted fact invalidates the replica within the same
+bound rather than surviving in it indefinitely.
 
-**Takeaway:** Choose the layout by naming the dominant query and the acceptable loss; a table that starts from the storage engine rather than the query has already skipped the design step.
+When the third condition fails the architecture becomes a correctness liability: the store of record and
+the replica disagree about whether a fact exists, and the replica is the one used for scoring. The failure
+is not detectable by row-count reconciliation unless deletions are counted separately, which is why
+deletion propagation needs an explicit test rather than a paragraph in a design document.
+
+The interface between the two should be narrow and explicit: fact identifier, snapshot identifier,
+identity version, and a build timestamp. Anything wider couples the two builds and makes a regression
+ambiguous, because a change in the replica can no longer be attributed to a data change or a code change
+without a bisect over both.
+
+### 7.4 Choosing between the four timestamp sets
+
+| Timestamp set | Answers | Cost per position | Choose when |
+|---|---|---|---|
+| none | current state only | 13 B (L1 5 B without weight) | the structure is derived and disposable |
+| event only | when facts happened | 21 B | analytics on the event axis, no backtests |
+| event + availability | what a model could have known | 29 B | any backtest, any decision-time feature |
+| all four (bitemporal) | what was believed and when | 45 B | base store of record, corrections, audits |
+
+The middle two rows are the ones confused in practice. A structure with event time only can compute
+everything about the world and nothing about the pipeline, which means it can support a feature that is
+recomputed identically but not a backtest that reproduces a decision. The 8 B that separates them is the
+cheapest 38% in this sheet.
+
+**Takeaway:** Choose the layout by naming the dominant query and the acceptable loss, and choose the
+timestamp set by naming the question the consumer will ask about time.
 
 ## 8. Failure Modes & Edge Cases
 
-Each entry states the mechanism, the causes that compete with it, and a check that separates them. The checks are the deliverable; the mechanisms are the vocabulary for asking.
+Each entry states the mechanism, the causes that compete with it, and an observation that separates them.
+The check is the deliverable; the mechanism is only the vocabulary for asking the question.
 
 ### F-01 Multiplicity collapsed to presence
 
-**Mechanism.** A pair occurring three times is stored once, usually because a `UNIQUE(src, dst)` constraint was added to make a join safe. Every downstream count then reports presence, and any frequency feature becomes a constant.
+**Mechanism.** A pair occurring three times is stored once, usually because a uniqueness constraint was
+added to make a join safe. Every downstream count then reports presence, and a frequency feature becomes
+constant at one. On the toy graph the collapse would take the occurrence sum from 18 to 12 and the mean
+occurrences per pair from 1.50 to 1.00.
 
-**Competing causes.** (a) multiplicity collapse at write time; (b) an as-of filter that is too aggressive and drops repeat occurrences; (c) deduplication in a SQL `SELECT DISTINCT` upstream of the feature. All three produce the same symptom: frequency features flat at 1.
+**Competing causes.** (a) collapse at write time via a constraint; (b) an as-of filter that is too
+aggressive and drops repeat occurrences whose availability differs; (c) a `SELECT DISTINCT` added upstream
+of the feature to fix a fan-out bug in a join.
 
-**Discriminating check.** Count rows and count distinct pairs on the same snapshot for the same relation. If rows > pairs and the feature max is 1, the collapse is downstream of the fact table; if rows = pairs, the collapse is at write time. In the toy graph the ratio is 9/6 = 1.5, so a collapse would be detectable as a drop to 6.
+**Discriminating check.** Count rows and distinct pairs on the same snapshot for one relation. If rows
+exceed pairs and the feature maximum is one, the collapse is downstream of the fact table. If rows equal
+pairs, it is at write time. On the toy graph the healthy ratio is 9/6 = 1.5, so the collapse appears as a
+drop to 6 with the row count unchanged in the base table.
 
 ### F-02 Availability time backdated to event time
 
-**Mechanism.** A batch load sets `t_avail = t_event` because the pipeline has no load timestamp, making every historical snapshot appear to know facts it could not have known. Offline metrics rise; production metrics do not.
+**Mechanism.** A batch loader has no load timestamp, so it fills availability from event time. Every
+historical snapshot then appears to know facts it could not have known, offline metrics rise, and
+production does not follow. The toy graph shows the signature: all nine lags become zero, whereas the
+actual lags run from 29 s to 74 s.
 
-**Competing causes.** (a) missing availability column filled from event time; (b) a correction process that updates the availability of old rows; (c) a timezone shift that moves availability earlier than event time. All three raise offline metrics relative to production.
+**Competing causes.** (a) a missing column filled from event time; (b) a correction process that rewrites
+the availability of old facts; (c) a timezone shift that moves availability earlier than the event.
 
-**Discriminating check.** Compute `min(t_avail - t_event)` over the fact table. A negative minimum proves a timezone or clock defect. A distribution with no mass above a few seconds proves the column is synthetic, because real ingestion has a tail. Then re-run one feature at a decision time inside the tail window: if the feature value changes when the availability rule is restored, the metric depended on the backdating.
+**Discriminating check.** Compute the minimum and the distribution of t_avail − t_event. A negative minimum
+proves a timezone or clock defect. A distribution with no mass above a few seconds proves the column is
+synthetic, because real ingestion has a heavy tail. Then recompute one feature at a decision time inside
+the tail window: a value that changes when the availability rule is restored shows the metric depended on
+the backdating.
 
 ### F-03 Supernode fan-out in traversal
 
-**Mechanism.** A shared token acquires 50,000 edges, and any two-hop expansion that touches it visits the entire neighbourhood. The traversal does not merely slow down; it changes the composition of the result, because the hub contributes 50,000 neighbours out of an otherwise small frontier.
+**Mechanism.** A shared token acquires 50,000 facts, and any two-hop expansion touching it visits the
+entire neighbourhood. The traversal does not merely slow down; it changes the result's composition,
+because the hub contributes 50,000 of the frontier's members and every aggregate over the frontier is
+therefore an aggregate over the hub.
 
-**Competing causes.** (a) genuine hub; (b) sentinel collapse such as `device = "unknown"`; (c) identifier recycling where one token was reused across years. All three look identical in degree.
+**Competing causes.** (a) a genuine hub such as a merchant or an institution; (b) a sentinel value such as
+`device = 'unknown'`; (c) identifier recycling, where one token was reused across years for different
+entities.
 
-**Discriminating check.** Sample twenty edges at the hub and inspect the source payload. If the device identifier is a constant string or a null, the hub is an artifact. If the edges are real but span years with disjoint account sets, it is recycling. If they are real and contemporaneous, it is a genuine hub and needs a policy (cap, downweight, exclude) rather than a fix.
+**Discriminating check.** Sample twenty facts at the hub and inspect the source payload. A constant string
+or a null proves a sentinel. Real facts with disjoint account sets across years prove recycling. Real,
+contemporaneous facts with varied payloads prove a genuine hub, which needs a policy (cap, downweight,
+exclude) rather than a fix.
 
-### F-04 Projection threshold breaks monotonicity
+### F-04 Projection threshold applied to a closed form
 
-**Mechanism.** A pruning rule keeps pairs sharing at least two attributes, or with similarity above 0.5. Adding a true edge changes the denominator of the similarity, so a pair can vanish when evidence is added. Incremental updates then produce a different graph from a full rebuild.
+**Mechanism.** A pipeline computes its expected output with C(k,2) and then prunes hubs below a degree
+threshold. The pruned count is data-dependent, so the capacity estimate is wrong in the optimistic
+direction and the job runs out of memory on the first hub-heavy day.
 
-**Competing causes.** (a) non-monotone pruning; (b) unstable tie-breaking in the top-k of a similarity list; (c) non-deterministic iteration order in the projection job. All three produce rebuild-versus-incremental divergence.
+**Competing causes.** (a) the formula applied to a pruned projection; (b) a threshold applied to the input
+degrees but not to the projected pair list, so the hub's pairs still emit; (c) deduplication that reduces
+the realised count below the formula, which masks (a) until it does not.
 
-**Discriminating check.** Build the projection twice: once from the full fact table, once by applying the incremental delta to a previous build. Compare pair sets exactly. Any symmetric difference is a reproducibility defect; then bisect with the pruning disabled — if the difference disappears, the pruning rule is non-monotone.
+**Discriminating check.** Emit the pair count per group before and after pruning, sorted by group. A ratio
+close to one with a large formula prediction means the prune and the formula are measuring different
+things; a ratio well below one means the prune works and the formula is simply the wrong estimate. The
+useful report is the realised count and the formula side by side, with the gap attributed.
 
-### F-05 Entity overmerge
+### F-05 Entity overmerge and undersplit
 
-**Mechanism.** Two people share a surname, a postcode and a birth year, and the resolution rule merges them. Their graphs union, and each appears to be connected to the other's counterparties.
+**Mechanism.** A resolution rule joins two records that are different people with the same name and
+postcode, unioning their neighbourhoods; both nodes then have a degree equal to the sum of two, and every
+two-hop feature doubles. The mirror defect splits one person into two nodes, deleting facts from each and
+making both look sparse.
 
-**Competing causes.** (a) overmerge from weak attributes; (b) genuine shared account (joint account, power of attorney); (c) a merge caused by a data-entry error in one source. All three create edges between parties that do not co-operate.
+**Competing causes.** (a) a match threshold set too low; (b) a shared field such as a household address or
+a generic name; (c) identifier recycling across time, where an old record's identifier was reused.
 
-**Discriminating check.** Take merged pairs and measure attribute agreement on a held-out adjudicated sample; report pair precision at the threshold actually used. Then check whether the merged node's edge set spans incompatible time ranges or geographies — a joint account does not typically produce transactions in two countries in the same minute.
+**Discriminating check.** Inspect the member count of the merged cluster and the field values of its
+members. An overmerge has a member count above the population's 99.9th percentile with field values that
+agree on the blocking key and disagree elsewhere. An undersplit has two clusters whose blocking keys
+agree and whose distinguishing fields agree too, which means the match rule never compared them.
 
-### F-06 Entity undersplit
+### F-06 Relation type used as a filter after projection
 
-**Mechanism.** The same person appears as three nodes because three systems emit three identifier formats. The graph is fragmented and every degree is understated, so ring detection misses the connection that a human would see instantly.
+**Mechanism.** A feature wants transfer-based connectivity but is computed from a projection that mixed
+sightings and transfers. The result is a number in mixed units, and it changes when the sighting
+instrumentation changes even though no transfer did.
 
-**Competing causes.** (a) missing normalisation rule; (b) a threshold set too conservatively after an overmerge incident; (c) a source that genuinely uses separate identifiers with no shared attribute. All three lower apparent connectivity.
+**Competing causes.** (a) the projection lost the relation column, as in the L1 layout without a parallel
+array; (b) the feature filtered on relation but the projection had already merged two relations into one;
+(c) a relation registry that maps two source codes to one canonical type.
 
-**Discriminating check.** Search for pairs of nodes with identical normalised attribute tuples but different identifiers; count them. A non-zero count with distinct identifiers means the rule is under-applying. If zero, the sources genuinely do not overlap on attributes and the remedy is a new attribute, not a lower threshold.
+**Discriminating check.** Compute the feature twice, once from the relation-filtered incidence structure
+and once from the projection. A difference proves the projection lost or merged the type. Then check the
+relation registry's distinct count against the source's code list, which localises (c) in one query.
 
-### F-07 Relation type used as a filter after projection
+### F-07 Null value coerced to zero
 
-**Mechanism.** A projection pools `TRANSFER` and `REFUND` because both connect an account to a merchant. Aggregate features then mix money in with money out, and the mean value becomes meaningless without any error appearing.
+**Mechanism.** A nullable value column is summed with nulls treated as zero, so a mean is divided by a
+denominator that includes facts with no value. On the toy graph the transfer mean falls from 250.00 to
+138.89, a 44.4% error, while the numerator is unchanged.
 
-**Competing causes.** (a) projection lost the relation discriminator; (b) a nullable relation column defaulted to `TRANSFER`; (c) an upstream join dropped the type to fit a two-column key. All three give a mixture distribution.
+**Competing causes.** (a) the coercion as described; (b) a join that produced a null for an unmatched fact
+and the aggregate then treated it as a real null; (c) a unit change that stored a scaled value and
+appeared as a large negative residual.
 
-**Discriminating check.** Compute the feature separately per relation type on the same snapshot and compare distributions. If the pooled version is bimodal or has a variance far above either component, the discriminator was lost. Then inspect the projected table's schema: absence of the column is conclusive.
+**Discriminating check.** Compare the aggregate's denominator against the count of facts with a non-null
+value in the same relation and window. Equality means the denominator is correct; a larger denominator
+means nulls were counted. Then sum the nulls explicitly: a non-zero count with a mean equal to the
+non-null mean times the ratio identifies the coercion with no further work.
 
-### F-08 Null value coerced to zero
+### F-08 Correction overwritten in place
 
-**Mechanism.** Device sightings have no amount, and a `NOT NULL DEFAULT 0` converts absence into a measurement. A mean transfer value now divides by a count that includes non-transfers, and the mean falls without any behaviour change.
+**Mechanism.** A fact is corrected by updating the row, so the previous value and its availability are
+gone. A backtest run before the correction cannot be reproduced, and a dispute about what the model saw
+cannot be resolved. The defect is invisible in row counts, because the row count is unchanged.
 
-**Competing causes.** (a) default-zero coercion; (b) an outer join that produces nulls then summed without a null check; (c) a legitimate zero-value transfer. All three lower the mean.
+**Competing causes.** (a) an in-place update as described; (b) a merge that collapsed two versions into one
+by taking the latest per identifier; (c) an ingestion deduplication that kept the last write per natural
+key.
 
-**Discriminating check.** Count facts by relation type with `value IS NULL` before the coercion. In the toy graph four facts carry no value (E6–E9), so an average over all nine has denominator 9 while a correct average has denominator 5. Comparing 16.67 versus 30.00-style discrepancies exposes the coercion immediately.
+**Discriminating check.** Count rows per fact identifier. A count of exactly one for every identifier in a
+system that has ever issued a correction proves no version history. The complement is to ask for the value
+of one fact at a past availability instant: a system with history answers, and a system without either
+errors or returns today's value, and the two are distinguishable by comparing against a known correction.
 
-### F-09 Correction overwritten in place
+### F-09 Bitemporal schema without a write rule
 
-**Mechanism.** A mis-posted transfer is updated, not superseded. The prior fact disappears from history and any snapshot before the correction now contains the corrected value, so a backtest sees the future.
+**Mechanism.** Four timestamp columns are added and the system is declared bitemporal. Nothing prevents two
+visible versions of the same fact at the same belief instant, so a historical query double-counts and every
+aggregate over it is inflated by the number of superseded versions.
 
-**Competing causes.** (a) in-place update; (b) a snapshot rebuilt from current state rather than from a bitemporal table; (c) a cache that was refreshed after the correction. All three make historical snapshots non-reproducible.
+**Competing causes.** (a) no enforcement at the write path; (b) a bulk load that bypassed the write path and
+inserted overlaps; (c) a valid-time representation whose system-end convention is open-interval in one
+loader and closed in another.
 
-**Discriminating check.** Rebuild the snapshot for a past decision time from the base table and diff against the stored snapshot identifier. If the diff is non-empty and the base table has no supersede rows, the base itself is not bitemporal. The check requires the snapshot to have been stored, which is the argument for storing them.
+**Discriminating check.** Assert at most one visible row per (fact identifier, system instant) with a
+group-by and having-count. A violation localises to the identifiers involved. The check is exact and cheap,
+and it is the only assertion that distinguishes a bitemporal schema from a bitemporal system.
 
 ### F-10 Direction dropped for symmetric convenience
 
-**Mechanism.** A directed `TRANSFER` is stored with an unordered pair key so both directions can be queried with one index. In-degree and out-degree become the same number, and any flow-based feature silently becomes a volume feature.
+**Mechanism.** A directed relation is stored as undirected, so a transfer from A to M becomes a symmetric
+edge. In-degree and out-degree are then the same number, and every feature that depends on direction —
+net flow, fan-in from new counterparties — loses its signal.
 
-**Competing causes.** (a) unordered key; (b) a normalisation that sorts the endpoints; (c) a view that presents the underlying table symmetrically. All three make in-degree equal out-degree.
+**Competing causes.** (a) the direction dropped at ingest; (b) a symmetric flag in the relation registry set
+wrongly; (c) a deduplication that collapsed A→M and M→A into one row because the pair matched.
 
-**Discriminating check.** Assert that the count of rows with `in_degree != out_degree` is non-zero for a directed relation. In the toy graph A1 out-edges 3 and in-edges 1 (E9), so any snapshot where they are equal for every account has lost direction. The assertion is cheap and it fails loudly.
+**Discriminating check.** Compare the sum of out-degrees to the sum of in-degrees for the relation. For a
+directed relation they are equal (both equal m), so equality proves nothing; instead check whether any node
+has a non-zero out-degree and a zero in-degree. A merchant with many in-edges and no out-edges proves the
+direction exists; a graph where every node has in-degree equal to out-degree for a supposedly directed
+relation proves it was collapsed.
 
 ### F-11 Timestamp granularity mismatch
 
-**Mechanism.** One source emits seconds and another milliseconds; a loader casts both to seconds by dropping digits, or to milliseconds by multiplying. The two directions differ by a factor of 1000, and as-of filters near a boundary include or exclude the wrong facts.
+**Mechanism.** Two sources report at different granularities, one in seconds and one in days. A join on
+timestamp equality then fails for all facts from one source, or succeeds for none, and the resulting graph
+is partitioned by source with no error raised.
 
-**Competing causes.** (a) unit mismatch; (b) timezone offset applied twice; (c) daylight-saving double counting in local time. All three move facts across a boundary.
+**Competing causes.** (a) granularity mismatch as described; (b) a timezone offset applied in one loader
+only; (c) a string format difference that parses successfully into a wrong value, such as day-month
+swapped.
 
-**Discriminating check.** Compute the maximum gap between a fact's event time and its availability time. A gap near 1000 s, or a cluster at exactly ±3600 s, indicates the specific defect. Then check the fraction of facts with a negative gap: any non-zero fraction is conclusive for a zone error.
+**Discriminating check.** Compute the distribution of seconds-since-midnight for each source. A source whose
+values are all zero has day granularity. Then compute the hour-of-day histogram: a source shifted by a
+whole number of hours has a timezone defect, while one that is uniformly spread is granularity-independent.
 
 ### F-12 Self-loop counted once
 
-**Mechanism.** A transfer from an account to itself is stored as a self-loop and the degree aggregate adds one instead of two, so the handshake identity fails by the number of self-loops. A pipeline that treats this as corruption deletes real facts.
+**Mechanism.** A fact whose endpoints are the same entity, such as a transfer to oneself or a device
+sharing event with itself, is counted once in the degree column. The handshake identity then fails by the
+loop count, and the failure is attributed to the loader rather than to the loop.
 
-**Competing causes.** (a) genuine self-transfer; (b) an entity-resolution merge that creates a self-loop from a previously cross-account transfer; (c) a duplicate key collision. All three produce self-loops.
+**Competing causes.** (a) the convention as described; (b) a resolution merge that made two distinct
+endpoints identical, creating loops retroactively; (c) a projection that emits a self-pair when a group of
+size one is not filtered.
 
-**Discriminating check.** Count self-loops and recompute `sum(degree) - 2m`; the residual should equal the self-loop count. If the residual equals the count, the loop handling is the only defect. If the residual also changes after a merge, the resolution step is synthesising loops and the merge rule needs a guard.
+**Discriminating check.** Count loops and compare the degree sum to 2m + L. Equality with the loop term
+included proves the convention is loop-aware and correct; equality with 2m proves loops are counted once.
+A merge-created loop is distinguishable because the loop count changes between identity versions while the
+base facts do not.
 
 ### F-13 Composite key collision across relation types
 
-**Mechanism.** The fact table is keyed on `(src, dst)` without the relation, so a `USED_DEVICE` and a `OWNS` fact on the same pair cannot coexist; the second insert is rejected or overwrites. Relation types vanish from the graph silently.
+**Mechanism.** A key of (src, dst) without the relation type collides across types, so a transfer and a
+sighting between the same pair of nodes overwrite each other. The graph loses one of the two facts silently,
+and the surviving type is whichever loaded last.
 
-**Competing causes.** (a) key missing the predicate; (b) upsert semantics on a shared key; (c) an ETL dedup that keeps the first row per pair. All three reduce the relation-type count.
+**Competing causes.** (a) a key missing the relation as described; (b) a key that includes relation but
+whose enum maps two source codes to the same value; (c) a staging table that partitioned by pair and kept
+one row per partition.
 
-**Discriminating check.** Compare the set of relation types in the source extract against the set present in the fact table for the same period. A missing type with a non-zero source count is conclusive. In the toy schema, keying without `rel` would have forced E6 and any `OWNS_DEVICE` fact to collide.
+**Discriminating check.** Count distinct (src, dst, rel) triples against distinct (src, dst) pairs per type.
+A per-type count below the triple count proves collision. Then count per relation: the survivor's count
+exceeds the others by exactly the collided number, which identifies the overwrite direction.
 
-### F-14 Snapshot rebuilt from the wrong identity version
+### F-14 Snapshot rebuilt from a different identity version
 
-**Mechanism.** Features are computed on a snapshot built with identity version 7 while the training labels came from cases keyed on version 6. Two nodes that were split then are merged now, so the label attaches to a different entity.
+**Mechanism.** A snapshot identifier names a date and a relation filter but not an identity version, so a
+rebuild after a resolution change produces a different graph under the same name. Feature values change,
+the change is attributed to the model, and the investigation starts in the wrong place.
 
-**Competing causes.** (a) version skew; (b) a merge applied without invalidating stored features; (c) a label store keyed on raw identifiers. All three misalign labels and features.
+**Competing causes.** (a) the version omitted from the identifier; (b) a version recorded but not used in
+the build; (c) a canonical-identifier rule that allocates fresh identifiers on each run even for an
+identical partition.
 
-**Discriminating check.** Join the feature table to the identity map on the version recorded in the snapshot metadata. Any node in the feature table absent from the stated version indicates skew. Then recompute one aggregate under both versions and compare: the difference bounds the contamination.
+**Discriminating check.** Rebuild the snapshot twice from the same identifier and diff the byte counts and
+the member counts. Identical bytes prove determinism; identical member counts with different identifiers
+proves the allocation rule is at fault; different member counts prove the partition changed, which means
+the version was not pinned.
 
 ### F-15 Hub pruning applied at query time
 
-**Mechanism.** A traversal caps the frontier at 1,000 neighbours, choosing them in storage order. Results become order-dependent and non-reproducible, and the cap silently excludes whichever neighbours happen to sit at the end of the array.
+**Mechanism.** A hub exclusion list is applied inside each query rather than at build time. The exclusion
+costs a predicate evaluation per frontier node, and worse, the pruned structure is not what the aggregates
+were computed against, so reports and features disagree about the graph's degree distribution.
 
-**Competing causes.** (a) arbitrary cap; (b) top-k by weight with unstable ties; (c) shuffled iteration order in a distributed job. All three produce run-to-run variation.
+**Competing causes.** (a) query-time pruning as described; (b) a build-time prune that was not propagated
+to one consumer; (c) two prune lists maintained by different teams.
 
-**Discriminating check.** Run the same query twice with a fixed seed and once with a different storage order; identical results under a seed but different results across orders isolates the ordering as the cause. A principled cap must be defined by a rule (highest weight, most recent) and the dropped fraction reported.
+**Discriminating check.** Compute the total degree from the serving structure and from the stored
+aggregate. A gap equal to the excluded hubs' degrees proves a prune is in effect on one side only. Then
+diff the two hub lists by identifier, which is the cheapest way to find (c).
 
-### F-16 Schema evolution that breaks the rebuild
+### F-16 Storage estimate that ignores indexes and replicas
 
-**Mechanism.** A new relation type is added with a different value semantic (net rather than gross). The rebuild script does not know about it, so aggregates either exclude it silently or include it with the wrong meaning.
+**Mechanism.** A capacity plan uses the CSR formula and omits the secondary indexes on the row store, the
+retained snapshots and the replication factor. The plan therefore understates by a factor between 4 and 90,
+and the shortfall appears as a disk-full incident rather than as a design error.
 
-**Competing causes.** (a) unregistered relation type; (b) a value column reused for a different unit; (c) a nullable column repurposed. All three change feature semantics without changing code.
+**Competing causes.** (a) omitted multipliers as described; (b) index storage estimated at one pointer per
+row when it is typically two to three; (c) a snapshot retention that counts days rather than decision
+instants, which is larger when the decision is made more than once per day.
 
-**Discriminating check.** Maintain a relation registry with units and null policy; assert that every distinct `rel` value in the fact table appears in the registry. Compare the distinct-value count per build and fail the build on an unregistered value rather than logging it.
+**Discriminating check.** Take the plan's figure and multiply explicitly by the number of retained
+snapshots and the replication factor in front of the planner. Then compare against the measured bytes of
+one snapshot: a factor above 1.2 between estimate and measurement identifies which term was omitted,
+because the four terms are of very different sizes.
 
-### F-17 Identifier recycling across entity lifetimes
-
-**Mechanism.** A device token or account number is reassigned after closure, so two unrelated entities occupy one node. The graph joins their histories and every aggregate that spans both is meaningless while remaining numerically plausible.
-
-**Competing causes.** (a) recycling after closure; (b) an entity-resolution merge that keyed on the identifier alone; (c) a test fixture loaded into a production namespace by mistake. All three produce a node with disjoint, non-overlapping activity bursts.
-
-**Discriminating check.** For each node, compute the maximum gap between consecutive incident facts and the overlap of attribute values across the bursts. A node whose activity is two widely separated bursts with no shared attributes is either recycled or misloaded; a node merged on a genuinely shared attribute shows attribute agreement across the gap. Confirm with the source's assignment dates, which are the only authority on recycling.
-
-### F-18 Namespace collision on numeric identifiers
-
-**Mechanism.** Two systems emit eight-digit identifiers that look alike, and a join on the identifier silently mixes an account with a merchant. The resulting edges are structurally ordinary and semantically wrong, so every statistical check passes.
-
-**Competing causes.** (a) missing namespace prefix; (b) a union of two extracts with a compatible schema; (c) a manual reconciliation spreadsheet that assumed one space. All three produce cross-type edges that are rare but not improbable.
-
-**Discriminating check.** Assert that every edge's source and target belong to the relation type's declared endpoint types. For `TRANSFER` the assertion is `type(src) = account AND type(dst) = merchant`. Any violation is a collision, and the count gives the blast radius. This is a schema assertion, not a statistical test, which is why it should run in the load rather than in a review.
-
-### F-19 Derived edge recomputed from a post-outcome signal
-
-**Mechanism.** An edge of type `SUSPECTED_LINK` is created by a rule that reads investigator notes, and the notes are written after the case is confirmed. The edge is available immediately, correctly stamped, and contaminated by provenance: it encodes the outcome the model is trying to predict.
-
-**Competing causes.** (a) post-outcome derivation; (b) a legitimate adjudicated link that predates the outcome; (c) a backfill of a link whose evidence was discovered earlier. All three produce a link whose availability time is earlier than the label but whose information content is not.
-
-**Discriminating check.** Timestamp filtering cannot catch this, so the check must be lineage-based: for every derived edge type, list the input artifacts and test whether any input is written by a process that runs only after adjudication. Then run the model with the derived type excluded; a large metric drop with the type included is evidence that the type carried outcome information. The discriminating step is the exclusion experiment, not the timestamp audit.
-
-### F-20 Write path bypassed by a bulk correction
-
-**Mechanism.** A monthly correction loads a CSV straight into the table, skipping the supersede logic, so both the wrong and the right value remain visible with the same event time. Aggregates double-count for every affected identifier.
-
-**Competing causes.** (a) bypassed write path; (b) a duplicate load of the same batch; (c) a retry after a partial failure that reinserted already-committed rows. All three raise counts for a bounded set of identifiers.
-
-**Discriminating check.** Group by the natural fact key and count rows; any group with more rows than the number of legitimate versions is a violation. If the duplicates share a load identifier, the cause is a retried batch; if they differ in load identifier but share the event key, the cause is a bypassed supersede.
-
-### F-21 Schema default masking a missing join
-
-**Mechanism.** A left join to the identity map fails for unresolvable identifiers, and a `COALESCE(node_id, 0)` puts every unresolved raw identifier into node 0. Node 0 becomes a supernode whose edges are unrelated by construction.
-
-**Competing causes.** (a) coalesced null; (b) a sentinel value from the source; (c) a legitimate shared account. All three create one node with an implausibly large degree.
-
-**Discriminating check.** Count facts whose resolved node equals the sentinel. A non-zero count is conclusive, because no genuine entity is identified by the sentinel. Then correlate the sentinel degree with the count of unresolved identifiers per load: equality proves the coalesce is the mechanism.
-
-### F-22 Timezone-naive comparison across sources
-
-**Mechanism.** One source stores local time without an offset and another stores UTC, so facts from the first shift by the offset. Edges that were simultaneous appear hours apart, and any co-occurrence window feature under-counts.
-
-**Competing causes.** (a) missing offset; (b) offset applied twice; (c) daylight-saving transitions. All three shift a subset of facts by a round number of hours.
-
-**Discriminating check.** Histogram `t_avail - t_event` by source. A source with a mode at exactly the local offset, or a bimodal split around 23:00 and 01:00 on transition dates, is conclusive. A single-source check cannot detect this; the histogram must be per source system, because the defect lives in one exporter.
-
-### F-23 Co-occurrence window defined on event time after the fact
-
-**Mechanism.** A co-occurrence edge is created for any pair of accounts on one device within 24 hours. The rule is applied at query time over all history, so a pair becomes adjacent retroactively; snapshots rebuilt at an earlier decision time therefore contain edges that did not exist then.
-
-**Competing causes.** (a) retroactive window; (b) a window defined on availability time in one implementation and event time in another; (c) a boundary rule that counts an exactly-24-hour gap inconsistently. All three shift which pairs are adjacent near the boundary.
-
-**Discriminating check.** Build the co-occurrence structure at two decision times with and without the derived edges, and check whether the earlier snapshot gained edges. Any addition to a past snapshot is conclusive for retroactivity. Then test the boundary explicitly with a pair exactly at the window edge.
-
-### F-24 Cardinality explosion in the value column
-
-**Mechanism.** A free-text `channel` value becomes part of the edge key, so the same relationship appears once per distinct string, including typos. Edge count inflates, degree inflates, and the multiplicity is an artifact of poor typing.
-
-**Competing causes.** (a) unconstrained categorical column; (b) a schema change that moved a comment field into a key; (c) a vendor adding new enum values. All three raise the distinct-value count for one column.
-
-**Discriminating check.** Count distinct values per column against a declared domain. A column with thousands of values where the registry declares twelve is conclusive, and the ratio of counts gives the inflation factor directly.
-
-### F-25 Storage estimate that ignores the secondary indexes
-
-**Mechanism.** A capacity plan counts only the heap rows and omits the indexes, so the deployment is sized at roughly 60% of the real footprint and the first month's growth triggers paging.
-
-**Competing causes.** (a) omitted indexes; (b) omitted replication factor; (c) omitted snapshot copies kept for reproducibility. All three make the estimate low by a multiplicative factor.
-
-**Discriminating check.** Recompute the estimate from the physical bytes on disk divided by the row count, and compare with the plan's per-row figure. A ratio above the heap-row size proves the plan omitted structures; the ratio itself tells you how much.
-
-### F-26 Lossy integer widening during a migration
-
-**Mechanism.** Node identifiers are renumbered into 32 bits, and a hash collision merges two nodes. The collision rate is low enough to pass review and high enough to matter at scale, and collisions are permanent.
-
-**Competing causes.** (a) hash truncation; (b) a modulo shard assignment reused as an identifier; (c) a legitimate merge. All three create a small number of merged nodes.
-
-**Discriminating check.** Recompute the identifier mapping twice, once with the original width, and diff. Any node whose member set differs is a collision. Because the check is exact rather than statistical, it should run as a one-off migration gate rather than as a monitor.
-
-**Takeaway:** Each entry separates a symptom that three mechanisms share, so the check must change the observation rather than re-examine the same number.
+**Takeaway:** Each entry separates a symptom that several mechanisms share, so the check must change the
+observation rather than re-examine the same number.
 
 ## 9. Complexity & Cost Analysis
 
-Costs below are stated in operation counts with ILLUSTRATIVE hardware constants (1e8 simple operations per second, 100 ns per random memory access, 10 ns per contiguous access). They are for comparing designs, not for predicting a deployment.
+Costs are stated in operation counts with ILLUSTRATIVE constants: 1e8 simple operations per second, 100 ns
+per random memory access, 10 ns per contiguous access, 2 GB/s sequential read. They compare designs; they
+do not predict a deployment.
 
-| Operation | Pattern | Time | Space | Notes |
+| Operation | Layout | Time | Space | Notes |
 |---|---|---|---|---|
-| Ingest one fact | row store append | O(1) amortised | O(1) | plus index maintenance, typically O(log m) |
-| Ingest one fact | CSR append | O(1) amortised | O(1) | only if the node is the last one; otherwise rebuild |
-| One-hop expansion | CSR | O(d_v) contiguous | O(1) extra | d_v occurrence degree |
-| One-hop expansion | row store with index | O(log m + d_v) | O(1) | index seek dominates for small d_v |
-| Two-hop expansion | CSR | O(sum of d over the frontier) | O(frontier) | dominated by max degree on the frontier |
-| k-hop bounded traversal | CSR + visited set | O(sum of d over visited) | O(visited) | visited set is the memory bound |
-| As-of filter | any, with timestamp array | O(m) full scan or O(log m) per index range | O(1) | the filter is the cost, not the layout |
-| Full sort by degree | any | O(n log n) | O(n) | avoid; a heap gives O(n log k) |
-| Projection | any | O(sum C(k_s,2)) | O(pairs) | quadratic in hub degree |
-| Rebuild snapshot | CSR | O(n + m) | O(n + m) | 24.1 GB at m = 1e9 |
-| Triangle count | CSR, node iterator | O(m^1.5) bound, often far less | O(m) | AGM bound; degree ordering helps |
-| Materialise CSC | transpose of CSR | O(n + m) | O(n + m) | one extra copy of the position array |
+| Ingest one fact | row store | O(1) amortised | O(1) | plus index maintenance at O(log m) |
+| Ingest one fact | CSR | O(1) if the node is last, else O(n) | O(1) | mid-array insert shifts every later offset |
+| One-hop expansion | CSR | O(d_v) contiguous | O(1) extra | 50,000 positions is 1.05 MB at 21 B |
+| One-hop expansion | row store with index | O(log m + d_v) | O(1) | log2(1e9) = 29.9 seeks per starting point |
+| Two-hop expansion | CSR | O(sum of d over frontier) | O(frontier) | dominated by the largest degree, not the mean |
+| k-hop traversal | CSR plus visited set | O(nodes and positions touched) | O(visited) | the visited set is the memory bound |
+| As-of filter, indexed | any | O(log m) per range | O(1) | requires an index the CSR does not have |
+| As-of filter, unindexed | any | O(m) | O(1) | 1e9 predicates at 1e8/s = 10 s per request |
+| Sort by degree | any | O(n log n) | O(n) | a heap gives O(n log k) for the top k |
+| Projection emission | any | O(sum C(k_g,2)) | O(pairs) | 1.745e9 pairs here, 174.5 s at 1e7/s |
+| Rebuild snapshot | CSR | O(n + m) | O(n + m) | 21.4 GB at n = 1e8, m = 1e9 |
+| Triangle count | CSR, node iterator | O(m^1.5) bound | O(m) | 3.16e13 operations at m = 1e9 as a ceiling |
+| Transpose to CSC | CSR | O(n + m) | O(n + m) | one extra copy of the position array |
+| Degree-sum assertion | any | O(m) | O(1) | 10 s at m = 1e9, 1e8/s |
+| Offset monotonicity | CSR | O(n) | O(1) | 1 s at n = 1e8, 1e8/s |
 
-Three readings of the table. First, **as-of filtering is a full-graph operation when it is not indexed**, so a design that filters at query time on a 1e9-edge table pays 1e9 predicate evaluations per request; the correct pattern is a materialised snapshot with the filter applied once. Second, **CSR ingest is append-only in the favourable case and a rebuild otherwise**: inserting a position for node 3 shifts every offset after it, so a mutable graph needs a different structure (adjacency lists, or a delta array merged periodically). Third, **projection cost is set by the largest k**, so a capacity estimate must use the maximum hub degree, not the mean; the mean is the statistic that makes pipelines look affordable and then time out.
-
-Worked cost comparison for one nightly feature build at m = 1e9, n = 1e8 (ILLUSTRATIVE constants):
+Three readings of the table. First, **as-of filtering is a full-graph operation when it is unindexed**, so
+a design that filters at query time on a 1e9-fact table pays 1e9 predicate evaluations per request; the
+correct pattern is a materialised snapshot with the filter applied once. Second, **CSR ingest is
+append-only in the favourable case and a rebuild otherwise**, because inserting a position for node 3
+shifts every offset after it; a mutable graph needs adjacency lists or a delta array merged periodically.
+Third, **projection cost is set by the largest group**, so a capacity estimate must use the maximum degree
+rather than the mean, and the mean is the statistic that makes pipelines look affordable before they time
+out.
 
 ```text
+worked build comparison at n = 1e8, m = 1e9, L2 layout (21 B per position)
+
 CSR build
-  allocate      (n+1)*4 + m*(4+8+1)  = 400 MB + 13 GB   = 13.4 GB
-  scan + write  m predicate evaluations + m stores        = 1e9 + 1e9 ops
-  at 1e8 ops/s                                            = 20 s
-  snapshot copy for immutability (one extra array set)    = +13.4 GB
+  allocate      4*(1e8+1) + 1e9*21        = 0.4 GB + 21.0 GB = 21.4 GB
+  scan + write  1e9 predicate evaluations + 1e9 stores
+                at 1e8 ops/s             = 10 s + 10 s     = 20 s
+  write out     21.4 GB at 2 GB/s         = 10.7 s
+  total                                    ~ 31 s
+  second copy for immutability            + 21.4 GB
 
-row store build
-  scan          m rows * 176 B read                       = 176 GB of I/O
-  at 2 GB/s sequential read                               = 88 s
-  index build   m * O(log m) comparisons                  = 1e9 * 30 = 3e10
-  at 1e8 comparisons/s                                    = 300 s
-  total dominated by index build                          ~390 s
+row-store build
+  scan          1e9 rows * 176 B          = 176 GB
+                at 2 GB/s                 = 88 s
+  index build   1e9 * log2(1e9) = 2.99e10 comparisons
+                at 1e8 comparisons/s      = 299 s
+  total                                    ~ 387 s
+  ratio to CSR build                       387 / 31 = 12.5x
 
-projection
-  sum C(k_s,2) with one hub k = 50,000 and 1e5 other hubs of k = 100
-  hub contribution   1.25e9 pairs
-  other contributions 1e5 * 4,950 = 4.95e8 pairs
-  total ~1.75e9 pairs, i.e. 1.75x the edge count, emitted once per build
-  at 1e7 pairs/s (emission plus dedup)                    = 175 s
+projection at the same scale
+  hub contribution      C(50,000,2)       = 1.249975e9
+  other contributions   1e5 * C(100,2)    = 0.495e9
+  total P                                  = 1.745e9 pairs = 1.745x m
+  emission at 1e7 pairs/s                  = 174.5 s
+  materialised at 8 B per pair             = 13.96 GB
 ```
 
-The comparison is the useful part: the index build, not the scan, dominates the row-store path, and the projection, not the traversal, dominates the feature path. A design review that budgets only storage will approve a pipeline whose cost is 90% elsewhere.
+The comparison's useful part is the decomposition: the index build is 299 of the row store's 387 seconds,
+and the scan is 88. A design review that budgets only storage will approve a pipeline whose cost is 77%
+index maintenance, and a review that budgets only the scan will predict a factor of 3.5 where the truth is
+12.5. The projection's 174.5 seconds is larger than the entire CSR build, which is the arithmetic behind
+the claim that a projection, not a traversal, is usually the dominant cost in a nightly graph job.
 
-Memory pressure has a second-order effect that belongs in the cost section because it changes asymptotics in practice. A CSR that does not fit in RAM is not merely slower; each frontier expansion becomes a random read per position, so an in-memory O(d_v) contiguous scan degrades to O(d_v) random accesses at 100 ns each, a 10x constant. The design consequence is that the snapshot size should be chosen to fit the memory of the serving host, and if it does not, the correct move is to partition the graph (by tenant, by region, by connected component) rather than to accept thrash.
+Memory pressure has a second-order effect that belongs here because it changes asymptotics in practice. A
+CSR that does not fit in RAM is not merely slower: each expansion becomes a random read per position, so an
+in-memory O(d_v) contiguous scan at 10 ns per access becomes O(d_v) random accesses at 100 ns, a 10x
+constant. The design consequence is that the snapshot should be sized to the serving host's memory, and if
+it is not, the correct move is to partition the graph rather than to accept thrash.
 
-### 9.1 Where the cost actually lands at three scales
+### 9.1 Where the cost lands at three scales
 
-The same design has different bottlenecks at different scales, and a cost analysis that ignores the transition produces a plan that is correct for the wrong size.
+| Scale | n | m | CSR bytes | Dominant cost | Design consequence |
+|---|---|---|---|---|---|
+| Prototype | 5e3 | 1e4 | 230 KB | developer time | use whatever is expressible |
+| Single host analytic | 2e6 | 1e7 | 218 MB | build time, intermediates | one process, in memory |
+| Single host at limit | 1e7 | 1e8 | 2.14 GB | random access on hub expansion | hub policy becomes mandatory |
+| Multi-host | 1e8 | 1e9 | 21.4 GB | shuffle and partition boundary | partition by tenant or component |
+| Beyond memory | 1e9 | 1e10 | 214 GB | paging or distributed latency | aggregate first, traverse second |
 
-| Scale | Edges | Bytes as CSR | Dominant cost | Design consequence |
-|---|---|---|---|---|
-| Prototype | 1e4 | 130 KB | nothing measurable; developer time | use whatever is expressible; do not optimise |
-| Single host analytic | 1e7 | 130 MB | build time, memory for intermediates | one process, in memory, no partitioning |
-| Single host at limit | 1e8 | 1.3 GB | random access on hub expansion | hub policy becomes mandatory |
-| Multi-host | 1e9 | 13 GB | I/O and shuffle; partition boundary | partition by tenant or component, accept boundary arrays |
-| Beyond memory | 1e10 | 130 GB | paging or distributed storage latency | rethink the problem; aggregate first, traverse second |
+The table's usefulness is in the fourth row, where the cost stops being arithmetic and becomes a
+distribution question. Up to about 1e8 facts a single host works because the working set fits, and past
+that the same code degrades by roughly a factor of ten per expansion because every offset read misses. The
+remedy is structural — partition, or reduce the working set by aggregation — rather than procedural.
 
-The table's usefulness is in the fourth row, where the cost stops being arithmetic and becomes a distribution question. Up to roughly 1e8 edges a single host with a hub policy works because the working set fits and the random accesses hit cache. Past that, the same code degrades by a factor of ten per frontier expansion because every offset read misses, and the remedy is structural rather than procedural.
+The first two rows deserve a warning of their own. At prototype scale the difference between the best and
+the worst layout is a few hundred milliseconds, which is why benchmark-driven layout choices are so often
+made at the wrong scale and why they survive review: the measurement was correct and the population was
+not.
 
 ### 9.2 Amortisation of a rebuild
 
-A nightly rebuild of a 24 GB structure costs the same every night regardless of how much changed. If facts accumulate at 1e7 per day, the rebuild processes 1e9 edges to absorb 1e7, a ratio of 100:1 wasted work.
+A nightly rebuild of a 21.4 GB structure costs the same every night regardless of what changed. If facts
+accumulate at 1e7 per day into a 1e9 structure, the rebuild processes 1e9 facts to absorb 1e7, a ratio of
+100:1 wasted work.
 
 ```text
-full rebuild      cost 1e9 edge operations + 1e9 writes per night
-incremental       1e7 edge operations + a merge of the delta arrays
-ratio             100x less work per night, at the price of:
-                  (a) a merge step that doubles peak memory;
-                  (b) a correctness dependency on append-only facts;
-                  (c) a snapshot identity that must record which delta was applied.
+full rebuild     1e9 predicate evaluations + 1e9 stores per night   = 20 s of CPU
+incremental      1e7 evaluations + a merge of the delta arrays     = 0.2 s of CPU
+ratio            100x less work, at the price of:
+                 (a) a merge that doubles peak memory while it runs;
+                 (b) a correctness dependency on append-only facts;
+                 (c) a snapshot identity that records which delta was applied.
 ```
 
-The condition in (b) is the one that decides the design in practice. If corrections arrive as new versions rather than in-place updates, the delta is append-only and the incremental path is safe. If corrections overwrite, the delta cannot express the change and the rebuild must be full — which is a second, independent argument for bitemporal facts, beyond reproducibility.
+Condition (b) decides the design in practice. If corrections arrive as new versions, the delta is
+append-only and the incremental path is sound; if corrections overwrite, the delta cannot express the
+change and the rebuild must be full. That is a second, independent argument for versioned facts beyond
+reproducibility, and it is the argument that usually wins a design review because it is a correctness
+argument rather than a performance one.
 
 ### 9.3 Cost of the assertions
 
-The integrity checks are cheap relative to the build and should never be skipped for cost. The degree identity costs one pass over the edge column, O(m). The offset monotonicity check costs O(n). The relation registry check costs a distinct count, O(m) or O(1) with an index. Together they add under 1% to a build and they localise defects that would otherwise surface as a metric anomaly weeks later.
+The integrity checks are cheap relative to the build and should never be skipped for cost. The degree
+identity costs one pass over the position array, 10 s at m = 1e9. Offset monotonicity costs 1 s at
+n = 1e8. The relation registry coverage costs a distinct count, which is O(m) without an index and O(1)
+with one. Together they add under 1% to a build and localise defects that would otherwise surface as a
+metric anomaly weeks later, at which point the fact table has moved on and the defect is unreproducible.
 
-The expensive check is the pair-level audit of resolved identity, which is O(pairs sampled × evidence lookup) and is the one that deserves a budget line. Sampling 1,000 resolved pairs against source records at 10 ms per lookup is 10 s, which is negligible; auditing all pairs is a full manual review and is not feasible. The sampling rate is therefore the design variable, and a rate derived from the acceptable miss probability is more defensible than a round number.
+The expensive check is the pair-level audit of resolved identity, which costs a lookup per sampled pair and
+is the one that deserves a budget line. Sampling 1,000 resolved pairs at 10 ms per lookup is 10 s, which is
+negligible; auditing all pairs is a manual review and is infeasible. The sampling rate is therefore the
+design variable, and a rate derived from the acceptable miss probability is more defensible than a round
+number, because it can be defended when the sample misses.
 
-**Takeaway:** Budget the index build and the projection emission, not just the bytes; those two dominate the real cost of a nightly graph build.
+**Takeaway:** Budget the index build, the projection emission and the snapshot retention; those three
+dominate the real cost of a nightly graph job, and none of them is visible in a storage-only estimate.
 
 ## 10. Key Theorems / Results Reference
 
-**Handshake lemma.** For any finite multigraph without self-loops, the sum of degrees equals twice the edge count. *Consequence:* degree sum is a checkable invariant per snapshot, and a mismatch localises the defect to the projection or the filter. *Limit:* loops contribute 2 each, so the naive assertion fails on self-loops.
+**Handshake lemma.** For a finite multigraph, the sum of occurrence degrees equals twice the number of
+occurrences, with loops contributing 2 each. *Consequence:* degree sum is a checkable per-snapshot
+invariant, and a mismatch localises immediately to a filter divergence or a deduplication. *Limit:* the
+identity holds for any consistent filter, so it cannot detect a filter that was applied to both sides
+wrongly — a snapshot and a degree column computed at the same wrong cut-off pass the assertion.
 
-**Euler's degree condition.** A connected undirected graph has an Eulerian circuit iff every vertex has even degree, and an Eulerian trail iff exactly zero or two vertices have odd degree. *Consequence:* trail-based traversal plans have an exact feasibility test. *Limit:* the condition concerns edge coverage, not the traversal you actually want, so it is a novelty check rather than a design tool.
+**Degree-pair inequality.** Occurrence degree is at least distinct-neighbour degree, with equality exactly
+when no pair repeats at the node, and the surplus equals the sum over neighbours of (c − 1). *Consequence:*
+the two definitions differ by a computable amount, so a feature can state which it uses and a reviewer can
+bound the difference. *Limit:* the inequality is preserved by double-counted directions, so a symmetry
+defect passes it; the check must compare the position sum against 2m and the distinct sum against 2 × pairs.
 
-**Sparsity of real relationship graphs.** Empirically, relationship graphs have m = O(n) rather than O(n²). *Consequence:* an adjacency matrix wastes a factor of n; a sparse layout is mandatory above a few thousand nodes. *Limit:* it is an empirical regularity, not a guarantee — dense subgraphs such as projection cliques violate it locally, and a projection is exactly where a designer is tempted to densify.
+**Quadratic projection bound.** A 2-section over a group of size k contains C(k,2) pairs, and adding one
+member adds exactly k. *Consequence:* projection cost is bounded by the square of the largest group, so hub
+policy is a cost decision as well as a modelling one, and a pair-count jump identifies the group size.
+*Limit:* the bound is on emitted pairs before deduplication; a pruned projection has no closed form because
+the prune depends on the data.
 
-**Quadratic projection bound.** A bipartite 2-section over a shared node of degree k contains C(k,2) pairs. *Consequence:* projection cost is bounded by the square of the maximum hub degree, so hub policy is a cost decision as well as a modelling decision. *Limit:* the bound is on the emitted pair count; a pruned projection has no closed-form count because the pruning depends on the data.
+**CSR storage identity.** Bytes equal 4(n+1) + m·w_pos with w_pos set by the attribute set. *Consequence:*
+the ratio between layouts is a function of the column set, not a constant, and the offset term is
+negligible until n approaches m. *Limit:* the identity excludes page overhead, fill factor, indexes and
+compression, so it compares layouts and does not predict an engine's footprint.
 
-**AGM bound for triangle counting.** The maximum number of triangles in a graph with m edges is O(m^{3/2}), attained by a complete graph. *Consequence:* exact triangle counting is feasible at 1e9 edges only with the bound exploited (degree ordering, orientation), not with a naive triple loop. *Limit:* the bound is worst-case; real graphs with skewed degrees often do far better with a node-iterator plus degree ordering, so the bound is a planning ceiling rather than a runtime prediction.
+**Information-theoretic floor for sparse structures.** The configuration of m positions among n rows has
+log₂ C(m+n−1, n−1) bits of content, which is 0.0604 GB at n = 1e8, m = 1e9, against 21.4 GB for the CSR.
+*Consequence:* explicit identifiers cost 354x the information content, which is why compressed variants
+exist and why 21 B per position is not a floor. *Limit:* the floor ignores access cost, and an encoding
+that reaches it cannot answer a one-hop query in O(d_v).
 
-**Bitemporal closure requirement.** Reproducible as-of queries require, for every fact identifier and system-time range, at most one visible version. *Consequence:* the write path must enforce a supersede rule and the schema must carry a uniqueness assertion; four timestamp columns alone do not provide bitemporal semantics. *Limit:* enforcement is a write-path property, so a bulk load that bypasses the write path breaks the invariant even when the schema is correct.
+**Partition duplication identity.** A vertex partition into p parts stores 1 + 1/p copies per edge when one
+direction is materialised and 2 − 1/p when both are, and requires m(1 − 1/p) boundary fetches per scan.
+*Consequence:* the duplication and the boundary traffic move in opposite directions as p grows, so there is
+an optimum set by whether the workload is compute-bound or network-bound. *Limit:* both figures are
+expectations under a degree-independent hash; a partition key correlated with size makes the maximum part
+several times the mean.
 
-**Reification cost identity.** Expressing an edge as a resource costs 2 + p statement rows for p properties. *Consequence:* the storage multiplier is computable before migration, and 1.6x on a three-property edge is a typical figure. *Limit:* statement-per-row stores may pack several statements into one physical row, so the logical count overstates the physical cost.
+**Edge-cut replication.** A node of degree d appears on p(1 − (1 − 1/p)^d) hosts under a uniform edge cut,
+which reaches 15.97 of 16 at d = 100. *Consequence:* edge-cut partitioning cannot be used for a graph with
+hubs, because the hubs are replicated onto every host and updated on every host. *Limit:* the formula
+assumes uniform assignment; a degree-aware assignment can hold a hub on one host at the price of a
+lookup, which is a different architecture and a different cost.
 
-**Loss under 2-section expansion of a hypergraph.** A hyperedge of size s replaced by a clique preserves pairwise adjacency and loses group identity; replaced by a star it preserves incidence and adds a hub of degree s. *Consequence:* neither binary encoding can answer both "are these two co-members" and "which group were they in", so the choice follows the query. *Limit:* for s = 2 the two encodings coincide, which is why the defect is invisible in small tests built from pairwise data.
+**Bitemporal closure requirement.** Reproducible as-of queries require at most one visible version per
+(fact identifier, belief instant), enforced by the write path. *Consequence:* the schema can be checked
+exactly and cheaply, so a system can prove it is bitemporal rather than asserting it. *Limit:* enforcement
+is a write-path property, so a bulk load that bypasses the write path breaks the invariant while the
+schema remains correct.
 
-**Diameter and expansion under projection.** A projection can only decrease the hop distance between two nodes of the retained type, because every projected pair is adjacent by construction. *Consequence:* any feature that uses hop distance becomes systematically smaller after projection, so a "two hops away" rule means different things on the base graph and on the projection. *Limit:* the statement is about pairs that survive; a pruned projection can remove a pair entirely and leave a distance that is infinite rather than smaller.
+**Reification cost identity.** A fact as a resource costs 2 + p statement rows for p properties, which is
+1.59x a flattened row at p = 3 with a 56 B statement. *Consequence:* the migration cost is computable
+before it is attempted, and the multiplier is linear in the property count. *Limit:* statement packing and
+dictionary encoding reduce the physical multiplier below the logical one, sometimes below 1.
 
-**Monotonicity requirement for incremental snapshots.** Incremental maintenance of a snapshot is sound iff every change is an append (no deletions, no in-place updates) and every derived structure is a monotone function of the fact set. *Consequence:* the delta-plus-base layout of Variant D is valid exactly under these two conditions, and its validity is a property of the data lifecycle rather than of the code. *Limit:* most derived features are monotone in the fact set (counts, sums), but percentile features and top-k selections are not, because an appended fact can push a value out of the top k.
+**Group encoding loss.** A star expansion preserves incidence and adds a non-domain node of degree s; a
+2-section preserves pairwise adjacency and destroys group identity, inflating edges by C(s,2)/s. *Consequence:*
+neither binary encoding answers both "are these two co-members" and "which group were they in", so the
+choice follows the query. *Limit:* for s = 2 the two encodings coincide, which is why a test suite built
+from pairwise fixtures cannot detect the loss.
 
-**Compression ceiling for sparse structures.** A structure with m positions and n rows carries at least log₂(C(m, n)) bits of information about which rows hold which positions, so no encoding can be smaller than that bound. *Consequence:* CSR's 4 bytes per position is far above the ceiling for graphs with strong locality, which is why reordered and gap-compressed variants exist, and why a designer should not assume 13 bytes per edge is the floor. *Limit:* the bound is informational and ignores access cost; a heavily compressed layout that cannot answer a one-hop query in O(d_v) has traded a cost the designer needed.
+**Diameter compression under projection.** A projection can only decrease hop distance between nodes of the
+retained type, since every projected pair is adjacent by construction. *Consequence:* a "within two hops"
+rule means different things on the base graph and the projection, so a hop feature must name its graph.
+*Limit:* a pruned projection can remove a pair entirely, making the distance infinite rather than shorter,
+which reverses the direction of the error for the discarded pairs.
 
-**Takeaway:** The usable results are the ones with a stated limit; each theorem above converts a design argument into an assertion with a known failure boundary.
+**Monotonicity requirement for incremental maintenance.** Incremental snapshot maintenance is sound iff
+every change is an append and every derived structure is monotone in the fact set. *Consequence:* counts
+and sums can be maintained incrementally; percentiles and top-k cannot, because an appended fact can push a
+value out of the top k. *Limit:* the condition is about the data lifecycle, so a system that mostly appends
+and occasionally overwrites is unsound in exactly the cases the team remembers.
+
+**Takeaway:** The usable results are those with a stated limit; each converts a design argument into an
+assertion with a known failure boundary.
 
 ## 11. Interview / Exam Questions
 
-**Q1. A graph has 9 edge occurrences over 6 nodes; the degree column sums to 17. What does that tell you, and what is the first check?**
-Answer: The handshake identity requires the sum to be 18, so one incidences is missing or one edge was counted once. The first check is whether any self-loop exists (it would change the expected value, not the sum) and then whether the degree aggregate was computed on a different as-of filter from the edge count. Reasoning: the identity is exact, so a mismatch is mechanical — a filter divergence, a deduplication, or an outer join producing a null degree. Follow-up: how would you localise it to a single node? Answer: recompute degree from the fact table grouped by node and diff the two columns; the differing nodes are the localisation. Red flag: "the graph is approximate". Scoring: 2 points for the identity, 2 for the filter hypothesis, 1 for the localisation method.
+**Q1. A graph has 9 occurrences over 6 nodes and the degree column sums to 17. What is the expected value and what is your first check?**
+Answer: the expected sum is 18, so one incidence is missing or one fact was counted once. The first check is
+whether any self-loop exists, because a loop-aware loader expects 2m + L and the convention changes the
+target; then check whether the degree aggregate used a different as-of filter from the edge count, which is
+the common cause. Reasoning: the identity is exact, so a mismatch is mechanical — a filter divergence, a
+deduplication, or an outer join emitting a null degree. Follow-up: how do you localise it to one node?
+Answer: recompute degrees from the fact table grouped by node and diff the two columns; the differing nodes
+are the localisation. Red flag: "the graph is approximate". Scoring: 2 for the identity, 2 for the filter
+hypothesis, 1 for the localisation.
 
-**Q2. Compute the distinct-neighbour degree of M1 in the toy graph and explain why it differs from 5.**
-Answer: M1 has five occurrences (E1–E5) but only two distinct neighbours (A1, A2), so d_dist = 2 and the surplus is 3. It differs because multiplicity is real: three transfers from A1 and two from A2. Reasoning: occurrence degree measures activity, distinct degree measures reach. Follow-up: which one belongs in a normalisation denominator for a propagation score? Answer: distinct degree, because the propagation divides mass among neighbours, not among events; using occurrence degree would let one busy counterparty absorb mass repeatedly. Red flag: treating the difference as a data-quality problem. Scoring: 2 for the numbers, 2 for the reason, 1 for the normalisation choice.
+**Q2. Compute the distinct-neighbour degree of M1 in the toy graph and explain why it is 2 rather than 5.**
+Answer: M1 has five occurrences (E1–E5) but two distinct neighbours (A1, A2), so d_dist = 2 and the surplus
+is 3, equal to (3−1) + (2−1) from the two pairs. The surplus is real behaviour: three transfers from A1 and
+two from A2. Reasoning: occurrence degree measures activity, distinct degree measures reach. Follow-up:
+which belongs in the denominator of a propagation feature? Answer: distinct degree, because mass divides
+among neighbours rather than among events, and using occurrence degree lets one busy counterparty absorb
+the mass repeatedly. Red flag: treating the surplus as a data-quality problem. Scoring: 2 for the numbers,
+2 for the mechanism, 1 for the normalisation choice.
 
-**Q3. Estimate the storage of a 1e9-edge snapshot as CSR with int32 targets, float64 weights and uint8 relation codes, no timestamps, and compare with a 176-byte row store.**
-Answer: offsets 4(n+1); for n = 1e8 that is 0.4 GB. Per edge 4 + 8 + 1 = 13 B, so 13 GB, total 13.4 GB. Row store: 176 GB. Ratio 13.1x. Reasoning: the comparison holds only for the same column set; adding an int64 timestamp per edge adds 8 GB and narrows the ratio to 8.1x. Follow-up: when does the row store win? Answer: when the dominant query filters by type and time before traversal, because the index prunes the scan and the byte overhead is paid only on the surviving rows. Red flag: quoting a vendor benchmark for a different column set. Scoring: 2 for the arithmetic, 2 for the ratio, 1 for the condition.
+**Q3. Estimate the CSR footprint at n = 1e8, m = 1e9 with int32 neighbours, float64 weights, uint8 relation codes and an int64 event time, and compare with a 176 B row store.**
+Answer: offsets 4 × (1e8+1) = 0.4 GB; positions 1e9 × 21 B = 21.0 GB; total 21.4 GB. The row store is
+176 GB, so the ratio is 8.22x. Reasoning: the ratio is a property of the column set, not of the engine;
+adding the availability stamp takes the position to 29 B, the total to 29.4 GB and the ratio to 5.99x.
+Follow-up: when does the row store win? Answer: when the dominant query filters by type and time before
+traversal, because the index prunes the scan and the byte overhead is paid only on survivors. Red flag:
+quoting a ratio without the column list. Scoring: 2 for the arithmetic, 2 for the ratio, 1 for the
+condition.
 
-**Q4. A projection over devices produces 1.25e9 pairs from one hub. Name two distinct repairs and the loss each introduces.**
-Answer: (a) exclude hubs above a degree threshold — loses genuine co-occurrence for all accounts on that device and biases against populations served by shared hardware; (b) cap pairs per hub by sampling — makes the projection non-deterministic and breaks rebuild equality unless the sample is seeded and stored. Reasoning: the pair count is C(k,2), so any repair either removes the hub or reduces its clique. Follow-up: what threshold would you set and how would you defend it? Answer: a threshold justified by the count of accounts per device in the population (kiosk, corporate handset pool) and checked against an adjudicated pair sample, not a round number. Red flag: raising memory as the fix. Scoring: 2 for two repairs, 2 for the losses, 1 for the threshold defence.
+**Q4. A projection over devices yields 1.25e9 pairs from one hub of degree 50,000. Name two repairs and the loss each introduces.**
+Answer: (a) exclude hubs above a degree threshold, which loses genuine co-occurrence for every account on
+that device and biases against populations served by shared hardware; (b) sample pairs within the hub, which
+makes the projection non-deterministic unless the sample is seeded and stored, breaking rebuild equality.
+Reasoning: the pair count is C(k,2), so any repair either removes the hub or shrinks its clique, and the
+marginal cost of one more member is exactly k = 50,000. Follow-up: what threshold and how defended?
+Answer: one justified by the account-count distribution per device in the population — kiosk, corporate
+pool, household — checked against an adjudicated pair sample, not a round number. Red flag: "raise the
+memory". Scoring: 2 for two repairs, 2 for the losses, 1 for the threshold defence.
 
-**Q5. Why must a fact table store availability time when it already stores event time?**
-Answer: Because the decision rule is "what did we know at t", and only availability time answers it. Event time alone permits a backtest that includes facts that had not landed, which inflates offline performance. Reasoning: the two timestamps coincide in no real pipeline, and the gap is heavy-tailed, so any backtest with a cut-off inside the tail is affected. Follow-up: give a discriminating test. Answer: restrict to facts with `t_avail - t_event > 60 s` and compare feature values at a cut-off inside that window under both filters; a difference proves the filter matters and quantifies the leak. Red flag: "we can reconstruct availability from the load log" — that is a source, not a column, and it is usually rotated. Scoring: 2 for the reason, 2 for the test, 1 for the follow-up mechanism.
+**Q5. Why does a fact table need availability time when it already stores event time?**
+Answer: because the decision rule is "what did we know at t", and only availability answers it. A snapshot
+filtered on event time includes facts that had not landed, which inflates offline metrics and cannot be
+reproduced in production. Reasoning: the two stamps coincide on no real pipeline and their difference is
+heavy-tailed, so any cut-off inside the tail is affected; the toy graph's lags run 29 s to 74 s, which is
+enough to change a snapshot at the right instant. Follow-up: give a discriminating test. Answer: restrict
+to facts with lag above 60 s and compare feature values at a cut-off inside that window under both filters;
+a difference proves the filter matters and quantifies the leak. Red flag: "we can reconstruct it from the
+load log", which is a rotated source rather than a stored column. Scoring: 2 for the reason, 2 for the
+test, 1 for the follow-up.
 
-**Q6. You find four timestamp columns in a table and are told it is bitemporal. What single assertion would you run first?**
-Answer: For every edge identifier and system-time range, assert at most one visible version: `COUNT(*) GROUP BY edge_id, valid_from HAVING COUNT(*) > 1` at the same instant. Reasoning: four columns are a schema; bitemporal semantics are a constraint on writes. Follow-up: what does a violation imply about historical snapshots? Answer: they double-count, because both the superseded and the correcting row are visible at times when only one should be. Red flag: accepting the column list as the proof. Scoring: 2 for the assertion, 2 for the implication, 1 for precision about visible versions.
+**Q6. You find four timestamp columns and are told the table is bitemporal. What single assertion do you run first?**
+Answer: for every fact identifier and belief instant, assert at most one visible version — group by
+(identifier, system start) and require a maximum count of one. Reasoning: four columns are a schema;
+bitemporal semantics are a constraint on writes, so the assertion tests the property rather than the
+declaration. Follow-up: what does a violation imply about historical snapshots? Answer: they double-count,
+because superseded and correcting rows are both visible at instants when only one should be, which inflates
+every aggregate over facts that were ever corrected. Red flag: accepting the column list as proof. Scoring:
+2 for the assertion, 2 for the implication, 1 for the precision about visible versions.
 
-**Q7. A feature computed from edge counts drops 12% overnight with no behaviour change. Give two competing causes and a check that separates them.**
-Answer: (a) a late batch changed the snapshot boundary, so m fell from 9 to 8 or the reverse; (b) a deduplication was added upstream, collapsing multiplicity. Check: compare `m` and `distinct pairs` for the same snapshot identifier. If m changed, the boundary moved; if m is the same but pairs fell, deduplication was introduced. Reasoning: the two causes move different counts. Follow-up: what would make the check inconclusive? Answer: if both happened, since the two effects can cancel; then diff the fact table row sets directly. Red flag: attributing the drop to the model. Scoring: 2 for two causes, 2 for the discriminating counts, 1 for the cancellation caveat.
+**Q7. An edge-count feature drops 12% overnight with no behaviour change. Give two causes and the counts that separate them.**
+Answer: (a) a late batch moved the snapshot boundary, so m fell from 9 to 8; (b) a deduplication was added
+upstream, collapsing multiplicity so the row count fell while the pair count did not. Check: compare m and
+distinct pairs for the same snapshot identifier. If m changed, the boundary moved; if m is unchanged but
+pairs fell, deduplication was introduced. Reasoning: the two causes move different counts, so one query
+distinguishes them. Follow-up: what makes the check inconclusive? Answer: both happening at once, in which
+case the effects can cancel; the fallback is to diff the fact identifier sets directly. Red flag:
+attributing the drop to the model. Scoring: 2 for the causes, 2 for the counts, 1 for the cancellation
+caveat.
 
-**Q8. When is a dense adjacency matrix the correct choice, and what is the numeric boundary?**
-Answer: It is correct for spectral work (eigendecomposition, matrix products) at small n. The boundary is where n² cells × 8 B exceeds the working set you can afford: n = 10,000 gives 0.8 GB, n = 1,000,000 gives 8 TB. Reasoning: memory grows quadratically while m typically grows linearly. Follow-up: at n = 10,000 with 20,000 edges, what is the overhead ratio? 8e8 B for the matrix versus about 10,000×4 + 20,000×13 ≈ 0.30 MB for CSR, so roughly 2,600x. Red flag: "dense is faster" without n. Scoring: 2 for the use case, 2 for the boundary numbers, 1 for the ratio.
+**Q8. When is a dense adjacency matrix correct, and where is its boundary?**
+Answer: correct for spectral work at small n, where the algorithm needs the full matrix. The boundary is
+where n² × 8 B exceeds the affordable working set: n = 1e4 gives 800 MB, n = 1e6 gives 8 TB. Reasoning:
+memory grows quadratically while facts grow linearly, so the ratio rises as n²/(n+m) — 1,739x at n = 1e4
+against a CSR of 460 KB. Follow-up: at n = 1e4 with 2e4 facts, what does a bitset version change? Answer:
+8 B per cell becomes 1 bit, an 8x reduction in n-boundary terms, because the boundary scales as sqrt(bytes
+per cell). Red flag: "dense is faster" without n. Scoring: 2 for the use case, 2 for the boundary numbers,
+1 for the ratio.
 
-**Q9. Explain how entity overmerge and supernode fan-out can produce the same symptom of implausibly high connectivity, and how to separate them.**
-Answer: Overmerge unions two nodes' neighbourhoods, raising degree for both; supernode collapse gives one node thousands of edges which then leaks into every neighbour's second hop. Both raise apparent connectivity in aggregates. Separation: inspect the degree distribution — overmerge shifts a small number of nodes up by roughly the sum of two moderate degrees, while a sentinel hub produces a single node orders of magnitude above the 99th percentile. Reasoning: the shapes differ even though the means move the same way. Follow-up: confirm the hub by sampling source payloads. Red flag: lowering the resolution threshold to "clean up". Scoring: 2 for the mechanism, 2 for the shape distinction, 1 for confirmation.
+**Q9. How can overmerge and supernode collapse produce the same symptom, and how do you separate them?**
+Answer: overmerge unions two nodes' neighbourhoods, raising degree for both by roughly the sum of two
+moderate degrees; a sentinel hub gives one node thousands of facts, which then leaks into every neighbour's
+second hop. Both raise apparent connectivity in aggregates. Separation: inspect the degree distribution —
+a sentinel produces one node orders of magnitude above the 99.9th percentile, while overmerge shifts a
+handful of nodes up by a moderate amount and leaves the maximum plausible. Reasoning: the shapes differ
+even though the means move together. Follow-up: confirm the hub by sampling source payloads, where a
+constant string proves the sentinel. Red flag: lowering the resolution threshold to "clean up". Scoring: 2
+for the mechanisms, 2 for the shape distinction, 1 for confirmation.
 
-**Q10. Two snapshots of the same graph differ by one edge; the projection differs by 49 pairs. What does that tell you?**
-Answer: The new edge either created or removed a shared node of degree 10 in the projection, because C(10,2) − C(9,2) = 45 − 36 = 9, and to move 49 the degree must be higher: C(k,2) differences are odd numbers 1, 3, 5, …, so 49 = 2k−1 gives k = 25. Reasoning: a one-edge change in the base graph can change 2k−1 pairs when it connects an account to a shared node of degree k, so 49 pairs implies k = 25. Follow-up: what if the projection also lost pairs? Then two shared nodes changed, or a pruning rule fired. Red flag: assuming the projection is linear in edges. Scoring: 2 for the quadratic insight, 3 for solving 2k−1 = 49, 1 for the two-node caveat.
+**Q10. Adding one account to a shared device raises the projection by exactly 50,000 pairs. What do you conclude, and what is the wrong arithmetic?**
+Answer: the device had degree 50,000 before the addition, because C(k+1,2) − C(k,2) = k, so the increment
+equals the previous group size. The wrong arithmetic is 2k − 1, which would give k = 25,000.5 — a
+non-integer, which is the tell. Reasoning: the marginal of a clique is its current size, so the increment
+reads the group size directly and is a cheap attribution check. Follow-up: what if the projection fell by
+24 pairs? Answer: a member was removed from a group of degree 25, since the decrement is k − 1. Red flag:
+assuming the projection is linear in facts. Scoring: 3 for the identity, 2 for the wrong arithmetic, 1 for
+the decrement case.
 
-**Q11. What is lost when a hyperedge of size 4 (a joint account with four holders) is encoded as a clique, and what is gained?**
-Answer: The group identity is lost — the clique says every pair co-holds, and also that two of them might form a pair independently, which is false. The incidence structure (four members of one group) is not recoverable. Gained: pairwise adjacency, so pair-level models run unchanged. Reasoning: a 4-clique has 6 edges versus 4 incidence edges, so the encoding also inflates edge count by 6/4 = 1.5x. Follow-up: when would you choose the star expansion instead? Answer: when the group is queryable as an entity (all holders of account X) at the cost of adding a node of degree 4 that is not a person. Red flag: claiming the clique preserves equivalence. Scoring: 2 for the loss, 2 for the edge inflation, 1 for the star condition.
+**Q11. What is lost when a joint account with four holders is encoded as a clique, and what is gained?**
+Answer: group identity is lost — the clique asserts every pair co-holds, and cannot say the four formed one
+group, nor distinguish a pair that also co-holds elsewhere. Gained: pairwise adjacency, so pair-level
+models run unchanged. Reasoning: a 4-clique has 6 edges against 4 incidence edges, an inflation of 1.5x,
+and at s = 100 the inflation is 49.5x, so the choice is also a cost decision. Follow-up: when choose the
+star instead? Answer: whenever "which group" is a query, at the cost of a node of degree 4 that is not a
+person and that must be excluded from entity-level aggregates. Red flag: claiming the clique preserves the
+group. Scoring: 2 for the loss, 2 for the inflation, 1 for the star condition.
 
-**Q12. Your rebuild takes 400 s of which 300 s is index maintenance. What layout change addresses that, and what new cost appears?**
-Answer: Drop the secondary indexes on the analytic replica and use CSR for the batch build; the new cost is that any per-edge filtered query becomes a full scan, so the replica can serve the batch and not the point queries. Reasoning: the index is paid per row at build time and redeemed per query; a nightly analytics workload does not redeem it. Follow-up: how would you serve the point queries? Answer: keep a small row-store serving table for recent facts, which is bounded by the retention window rather than by total history. Red flag: removing indexes from the transactional store. Scoring: 2 for the change, 2 for the new cost, 1 for the two-store pattern.
+**Q12. Your build takes 387 s of which 299 s is index maintenance. What change addresses it and what new cost appears?**
+Answer: drop the secondary indexes on the analytic replica and build a CSR for the batch; the new cost is
+that any per-fact filtered query becomes a full scan, so the replica serves the batch and not the point
+queries. Reasoning: an index is paid per row at build time and redeemed per query, and a nightly analytic
+workload does not redeem it — 299 of 387 seconds is 77% of the build spent on a structure the job never
+uses. Follow-up: how serve the point queries? Answer: keep a small row-store serving table for recent
+facts, bounded by the retention window rather than by total history. Red flag: removing indexes from the
+transactional store. Scoring: 2 for the change, 2 for the new cost, 1 for the two-store pattern.
 
-**Q13. A motif count of 400 three-cycles is reported as evidence of a coordinated ring. What is missing?**
-Answer: A null model preserving the degree sequence. A graph with the same degrees generates many 3-cycles without coordination, so 400 is a count, not a finding. Reasoning: cycle counts are driven by degree distribution and clustering; without the null, the number measures the degree sequence. Follow-up: what would a defensible comparison look like? Answer: configuration-model samples or a degree-preserving rewiring ensemble, reporting the observed count against the ensemble's quantiles and the fraction of cycles that touch a hub. Red flag: "400 is a lot". Scoring: 2 for the null model, 2 for the reason, 1 for the ensemble method.
+**Q13. A motif count of 400 three-cycles is offered as evidence of a coordinated ring. What is missing?**
+Answer: a null model preserving the degree sequence. A graph with the same degrees produces many 3-cycles
+without coordination, because a hub of degree k contributes on the order of k² potential triples, so 400 is
+a count rather than a finding. Reasoning: cycle counts are driven by degree distribution and local
+clustering, so without the null the number measures the degree sequence. Follow-up: what would a defensible
+comparison be? Answer: configuration-model samples or a degree-preserving rewiring ensemble, reporting the
+observed count against the ensemble's quantiles plus the share of cycles touching the top-degree node. Red
+flag: "400 is a lot". Scoring: 2 for the null model, 2 for the mechanism, 1 for the ensemble.
 
-**Q14. Given a fact table with a nullable value column and four of nine facts null, what is the correct mean-transfer feature and what does the wrong one produce?**
-Answer: Correct: sum over TRANSFER facts / count of TRANSFER facts, with a null policy that drops non-transfers from the denominator. In the toy graph that is 380 + 615 = 995 over 5 transfers = 199.00. Wrong: coercing nulls to zero and dividing by 9 gives 995/9 = 110.56. Reasoning: the wrong version mixes two populations and its value depends on how many device sightings were joined in, so it drifts with logging volume. Follow-up: how do you detect the coercion post hoc? Answer: the denominator equals the total fact count rather than the transfer count; recompute both and compare. Red flag: "zero is a reasonable default". Scoring: 2 for the correct feature, 2 for the arithmetic, 1 for the detection.
+**Q14. A nullable value column has four nulls of nine facts and five transfers summing to 1,250.00. Give the correct mean, the wrong one, and the detection.**
+Answer: correct is 1,250 / 5 = 250.00 per transfer; the wrong version divides by all nine and gives 138.89,
+a 44.4% understatement with an unchanged numerator. Detection: the denominator equals the total fact count
+rather than the transfer count, so recomputing both exposes it. Reasoning: the wrong version mixes two
+populations, so its value drifts with logging volume — a sighting outage lowers a transfer feature, which
+is the signature. Follow-up: how would you catch it in a test? Answer: assert the denominator equals the
+count of non-null facts in the relation, and add a fixture with a null-valued fact of another type. Red
+flag: "zero is a reasonable default". Scoring: 2 for the correct mean, 2 for the arithmetic, 1 for the
+detection.
 
-**Q15. You must serve one-hop expansion at p99 under 50 ms over 1e8 edges. Which layout, and what does the requirement forbid?**
-Answer: A materialised CSR (or CSC for reverse direction) snapshot in memory, partitioned to fit the host, with the as-of filter applied at build time. It forbids query-time as-of filtering over the base table, because that is a 1e8-predicate scan per request, and it forbids rebuilding the snapshot per request for the same reason at a larger constant. Reasoning: the latency budget permits an O(d_v) contiguous scan and nothing that touches m. Follow-up: what if the graph changes intraday? Answer: a delta array merged on a schedule, with the merge cost amortised, and the staleness bounded and stated. Red flag: "we will just cache it". Scoring: 2 for the layout, 2 for the forbiddance, 1 for the staleness plan.
+**Q15. You must serve one-hop expansion at p99 under 50 ms over 1e8 facts. Which layout, and what does the requirement forbid?**
+Answer: a materialised CSR in memory, partitioned to fit the host, with the as-of filter applied at build
+time. It forbids query-time as-of filtering over the base table, which is a 1e8-predicate scan per request
+— about 1 s at 1e8 predicates per second — and it forbids per-request rebuilds for the same reason at a
+larger constant. Reasoning: the budget permits an O(d_v) contiguous scan and nothing that touches m.
+Follow-up: what if the graph changes intraday? Answer: a delta array merged on a schedule, with the
+staleness bounded and stated in the feature contract. Red flag: "we will cache it". Scoring: 2 for the
+layout, 2 for the forbiddance with its cost, 1 for the staleness plan.
 
-**Takeaway:** The questions that matter ask for a number or a discriminating check; answers that describe concepts without either are not answers.
+**Takeaway:** The questions that matter ask for a number or a discriminating check; an answer that
+describes a concept without either is not an answer.
 
 ## 12. Quick Reference Card
 
 | Element | Statement | Condition |
 |---|---|---|
-| Handshake check | sum of occurrence degrees = 2m | no self-loops; self-loops add 2 each |
-| CSR storage | 4(n+1) + m(4 + w + 1 + t) bytes | int32 ids; widen above 2^31 nodes |
-| Row-versus-CSR ratio | 7.3x for 176 B rows vs 24.1 B/edge | same column set; narrows as payload grows |
-| Degree pair | d_occ >= d_dist, surplus = repeats at both ends | per snapshot, per node |
-| Projection size | C(k,2) pairs per shared node of degree k | full clique; pruning breaks the closed form |
-| Dense matrix bound | n² × 8 B; 0.8 GB at 1e4, 8 TB at 1e6 | correct only for small n or spectral work |
-| Time rule | eligible iff t_avail <= t_decision | never substitute t_event |
-| Bitemporal invariant | at most one visible version per (id, system time) | enforced by the write path, not the schema |
-| Reification cost | 2 + p rows per edge, ~1.6x at p = 3 | logical count; packing reduces physical rows |
-| Rebuild rule | every derived structure reproducible from base + identity version | any hand-edited edge breaks it |
+| Handshake check | Σ occurrence degree = 2m (+L if loops counted once) | same filter on both sides |
+| Degree pair | d_occ ≥ d_dist; surplus = Σ(c−1) | per snapshot; direction stored once |
+| CSR bytes | 4(n+1) + m·w_pos, w_pos = 13/21/29/45 B | fixed width, no compression |
+| Layout ratio | 8.22x row vs 21 B position at 1e9 facts | same column set; falls to 3.66x at 45 B |
+| Projection | C(k,2) pairs; marginal = k per added member | full clique; pruning breaks the form |
+| Dense bound | n² × 8 B; 800 MB at 1e4, 8 TB at 1e6 | small n or spectral work only |
+| Time rule | eligible iff t_avail ≤ t_decision | never substitute t_event |
+| Bitemporal | ≤ 1 visible version per (fact, belief instant) | enforced by the write path |
+| Partition | 1 + 1/p copies one-way, 2 − 1/p two-way | degree-independent hash |
+| Reification | 2 + p rows per fact, 1.59x at p = 3 | logical count; packing reduces it |
+| Rebuild rule | derived = f(base facts, identity version) | any hand-edited edge breaks it |

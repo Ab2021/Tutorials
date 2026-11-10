@@ -1,1198 +1,1467 @@
 ---
-case_id: CASE-01-06-001
-title: Dynamic pricing for an ecommerce retail assortment
-case_type: hybrid
-domain: ecommerce pricing
-primary_pattern: causal-confounding
-secondary_patterns: [evaluation-mismatch, model-monitoring]
-evidence_level: not-measured
-source_basis: illustrative
-as_of_date: 2026-11-07
+case_id: "CASE-01-06-001"
+case_title: "Dynamic pricing for an ecommerce retail assortment"
+case_version: "2.0"
+created: "2026-11-10"
 last_reviewed: null
-owner_role: pricing science lead
-source_index: INDEX.md
-review_trigger: Change in eligible products, pricing rules, or experiment design
-editorial_status: draft-unreviewed
+status: "proposed"
+content_status: "draft"
+case_type: "hybrid"
+domain: "Ecommerce retail pricing"
+primary_pattern: "causal-confounding"
+secondary_patterns: ["evaluation-mismatch", "constraint-violation"]
+evidence_level: "illustrative"
+source_basis: "constructed teaching inputs; no company data, system, or measured outcome is described"
+as_of_date: "2026-11-10"
+owner_role: "Pricing director (decision owner); pricing science lead (analysis owner)"
+source_index: "INDEX.md"
+review_trigger: "Change in landed cost basis, payment or marketplace fees, eligibility rules, price-movement limits, or the price-experiment design"
 ---
+
 # Dynamic pricing for an ecommerce retail assortment
 
+**Evidence disclaimer.** This is a constructed teaching case. The retailer, catalogue, cost figures,
+conversion rates, elasticities, capacity limits and financial totals below are **ILLUSTRATIVE**
+inputs chosen so the arithmetic is checkable by hand. No system is deployed, no experiment was run,
+no company result is reported, and no retailer's practice is described. Every claim about the world
+is either arithmetic that this document performs or an assumption labelled as one. The case exists to
+show how a price recommendation is converted into a bounded, refusable decision with a stated owner,
+a stated cut-off, and a stated way to be wrong.
+
 ## 1. The One-Line Framing
-Given a product-market-day, recommend one public shelf price for the next day to a retailer's pricing owner, maximizing expected contribution under inventory, price movement, and customer-protection constraints, against a fixed-price rule.
-**Evidence:** This is a constructed teaching case, not an account of a particular retailer.
-Every number, operating target, role, policy, and scenario below is illustrative; no system, experiment, or business outcome is claimed to exist.
-The primary pattern is **causal-confounding**; secondary patterns are **evaluation-mismatch** and **model-monitoring**.
-This is an allocation and constrained optimization decision repeated daily, not a personalized offer.
-The important tradeoff is that a price with higher revenue can have lower contribution once costs are included.
-Demand prediction alone does not reveal what demand would have been at a different price.
-The proposed next action is to obtain experimental evidence, not to assert an optimized price works in production.
+
+Given one eligible product-market-day, publish one shelf price for the following trading day, chosen
+by the pricing director from a candidate set that the pricing science team can defend, so that
+expected contribution per available unit rises without breaching price-movement, inventory-reserve,
+or customer-protection rules, compared with holding the previously approved price.
+
+The decision is a *single* number per product-day. It is not a personalised offer, not a discount
+campaign, and not a markdown ladder. The naive framing — "predict demand, pick the price that
+maximises predicted revenue" — fails for three separate reasons, each of which this case costs out.
+Revenue ignores the cost of goods, so a price cut looks better than it is. Predicted demand at a
+price the catalogue has never charged is an extrapolation, not a measurement. And the elasticity
+that the extrapolation relies on is estimated from observational variation that is entangled with
+promotions, stockouts and seasonality.
+
+The arithmetic below produces a defensible answer that is smaller than the proposal suggests. A
+planned 10% across-the-board price cut is contribution-negative by 3.37%, or 8.78% once a $1.10
+per-order variable picking cost is included. The elasticity implied by the cut's own observed
+conversion lift is 2.19, while the cut requires 2.52 to break even on contribution. Under a binding
+inventory cap the same catalogue supports a *price increase* to 19.39, worth 17.93% more contribution
+than the baseline price.
+
+**Takeaway:** the useful output of a pricing model is not "the optimal price"; it is a ranked,
+constraint-filtered candidate set plus the one number that decides between the top two candidates.
 
 ## 2. Context & Background
-The fictional retailer sells replenishable, non-essential household goods through a single ecommerce channel.
-The pilot covers one market, one currency, and a defined cohort of eligible products.
-A product-market-day is the decision unit; all customers in that market see the same shelf price for that product during the assigned interval.
-The baseline is a manually approved fixed shelf price, held unless the merchant intervenes.
-The baseline is a constructed comparator, not a reported practice or measured deficiency.
-The merchant decides the price; the pricing scientist proposes the policy; operations and legal can stop the pilot.
-Catalog operations maintain product eligibility and vendor restrictions.
-Inventory operations own availability and replenishment inputs.
-Finance defines contribution and matures return-related adjustments.
-Customer support handles price display disputes and records complaints.
-The proposed decision happens before the local trading day starts.
-The price system publishes an approved version to listing, product, cart and checkout surfaces.
-An already accepted order retains its contracted price; legal and product teams must approve any cart-price policy before exposure.
-Illustrative planning scale is 10,000 eligible SKUs and one batch decision per SKU per day.
-This is a workload assumption, not a retailer's actual volume.
-Peak shopping traffic affects read capacity separately from batch recommendation volume.
-Cross-product substitution and common inventory introduce interference across product decisions.
-No actual geography or applicable legal rule is established here.
-Legal approval and jurisdiction-specific requirements are prerequisites, not assumed facts.
+
+A mid-sized online retailer sells replenishable household and personal-care goods from its own
+warehouse. Prices are set centrally per market, published to the catalogue, and read by every
+customer in that market for the interval the price is live. There is one currency, one legal
+jurisdiction, and one fulfilment network in the pilot scope.
+
+The current process is manual and slow. A category merchant reviews a weekly margin report, decides
+which products to reprice, and applies the change through a spreadsheet upload that is validated by
+a rules service. The rules service enforces a floor, a ceiling, and a maximum percentage move per
+day. Nothing in the process estimates demand response. When a product goes out of stock, the
+merchant often cuts its price on the assumption that demand has fallen, which is the opposite of the
+correct inference.
+
+Four accountability boundaries are routinely blurred, and separating them is most of the design.
+
+*Merchandising* owns assortment, vendor terms and the commercial relationship. It decides which
+products are in scope and what the contractual floor is.
+
+*Pricing science* owns the demand model, the elasticity estimate, the candidate generator and the
+evaluation report. It recommends; it does not publish.
+
+*Commerce engineering* owns the price publication path, the cache invalidation behaviour, and whether
+the price a customer sees on the listing page equals the price in the cart and the price on the
+receipt. It does not decide prices.
+
+*Finance* owns the contribution definition, the landed-cost basis, the fee schedule and the
+maturation of return-related adjustments. It signs off on whether a claimed saving is real.
+
+Two supporting functions gate any change. *Legal* confirms that no price is individual-specific and
+that no protected attribute enters the decision. *Inventory operations* supplies sellable on-hand
+and the safety reserve that any markdown must respect.
+
+The scale used for planning is deliberately round: 10,000 eligible SKUs, one recommendation per SKU
+per local day, one market. That is a workload assumption for capacity arithmetic, not a statement
+about any retailer's catalogue. Peak trading hours affect read capacity on the publication path and
+are a separate engineering concern from the batch recommendation volume, which is flat.
+
+Two structural properties of this problem are worth stating before any method is chosen. First, the
+decision repeats daily, so a small per-decision error compounds across 3.65 million decisions a year
+at the assumed scale; a 0.3% average contribution improvement is worth having, and a 3% average
+regression is existential. Second, price is a public, observable, remembered quantity. A customer who
+buys at 18.00 and sees 16.20 the next day has a legitimate grievance that no contribution model
+accounts for.
 
 ## 3. The Business Question
-**Illustrative owner question:** Should the retailer replace the current rule with a bounded, inventory-aware daily price policy for eligible products?
-The decision owner is the pricing director, who can approve, reject, or defer the policy.
-The trigger is a hypothetical quarterly assortment review; the deadline is before a proposed pilot.
-The actions are retain baseline, test a constrained price policy, or defer until identification and operations improve.
-The primary objective is incremental realized contribution per eligible product-day, compared with the current rule, after a prespecified maturity period.
-Contribution includes revenue minus merchandise cost and specified variable transaction, fulfillment, and return costs.
-Lost sales, customer harm, legal breaches, and operational outages are not acceptable ways to improve that objective.
-Price constraints are hard eligibility gates, not penalties that can be traded off against profit.
-The scope excludes personalized pricing, sensitive products, private seller offers, advertising auctions, and supplier contract renegotiation.
-A price change is expensive when it erodes customer trust or exhausts inventory that would have served later customers.
-Conversion and revenue are diagnostic proxies, not the decision objective.
-A final decision can be to collect evidence rather than launch.
+
+**The decision.** For each eligible product-market-day, may the pricing director authorise
+publication of a model-recommended price, replacing the merchant's held price, for the following
+trading day?
+
+The owner is the pricing director. The team can approve, reject, approve for a bounded subset, or
+defer. Deferral is a real option, not a courtesy: the baseline continues, the merchant keeps
+discretion, and the cost of deferral is the contribution left on the table, which is unmeasured.
+
+The trigger is a quarterly commercial review at which the merchant organisation has asked whether
+the manual process should be replaced. The deadline is the start of the next planning quarter, after
+which the change would collide with a seasonal peak and be deferred by default.
+
+The primary objective is incremental realised contribution per eligible product-day over the
+maturity window, compared with the held-price baseline on the same products and days. Contribution is
+defined as revenue minus landed cost minus payment processing minus marketplace or channel fees,
+minus prespecified variable fulfilment cost. It excludes fixed costs, because fixed costs do not
+change when a price changes and including them would dilute exactly the comparison the decision
+needs.
+
+Four things are explicitly *not* acceptable ways to improve that objective. Converting a stockout
+into "demand fell" is not. Raising price on a product whose supply is about to fail is not. Charging
+different customers different prices for the same product in the same market is not. Publishing a
+price that the cart or the checkout will not honour is not.
+
+The scope excludes personalised and member-specific pricing, regulated or age-restricted products,
+third-party marketplace seller offers where the retailer does not control the price, advertising
+auctions, and any renegotiation of supplier terms. Those are separate decisions with different owners.
+
+A price change also has a non-financial cost that the objective does not capture. It consumes
+customer trust, and trust is consumed faster than it is rebuilt. The decision therefore carries a
+guardrail on the frequency and magnitude of moves that is not tradeable against contribution.
+
+The final decision may legitimately be "collect evidence". A negative answer with a measured reason
+is a better outcome than a launch with an unmeasured hope, and the case is written so that the
+negative answer is reachable.
 
 ## 4. Assumptions & Constraints
-| ID | Condition and type | Status / verification | Consequence and fallback | Owner / trigger |
+
+| ID | Condition and type | Status / verification route | Consequence if false | Owner / trigger |
 |---|---|---|---|---|
-| A1 | Causal demand response transports to eligible pilot items | Unverified; randomized price contrasts | Wrong price ranking; retain baseline | Science; assortment or season changes |
-| A2 | Product inventory is available and timely | Unverified; reconcile snapshots with fulfillment | Overselling or false low demand; freeze SKU | Inventory; stale or discrepant feed |
-| A3 | Costs and return liabilities can be attributed | Unverified; finance ledger reconciliation | Wrong contribution; use conservative cost or exclude | Finance; vendor or fee change |
-| A4 | Public price is consistent across surfaces | Unverified; synthetic journey and receipt comparison | Broken promises; stop publication | Commerce engineering; version drift |
-| A5 | Sufficient eligible clusters and stable exposure | Unverified; pre-pilot design and power study | Inconclusive treatment effect; expand horizon or defer | Experimentation; recruitment shortfall |
-| C1 | Price lies between approved floor and ceiling | Scenario rule; rules team must approve | Reject proposed price, retain approved price | Merchant; rule update |
-| C2 | Price moves at most 10% from last approved daily price | Scenario rule, not a law | Restrict feasible grid; retain valid baseline if empty | Merchant; override |
-| C3 | No protected-attribute or individual-specific price | Scenario policy; legal review outstanding | Reject request and audit | Legal; new use case |
-| C4 | Existing order terms must be honored | Scenario contractual safeguard; legal confirms | Hold order price and investigate | Commerce; inconsistent checkout |
-| C5 | Inventory must exceed safety reserve before an experimental markdown | Scenario safety rule | Disallow markdown or exclude product | Inventory; reserve update |
-The three assumptions most likely to reverse the recommendation are A1, A2 and A3.
-A scenario constraint is not proof that any real regulation or contract imposes it.
-An infeasible rule set must be escalated; simply falling back to a now-invalid price is unsafe.
-A manually approved emergency price is valid only after the same applicable rules are checked.
+| A1 | Demand responds to own price with a stable elasticity over the tested range | Unverified; needs randomised price contrasts, not observational regression | Candidate ranking inverts; hold baseline | Pricing science; assortment or season change |
+| A2 | Sellable inventory is known at the cut-off and excludes allocations | Unverified; reconcile warehouse snapshot against fulfilment events | Recommends a price for units that do not exist; freeze SKU | Inventory operations; feed lag > 2 h |
+| A3 | Landed cost is effective-dated and payable at the decision time | Unverified; reconcile against the payables ledger | Contribution sign error on thin-margin SKUs; exclude SKU | Finance; vendor or freight change |
+| A4 | Payment and channel fees are known and constant per order | Unverified; fee schedule version must be pinned to the decision | Margin overstated by the fee delta; recompute candidate set | Finance; fee renegotiation |
+| A5 | The same price is served on listing, product, cart and checkout | Unverified; synthetic purchase journey plus receipt comparison | Broken price promise; stop publication and roll back | Commerce engineering; cache or version drift |
+| A6 | Products are independent enough that per-product pricing does not move neighbours | Unverified; measure cross-price response in the test | Optimises each SKU into a worse assortment position | Pricing science; substitute-pair refresh |
+| C1 | Price must lie within the vendor-contracted floor and the category ceiling | Contractual gate; merchandising maintains the effective-dated bounds | Candidate is filtered out, not penalised; publish baseline | Merchandising; contract amendment |
+| C2 | A published price may move at most 10% from the last published price | Internal policy for this case, not a law | Feasible set may become empty; hold and escalate | Pricing director; policy review |
+| C3 | No price may depend on an individual's identity or a protected attribute | Legal gate; counsel review outstanding before any exposure | Stop the programme; audit the feature store | Legal; new data source |
+| C4 | Accepted orders keep their contracted price | Contractual safeguard; checkout confirms | Goodwill cost and possible regulatory exposure | Commerce; checkout inconsistency |
+| C5 | A markdown requires sellable stock above a 15-day safety reserve | Inventory safety rule for this case | Markdown disallowed; SKU excluded from the batch | Inventory operations; reserve revision |
+| C6 | No price may be published for a SKU with an open cost dispute | Finance control | Excluded from the batch; count and report the exclusion | Finance; dispute opened |
+
+Three assumptions can reverse the recommendation on their own: A1, A2 and A3. A1 removes the
+mechanism, A2 misreports the binding resource, and A3 flips the sign of the objective on every SKU
+whose gross margin is thin. A4 and A5 are cheaper to test and more likely to be true, but a failure
+in either produces a hard operational stop rather than a soft financial error, so they are gated
+before exposure rather than monitored after it.
+
+A scenario constraint is not evidence that a real jurisdiction imposes it. C2, C5 and C6 are
+written as this case's rules so that the feasibility arithmetic has something to bite on. A real
+programme must replace them with the actual contractual and regulatory text, and must record who
+approved each bound and when.
+
+An infeasible candidate set is an expected outcome, not an exception. On a day when the landed cost
+jumps and the price-move limit binds, the model's preferred price is more than 10% away from the
+published price and every candidate is filtered out. The correct behaviour is to publish the held
+price and raise an escalation, not to relax the constraint silently or to interpolate toward the
+preferred price in the hope that partial movement is close enough.
 
 ## 5. Data, Tools & Method
+
 ### 5a. Data Specification
-The panel grain is product × market × local day, with a separate event grain for exposure and orders.
-An illustrative historical window is 52 weeks, but its existence and sufficiency are not established.
-Product, market, day, decision version, and channel identify a policy decision.
-Exposure events additionally require session and event identifiers; orders require unique order-line identifiers.
-The decision cutoff precedes the day being priced; point-in-time joins select only records available by that cutoff.
-Price is the public shelf price in currency per unit, before any separately recorded discount.
-Record displayed, cart, and paid prices independently to detect inconsistent treatment.
-Cost is landed unit cost in currency per unit, effective and known at decision time.
-A separate mature ledger records refunds, variable fulfillment, and other prespecified contribution adjustments.
-Inventory is sellable on-hand units minus allocations, with event time and ingestion time.
-Reservations and replenishment expectations are distinct fields, not interchangeable with physical stock.
-Sales quantity is fulfilled units, not latent demand; stockouts censor sales.
-Record stockout times, page impressions, search placement, delivery promise and known marketing campaigns.
-For causal estimation, log assignment probabilities, eligibility, cluster, time block and actual displayed treatment.
-Zero sales on an available day are valid outcomes; an unlisted product is not a zero-demand observation.
-Exclude products with invalid cost, inconsistent product identity, contract restriction, or unresolved stock data before randomization.
-Record exclusions and compare eligible with excluded products to delimit the estimand.
-Use time-ordered training, validation and final test periods, with product-group boundaries appropriate to the target population.
-Do not fit encoders, imputation or scaling on the final test period.
-Delayed return labels mature on a fixed window; reconcile late adjustments rather than silently relabeling past outcomes.
-Link order lines by stable keys with documented one-to-many relationships and deduplicate event IDs before aggregation.
-Count orphan events and late arrivals; fail the relevant batch when reconciliation exceeds a pre-agreed tolerance.
+
+**Grain.** The recommendation grain is product × market × local trading day. Every other table is
+either a dimension of that grain or an event that aggregates into it.
+
+**Decision cut-off.** The cut-off is 02:00 local time on the day before the priced day, which is
+after the overnight warehouse reconciliation and before the merchant's morning review. Every input
+must carry an ingestion timestamp at or before that cut-off. A record that arrived at 02:07 is not
+available to the 02:00 decision, no matter how useful it would have been.
+
+**Population.** Eligible SKUs are those owned by the retailer, in the pilot market, with a valid
+landed cost, no open cost dispute, no vendor price restriction, and at least one sellable unit. The
+population is defined before randomisation and its membership is recorded per day, because an
+eligibility rule that changes mid-test changes the estimand.
+
+**Keys.** The decision key is (product_id, market_id, trading_date, policy_version). Exposure events
+add (session_id, event_timestamp); order lines add (order_line_id); inventory snapshots add
+(snapshot_timestamp). Every join is on stable identifiers, and one-to-many relationships are declared
+rather than assumed.
+
+**Units, explicitly.** Price is currency per unit, inclusive of tax, as displayed. Landed cost is
+currency per unit, exclusive of recoverable tax, effective-dated. Quantity is fulfilled units, not
+ordered units and not sessions. Conversion is orders per session, dimensionless. Contribution is
+currency per product-day. Elasticity is a pure number, defined as the percentage change in quantity
+per one percent change in price, and carries a sign convention that is stated once and never flipped.
+
+**What the fields mean, and what they do not.**
+
+Displayed price, cart price and paid price are recorded as three independent fields, not derived from
+one another, because the entire A5 failure mode consists of them disagreeing.
+
+Stock quantity is sellable on-hand minus allocations. Reservations, in-transit replenishment and
+supplier purchase orders are separate fields. Treating in-transit as available is the most common way
+to recommend a price for inventory that will not arrive.
+
+Sales quantity is fulfilled units. It is *not* latent demand. A day on which the SKU sold out at
+noon records a small number that means "we ran out", not "customers did not want it". Stockout time
+must be recorded separately, and any product-day with a stockout inside the trading window is either
+excluded or handled with a censored likelihood.
+
+Zero sales on a day when the SKU was listed and available is a genuine observation and must be kept.
+Zero sales on a day when the SKU was unlisted is not an observation of demand at all and must be
+dropped. Confusing the two silently biases elasticity toward zero.
+
+For causal work, the log must contain the assignment probability, the eligibility flag, the cluster
+identifier, the time block, and the price actually displayed. Without the displayed price, an
+analysis cannot distinguish a price that was assigned from a price that was overridden by the rules
+service at the last moment.
+
+**Exclusions, recorded not implied.** Exclude product-days with an invalid cost record, a product
+identity conflict, a contractual price restriction, unresolved inventory, or an open finance dispute.
+Count exclusions by reason per day and compare the excluded set against the included set on baseline
+price and baseline conversion. If the excluded set is materially different, the estimand has changed
+and the report must say so.
+
+**Time split.** Train on a contiguous historical window, tune on the next window, and evaluate on a
+final holdout that is never touched during model selection. Encoders, imputation statistics and
+scalers are fit on the training window only. The holdout is time-ordered, not randomly interleaved,
+because the deployment uses the model to predict forward.
+
+**Delayed labels.** Return-related adjustments mature over a fixed window after the order. The
+maturity window is declared in advance. Late adjustments that arrive after maturity are accumulated
+in a reconciliation report and are never used to relabel a past evaluation. A silently relabelled
+history makes every prior decision look better or worse than it was, and destroys the audit trail.
 
 ### 5b. Tools & Stack
-A proposed warehouse stores immutable event snapshots and effective-dated dimensions.
-A proposed Python batch job validates inputs, estimates demand and enumerates approved price candidates.
-A versioned artifact registry stores model, feature specification, pricing rules and cost assumptions together.
-An approval service publishes versioned prices to the commerce catalog.
-A separate monitoring pipeline joins exposures, sales, inventory and finance outcomes after maturity.
-These are roles in a design, not assertions that a named product, version or implementation was used.
-Infrastructure owners would select versions and deployment configuration before any implementation.
+
+The design assumes five components and asserts nothing about which products implement them.
+
+An append-only warehouse holds immutable event snapshots and effective-dated dimensions. Immutability
+matters because the evaluation must be replayable against the data that existed at the time.
+
+A batch job, run after the cut-off, validates inputs, fits or loads the demand model, enumerates the
+approved candidate prices, applies the hard constraints, and writes a ranked recommendation table
+with the reason code for every filtered candidate.
+
+A versioned artefact registry stores the model binary, the feature specification, the constraint set,
+the cost basis and the fee schedule as one atomic bundle. A price recommendation is only meaningful
+relative to the exact combination that produced it; storing the model without the cost basis makes
+the recommendation unreproducible.
+
+A publication service accepts an approved version and writes it to the catalogue with cache
+invalidation. It refuses to publish a version that has not passed the constraint check, and it
+records the version identifier against every published price.
+
+A monitoring pipeline joins exposures, orders, inventory and finance outcomes after maturity and
+emits the decision metrics.
+
+Infrastructure owners select runtime, orchestration and storage engines. This document does not.
 
 ### 5c. Method Summary
-The baseline holds the approved price for each eligible product, except documented merchant actions.
-The proposed method predicts demand under each feasible candidate and selects the candidate with maximum expected constrained contribution.
-A simple rule-based markdown is an alternative; it is transparent but can react to stock without identifying demand response.
-An observational regression is another alternative; it predicts within its historical distribution but can learn biased price coefficients.
-A randomized price-grid experiment is proposed to identify local response within approved limits.
-A bandit is not selected for the initial pilot because adaptive assignment complicates inference and exposure governance.
-None of these alternatives has been tested in an actual business in this case.
-The optimizer enumerates the discrete permitted price grid; ties keep the current price to avoid unnecessary churn.
-The stopping condition is evaluation of all feasible candidates; there is no iterative numerical solver in this proposal.
-A candidate is eligible only after floor, ceiling, movement, cost, inventory and merchant-rule checks.
-An uncertain estimate outside experimentally supported price ranges is not a reason to extrapolate or lift the bounds.
-If no valid candidate remains, do not publish; escalate to the merchant and use an approved safe state.
 
-### 5d. Data provenance, quality, exclusions and leakage controls
-The case contains no actual data extract and no actual business event logs.
-A real implementation would document source owner, permissions, snapshot ID, extraction time, and retention for every table.
-The catalog owns product identity; commerce owns exposure and order events; inventory owns stock records; finance owns cost and returns.
-A price change caused by a promotion can coincide with advertising or seasonal demand, creating confounding.
-Post-decision sales, rankings, returns and inventory movements must not become same-day predictive inputs.
-Prior-day versions are usable only when available before cutoff, not merely timestamped earlier by an upstream source.
-Use both event and ingestion timestamps to detect late-arriving data and avoid hindsight joins.
-Do not use current realized units to infer the counterfactual inventory at a different price.
-Audit missingness and exclusions by category and treatment; missing outcomes can change the target population.
-Use access-controlled, minimized customer data, retaining only what the approved attribution and audit purposes require.
-Anonymization does not by itself guarantee privacy; retention and access rules require local approval.
+Five candidate methods were considered. They are listed with the reason each was kept or dropped,
+because the method-selection record is part of the evidence.
 
-### 5e. Reproducibility and method-selection ledger
-| ID | Artifact / reference | Status and scope | Reproduction boundary |
-|---|---|---|---|
-| SRC-01 | Source-tree filename in directory.txt | Topic provenance only | Source content and business results not supplied |
-| SRC-02 | [scikit-learn common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html) | Method reference for leakage | Not evidence of a pricing result |
-| SRC-03 | [Google SRE SLO workbook](https://sre.google/workbook/implementing-slos/) | Method reference for user-centered reliability | Not a target or benchmark for this proposal |
-| ART-01 | Cost, demand and candidate grid in Section 6 | Constructed numerical example | Arithmetic only; no fitted model |
-| RUN-01 | Experiment and deployment | Not executed | No code, data snapshot, seed or run ID exists |
-For a real run, record code revision, package versions, parameters, split boundaries, randomization seed, data snapshots and model checksum.
-Keep the assignment ledger and rule version with each decision so a reviewer can reconstruct eligibility and exposure.
-A seed does not guarantee bitwise reproducibility across changed runtime, libraries, or nondeterministic compute.
+**Hold the approved price.** This is the baseline and the default. It is transparent, requires no
+model, and is wrong only in the sense that it leaves measurable value uncaptured — which is exactly
+what the pilot is trying to establish.
+
+**A rule-based markdown ladder.** If stock cover exceeds a threshold, cut by a fixed step. This is
+what many merchants do manually. It is auditable and cheap, but it responds to stock rather than to
+demand, and it systematically cuts price precisely when the correct action may be to hold.
+
+**Observational regression on historical price variation.** Fit quantity on price with controls. It
+predicts well inside the historical distribution and is available immediately. It fails as a causal
+device because historical price changes were made *because* someone expected demand to move;
+promotions, competitor reactions and stockouts all enter the price variable.
+
+**A randomised price-grid experiment within the approved bounds.** Assign each eligible product-day
+to one of four approved price points, hold everything else constant, and estimate response from the
+contrast. This is the only option that identifies the object the decision needs. It costs real
+revenue during the test and it perturbs customers, which is why it is bounded.
+
+**A contextual bandit.** Allocate traffic adaptively to learn and earn simultaneously. It was
+rejected for the initial pilot. Adaptive assignment makes the estimator harder to defend to a
+finance audience, it concentrates exposure on the currently-best arm and therefore starves the
+contrast that resolves uncertainty, and it interacts badly with the 10% price-move constraint
+because arm availability changes with the previously published price.
+
+The chosen sequence is: run the randomised grid, estimate elasticity with an interval, then decide
+whether the point estimate is far enough from the decision boundary to act. The rest of this case
+executes that sequence on constructed inputs.
+
+### 5d. Provenance, Quality, Exclusions, Leakage
+
+Every input in the constructed panel is generated for this document. There is no source system, so
+there is no provenance chain to audit; what can be audited is whether the arithmetic that consumes
+the inputs is internally consistent, and that is what section 6 checks.
+
+Four quality checks would need to pass before any real analysis, and each has a specific failure it
+detects.
+
+*Row-count reconciliation.* The count of product-days in the decision table must equal the count of
+eligible SKUs multiplied by the number of trading days in the window, minus recorded exclusions.
+A mismatch means a join duplicated or dropped rows, and duplicated rows inflate apparent precision.
+
+*Price-surface consistency.* For a sample of product-days, the listing price, cart price and paid
+price must be equal. Any disagreement is an A5 failure observed in production, not a modelling
+problem, and it invalidates any analysis that uses "price" as a single field.
+
+*Cost-basis continuity.* The landed cost effective on the decision date must equal the cost used in
+the recommendation. A one-day lag between a vendor price increase and the cost record produces a
+recommendation that is profitable on paper and loss-making in the ledger.
+
+*Stockout attribution.* Fulfilled units plus recorded lost units must reconcile to modelled demand
+within tolerance on days with a stockout. If they do not, the censoring model is wrong and every
+elasticity estimated from those days is biased.
+
+Leakage in this problem does not usually look like a target column. It looks like a feature that is
+computed after the fact: return rate measured over the full maturity window, "days since last
+stockout" computed from a table that was backfilled, competitor price scraped at end of day and
+joined to the same day's decision, or a demand forecast that was itself revised after the outcome was
+known. The defence is mechanical: every feature must resolve to a source table with an ingestion
+timestamp, and the ingestion timestamp must be at or before the cut-off. A feature that cannot
+produce that timestamp is excluded regardless of its measured value.
+
+### 5e. Reproducibility & Method-Selection Ledger
+
+| Decision | Options considered | Chosen | Reason | Reversal condition |
+|---|---|---|---|---|
+| Identification strategy | Observational regression; randomised grid; bandit | Randomised price grid | Only design that separates price response from the reasons prices moved | Grid infeasible at the SKU level; then use regression with explicit bias bound |
+| Objective | Revenue; gross margin; contribution after variable cost | Contribution after variable cost and fees | Revenue rewards unprofitable volume; gross margin omits per-order cost | Finance revises the contribution definition |
+| Price grid | 2 cells; 4 cells; continuous | 4 cells, ±5% and ±10% in equal steps around the held price | Four cells allow a curvature check; two cannot | Constraint C2 binds and removes outer cells |
+| Demand functional form | Linear; log-log constant elasticity; spline | Log-log constant elasticity | Coefficient is the elasticity the decision needs; linear form's elasticity varies with price | Residual curvature persists after a curvature test |
+| Uncertainty | Point estimate; bootstrap interval; analytic interval | Analytic interval plus bootstrap cross-check | Analytic interval is auditable; bootstrap catches non-normal residuals | Heavy-tailed residuals |
+| Decision rule | Argmax predicted contribution; act only if interval clears threshold | Act only if the interval excludes the no-change contribution | Prevents acting on noise that the pilot cannot resolve | Interval narrows below one step of the price grid |
+| Aggregation | Per-SKU decisions; category decisions | Per-SKU with category-level guardrail | Per-SKU matches the constraint structure; category guardrail prevents assortment distortion | Substitution measured as material |
+
+The reproducibility requirement is concrete. Given the seed, the panel construction script, the grid
+assignment and the cost basis version, a second analyst must reproduce every number in this case to
+the printed precision. That is the standard the numbers below are held to: they are all closed-form
+or four-function arithmetic on stated inputs.
 
 ## 6. Analysis Walkthrough
-The decisive teaching tradeoff is that lower modeled revenue need not imply lower modeled contribution.
-All inputs in this section are illustrative, not estimates from a retailer.
-Suppose an item has a current approved price of 100 currency units, a unit merchandise cost of 60, and variable cost of 5 per fulfilled unit.
-Assume no fixed cost changes between candidate prices, no taxes included, and all relevant returns already represented in the variable cost assumption.
-Assume at least 100 sellable units remain above the safety reserve for the day, so inventory does not cap any candidate in this first example.
-The allowed prices are 90, 100, and 110, respecting the illustrative 10% daily movement rule and approved bounds of 90 to 110.
-Assume for this calculation the potential demand under each candidate is known: 100, 80, and 60 units, respectively.
-In practice those counterfactual quantities must be estimated; their values here are not empirical evidence.
-Validity: the following deterministic calculation applies only if candidate-specific fulfilled units and variable costs are as stated, with no cross-product effects.
-Derivation: each sold unit earns price minus merchandise and variable costs, multiplied by fulfilled units.
-```text
-FORMULA: contribution(p) = (p - c - v) × q(p)
-WHERE: p, c, v are currency/unit; q(p) is fulfilled units/day.
-CONSTRAINT: feasible p and known q(p); costs include all variable components relevant to the comparison.
-NUMERICAL EXAMPLE: at p=90, (90 - 60 - 5) × 100 = 2,500 currency/day.
-INTERPRETATION: this is modeled daily contribution, not realized profit.
-```
-| Price | Demand, units/day | Revenue, currency/day | Unit contribution | Total contribution, currency/day |
-|---:|---:|---:|---:|---:|
-| 90 | 100 | 9,000 | 25 | 2,500 |
-| 100 | 80 | 8,000 | 35 | 2,800 |
-| 110 | 60 | 6,600 | 45 | 2,700 |
-Under these assumptions, retain 100 because 2,800 exceeds 2,700 and 2,500.
-The 90 price has the highest revenue, but 300 less contribution than the baseline price.
-An independent arithmetic check is 80 × 35 = 8 × 35 × 10 = 2,800.
-The 110 candidate loses 100 contribution relative to baseline despite its higher unit margin.
-A price-dependent demand estimate may be systematically wrong if merchant promotions coincide with high expected demand.
-The optimizer cannot repair a biased or unsupported demand curve.
-**Sensitivity — changed unit cost:** if merchandise cost rises to 70 while other assumptions stay fixed, contributions are 1,500, 2,000, and 2,100 respectively.
-At that cost the highest-price candidate becomes best by 100; the recommendation is cost-sensitive.
-**Sensitivity — scarce inventory:** if only 50 units can be sold above the reserve and all demand is certain, each candidate sells 50 units.
-Their contributions are 1,250, 1,750, and 2,250; the 110 candidate wins in this one-day example.
-This naive cap is not a general expected-demand formula: expected minimum of random demand and stock is not minimum of their expectations.
-It also ignores the option value of stock in later days and substitution into other products.
-For stochastic demand, estimate the expectation of margin times fulfilled units and subtract any modeled, defensible inventory opportunity cost.
-If replenishment is delayed, a multi-day inventory model may reverse the one-day ranking; defer if its assumptions cannot be supported.
-**Not tried:** no historical regression, randomized price test, or deployment has been executed.
-**Highest leverage:** identify price response in the eligible region before treating a ranking as actionable.
 
-### Additional worked decisions and interview defenses
-The examples below are hypothetical calculations under explicitly stated assumptions, not observations from a pilot.
-**Break-even demand at 90:** matching the baseline contribution of 2,800 requires 2,800 / 25 = 112 fulfilled units.
-The assumed 100 units fall short by 12 units, so 90 is inferior in the original one-day comparison.
-The threshold is meaningful only when the merchandise and variable cost assumptions remain valid at the higher volume.
-**Break-even demand at 110:** matching 2,800 requires 2,800 / 45 ≈ 62.22 fulfilled units.
-If units must be whole, at least 63 fulfilled units are required to exceed the baseline, yielding 2,835.
-The assumed 60 units earn 2,700, and 62 units would earn only 2,790.
-These are deterministic thresholds, not confidence bounds on a real demand curve.
-**Incremental comparison:** the move from 100 to 90 adds 20 units but lowers the margin on all units.
-The extra 20 units at margin 25 contribute 500, while reducing the margin on the original 80 units costs 800.
-The net change is 500 − 800 = −300, matching the difference between 2,500 and 2,800.
-The decomposition assumes the original 80 sales can be treated as retained for accounting; it does not identify individual buyers.
-**Higher-price comparison:** the move from 100 to 110 sacrifices 20 assumed units.
-The 60 remaining units each earn 10 more, adding 600, while 20 lost units would have contributed 700 at baseline.
-The net change is 600 − 700 = −100, matching the candidate totals.
-This comparison does not say that the same 60 customers would buy at both prices.
-**Inventory uncertainty:** suppose demand is equally likely to be 20 or 100 units, with 50 units available.
-Expected demand is 60, but expected fulfilled units are (20 + 50) / 2 = 35.
-Using min(60, 50) would incorrectly predict 50 fulfilled units, overstating this expectation by 15.
-At a hypothetical unit margin of 35, the correct expected contribution is 35 × 35 = 1,225.
-The shortcut instead gives 50 × 35 = 1,750, an overstatement of 525 before any stock opportunity cost.
-The two-point distribution is illustrative and cannot be assumed from a mean demand forecast.
-**Multi-day opportunity:** assume 50 units are available today and no replenishment arrives tomorrow.
-Selling all 50 today at a contribution of 25 each yields 1,250 and leaves nothing for tomorrow.
-If instead all 50 could be sold tomorrow at a contribution of 35 each, waiting yields 1,750.
-The 500 difference illustrates why scarce inventory has option value beyond today’s margin.
-This comparison requires the stated certain demand tomorrow and ignores discounting, holding cost and customer effects.
-**Offer composition:** suppose a compliant 100 shelf price receives a separate 10-unit coupon.
-With merchandise cost 60 and variable cost 5, the paid-price unit contribution is 90 − 60 − 5 = 25.
-Without the coupon it is 35, so the coupon costs 10 per fulfilled unit under these assumptions.
-At 80 units the difference is 800; this is not a causal estimate of the coupon’s demand effect.
-Any actual floor must be checked against the correct contractual measure, not an invented universal margin rule.
-**Substitution:** suppose an illustrative discounted SKU gains 20 units at margin 25.
-Its incremental contribution is 500 if all other units and margins remain unchanged.
-If 15 of those purchases displace a substitute earning 40 per unit, the substitute loses 600.
-The combined contribution change is 500 − 600 = −100 before other spillovers.
-The calculation assumes exactly 15 displaced sales; a randomized category-level design would be needed to estimate displacement.
-**Experiment denominator:** suppose an assigned cluster contains 10 eligible product-days and earns 2,000 mature contribution.
-Its contribution per eligible product-day is 2,000 / 10 = 200, including zero-sale days.
-If only eight of those days have sales, dividing by eight gives 250 and changes the estimand.
-Availability can itself be affected by pricing, so excluding stockout days can create selection bias.
-For unequal cluster sizes, the planned weighting and variance estimator must match the eligible product-day estimand.
-**Interview defense:** a high-quality sales forecast alone cannot identify how sales would change under a different price.
-The merchant may have chosen that price using demand information absent from the training panel.
-Randomized, feasible price variation addresses preassignment confounding in expectation, not all interference or implementation failures.
-A cluster randomized policy test answers whether the proposed policy beats baseline over the specified horizon.
-A separate local price-grid test answers a different question about response at the tested prices and population.
-Neither test automatically supports extrapolation to new markets, products, seasons or unrestricted price changes.
-An interval covering both meaningful harm and meaningful benefit is inconclusive even if the point estimate is positive.
-A statistically precise lift is not sufficient if price validity, customer protection or other hard guardrails fail.
-The launch recommendation remains to retain a currently valid approved baseline until credible evidence and approvals exist.
+The walkthrough computes one decision eight times from different angles, then shows where the
+arithmetic stops being valid. Each block states the formula, the symbol units, the condition under
+which it holds, a numerical example with intermediate values, and the interpretation a decision
+maker should take from it. All inputs are **ILLUSTRATIVE**.
+
+The base inputs are fixed here and never varied silently: a held price of 18.00 currency units per
+unit, a baseline quantity of 1,000 units per product-day, a landed cost of 9.40 per unit, a payment
+processing fee of 6.0% of revenue, and a marketplace or channel fee of 2.5% of revenue. The two fees
+combine into a single retention factor, which is the first derivation.
+
+### Step 1 — Convert the fee schedule into a retention factor
+
+```text
+FORMULA [M-01]: k = 1 - r_pay - r_ch
+WHERE: k = net revenue retention factor [dimensionless, 0..1];
+       r_pay = payment processing rate on revenue [fraction];
+       r_ch  = marketplace or channel fee rate on revenue [fraction].
+CONSTRAINT: both fees must be percentage-of-revenue and must not have a fixed component; a fixed
+            per-order fee is a cost per order, not a reduced retention factor, and belongs in the
+            margin, not here.
+NUMERICAL EXAMPLE: r_pay = 0.060; r_ch = 0.025;
+                  k = 1 - 0.060 - 0.025 = 1 - 0.085 = 0.915.
+INTERPRETATION: of every 100.00 of revenue, 91.50 reaches the contribution line; the remaining 8.50
+                is paid to intermediaries and is not available to cover cost of goods.
+```
+
+The distinction in the constraint is not pedantry. A processor that charges 6% plus 0.30 per
+transaction cannot be represented by a retention factor alone, because the fixed component does not
+scale with price. Substituting a blended percentage in that case understates the cost at low prices
+and overstates it at high prices, which is precisely the range where the pricing decision lives. The
+correct form adds the fixed fee to the per-order cost and keeps the percentage in the factor.
+
+### Step 2 — Contribution margin per unit
+
+```text
+FORMULA [M-02]: m(p) = k * p - c
+WHERE: m(p) = contribution margin per unit at price p [currency/unit];
+       p = published shelf price [currency/unit];
+       c = landed cost per unit, effective at the decision date [currency/unit].
+CONSTRAINT: c must be the cost payable for the units actually sold in that window; using a standard
+            cost that differs from the payable cost by more than the margin makes the sign wrong.
+NUMERICAL EXAMPLE: p = 18.00; k = 0.915; c = 9.40;
+                  k * p = 0.915 * 18.00 = 16.47;
+                  m(18.00) = 16.47 - 9.40 = 7.07 per unit.
+INTERPRETATION: at the held price, each unit contributes 7.07 to fixed cost and profit after
+                variable cost; the same SKU at 16.20 contributes 0.915*16.20 - 9.40 = 5.42.
+```
+
+Read the two numbers together. A 10% price cut reduces the per-unit margin from 7.07 to 5.42, a fall
+of 1.65 or 23.3%. That ratio is the entire reason elasticity matters: the seller must find 30.4%
+more units to stand still, because 7.07 / 5.42 = 1.3037. Any elasticity estimate below the value
+that delivers 1.3037 units of demand ratio for a 0.90 price ratio is an argument against the cut,
+and that comparison can be made before any model is fitted.
+
+The break-even condition can be stated as a required elasticity, which is more useful than a margin
+ratio because it is directly comparable to the estimate.
+
+### Step 3 — The elasticity required to keep contribution flat
+
+```text
+FORMULA [M-03]: e_req = ln[m(p_0)/m(p_1)] / ln[p_0/p_1]
+WHERE: e_req = elasticity magnitude required for equal contribution [dimensionless, positive];
+       p_0 = held price [currency/unit]; p_1 = candidate price [currency/unit];
+       m(.) = contribution margin per unit [currency/unit].
+CONSTRAINT: valid for constant-elasticity demand q(p) = A p^(-e); under other forms the requirement
+            is a local slope, not a constant, and must be re-derived at the candidate price.
+NUMERICAL EXAMPLE: m(18.00) = 7.07; m(16.20) = 5.42;
+                  ln(7.07/5.42) = ln(1.3037) = 0.26530;
+                  ln(18.00/16.20) = ln(1.11111) = 0.10536;
+                  e_req = 0.26530 / 0.10536 = 2.517.
+INTERPRETATION: the 10% cut breaks even on contribution only if demand rises by at least the
+                elasticity 2.52 allows, i.e. by about 1.11111^2.517 - 1 = 30.4% in units.
+```
+
+This is the most useful number in the case, because it converts a modelling question into a
+falsifiable commercial claim. The merchant proposing the cut is asserting, implicitly, that this
+catalogue's demand elasticity exceeds 2.52 at this price point. That assertion can be tested with
+four price cells and a few thousand sessions per arm, and it can be rejected.
+
+### Step 4 — Estimate the elasticity from the price test
+
+The constructed test assigns eligible product-days to four approved price points and records the
+conversion rate for each. Four cells allow a curvature check that two cells cannot provide.
+
+| Cell | Price | Conversion | Units per 1,000 sessions |
+|---|---:|---:|---:|
+| C1 | 16.20 | 0.0519 | 51.9 |
+| C2 | 17.10 | 0.0479 | 47.9 |
+| C3 | 18.00 | 0.0412 | 41.2 |
+| C4 | 18.90 | 0.0352 | 35.2 |
+
+```text
+FORMULA [M-04]: ln d_i = a + b * ln p_i + u_i, and e_hat = -b
+WHERE: d_i = conversion rate in cell i [orders/session, dimensionless];
+       p_i = price in cell i [currency/unit]; b = slope [dimensionless];
+       e_hat = estimated elasticity magnitude [dimensionless]; u_i = residual.
+CONSTRAINT: b is estimated by ordinary least squares on four points, so the interval uses t with
+            4 - 2 = 2 degrees of freedom; with fewer than three distinct prices the interval is
+            unbounded in practice and cannot support a decision.
+NUMERICAL EXAMPLE: x_i = ln p_i = {2.78501, 2.83908, 2.89037, 2.93916};
+                  y_i = ln d_i = {-2.95844, -3.03864, -3.18932, -3.34671};
+                  mean x = 2.86341; mean y = -3.13328;
+                  S_xx = 0.013204; S_xy = -0.033689;
+                  b = -0.033689 / 0.013204 = -2.5515;  e_hat = 2.5515.
+INTERPRETATION: a 1% higher price is associated with 2.55% lower conversion inside the tested band.
+```
+
+Two checks decide whether that slope can carry a decision. The first is fit. R-squared is 0.974, and
+the residuals are +2.55%, -3.20%, -1.27%, +2.03% on the fitted values, so they alternate in sign
+rather than tracing a curve. That alternation is the evidence that a constant-elasticity form is not
+obviously wrong here; a monotone residual pattern would be evidence of curvature and would send the
+analysis to a spline or a quadratic in logs.
+
+The second is precision. The standard error of the slope is 0.2928, so the 95% interval with two
+degrees of freedom is -2.5515 ± 4.303 × 0.2928, which is [-3.811, -1.292]. Translating to the
+positive elasticity convention, the interval on e is [1.292, 3.811].
+
+That interval is very wide, and the width is the honest headline. The decision boundary derived in
+Step 3 is 2.517, which sits *inside* the interval. So the test as constructed cannot tell the
+decision maker whether the cut is contribution-positive. This is not a defect of the analysis; it is
+the finding, and it is the kind of finding that saves a programme.
+
+The direct two-cell contrast gives a narrower but differently biased estimate. Comparing only C1 and
+C3 gives e = ln(0.0519/0.0412) / ln(18.00/16.20) = 0.23088 / 0.10536 = 2.191. It is narrower because
+it uses two well-separated cells, and it is less trustworthy because it cannot detect curvature. The
+honest report contains both numbers and says which one the decision uses for which purpose: the
+four-cell slope for the interval, the two-cell contrast for the point forecast.
+
+### Step 5 — Contribution per session, the correct unit of comparison
+
+Product-day contribution is the wrong unit when arms have different session counts. Sessions differ
+because a price change can move click-through as well as conversion, so the comparison must be
+normalised before it is aggregated.
+
+```text
+FORMULA [M-05]: pi(p) = d(p) * m(p)
+WHERE: pi(p) = expected contribution per session at price p [currency/session];
+       d(p) = conversion rate [orders/session]; m(p) = margin per unit [currency/order].
+CONSTRAINT: one order equals one unit; if basket size varies with price, replace m(p) by the
+            average basket contribution and re-check that the basket did not change.
+NUMERICAL EXAMPLE: control p = 18.00, d = 0.0412;
+                  pi_control = 0.0412 * 7.070 = 0.291284 per session;
+                  treatment p = 16.20, d = 0.0519;
+                  pi_treatment = 0.0519 * 5.423 = 0.281454 per session;
+                  delta = 0.281454 - 0.291284 = -0.009830, i.e. -3.37%.
+INTERPRETATION: the cut raises conversion by 26.0% and revenue per session by 13.4%, and lowers
+                contribution per session by about 3.4%.
+```
+
+The three percentage changes are computed from the same two cells and they point in three different
+directions:
+
+```text
+revenue per session: 18.00*0.0412 = 0.741600   ->  16.20*0.0519 = 0.840780,  +13.37%
+units per session:   0.0412        = 0.041200   ->  0.0519        = 0.051900,  +25.97%
+contribution/sess:   0.291284                   ->  0.281454,                -3.37%
+```
+
+This is the case's central mechanism. Any dashboard built on revenue would have reported a win.
+The programme would have scaled a change that loses money, and the loss would have been invisible
+until a finance reconciliation months later, by which time the price would have been treated as
+validated.
+
+### Step 6 — Add the per-order variable cost
+
+The margin in Step 2 excludes picking and packaging, which is variable per order and does not scale
+with price. Adding it changes both the level and the ranking.
+
+```text
+FORMULA [M-06]: pi_net(p) = d(p) * [m(p) - w]
+WHERE: w = variable per-order fulfilment cost [currency/order], for example pick, pack and label;
+       pi_net(p) = contribution per session after per-order cost [currency/session].
+CONSTRAINT: w must be per order and must not vary with price; if packaging is charged as a percentage
+            of order value it belongs in k, not here.
+NUMERICAL EXAMPLE: w = 1.10;
+                  net margin at 18.00 = 7.070 - 1.10 = 5.970;
+                  net margin at 16.20 = 5.423 - 1.10 = 4.323;
+                  pi_net_control = 0.0412 * 5.970 = 0.245964;
+                  pi_net_treatment = 0.0519 * 4.323 = 0.224364;
+                  delta = -0.021600, i.e. -8.78%.
+INTERPRETATION: the per-order cost does not change the sign of the comparison, it widens the loss,
+                because the treatment arm has 26% more orders each carrying the same fixed cost.
+```
+
+The required conversion rate is the operationally meaningful number, because it can be compared
+against the observed lift. Holding the control's net contribution per session fixed at 0.245964 and
+solving for the treatment conversion gives 0.245964 / 4.323 = 0.056897, or 5.690%. Against a control
+of 4.12% that is a relative uplift of 38.10%, versus the 26.0% actually observed. The gap between
+26.0% and 38.1% is the size of the argument, and it is small enough to be closed by a different
+assumption about w — which is why w must be pinned by finance before the test, not after.
+
+The required elasticity under this cost basis is a third log ratio, and it is worth computing because
+it shows how much the per-order cost hardens the threshold: ln(5.970/4.323) = ln(1.38100) = 0.32281,
+divided by ln(1.11111) = 0.10536, gives 3.064. The per-order cost raises the bar from 2.52 to 3.06
+because it compresses the margin on both arms, and it compresses the treatment arm proportionally
+more.
+
+### Step 7 — The optimal price under constant elasticity
+
+```text
+FORMULA [M-07]: p* = e * c / [(e - 1) * k]
+WHERE: p* = contribution-maximising price [currency/unit]; e = elasticity magnitude (> 1);
+       c = landed cost [currency/unit]; k = retention factor [dimensionless].
+CONSTRAINT: requires e > 1 strictly. At e = 1 the denominator vanishes; below e = 1 the expression is
+            negative and the true optimum is unbounded, which is a statement about the model, not
+            about the market.
+NUMERICAL EXAMPLE: e = 2.191, c = 9.40, k = 0.915;
+                  numerator = 2.191 * 9.40 = 20.595;
+                  denominator = (2.191 - 1) * 0.915 = 1.191 * 0.915 = 1.08977;
+                  p* = 20.595 / 1.08977 = 18.90.
+INTERPRETATION: with the two-cell elasticity, the contribution-maximising price is 18.90, not the
+                16.20 the merchant proposed; the direction of the recommendation is opposite.
+```
+
+The derivation is short enough to state, because knowing where p* comes from is what tells you when
+it will betray you. Contribution per unit of demand is k*p - c, and demand is A p^(-e). Total
+contribution is A p^(-e)(k p - c). Differentiating with respect to p and setting to zero gives
+A[-e p^(-e-1)(k p - c) + k p^(-e)] = 0, so k p = e(k p - c), so k p (e - 1) = e c, and p* follows.
+Every step assumes e is constant in p, which is the assumption the four-cell test is designed to
+probe.
+
+The flatness of the objective around p* is the most important practical property. Evaluating the
+constructed demand curve at seven prices gives:
+
+| Price | Units per day | Margin per unit | Contribution | Versus 18.00 |
+|---:|---:|---:|---:|---:|
+| 16.20 | 1,259.71 | 5.4230 | 6,831.40 | -3.37% |
+| 17.00 | 1,133.44 | 6.1550 | 6,976.30 | -1.33% |
+| 18.00 | 1,000.00 | 7.0700 | 7,070.00 | baseline |
+| 18.90 | 898.60 | 7.8935 | 7,093.11 | +0.33% |
+| 20.00 | 793.83 | 8.9000 | 7,065.13 | -0.07% |
+| 21.00 | 713.34 | 9.8150 | 7,001.44 | -0.97% |
+| 22.00 | 644.21 | 10.7300 | 6,912.33 | -2.23% |
+
+Between 17.00 and 22.00 the contribution varies by 2.21% end to end (6,912.33 to 7,065.13) while the
+price varies by 29.4%. The objective is nearly flat over that range, while the uncertainty in the
+elasticity is wide enough to move the implied optimum from 13.93 to 45.49. The correct conclusion is
+not "raise price to 18.90"; it is "the data cannot distinguish these prices, so choose on
+non-contribution grounds — customer perception, competitive position, and the risk of being wrong in
+the expensive direction."
+
+### Step 8 — The binding inventory constraint
+
+When supply is limited, the objective changes: contribution per available unit, not per unit of
+demand. The unconstrained optimum sells more units than exist.
+
+```text
+FORMULA [M-08]: p_cap = p_0 * (Q / q_0)^(-1/e), valid when q(p_cap) = Q
+WHERE: p_cap = price at which predicted demand equals the available quantity [currency/unit];
+       Q = sellable units available for the day [units]; q_0 = demand at p_0 [units].
+CONSTRAINT: requires Q < q(p*) so the cap binds; if Q >= q(p*) the constraint is inactive and the
+            answer is p* from M-07. Requires e estimated in the same range, not extrapolated.
+NUMERICAL EXAMPLE: Q = 850 units; p_0 = 18.00; q_0 = 1,000; e = 2.191;
+                  Q/q_0 = 0.850; ln(0.850) = -0.162519;
+                  (-1/2.191) * (-0.162519) = 0.074164;  exp(0.074164) = 1.076983;
+                  p_cap = 18.00 * 1.076983 = 19.3857;
+                  margin at 19.3857 = 0.915*19.3857 - 9.40 = 17.7379 - 9.40 = 8.3379;
+                  contribution = 850 * 8.3379 = 7,087.23.
+INTERPRETATION: with 850 units to sell, 19.3857 yields 7,087.23 against 850 * 7.070 = 6,009.50 at
+                the held price, an improvement of 1,077.73 or 17.93%, and it is far larger than any
+                price effect the demand model could resolve.
+```
+
+The cap result dominates the elasticity question. The value of moving from 18.00 to 19.39 comes from
+selling the same 850 units at a higher margin, and it is worth almost 18% against a price-optimisation
+gain of 0.33% with full supply. That asymmetry is the practical lesson: in a supply-constrained
+catalogue, scarcity pricing is worth more than demand-response accuracy, and the team's effort should
+follow the money.
+
+Note what the constraint does to the 10% price-move policy. A move from 18.00 to 19.39 is +7.7%, inside
+the limit. A month of such moves would accumulate, because the limit is measured against the last
+published price, not against an approved reference. A programme that repeatedly applies the cap will
+walk the price upward in 7.7% steps, and the guardrail as written will not stop it. The policy needs a
+reference-price anchor, not a step limit, and that is an organisational fix that no model can supply.
+
+### Boundary case — where the formula breaks
+
+The constant-elasticity optimum is not robust near e = 1, and the failure is instructive.
+
+```text
+FORMULA [M-07] LIMIT CHECK: p* = e c / [(e-1) k] as e -> 1+
+NUMERICAL EXAMPLE: e = 1.05; c = 9.40; k = 0.915;
+                  p* = 1.05*9.40 / (0.05*0.915) = 9.87 / 0.045750 = 215.74.
+INTERPRETATION: a plausible-looking elasticity estimate produces a price 12 times the held price.
+                The formula is arithmetically correct and commercially absurd, which means the input
+                is being used outside its range, not that the price is an opportunity.
+```
+
+Three constraints bound the answer and none of them is inside the formula. Price must exceed the
+zero-margin price c/k = 9.40/0.915 = 10.27, or the seller loses money on every unit. Price must
+exceed the zero-net-margin price (c + w)/k = 10.50/0.915 = 11.47 once the per-order cost is included.
+And price must lie inside the approved floor and ceiling, with a move of no more than 10% from the
+published price. Those constraints live outside the optimisation, and the model that ignores them
+will produce recommendations that are correct and unactionable.
+
+The deeper boundary is the identification boundary. The four-cell test spans 16.20 to 18.90, a range
+of ±8%. The elasticity 2.55 estimated there is being used in Step 8 to justify 19.39, which is 15%
+above the top of the tested range, and in the limit check to justify 215.74, which is twelve times
+it. Extrapolating a constant elasticity outside the tested band is the single most common way this
+arithmetic is abused in practice, and the abuse is invisible because the numbers still compute.
+
+**What the walkthrough establishes.** The planned cut is contribution-negative under every cost
+definition tried, by 3.37% or 8.78% depending on whether the per-order cost is included. The elasticity
+interval is too wide to resolve the question the decision asks. The scarcity case is worth 17.9% and
+is robust to the elasticity input. The objective is flat enough that price choice within ±10% is a
+judgement call, not an optimisation result. Any of these findings would be reportable on its own; the
+combination means the programme should not be launched as proposed.
 
 ## 7. The Finding
-For the constructed one-day example, retain the 100 price: modeled contribution is 2,800 versus 2,500 at 90 and 2,700 at 110.
-These values are a calculation from assumed demand, not a measured or causal business outcome.
-The preferred price changes under the cost and inventory sensitivity examples, and the demand curve has not been identified.
-The owner should therefore retain the existing approved rule while designing an ethically and operationally bounded randomized test.
+
+Do not authorise the proposed blanket 10% price reduction. Do not authorise model-driven pricing
+either, on the evidence available. Authorise a bounded scarcity rule for the subset of SKUs whose
+sellable stock is below the cover threshold, and commission a properly powered price test for the
+remainder.
+
+The constructed evidence supports three separate statements, and they have different strengths.
+
+**Statement one, arithmetic and firm.** Under the stated cost basis, a 10% cut requires an elasticity
+of at least 2.52 to hold contribution constant, and of at least 3.06 once the per-order cost is
+included. The observed lift implies 2.19. The cut is contribution-negative by 3.37% before the
+per-order cost and by 8.78% after it. No modelling assumption enters this statement; it is division.
+
+**Statement two, estimate and uncertain.** The elasticity estimated from four price cells is 2.55 with
+a 95% interval of [1.29, 3.81]. The interval contains the decision boundary. On this evidence the
+pricing team cannot say whether repricing in either direction improves contribution.
+
+**Statement three, structural and robust.** When sellable stock is below predicted demand, the price
+that clears the available units at full margin beats the unconstrained optimum by a wide margin
+(17.93% over the held price in the worked example), and that conclusion depends only on the direction
+of demand, not on the magnitude of the elasticity.
+
+The finding therefore separates the question into one part that can be acted on now and one part that
+requires more evidence. Acting on the whole proposal would overreach; deferring everything would
+leave 17.93% of contribution uncaptured on the constrained subset for a quarter.
+
+The recommendation carries a fourth statement about what was not measured. No baseline replay was
+executed, no model was trained, no capacity study exists, no customer-response study on the price
+change exists, and no competitive reaction was observed. The arithmetic is a worksheet built on
+constructed inputs, and every number above would change if the inputs did.
 
 ## 8. System/Solution Design
-### 8a. Offline / Training / Batch Path
-```text
-Versioned catalog + cost + inventory + exposures + mature orders
-  -> cutoff / schema / lineage checks -> quarantine invalid product-days
-  -> point-in-time feature panels -> temporal splits -> demand model or experiment analysis
-  -> candidate-grid optimizer -> constraint gate -> merchant approval
-  -> versioned price manifest -> catalog publish -> reconciliation and audit
-```
-The batch produces recommendations, not authoritative customer prices, until the merchant approves the manifest.
-Train only on observations available before the cutoff and log the exact snapshot and model version.
-Calculate uncertainty by candidate; unsupported or highly uncertain decisions fall back to a previously approved valid price.
-The gate checks effective-dated rules before publication and again if rules change during approval.
-Training, evaluation, configuration and serving artifact versions are bound in the manifest.
-Failures quarantine affected SKUs rather than silently publishing incomplete estimates.
 
-### 8b. Online / Serving / Real-Time Path
-```text
-Shopper -> catalog price read -> listing / product / cart -> checkout
-               |                        |                    |
-         approved version       exposure event         committed order price
-               |                        |                    |
-       last valid safe price      audit / metrics       order / finance ledger
-               ^                        |
-       rule-validated fallback <- incident control <- mismatch alert
-```
-The shopper reads a precomputed public price; model inference is not required on the checkout path.
-Catalog reads authenticate internal clients, use scoped service identity, and return price version and effective time.
-Price display caches must invalidate or expire within a defined propagation window before publication is considered complete.
-Checkout verifies the applicable price version and honors binding order terms, with exceptions defined by approved policy.
-Exposure, assignment, decision version and order events are written with unique identifiers for later reconciliation.
-If the catalog dependency fails, a previously approved price can be served only while still effective and compliant.
-If that cannot be verified, the safe action is to stop offering the affected SKU, not invent a price.
-A kill switch prevents new dynamic publications; it cannot rewrite orders already committed.
+The design has two paths that must be reasoned about separately, because they fail differently and
+are owned by different teams. The batch path produces a recommendation and can be wrong safely. The
+publication path touches customers and can be wrong dangerously.
 
-### 8c. Key Design Decisions
-| Choice | Alternative | Reason / boundary | Revisit trigger |
-|---|---|---|---|
-| Daily SKU-market price | Individual price | Auditability and consistent exposure; market effects can interfere | New legal or product policy |
-| Enumerate valid grid | Continuous optimizer | Clear hard-rule checks; coarse grid can miss an optimum | Grid granularity review |
-| Cluster randomization | Session-level randomization | Avoid simultaneous public prices and within-cluster contamination | New independent market boundary |
-| Price manifest | Online model call | Checkout survives model outage; manifest may go stale | Freshness or scale requirements |
-| Hold current approved rule | Automatic unsupported extrapolation | Safer under weak causal identification; misses possible gains | Experiment establishes local response |
+### 8a. Offline batch path
 
-### 8d. Architecture Artifacts and Operational Readiness
-The pricing director owns rule approval and the on-call commerce engineer owns publication recovery.
-The proposed contract contains SKU, market, currency, price, effective interval, rule version, model version, decision ID and approval ID.
-The catalog rejects malformed, unauthorized, stale, out-of-bound or overlapping active manifests.
-Use a unique decision ID and idempotent writes so retried publishes do not create multiple price changes.
-A rule update during publication requires revalidation rather than replaying a stale manifest.
-The ledger is append-only for decisions and approvals; price state has a single authoritative owner.
-Backups must cover manifests, rules, approvals and decision-event offsets, with access and retention approved by governance.
-Proposed user-facing SLI: fraction of eligible product views where a valid current price is shown and matches checkout policy, measured over a rolling 30-day window.
-An illustrative target of 99.9% is a planning objective, not a measured service level or universal requirement.
-The denominator is eligible views with a resolvable price contract; rejected requests remain separately monitored.
-Synthetic end-to-end journeys and sampled real journey reconciliation provide complementary evidence.
-Error-budget exhaustion pauses expansion and triggers investigation by the commerce on-call and pricing owner.
-Timeouts and retry budgets must be configured per dependency; retries use backoff and cannot bypass idempotency or approval.
-Alert on invalid price, stale inventory, display-checkout mismatch, assignment imbalance and unaccounted orders.
-Shadow mode compares recommendations without changing displayed prices; a canary then uses approved, randomized scope.
-Rollback freezes new publications, restores an approved compatible manifest, invalidates caches, and verifies all surfaces.
-If schema or rules changed, the old manifest must pass current checks; otherwise withdraw affected offers and escalate.
-The mechanism does not claim a rollback time without a tested recovery exercise.
-**Illustrative capacity calculation:** 10,000 product decisions/day over a two-hour batch window is 10,000 / 7,200 ≈ 1.39 decisions/second on average.
-If each evaluates 11 candidate prices, that is 110,000 candidate evaluations per day, approximately 15.28 per second averaged over the two hours.
-At 2 KB per decision record, 10,000 records require about 20 MB/day before indexes, replicas, compression or telemetry.
-At 30 days of unreplicated records, the arithmetic estimate is about 600 MB; actual storage requires measurement and retention approval.
-These averages do not establish peak capacity, runtime, compute sizing or end-to-end latency.
-Read traffic, catalog fanout, inventory joins and bursty publish concurrency may dominate the batch calculations.
-Capacity validation would model peak reads, maximum concurrent publication, cache invalidations, retries, network and recovery replay.
-No component percentile is added to claim an end-to-end p99.
+The job runs once per trading day, after the 02:00 cut-off, and is idempotent: re-running it for the
+same day and policy version must produce the same recommendation table, and the table is keyed by
+(product, market, day, policy_version) with a uniqueness assertion.
+
+Stage one is input assembly. The job reads the eligible-SKU dimension effective at the decision date,
+the inventory snapshot stamped at or before the cut-off, the effective-dated cost, the fee schedule
+version, and the constraint set version. Every read is versioned and the version identifiers are
+written into the output row. A missing input fails the run for the affected SKUs only; it never
+substitutes a default, because a default cost silently prices inventory at zero.
+
+Stage two is candidate generation. For each SKU the job enumerates the approved grid, which is the
+held price plus four offsets within the 10% move limit, filtered by the contractual floor and ceiling
+and by the safety-reserve rule for markdowns. The candidate set is written out, including the
+filtered candidates and their reason codes, because an empty feasible set is a finding that must be
+visible rather than inferred.
+
+Stage three is scoring. For each feasible candidate the job computes predicted demand, predicted
+contribution, and the interval. The interval is propagated, not dropped: the output row carries the
+point estimate and the lower bound, and the decision rule uses the lower bound.
+
+Stage four is selection under the decision rule: choose the candidate with the highest lower bound;
+if the held price's lower bound is not exceeded by at least one grid step of value, recommend the
+held price. This rule is deliberately conservative and it converts the wide uncertainty into a
+no-change recommendation automatically, which is the correct behaviour for a programme that cannot
+yet resolve the question.
+
+Stage five is write-out: a recommendation table, an exclusion report by reason, and a summary that a
+merchant can read in thirty seconds. The merchant does not read the model. The merchant reads the
+recommendation, the reason code, and the interval.
+
+### 8b. Online publication path
+
+Publication is a separate service with its own controls. It accepts an approved artefact, validates
+that the artefact's constraint check passed at the same version as the recommendation, writes the
+price to the catalogue, and invalidates the cache for the affected product pages.
+
+Three properties matter and each has a specific test. *Atomicity across surfaces:* the listing page,
+the product page, the cart and the checkout must serve the same price. The test is a synthetic
+purchase that records all four values and fails the publication if any differ. *Immutability of
+accepted orders:* an order placed before a price change keeps its price; the test is to place an
+order, publish a change, and complete checkout, then reconcile the receipt. *Bounded blast radius:*
+publication is chunked by category with a kill switch per chunk, so a defect found in one category
+does not require reverting the whole catalogue.
+
+The service refuses to publish any version that has not passed the constraint check, and it refuses
+to publish a price more than 10% away from the last published price regardless of what the
+recommendation says. That duplication is intentional. The constraint check in the batch job protects
+against a modelling error; the check in the publication service protects against a plumbing error
+that bypasses the batch job.
+
+### 8c. Key design decisions
+
+| Decision | Alternative rejected | Reason |
+|---|---|---|
+| Recommend, never auto-publish, in the pilot | Full automation from day one | An unreviewed price error is customer-visible within minutes and unrecoverable |
+| Interval-based selection | Point-estimate argmax | The interval is what makes the programme refuse to act on noise |
+| Write filtered candidates to the output | Write only the winner | An empty feasible set must be observable, not inferred from a missing row |
+| Duplicate the constraint check in publication | Trust the batch job | Separates modelling error from plumbing error |
+| Version-bind model, cost basis and constraint set | Version the model alone | A recommendation without its cost basis cannot be reproduced or defended |
+| Exclude SKUs with cost disputes rather than defaulting | Substitute a category-average cost | A synthetic cost produces a profitable-looking recommendation on a loss-making SKU |
+| Chunk publication by category | Publish the whole catalogue at once | Limits rollback cost and makes the incident review tractable |
+
+### 8d. Operational readiness
+
+Five controls gate the first publication. Each has an owner and a test, and the pilot does not start
+until all five are recorded as passed.
+
+The *rollback* control requires that a single command restores the previous published price for a
+category within a stated time, and that the restore has been rehearsed on the staging catalogue.
+The *audit* control requires that every published price is traceable to a recommendation row, a
+policy version, an approver identity and a timestamp. The *exclusion* control requires a daily count
+of SKUs that were eligible yesterday and are not eligible today, with a reason. The *guardrail*
+control requires that the customer-complaint rate and the price-change frequency are both visible
+daily, not weekly. The *kill switch* control requires a named on-call owner who can stop publication
+without a code change.
+
+None of these is a model control. That is the point: the model's failure modes are mostly absorbed by
+review, while the system's failure modes are absorbed only by these five.
 
 ## 9. Evaluation & Validation
-The intended primary estimand is the treatment-minus-control mean mature contribution per eligible product-day within randomized clusters over the prespecified pilot horizon.
-The numerator sums finance-reconciled contribution from all eligible product-days, including zero-sale days.
-The denominator is all eligible product-days in assigned clusters, not only purchasers or exposed checkout sessions; inference accounts for cluster assignment.
-The comparison is intention-to-treat: assigned policy versus baseline policy, regardless of compliance.
-Assign mutually substitutable products within a market together where feasible; randomize independent market-category clusters in time blocks.
-The exact cluster definition and minimum sample size require a pre-pilot design based on availability, correlation, interference and variance.
-Use blocked assignment to balance prespecified product and market characteristics, and log the randomization probability.
-A finite number of clusters, shared stock and customers crossing markets can limit independence and effective sample size.
-Estimate uncertainty at the randomization-unit level, using an analysis suited to the actual blocking and number of clusters.
-If few independent clusters are available, use an appropriate randomization-based analysis or redesign rather than treating product-days as independent.
-Predefine the minimum economically meaningful effect, significance or decision interval, maximum duration and interim stopping rule before assignment.
-Check sample-ratio mismatch against the assigned allocation and distinguish eligibility errors from post-assignment attrition.
-Track price compliance, stockouts, complaints, margin floor violations, service reliability and customer cohort disparities as guardrails.
-A customer fairness audit requires an approved definition, adequate subgroup data, privacy review and a plan for small or missing groups.
-Do not interpret lack of statistical significance in a small subgroup as proof of fairness.
-Returns and cancellations mature on a prespecified horizon; report preliminary and mature windows separately.
-Analyze stockout and substitution effects as part of policy impact, not by excluding post-treatment low-stock observations.
-A separate local randomized price-grid design can estimate response at permitted prices under sufficient overlap and stable exposure.
-Counterfactual claims need consistency, randomized or defensibly adjusted assignment, overlap and an explicit interference boundary.
-Observational adjustment alone cannot guarantee removal of unmeasured merchant information.
-Check pre-treatment balance, treatment delivery, missingness and alternative exposure definitions without replacing the primary estimand.
-For the pilot, freeze the eligible assortment and its rule versions before assigning each experimental block.
-If a product becomes legally ineligible after assignment, stop its exposure without erasing the original assignment record.
-Document how its subsequent outcomes enter the prespecified intention-to-treat estimand and report the operational withdrawal separately.
-If eligibility changes are widespread, the planned target population may no longer describe the desired launch population.
-Define the policy contrast as the complete assignment-to-price procedure, including merchant overrides and valid fallback behavior.
-Comparing only days where the model price was served would select on post-assignment implementation outcomes.
-Monitor delivery compliance as a diagnostic, with reasons such as rule rejection, missing stock input and merchant override.
-Do not interpret a compliant-days-only contrast as causal without additional assumptions or a separately justified design.
-An assigned cluster may contain products with very different baseline turnover and contribution.
-Prespecify whether the primary product-day mean weights larger clusters more heavily and use an estimator consistent with assignment probabilities.
-An unweighted average of cluster means instead targets an average cluster and can answer a different business question.
-For example, a cluster with 10 eligible product-days and total contribution 2,000 has a mean of 200 per product-day.
-A second cluster with two eligible product-days and total contribution 200 has a mean of 100 per product-day.
-The pooled mean is 2,200 / 12 ≈ 183.33 per product-day, while the equal-cluster mean is (200 + 100) / 2 = 150.
-Neither number is a treatment effect; both are hypothetical single-arm summaries illustrating different weights.
-If treatment probabilities vary across blocks, use a prespecified assignment-aware estimator rather than naively pooling different allocations.
-Record the block schedule, assignment seed, eligible cluster roster and allocation probabilities before outcomes are examined.
-Resolve missing finance records by reconciliation and report missingness by assigned arm rather than silently treating unknown outcomes as zero.
-Run a sensitivity analysis for plausible missing outcomes if reconciliation cannot recover every eligible product-day.
-Set the return-maturity cutoff before evaluating the primary outcome and disclose any later ledger correction separately.
-Separate safety monitoring from efficacy testing: an urgent invalid-price incident can require stopping even when no efficacy look is scheduled.
-Stopping for safety does not establish whether the pricing policy would otherwise have improved contribution.
-If the prespecified interval is too wide to exclude material harm, do not equate a positive point estimate with launch readiness.
-Any expansion should define its new eligible population and verify that evidence and safeguards plausibly transfer to that population.
-The daily movement limit also creates carryover: yesterday's assigned price changes today's permitted candidate set.
-Therefore a cluster switched between policies midway through the test may not immediately represent a fresh policy assignment.
-Prefer a fixed policy assignment over the evaluation horizon unless a switchback design explicitly models such carryover.
-If switchbacks are necessary, prespecify transition handling and recognize that a washout period may not erase inventory effects.
-Track the price path and stock remaining at each transition to explain how earlier assignments affect later feasibility.
-Do not use a post-switch price constraint violation as a reason to relax a customer-protection rule.
-Competitor prices may also change during the pilot, but matching their timestamps does not identify a competitive reaction.
-Randomization can still estimate the policy effect in the competitive environment experienced by the enrolled clusters.
-Transporting that effect to a market where competitors respond differently requires a separate substantive argument.
-If the optimizer uses a treatment-specific demand model updated during the experiment, the adaptive update is part of the policy being tested.
-Freeze or document the learning schedule in advance so that investigators know which policy each cluster was assigned to receive.
-For a local price-grid study, retain positive assignment probability for each permitted price in the targeted context.
-Zero probability for a candidate leaves its demand response unidentified by that randomized design.
-Selection of a price after inspecting many noisy candidate estimates can exaggerate its expected advantage.
-Evaluate the selected policy on independent randomized data or use a prespecified method accounting for selection.
-The same data should not be presented as both an unbiased selection sample and a definitive policy win.
-Status: no experiment, analysis, sample-size calculation or statistical result has been executed.
-Decision: not measured; preregister and obtain approvals before any pilot.
+
+The evaluation must be specified before the pilot, because a metric chosen after the outcome is known
+is not evidence.
+
+**Numerator.** Incremental realised contribution: the sum over eligible product-days of realised
+contribution under the new policy minus the counterfactual contribution those same product-days would
+have produced under the held-price baseline, net of the cost of running the policy.
+
+**Denominator.** Eligible product-days in the evaluation window, so the headline metric is
+contribution per eligible product-day. The per-day normalisation prevents a policy that expands
+eligibility from looking good purely by counting more days.
+
+**Population.** Products eligible on day one and still eligible at the end of the window. Products
+that become ineligible are reported separately with reasons; they are not silently dropped, because
+dropping them is equivalent to conditioning on a post-treatment variable.
+
+**Window.** A four-week evaluation window after a two-week burn-in. The burn-in exists because the
+first days of a new policy produce merchant override behaviour that is not representative. The window
+is fixed in advance and is not extended because the result is close to the threshold.
+
+**Comparator.** Two comparators, both required. The first is the held price on the same product-days,
+reconstructed from the audit log. The second is the randomised control arm, for the subset of
+product-days that were assigned to a control price. The first answers "did we beat what we would
+have done"; the second answers "did the policy cause the difference". Reporting only the first is the
+standard error in this domain.
+
+**Guardrails, each with a threshold fixed in advance.** Customer complaint rate attributable to price
+display, per 10,000 orders. Share of product-days where the price moved twice within seven days.
+Share of SKUs whose contribution fell by more than 20% against the held price. Count of publication
+incidents where the cart price differed from the listing price, which has a threshold of zero.
+
+**Uncertainty.** Every reported metric carries an interval. Differences are reported as intervals
+from a cluster bootstrap at the product level, since product-days within a product are strongly
+dependent. A point estimate without an interval is not reportable, because the decision rule in
+section 8a depends on the lower bound.
+
+**Executed or not executed, stated plainly.** No baseline replay was executed. No model was trained.
+No pilot was run. No interval was computed from real data. The arithmetic in section 6 is closed-form
+on constructed inputs, and the four-cell elasticity table is similarly constructed. This is the
+honest status: designed and computed, not executed and observed.
+
+**Why the executed/not-executed distinction matters here.** A reader who skims section 6 could take
+away "the pilot returned 2.55 elasticity and 0.33% improvement". Both numbers were produced by
+arithmetic in this document, not by a business. The distinction is not a legal nicety; it changes
+what a reader should do next, because an observed 2.55 with a wide interval calls for a bigger test,
+while a constructed 2.55 calls for a first test.
+
+Four validation checks would be required before any number in section 6 could be treated as evidence.
+
+*A/A test.* Split eligible product-days at random into two groups, apply the held price to both, and
+confirm the estimated difference is centred on zero with the predicted interval width. A non-zero
+centre indicates a pipeline defect, not a real effect, and the study stops.
+
+*Placebo price.* Assign a price change that the rules service filters out at publication, so the
+customer sees no change. Any measured difference is a pipeline artefact and bounds the minimum
+detectable effect.
+
+*Negative control outcome.* Track a metric that the policy cannot affect, such as the share of
+sessions from a paid channel with a fixed budget. A change in it indicates that assignment altered
+traffic composition rather than price response.
+
+*Reconciliation.* Sum realised contribution from the ledger and compare against the sum computed by
+the evaluation pipeline for the same product-days. A gap above a pre-agreed tolerance invalidates the
+evaluation, and the gap is reported rather than adjusted away.
+
+The power arithmetic from Step 8 is part of the validation design, because a test that cannot resolve
+the decision boundary is not a cheap test, it is a wasted one.
+
+| Design | Unit of randomisation | Design effect | Effective sessions | MDE at 4.5% base |
+|---|---|---:|---:|---:|
+| Session-level, naive | Session | 1 | 6,084 per arm | 1.05 pp |
+| Market-level, 6 markets | Market-week | 201.0 | 3,980 | 1.30 pp |
+| Switchback, 48 blocks | Market-block | 26.0 | 30,771 | 0.47 pp |
+| Market-level, ICC 0.005 | Market-week | 667.7 | 1,198 | 2.37 pp |
+
+The table is the argument for the switchback design. Session-level randomisation is not implementable
+for a *shelf* price, because all customers in a market see the same price; the market-level design is
+the naive implementable choice and its design effect of 201 destroys the test. Alternating the price
+by block within market recovers most of the information, at the cost of requiring the blocks to be
+time-balanced and the analysis to model the block structure.
 
 ## 10. Action Taken
-No action taken as of 2026-11-07; this is a design exercise with no identified organization or deployment.
-The proposed recommendation is to maintain the approved baseline while preparing a cluster experiment and operational controls.
-Pricing, finance, legal, inventory, experimentation and commerce would each sign off their respective responsibilities before exposure.
-The pilot would begin with shadow validation, followed by a small randomized release and gated expansion.
-Any invalid-price breach, checkout inconsistency, severe customer impact or critical data failure would stop publication.
-The incident commander and pricing director would authorize rollback under a preapproved runbook.
-No effective market, implementation date, or model version exists in this exercise.
+
+The decision record, written for this teaching case, records four actions and two refusals.
+
+**Action one: reject the blanket cut.** The pricing director rejects the proposed 10% reduction on
+the grounds that it requires an elasticity of 2.52 and the observed response implies 2.19. The
+rejection is documented with the arithmetic, so a future reader can see it was a calculation and not
+a preference.
+
+**Action two: authorise the scarcity rule for the constrained subset.** For SKUs whose sellable stock
+is below the 15-day cover threshold and whose predicted demand exceeds available units, the batch job
+may recommend a price up to the level that clears the stock, subject to the contractual ceiling and
+the 10% move limit. The recommendation is reviewed by the merchant before publication in the first
+four weeks and published directly thereafter if the guardrails hold. This subset is where the value
+is, and the value does not depend on the elasticity magnitude.
+
+**Action three: commission a properly powered price test.** The test uses the switchback design, four
+price cells inside ±10%, a pre-registered primary metric of contribution per session, and the
+decision rule fixed in advance: adopt the candidate only if the interval on the difference excludes
+zero. Duration is set from the power calculation, not from the calendar.
+
+**Action four: fix the guardrail definition.** The move limit is replaced by an anchor rule, so the
+published price cannot drift more than 10% from an approved quarterly reference, regardless of how
+many small moves occur. This closes the walk described in Step 8.
+
+**Refusal one.** The team refuses to approve a revenue-based success metric, on the grounds that the
+worked example shows revenue and contribution moving in opposite directions from the same data. The
+refusal is recorded because the merchant organisation requested the revenue metric.
+
+**Refusal two.** The team refuses to include the personalised-pricing variant in the pilot scope,
+because C3 is not yet confirmed and a personalised price cannot be recalled once shown. Deferring
+that variant costs nothing this quarter, because the value identified sits in the scarcity subset.
+
+Two things were explicitly not done. The team did not run the cut for a week "to see what happens",
+because the arithmetic already answers that question and the answer is a loss of about 0.01 per
+session at the assumed traffic. And the team did not relax the 10% move limit to let the model reach
+its preferred price, because the limit protects customers and the model has not earned the right to
+override a customer protection.
 
 ## 11. Outcome & Results
-**Source declaration:** Figures elsewhere are constructed teaching values, not measurements of any named organization or realized impact.
-| Metric | Baseline | Treatment | Change / uncertainty | Evidence / limitation |
-|---|---|---|---|---|
-| Mature contribution per eligible product-day | Not measured | Not measured | Not available | No pilot or finance data |
-| Invalid-price rate | Not measured | Not measured | Not available | No live deployment |
-| Complaint rate | Not measured | Not measured | Not available | No customer outcomes |
-| Price consistency SLI | Not measured | Not measured | Not available | Proposed target only |
-The numerical ranking in Section 6 is not a before/after outcome and is not placed in this table as one.
-The experimentation owner would report both assigned groups after the agreed pilot and label-maturity window.
-The decision owner would compare the interval and guardrails with preregistered criteria; otherwise the result remains inconclusive.
+
+There is no business outcome to report. The programme was not launched, no revenue was earned, no
+contribution was realised, and no customer responded to anything. Every figure in this section is a
+constructed projection from the section 6 arithmetic, labelled **ILLUSTRATIVE**, and exists to show
+the scale of the decisions, not to claim a result.
+
+| Quantity | Constructed value | Basis | Status |
+|---|---:|---|---|
+| Contribution margin at held price | 7.07 per unit | 0.915*18.00 - 9.40 | arithmetic |
+| Contribution margin at -10% price | 5.42 per unit | 0.915*16.20 - 9.40 | arithmetic |
+| Required elasticity for the cut | 2.52 | ln(7.07/5.42)/ln(18.00/16.20) | arithmetic |
+| Observed elasticity, two cells | 2.19 | ln(0.0519/0.0412)/ln(18.00/16.20) | constructed input |
+| Observed elasticity, four cells | 2.55 | OLS on four log points | constructed input |
+| 95% interval on four-cell elasticity | [1.29, 3.81] | t(2) x standard error | arithmetic |
+| Contribution change per session | -3.37% | 0.281454 vs 0.291284 | arithmetic |
+| Contribution change with order cost | -8.78% | 0.224364 vs 0.245964 | arithmetic |
+| Annualised at 200,000 sessions/week | -102,235 | -0.009830 * 200,000 * 52 | projection |
+| Scarcity price uplift at 850 units | +17.93% | 8.3379 vs 7.0700 per unit | arithmetic |
+| Sessions per arm for the planned test | 6,084 | two-proportion power, 80%, alpha 0.05 | arithmetic |
+| MDE under the switchback design | 0.47 pp | effective n = 30,771 | arithmetic |
+
+The annualised row is the one that would be quoted in a steering committee, and it is the one most
+likely to be wrong. It multiplies a constructed per-session difference by a constructed traffic
+figure and assumes 52 identical weeks. Real traffic is seasonal, real SKUs differ, and real
+elasticities vary across the catalogue. The row is included to show the order of magnitude that makes
+the decision consequential, not as a forecast.
+
+Three sensitivities would change the sign or the size of the projection, and each is worth stating
+because a decision maker needs to know what would flip it.
+
+If the per-order cost w is 0 instead of 1.10, the treatment is still negative but by 3.37% instead of
+8.78%. The sign survives, so the rejection of the cut is robust to this input. If the elasticity is at
+the upper end of the interval, 3.81, the cut becomes contribution-positive and the rejection would be
+wrong; the rejection is therefore a bet on the point estimate, and should be revisited as soon as the
+interval narrows. If the inventory cap applies to most of the catalogue rather than a subset, the
+scarcity rule dominates everything else and the elasticity question becomes second-order.
+
+The one number that would most change the decision is not in the table. It is the share of eligible
+SKUs whose sellable stock falls below demand. If that share is small, the scarcity rule captures a
+small fraction of the value and the elasticity problem needs solving. If it is large, the programme
+should be built around supply and the demand model is a secondary component. That share is not known
+here, and it is the first thing a real programme should measure.
 
 ## 12. Failure Modes & What Went Wrong
-No incident occurred in this constructed case; all diagnostic scenarios below are **hypothetical**.
-Each scenario is a distinguishable failure hypothesis, not a claim that the system was built or that a mitigation succeeded.
-### F-01. Promotions confound price
-- **Trigger / symptom:** Sales rise when price falls during a campaign.
-- **First evidence:** Check campaign timing and randomized price contrasts.
-- **Candidate mechanism:** Promotion exposure rather than price may drive lift.
-- **Competing explanation:** Campaign demand may rise even without a discount.
-- **Discriminating test:** Compare within randomized campaign strata.
-- **Containment:** Pause causal use of observational coefficients.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Log campaign assignment and prohibit changing promotion allocation with price.
-- **Verification:** Compare randomized price contrasts within campaign strata; check arm-level campaign balance.
-### F-02. Merchant anticipates demand
-- **Trigger / symptom:** High prices correlate with strong sales.
-- **First evidence:** Compare merchant forecasts available before the change.
-- **Candidate mechanism:** Expected demand may cause the price decision.
-- **Competing explanation:** An omitted local event may drive both merchant forecasts and purchases.
-- **Discriminating test:** Audit forecast logs against assignment.
-- **Containment:** Keep manual baseline until randomized contrasts exist.
-- **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Timestamp merchant forecasts before approval and retain override reasons.
-- **Verification:** Compare randomized contrasts within forecast strata; forecasts cannot reveal every private signal.
-### F-03. Stockout censoring
-- **Trigger / symptom:** A low-price day shows unexpectedly few units.
-- **First evidence:** Inspect in-stock minutes and replenishment events.
-- **Candidate mechanism:** Actual demand may exceed observed fulfilled units.
-- **Competing explanation:** A checkout outage can suppress fulfilled units despite full availability.
-- **Discriminating test:** Compare availability-aware exposures across arms.
-- **Containment:** Do not interpret low sales as low demand.
-- **Responsible role:** Inventory science coordinates the investigation and records the decision.
-- **Prevention:** Record stock intervals and reservations independently of order events.
-- **Verification:** Reconstruct in-stock minutes alongside checkout failures; do not condition the primary effect on stockout.
-### F-04. Missing zero-sales days
-- **Trigger / symptom:** Estimated demand exceeds reality.
-- **First evidence:** Reconcile panel days against eligible catalog calendar.
-- **Candidate mechanism:** An inner join may remove valid zero outcomes.
-- **Competing explanation:** A listing outage can also produce no orders but is not an available zero-sales day.
-- **Discriminating test:** Count no-order eligible days before and after join.
-- **Containment:** Rebuild the panel with explicit zero units.
-- **Responsible role:** Data engineering coordinates the investigation and records the decision.
-- **Prevention:** Generate the panel from the effective eligibility calendar before joining orders.
-- **Verification:** Compare calendar keys with the panel and separately classify unlisted intervals.
-### F-05. Future cost leakage
-- **Trigger / symptom:** Backtest contribution is implausibly accurate.
-- **First evidence:** Compare cost ingestion timestamps to decision cutoff.
-- **Candidate mechanism:** Later vendor invoices may overwrite historical cost.
-- **Competing explanation:** A genuinely stable cost schedule can also make predictions accurate.
-- **Discriminating test:** Reconstruct as-known cost snapshots.
-- **Containment:** Invalidate leaked backtest and retrain.
-- **Responsible role:** Finance data coordinates the investigation and records the decision.
-- **Prevention:** Keep bitemporal cost records and reject versions ingested after cutoff.
-- **Verification:** Rebuild the as-known snapshot and compare recommendations with the original backtest.
-### F-06. Late exposure events
-- **Trigger / symptom:** Some assigned products appear never shown.
-- **First evidence:** Inspect event-time versus ingestion-time lag.
-- **Candidate mechanism:** Telemetry delay may mimic treatment noncompliance.
-- **Competing explanation:** A cache or publishing failure can prevent exposure rather than delay telemetry.
-- **Discriminating test:** Reconcile catalog access logs with exposure stream.
-- **Containment:** Hold analysis until agreed lateness window.
-- **Responsible role:** Observability lead coordinates the investigation and records the decision.
-- **Prevention:** Monitor ingestion lag and retain catalog request logs with version IDs.
-- **Verification:** Reconcile late events to catalog requests after the agreed watermark.
-### F-07. Duplicate orders
-- **Trigger / symptom:** Contribution appears to jump after retry storm.
-- **First evidence:** Count order-line IDs and delivery attempts.
-- **Candidate mechanism:** At-least-once delivery may duplicate ledger records.
-- **Competing explanation:** A genuine surge in distinct order lines can follow a campaign.
-- **Discriminating test:** Compare immutable order IDs with event IDs.
-- **Containment:** Deduplicate by order-line lifecycle semantics.
-- **Responsible role:** Commerce data coordinates the investigation and records the decision.
-- **Prevention:** Make lifecycle event IDs idempotent without collapsing legitimate partial shipments.
-- **Verification:** Match deduplicated lines to settled orders and preserve separate refund events.
-### F-08. Partial refunds omitted
-- **Trigger / symptom:** Revenue improves while realized profit falls.
-- **First evidence:** Reconcile return ledger by original order line.
-- **Candidate mechanism:** Return liability may be missing or delayed.
-- **Competing explanation:** An increase in fulfillment fees can reduce profit even when refunds are complete.
-- **Discriminating test:** Compare mature cohorts with and without refund adjustments.
-- **Containment:** Use mature contribution for launch decision.
-- **Responsible role:** Finance coordinates the investigation and records the decision.
-- **Prevention:** Link each refund to its original line and define the maturity cutoff with finance.
-- **Verification:** Reconcile gross and net contribution for equally mature cohorts.
-### F-09. Incorrect currency conversion
-- **Trigger / symptom:** A market appears unprofitable across all prices.
-- **First evidence:** Inspect currency code and effective exchange-rate timestamps.
-- **Candidate mechanism:** Cross-currency joins may mix local and reporting units.
-- **Competing explanation:** A legitimate vendor price increase can reduce margin in local currency.
-- **Discriminating test:** Recompute a sampled receipt in local currency.
-- **Containment:** Quarantine affected market until reconciled.
-- **Responsible role:** Finance data coordinates the investigation and records the decision.
-- **Prevention:** Require currency and timestamp on cost and exchange-rate records.
-- **Verification:** Convert one receipt using the recorded rate and reconcile against the local ledger.
-### F-10. Tax treatment mismatch
-- **Trigger / symptom:** Checkout margin differs from modeled margin.
-- **First evidence:** Trace tax-inclusive and tax-exclusive price fields.
-- **Candidate mechanism:** Tax may be counted as revenue or subtracted twice.
-- **Competing explanation:** A change in shipping or discount allocation can also explain the margin gap.
-- **Discriminating test:** Reconcile a receipt with finance definitions.
-- **Containment:** Freeze affected product calculations.
-- **Responsible role:** Tax and finance coordinates the investigation and records the decision.
-- **Prevention:** Specify tax-inclusive and tax-exclusive fields and validate their currency units.
-- **Verification:** Rebuild a receipt from shelf price through tax and finance contribution.
-### F-11. Price rounding breach
-- **Trigger / symptom:** A candidate looks valid before publication but not after rounding.
-- **First evidence:** Compare pre-round and published prices against effective bounds.
-- **Candidate mechanism:** Currency rounding can cross a floor or ceiling.
-- **Competing explanation:** A changed floor effective at publication can invalidate an otherwise correctly rounded price.
-- **Discriminating test:** Run constraint checks after quantization.
-- **Containment:** Reject invalid candidate rather than silently clamp.
-- **Responsible role:** Pricing engineering coordinates the investigation and records the decision.
-- **Prevention:** Quantize to currency precision before checking all effective bounds.
-- **Verification:** Test boundary values on both sides of every floor and ceiling.
-### F-12. Movement measured from wrong baseline
-- **Trigger / symptom:** Daily price jumps farther than permitted.
-- **First evidence:** Inspect prior approved versus proposed price.
-- **Candidate mechanism:** An unpublished recommendation may be treated as the previous price.
-- **Competing explanation:** A legitimate emergency override may have changed the last published price.
-- **Discriminating test:** Replay with authoritative publication history.
-- **Containment:** Restore an approved valid manifest.
-- **Responsible role:** Catalog engineering coordinates the investigation and records the decision.
-- **Prevention:** Read the authoritative active manifest, not a prior proposed candidate.
-- **Verification:** Recompute the percentage movement from the actual approved published value.
-### F-13. Contradictory rules
-- **Trigger / symptom:** All candidates fail the constraint gate.
-- **First evidence:** Inspect effective floor ceiling and movement limits.
-- **Candidate mechanism:** A rule update may make the grid infeasible.
-- **Competing explanation:** An outdated candidate grid can be empty despite mutually consistent rules.
-- **Discriminating test:** Evaluate each rule against the same timestamp.
-- **Containment:** Withdraw or escalate instead of publishing invalid fallback.
-- **Responsible role:** Merchant operations coordinates the investigation and records the decision.
-- **Prevention:** Evaluate bounds and grid construction under the same effective timestamp.
-- **Verification:** Show the merchant the failing constraints and confirm any replacement passes all rules.
-### F-14. Stale inventory snapshot
-- **Trigger / symptom:** Markdown occurs just before stock exhaustion.
-- **First evidence:** Compare feed timestamps and physical reservation state.
-- **Candidate mechanism:** Delayed inventory may overstate sellable stock.
-- **Competing explanation:** A real demand surge can exhaust accurate inventory faster than expected.
-- **Discriminating test:** Reconcile inventory service and warehouse snapshots.
-- **Containment:** Freeze markdowns for affected products.
-- **Responsible role:** Inventory operations coordinates the investigation and records the decision.
-- **Prevention:** Enforce maximum inventory age and reconcile reservations before markdown approval.
-- **Verification:** Trace snapshot, reservation and sales events through the decision cutoff.
-### F-15. Double-counted reservations
-- **Trigger / symptom:** Optimizer acts as if inventory is scarce.
-- **First evidence:** Trace allocated units through inventory fields.
-- **Candidate mechanism:** Reservations may already be excluded from sellable stock.
-- **Competing explanation:** A physical stock adjustment can also reduce availability legitimately.
-- **Discriminating test:** Recalculate availability from the authoritative contract.
-- **Containment:** Use baseline until the definition is corrected.
-- **Responsible role:** Inventory engineering coordinates the investigation and records the decision.
-- **Prevention:** Document whether the authoritative sellable field already excludes allocations.
-- **Verification:** Reconcile a known reservation lifecycle against warehouse and catalog totals.
-### F-16. Replenishment promise fails
-- **Trigger / symptom:** Projected stock remains high but availability collapses.
-- **First evidence:** Compare expected receipts with received units.
-- **Candidate mechanism:** Supplier delays can invalidate the availability forecast.
-- **Competing explanation:** A demand surge can consume stock even when a delivery arrives on schedule.
-- **Discriminating test:** Inspect supplier confirmations and actual receipts.
-- **Containment:** Constrain markdowns and reassess horizon.
-- **Responsible role:** Supply chain coordinates the investigation and records the decision.
-- **Prevention:** Separate confirmed receipts from forecast replenishment and retain arrival timestamps.
-- **Verification:** Compare promised, received and reserved quantities over the pricing horizon.
-### F-17. Shared-stock interference
-- **Trigger / symptom:** Control products sell out during treatment.
-- **First evidence:** Map shared inventory pools and substitution paths.
-- **Candidate mechanism:** Treatment demand can consume stock available to control.
-- **Competing explanation:** A common supplier delay can affect both clusters without treatment spillover.
-- **Discriminating test:** Inspect stock movements by randomized cluster.
-- **Containment:** Redesign clusters around inventory pools.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Build cluster boundaries from shared stock pools before assignment.
-- **Verification:** Trace pool-level withdrawals and compare within-pool assignment histories.
-### F-18. Cross-product cannibalization
-- **Trigger / symptom:** A promoted SKU gains while category contribution drops.
-- **First evidence:** Compare category-level units and contribution by assignment.
-- **Candidate mechanism:** Demand may move from a substitute rather than increase.
-- **Competing explanation:** An unrelated category demand decline can offset an individual SKU gain.
-- **Discriminating test:** Measure prespecified category-level effect.
-- **Containment:** Evaluate portfolio outcome before expansion.
-- **Responsible role:** Category owner coordinates the investigation and records the decision.
-- **Prevention:** Prespecify category contribution and include substitutes in the randomization design.
-- **Verification:** Compare whole-category mature contribution by assigned cluster.
-### F-19. Unsupported price extrapolation
-- **Trigger / symptom:** Model proposes the most extreme allowed price.
-- **First evidence:** Inspect historical and randomized support by price.
-- **Candidate mechanism:** A flexible model can extrapolate beyond observed variation.
-- **Competing explanation:** A boundary price can genuinely maximize contribution within supported prices.
-- **Discriminating test:** Plot response and uncertainty inside the local support.
-- **Containment:** Restrict candidates to supported intervals.
-- **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Store support counts and uncertainty for each candidate and market context.
-- **Verification:** Inspect randomized local response before interpreting a boundary optimum.
-### F-20. Flat response from bad join
-- **Trigger / symptom:** Predicted demand is identical for all candidate prices.
-- **First evidence:** Trace candidate price into the model feature vector.
-- **Candidate mechanism:** Feature overwrite or stale cache can remove variation.
-- **Competing explanation:** An insensitive model may genuinely predict a flat local response despite correct wiring.
-- **Discriminating test:** Replay one SKU at distinct valid candidate values.
-- **Containment:** Disable optimizer until candidate features differ.
-- **Responsible role:** ML engineering coordinates the investigation and records the decision.
-- **Prevention:** Assert that candidate-price inputs reach the feature transform unchanged.
-- **Verification:** Trace transformed values and outputs for distinct approved candidates.
-### F-21. Model monotonicity violation
-- **Trigger / symptom:** Higher prices predict implausibly larger demand.
-- **First evidence:** Inspect comparable randomized observations and price features.
-- **Candidate mechanism:** Confounding or data errors can produce a positive association.
-- **Competing explanation:** A premium-quality signal or small-sample noise can yield a positive local response.
-- **Discriminating test:** Compare response across similar supported contexts.
-- **Containment:** Require review; do not blindly enforce a false universal law.
-- **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Flag positive slopes for review without imposing a universal demand law.
-- **Verification:** Inspect randomized price contrasts and confidence intervals within comparable contexts.
-### F-22. Outlier-driven margin
-- **Trigger / symptom:** One product dominates the aggregate uplift.
-- **First evidence:** Inspect product-level influence and data validity.
-- **Candidate mechanism:** A legitimate high-volume item or a data error can dominate.
-- **Competing explanation:** A valid high-volume SKU may legitimately dominate total business contribution.
-- **Discriminating test:** Recompute with and without the item as sensitivity.
-- **Containment:** Investigate before applying any exclusion.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Prespecify influence diagnostics without silently removing influential products.
-- **Verification:** Audit the line-level records and report the full estimate plus sensitivity.
-### F-23. Wrong price displayed
-- **Trigger / symptom:** Product page and checkout show different prices.
-- **First evidence:** Compare manifest version and cache headers on both surfaces.
-- **Candidate mechanism:** Cache invalidation or propagation may be incomplete.
-- **Competing explanation:** A shopper may have accepted an earlier binding price rather than a stale display.
-- **Discriminating test:** Trace a single SKU across all surfaces.
-- **Containment:** Stop changes and honor applicable commitments.
-- **Responsible role:** Commerce on-call coordinates the investigation and records the decision.
-- **Prevention:** Propagate version and effective-time metadata across listing, cart and checkout.
-- **Verification:** Trace one complete journey and distinguish contractual price holds from version drift.
-### F-24. Stale safe-price fallback
-- **Trigger / symptom:** Catalog outage triggers an expired previous price.
-- **First evidence:** Compare fallback effective interval and current rules.
-- **Candidate mechanism:** A previously valid price may now be prohibited.
-- **Competing explanation:** A catalog outage may occur while the cached manifest remains valid.
-- **Discriminating test:** Exercise outage replay after an effective-date change.
-- **Containment:** Withdraw affected offer if no valid fallback exists.
-- **Responsible role:** Commerce on-call coordinates the investigation and records the decision.
-- **Prevention:** Require effective-time and rule-version validation before any fallback is served.
-- **Verification:** Exercise outage handling across a simulated expiry and rule update.
-### F-25. Duplicate publish
-- **Trigger / symptom:** An operator retries after a timeout and sees repeated updates.
-- **First evidence:** Inspect decision IDs and catalog write audit.
-- **Candidate mechanism:** The first request may have succeeded despite timeout.
-- **Competing explanation:** Two independently approved changes may legitimately share the same price.
-- **Discriminating test:** Replay identical idempotency key in staging.
-- **Containment:** Stop retries until write status is reconciled.
-- **Responsible role:** Platform engineering coordinates the investigation and records the decision.
-- **Prevention:** Bind each idempotency key to one immutable manifest payload.
-- **Verification:** Retry the same request and compare committed versions with approval records.
-### F-26. Split-brain price owner
-- **Trigger / symptom:** Two services publish competing price manifests.
-- **First evidence:** Inspect authorization and overlapping effective intervals.
-- **Candidate mechanism:** Multiple writers can race without a shared authority.
-- **Competing explanation:** A scheduled successor manifest may legitimately begin after the previous interval ends.
-- **Discriminating test:** Compare version histories and writer identities.
-- **Containment:** Revoke unauthorized writer and reconcile state.
-- **Responsible role:** Security and platform coordinates the investigation and records the decision.
-- **Prevention:** Enforce a single authorized writer and reject overlapping active intervals.
-- **Verification:** Reconstruct writer identities and exact effective intervals before revoking access.
-### F-27. Unauthorized override
-- **Trigger / symptom:** A price changes without approved merchant action.
-- **First evidence:** Trace principal approval ID and signature.
-- **Candidate mechanism:** An overprivileged service or compromised credential may write.
-- **Competing explanation:** An authorized emergency override may lack a linked ticket because of logging failure.
-- **Discriminating test:** Compare policy logs to the approved change record.
-- **Containment:** Revoke access and restore a compliant price.
-- **Responsible role:** Security on-call coordinates the investigation and records the decision.
-- **Prevention:** Require scoped credentials and an auditable emergency approval path.
-- **Verification:** Match the writer identity, signature and emergency record before attributing intent.
-### F-28. Invalid approval after rule change
-- **Trigger / symptom:** A formerly approved manifest violates new bounds.
-- **First evidence:** Compare approval time and rule effective time.
-- **Candidate mechanism:** Approval may refer to an obsolete rule set.
-- **Competing explanation:** A rule may not yet be effective at the proposed start time.
-- **Discriminating test:** Re-evaluate manifest against current rules.
-- **Containment:** Block publish and obtain new approval.
-- **Responsible role:** Pricing governance coordinates the investigation and records the decision.
-- **Prevention:** Bind approval to the rule version and revalidate at publication time.
-- **Verification:** Recompute eligibility at the manifest start and inspect the approval binding.
-### F-29. Treatment assignment imbalance
-- **Trigger / symptom:** One arm has far fewer eligible clusters.
-- **First evidence:** Check assignment ledger before looking at outcomes.
-- **Candidate mechanism:** Hashing, eligibility or instrumentation can create imbalance.
-- **Competing explanation:** Unequal cluster sizes can produce unequal product counts under balanced cluster assignment.
-- **Discriminating test:** Compare assigned cluster counts to planned allocation.
-- **Containment:** Pause enrollment and diagnose without reallocating ad hoc.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Check planned allocation on assigned independent clusters within blocks.
-- **Verification:** Compare assignment counts with the planned randomization mechanism before outcomes.
-### F-30. Post-treatment eligibility filter
-- **Trigger / symptom:** Treatment looks profitable after dropping unavailable products.
-- **First evidence:** Reconstruct eligibility at randomization time.
-- **Candidate mechanism:** Treatment itself may cause stockouts and exclusions.
-- **Competing explanation:** A preassignment exclusion can legitimately remove an ineligible product.
-- **Discriminating test:** Compare intention-to-treat with filtered analysis.
-- **Containment:** Restore prespecified denominator.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Freeze eligibility and denominator membership before randomized assignment.
-- **Verification:** Reconstruct the original cohort and report the filtered analysis only as diagnostic.
-### F-31. Underpowered cluster test
-- **Trigger / symptom:** Point estimate is large but confidence interval is wide.
-- **First evidence:** Count independent clusters rather than product-days.
-- **Candidate mechanism:** Within-cluster correlation reduces effective information.
-- **Competing explanation:** Large between-cluster outcome variance can widen intervals even with low intracluster correlation.
-- **Discriminating test:** Inspect cluster-level outcome variation.
-- **Containment:** Continue only under the prespecified design or conclude inconclusive.
-- **Responsible role:** Statistician coordinates the investigation and records the decision.
-- **Prevention:** Plan power using plausible cluster sizes, correlation and outcome variance.
-- **Verification:** Recompute uncertainty at the assignment unit under the preregistered analysis.
-### F-32. Network contamination
-- **Trigger / symptom:** Customers observe more than one experimental market.
-- **First evidence:** Inspect delivery geography and cross-market customer journeys.
-- **Candidate mechanism:** A shared audience can dilute the treatment contrast.
-- **Competing explanation:** Cross-market delivery restrictions can make apparent overlapping views non-purchasable.
-- **Discriminating test:** Measure cross-market exposure with privacy safeguards.
-- **Containment:** Reassign broader clusters or narrow the target.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Map customer journeys and delivery boundaries during cluster design.
-- **Verification:** Estimate cross-market exposure using approved privacy-preserving linkage.
-### F-33. Sequential peeking
-- **Trigger / symptom:** A result crosses a threshold after repeated checks.
-- **First evidence:** Review the preregistered monitoring schedule.
-- **Candidate mechanism:** Unplanned repeated testing inflates false positive risk.
-- **Competing explanation:** A prespecified sequential boundary may validly allow an early decision.
-- **Discriminating test:** Compare actual looks with the planned stopping rule.
-- **Containment:** Do not declare a win; analyze under a valid design.
-- **Responsible role:** Statistician coordinates the investigation and records the decision.
-- **Prevention:** Record analysis looks and use the agreed alpha-spending or other valid rule.
-- **Verification:** Compare every actual look and stopping decision with the registered plan.
-### F-34. Model drift
-- **Trigger / symptom:** Candidate ranking changes sharply in a new season.
-- **First evidence:** Compare covariate distributions and calibration by time.
-- **Candidate mechanism:** Seasonality or a pipeline error can change predicted demand.
-- **Competing explanation:** A seasonal shift may be real even when the feature pipeline is healthy.
-- **Discriminating test:** Check data freshness and holdout calibration separately.
-- **Containment:** Revert to the approved rule pending review.
-- **Responsible role:** ML operations coordinates the investigation and records the decision.
-- **Prevention:** Monitor input freshness separately from mature outcome calibration.
-- **Verification:** Recalculate calibration on a time-later cohort after reconciling feature delivery.
-### F-35. Feedback loop
-- **Trigger / symptom:** Frequent markdowns train the model on selected inventory.
-- **First evidence:** Inspect historical policy and selection into each price.
-- **Candidate mechanism:** The policy determines which counterfactuals are observed.
-- **Competing explanation:** A supplier change may cause markdowns and demand changes simultaneously.
-- **Discriminating test:** Compare randomized exploration with policy-selected days.
-- **Containment:** Do not treat policy data as unconfounded.
-- **Responsible role:** Pricing science coordinates the investigation and records the decision.
-- **Prevention:** Log historical policy, assignment probabilities and merchant overrides.
-- **Verification:** Contrast randomized exploration with selected markdowns without claiming observational equivalence.
-### F-36. Model version skew
-- **Trigger / symptom:** Offline approved recommendation differs from served value.
-- **First evidence:** Compare manifest model checksum with approval artifact.
-- **Candidate mechanism:** Publisher may load a different artifact or transform.
-- **Competing explanation:** A later merchant override can legitimately differ from the model recommendation.
-- **Discriminating test:** Recompute the same decision with recorded inputs.
-- **Containment:** Block mismatched manifests and restore compatible version.
-- **Responsible role:** ML platform coordinates the investigation and records the decision.
-- **Prevention:** Bind model checksum, transforms, rules and approval to the manifest.
-- **Verification:** Recompute the approved recommendation and separately trace subsequent overrides.
-### F-37. Late finance corrections
-- **Trigger / symptom:** A pilot win reverses after refunds arrive.
-- **First evidence:** Plot cumulative contribution by maturity age.
-- **Candidate mechanism:** Returns and chargebacks are delayed labels.
-- **Competing explanation:** A different product mix can change the result even without delayed refunds.
-- **Discriminating test:** Compare equally mature cohorts across arms.
-- **Containment:** Delay final decision until the agreed window.
-- **Responsible role:** Finance coordinates the investigation and records the decision.
-- **Prevention:** Publish preliminary and mature cohorts with fixed age and correction policy.
-- **Verification:** Compare both arms at the same maturity and reconcile all late adjustments.
-### F-38. Order attribution ambiguity
-- **Trigger / symptom:** Reported treatment revenue exceeds ledger revenue.
-- **First evidence:** Trace order-line allocation to product and market.
-- **Candidate mechanism:** A multi-item order may be joined more than once.
-- **Competing explanation:** Order-level discounts may be allocated differently without duplicate order lines.
-- **Discriminating test:** Reconcile sum of attributed lines to ledger totals.
-- **Containment:** Hold outcome report until attribution balances.
-- **Responsible role:** Analytics engineering coordinates the investigation and records the decision.
-- **Prevention:** Define one allocation rule and enforce line-level conservation against finance totals.
-- **Verification:** Sum allocated revenue and costs across all lines and compare to each order ledger.
-### F-39. Margin floor violation
-- **Trigger / symptom:** A transaction falls below required contribution margin.
-- **First evidence:** Compare actual fees and discounts with policy inputs.
-- **Candidate mechanism:** An unmodeled promotion can stack with a valid shelf price.
-- **Competing explanation:** Higher actual fulfillment charges can breach contribution requirements without a coupon.
-- **Discriminating test:** Replay checkout with all active discounts.
-- **Containment:** Disable the conflicting promotion or withdraw SKU.
-- **Responsible role:** Merchant operations coordinates the investigation and records the decision.
-- **Prevention:** Validate the complete checkout offer and current cost assumptions against the floor.
-- **Verification:** Reconstruct the paid-price margin for the affected order including variable fees.
-### F-40. Promotion stacking
-- **Trigger / symptom:** Displayed shelf price is compliant but paid price is not.
-- **First evidence:** Trace coupon and loyalty deductions at checkout.
-- **Candidate mechanism:** Several independently valid offers can combine unsafely.
-- **Competing explanation:** A promised earlier cart price can differ from the current shelf price legitimately.
-- **Discriminating test:** Test complete offer composition against rules.
-- **Containment:** Block conflicting offer combination.
-- **Responsible role:** Commerce and legal coordinates the investigation and records the decision.
-- **Prevention:** Specify eligible coupon combinations and apply approved cart-price policy consistently.
-- **Verification:** Evaluate each permitted coupon combination against the paid-price rule.
-### F-41. Legal policy uncertainty
-- **Trigger / symptom:** A pilot includes a newly restricted product.
-- **First evidence:** Compare eligibility list with approved legal scope.
-- **Candidate mechanism:** Catalog classification or requirements may have changed.
-- **Competing explanation:** A product may have been correctly excluded but remain visible under baseline pricing.
-- **Discriminating test:** Obtain a jurisdiction-specific legal determination.
-- **Containment:** Exclude affected products pending approval.
-- **Responsible role:** Legal coordinates the investigation and records the decision.
-- **Prevention:** Maintain effective-dated legal scope separately from dynamic-price assignment.
-- **Verification:** Trace the classification, approval and assignment at the decision time.
-### F-42. Sensitive segment disparity
-- **Trigger / symptom:** Complaint rates rise for a customer group.
-- **First evidence:** Compare exposure-adjusted complaints and uncertainty.
-- **Candidate mechanism:** Price, accessibility or support-channel differences can all contribute.
-- **Competing explanation:** Differences in access to support channels can alter complaint counts independently of harm.
-- **Discriminating test:** Audit eligible exposure and treatment across approved groups.
-- **Containment:** Pause affected rollout and investigate customer impact.
-- **Responsible role:** Fairness reviewer coordinates the investigation and records the decision.
-- **Prevention:** Agree exposure denominators and privacy-approved group definitions before launch.
-- **Verification:** Compare reporting channels and treatment exposure with uncertainty and missingness.
-### F-43. Small subgroup inference
-- **Trigger / symptom:** One segment appears unaffected despite few observations.
-- **First evidence:** Inspect group counts and interval width.
-- **Candidate mechanism:** Low power can conceal meaningful harm.
-- **Competing explanation:** The segment may genuinely have little impact, but the data may not distinguish that from harm.
-- **Discriminating test:** Report uncertainty and missingness alongside rates.
-- **Containment:** Avoid declaring the guardrail passed from a null test.
-- **Responsible role:** Statistician coordinates the investigation and records the decision.
-- **Prevention:** Set minimum reportable group sizes and an escalation rule for wide intervals.
-- **Verification:** Report effect intervals and suppress unsafe small cells under approved privacy policy.
-### F-44. Cold-start product
-- **Trigger / symptom:** A new SKU has no prior price variation.
-- **First evidence:** Inspect similar-product evidence and support overlap.
-- **Candidate mechanism:** No local elasticity estimate may exist.
-- **Competing explanation:** A new SKU may have rich evidence from an otherwise comparable predecessor.
-- **Discriminating test:** Compare baseline demand features without extrapolating price effect.
-- **Containment:** Use approved manual price until evidence exists.
-- **Responsible role:** Merchant coordinates the investigation and records the decision.
-- **Prevention:** Define similarity and price-support criteria before borrowing evidence.
-- **Verification:** Compare predecessor attributes and randomized support without assuming transportability.
-### F-45. Price war feedback
-- **Trigger / symptom:** Competitor repricing follows repeated changes.
-- **First evidence:** Inspect timestamps and external market context.
-- **Candidate mechanism:** Competitors and the retailer can respond to common shocks.
-- **Competing explanation:** A shared supplier-cost shock can cause simultaneous retailer and competitor repricing.
-- **Discriminating test:** Avoid interpreting correlation as a competitor reaction.
-- **Containment:** Apply approved movement limits and merchant review.
-- **Responsible role:** Category strategy coordinates the investigation and records the decision.
-- **Prevention:** Require merchant review of external-price signals and retain their observation times.
-- **Verification:** Compare timing with public cost shocks; temporal order alone does not prove reaction.
-### F-46. Demand spike outside forecast
-- **Trigger / symptom:** Event-driven traffic exceeds predicted units.
-- **First evidence:** Compare campaign calendar, sessions and available stock.
-- **Candidate mechanism:** A real demand shock or broken feature feed can look similar.
-- **Competing explanation:** A tracking failure may inflate session counts while sales remain stable.
-- **Discriminating test:** Cross-check independent traffic and campaign records.
-- **Containment:** Freeze changes if input integrity is uncertain.
-- **Responsible role:** Operations coordinates the investigation and records the decision.
-- **Prevention:** Compare independent traffic, campaign and availability feeds before changing prices.
-- **Verification:** Reconcile sessions with orders and known campaign schedules.
-### F-47. Batch overrun
-- **Trigger / symptom:** Price manifest misses the daily cutoff.
-- **First evidence:** Inspect queue time, input completeness and per-stage duration.
-- **Candidate mechanism:** Data delay and insufficient compute have different remedies.
-- **Competing explanation:** A delayed approval can miss the cutoff even when compute finishes on time.
-- **Discriminating test:** Trace a single batch through its stage timestamps.
-- **Containment:** Retain an approved still-valid price and investigate.
-- **Responsible role:** Data platform coordinates the investigation and records the decision.
-- **Prevention:** Set stage deadlines for inputs, scoring, approval and publication separately.
-- **Verification:** Trace timestamps and identify the first stage that exceeded its allocated window.
-### F-48. Cache stampede
-- **Trigger / symptom:** A bulk price update causes read latency spikes.
-- **First evidence:** Inspect invalidation rate and cache miss concurrency.
-- **Candidate mechanism:** Simultaneous expiry can overload catalog backends.
-- **Competing explanation:** A backend deployment can increase latency independently of cache invalidation.
-- **Discriminating test:** Compare misses and backend saturation during publication.
-- **Containment:** Throttle publication and serve compliant cached values.
-- **Responsible role:** Commerce on-call coordinates the investigation and records the decision.
-- **Prevention:** Rate-limit invalidations and test cache refill under representative concurrency.
-- **Verification:** Correlate misses, backend saturation and deployment timing before attributing cause.
-### F-49. Rollback schema mismatch
-- **Trigger / symptom:** An old manifest cannot load after deployment.
-- **First evidence:** Inspect schema compatibility and rule version.
-- **Candidate mechanism:** Restoring an artifact alone may not restore valid state.
-- **Competing explanation:** A still-compatible old manifest can nevertheless violate a new pricing rule.
-- **Discriminating test:** Test rollback using current validation rules.
-- **Containment:** Withdraw affected offers if no compatible approved manifest exists.
-- **Responsible role:** Release engineering coordinates the investigation and records the decision.
-- **Prevention:** Rehearse rollback against current schemas and current effective rules.
-- **Verification:** Load a prior approved manifest in a controlled exercise and validate its eligibility.
-### F-50. Audit log gap
-- **Trigger / symptom:** A customer dispute cannot be reconstructed.
-- **First evidence:** Trace decision ID from display through order.
-- **Candidate mechanism:** Missing joins or retention expiry can break evidence.
-- **Competing explanation:** An expired retention period may be intentional under the approved privacy policy.
-- **Discriminating test:** Replay a sample journey from immutable records.
-- **Containment:** Preserve available records and escalate rather than infer.
-- **Responsible role:** Governance coordinates the investigation and records the decision.
-- **Prevention:** Define minimum audit fields, retention and access alongside privacy requirements.
-- **Verification:** Trace a synthetic journey within the approved retention window.
-### F-51. Incorrect sample window
-- **Trigger / symptom:** An apparent treatment change is a holiday effect.
-- **First evidence:** Compare matched calendar blocks and randomization timestamps.
-- **Candidate mechanism:** Seasonality and staggered rollout can confound time comparisons.
-- **Competing explanation:** Concurrent treatment and control can both rise during a holiday.
-- **Discriminating test:** Analyze concurrent randomized controls within blocks.
-- **Containment:** Do not use simple before-after attribution.
-- **Responsible role:** Experimentation lead coordinates the investigation and records the decision.
-- **Prevention:** Block assignment by calendar and analyze concurrent controls within those blocks.
-- **Verification:** Recompute the treatment contrast within matched blocks rather than comparing before and after.
-### F-52. Unexpected negative margin
-- **Trigger / symptom:** Higher volume coincides with lower contribution.
-- **First evidence:** Decompose per-unit contribution and quantity by arm.
-- **Candidate mechanism:** Fees, returns or product mix may overwhelm revenue.
-- **Competing explanation:** Higher returns can reduce contribution even with unchanged paid prices.
-- **Discriminating test:** Reconcile treatment and control cost components.
-- **Containment:** Stop expansion until finance validates the decomposition.
-- **Responsible role:** Finance coordinates the investigation and records the decision.
-- **Prevention:** Reconcile price, quantity, fees, merchandise cost and refunds by assignment.
-- **Verification:** Check the component totals against the finance ledger for equally mature cohorts.
-### F-53. Unstable rules across regions
-- **Trigger / symptom:** A price is valid in one market but invalid in another.
-- **First evidence:** Inspect market-specific rule and currency identifiers.
-- **Candidate mechanism:** Rules may be cached without the market key.
-- **Competing explanation:** A legitimate market-specific floor can make the same price valid in only one region.
-- **Discriminating test:** Replay identical SKU across two market contexts.
-- **Containment:** Quarantine incorrect scope and invalidate caches.
-- **Responsible role:** Catalog engineering coordinates the investigation and records the decision.
-- **Prevention:** Include market, currency and effective rule version in every cache key.
-- **Verification:** Replay the SKU in both markets with their own independent rule sets.
-### F-54. Inventory opportunity cost ignored
-- **Trigger / symptom:** One-day profit rises while later lost sales increase.
-- **First evidence:** Inspect sell-through and replenishment over the full horizon.
-- **Candidate mechanism:** A one-day optimizer can consume scarce stock too early.
-- **Competing explanation:** A supplier delay may reduce later sales even if the first-day price was unchanged.
-- **Discriminating test:** Compare multi-day contribution and stockout timing.
-- **Containment:** Add an approved inventory-horizon constraint or defer.
-- **Responsible role:** Inventory science coordinates the investigation and records the decision.
-- **Prevention:** Prespecify a replenishment horizon and inventory reserve before optimization.
-- **Verification:** Compare total horizon contribution and stockout timing across assigned policies.
+
+This section catalogues the failure mechanisms that this decision is actually exposed to. Each entry
+states the symptom an operator would observe, the competing causes that produce the same symptom, the
+check that discriminates between them, and the correction. A mechanism without a discriminating check
+is not a failure mode, it is a worry.
+
+### F-01 — Promotion calendar confounds the price coefficient
+
+*Symptom.* The observational regression returns an elasticity of 0.4 on a category where the merchant
+insists demand is elastic, and adding a price-squared term changes the sign.
+
+*Competing causes.* (a) A real, inelastic category; (b) promotional activity correlated with price, so
+the price coefficient absorbs the promotion; (c) insufficient price variation, so the coefficient is
+estimated from noise.
+
+*Discriminating check.* Regress on the randomised cell only, where promotion is held fixed by design,
+and compare with the observational coefficient on the same products and weeks. A large divergence
+identifies (b). A wide interval on both identifies (c). A stable near-zero coefficient on the
+randomised cells supports (a).
+
+*Correction.* Estimate response from the experimental contrast, and use the observational model only
+where no experiment exists, with an explicit bias bound.
+
+*Prevention.* Log the promotion flag as a covariate at assignment time and forbid any analysis of
+price response that omits it.
+
+### F-02 — Stockout censoring is read as low demand
+
+*Symptom.* A SKU sells out at 11:00 and its measured conversion is a third of the category average.
+The model learns "high price, low demand" from a day on which the true statement is "high demand,
+no stock".
+
+*Competing causes.* (a) Genuine low demand; (b) stockout censoring; (c) a listing or search-placement
+defect that suppressed impressions.
+
+*Discriminating check.* Join the stockout timestamp and recompute conversion on sessions before the
+stockout. If the pre-stockout conversion is close to the category average, (b) is confirmed. If the
+impression count is also low, (c) is also present and must be excluded before (b) is sized.
+
+*Correction.* Exclude product-days with a stockout inside the trading window, or fit a censored model
+that treats the stockout as an unobserved upper bound on demand.
+
+*Prevention.* Require the stockout timestamp as a non-null field on every product-day row, and fail
+the build when it is missing on a day with zero fulfillable units.
+
+### F-03 — Landed cost drifts between recommendation and ledger
+
+*Symptom.* The batch job reports a 7.07 margin and the finance reconciliation reports 6.52. The gap
+is 8% and it appears on the SKUs with the highest volume.
+
+*Competing causes.* (a) A vendor price increase that took effect after the cost record was read;
+(b) a currency revaluation on imported goods; (c) a freight surcharge applied at receipt but not at
+the unit cost.
+
+*Discriminating check.* Compare the cost version used in the recommendation against the effective
+cost on the order date for the same SKUs. A version mismatch identifies (a). A stable mismatch for
+imports only identifies (b). A mismatch that scales with receipt volume identifies (c).
+
+*Correction.* Recompute the recommendation on the correct cost version and re-run the evaluation;
+never adjust the evaluation to match the ledger.
+
+*Prevention.* Bind the cost version to the recommendation row and assert at evaluation time that the
+version matches the order date's effective cost.
+
+### F-04 — The feasible set is empty and the failure is invisible
+
+*Symptom.* A category shows no price changes for three weeks during a cost shock. Nobody notices,
+because "no recommendation" looks identical to "recommendation equals the held price".
+
+*Competing causes.* (a) Every candidate filtered by the move limit; (b) every candidate filtered by
+the contractual floor; (c) an upstream failure that removed the SKU from eligibility.
+
+*Discriminating check.* Count recommendation rows by reason code per day. A spike in move-limit
+filtering identifies (a), a spike in floor filtering identifies (b), and a drop in eligible-SKU count
+identifies (c).
+
+*Correction.* Publish the held price and escalate the empty set to the merchant with the binding
+constraint named, so a human can decide whether the constraint or the price is wrong.
+
+*Prevention.* Make the filtered-candidate table a required output and alert on the empty-set rate
+exceeding a threshold.
+
+### F-05 — Interference through substitution
+
+*Symptom.* A price increase on product A raises A's contribution and lowers B's, where B is A's
+substitute, and the category total is flat or negative.
+
+*Competing causes.* (a) True substitution; (b) a shared promotion that ended in the same week;
+(c) a shared stockout that suppressed both.
+
+*Discriminating check.* Randomise the price change at the category level in some markets and the SKU
+level in others, then compare the category total contribution under both. A difference attributable
+to the randomisation unit is (a). A contemporaneous promotion or stockout on both products points to
+(b) or (c).
+
+*Correction.* Evaluate at the category level when substitution is material, and set prices jointly
+rather than per SKU.
+
+*Prevention.* Maintain an effective-dated substitute map and declare the evaluation unit from it
+before the test, not after.
+
+### F-06 — Revenue substitutes for contribution in the success metric
+
+*Symptom.* The pilot is declared a success on a 13.37% revenue-per-session improvement while
+contribution per session fell 3.37%.
+
+*Competing causes.* (a) The metric was never defined precisely; (b) the metric was defined but the
+dashboard computed revenue; (c) contribution was computed before the per-order cost was added.
+
+*Discriminating check.* Recompute both metrics from the same two cells. If revenue rises and
+contribution falls, (a) or (b) is present and the direction of the difference identifies which. If
+contribution is positive only in the version without the per-order cost, (c) is present.
+
+*Correction.* Restate the primary metric as contribution per session with the cost basis named in the
+definition, and re-issue the pilot verdict.
+
+*Prevention.* Put the metric definition, its numerator, denominator and cost basis in the
+pre-registration document, signed before the test starts.
+
+### F-07 — Elasticity is extrapolated outside the tested range
+
+*Symptom.* A model trained on prices between 16.20 and 18.90 recommends 24.00 for a slow-moving SKU,
+and the recommendation is accepted because the arithmetic is internally consistent.
+
+*Competing causes.* (a) Extrapolation of a constant elasticity; (b) a genuine regime change, such as
+a competitor exiting; (c) a cost increase that legitimately raises the optimal price.
+
+*Discriminating check.* Plot the fitted demand against the observed cells and flag any recommendation
+more than one grid step outside the tested band. If the flag fires and no competitor or cost event is
+recorded, (a) is present.
+
+*Correction.* Cap the recommendation at the tested band plus one step, and require an explicit
+merchant approval for anything outside it.
+
+*Prevention.* Encode the tested band as a constraint, not as a comment, so the model cannot recommend
+outside it without a recorded override.
+
+### F-08 — Publication plumbing serves inconsistent prices
+
+*Symptom.* The listing page shows 16.20 and the cart charges 18.00. Complaints arrive before the
+monitoring dashboard updates, which is the worst possible order.
+
+*Competing causes.* (a) Cache not invalidated on one surface; (b) two publication versions live at
+once during a chunked rollout; (c) the cart reading a price snapshot rather than the live catalogue.
+
+*Discriminating check.* Run the synthetic purchase journey against the affected product and record
+all four prices with their serving timestamps and version identifiers. A single stale surface
+identifies (a); two different version identifiers identify (b); a cart timestamp older than the
+publication identifies (c).
+
+*Correction.* Roll back the affected chunk, then re-publish after the surface is fixed. Do not
+"re-publish and hope", because the stale surface will serve the same stale value.
+
+*Prevention.* Make the four-surface consistency check a publication gate with a zero-incident
+threshold, and alert on version divergence rather than on complaint volume.
+
+### F-09 — Override behaviour is mistaken for model error
+
+*Symptom.* Merchant overrides run at 40% of SKUs in the first weeks, and the measured policy effect is
+small, which is read as "the model is weak".
+
+*Competing causes.* (a) The model's recommendations are genuinely poor; (b) merchants override on
+SKUs where they have private information the model lacks, such as a vendor negotiation; (c) the
+override rule itself changed during the window.
+
+*Discriminating check.* Compare realised contribution on overridden versus non-overridden product-days
+at the same predicted margin. If overrides outperform, (b) is present and the model is missing a
+feature. If overrides underperform, (a) is supported. A step change in the override rate at a date
+identifies (c).
+
+*Correction.* Analyse the pilot on an intention-to-treat basis, using the recommendation rather than
+the published price as the assigned treatment, and report the per-protocol result separately.
+
+*Prevention.* Log every override with an actor, a reason code and a timestamp, and report the override
+rate as a first-class metric.
 
 ## 13. Transferable Lesson
-| Field | Lesson |
-|---|---|
-| Canonical pattern | causal-confounding: the policy chooses price using information that also predicts demand |
-| Principle | Optimize a business outcome over feasible actions only after learning the action response with credible identification |
-| Preconditions | Stable unit of assignment, observable mature outcomes, feasible safe price variation and sufficient support |
-| Mechanism | Randomization breaks measured and unmeasured pre-assignment confounding in expectation, subject to design and implementation |
-| Evidence | Constructed arithmetic illustrates a decision reversal; it does not demonstrate real-world causal impact |
-| Avoid when | Price experiments are prohibited, exposure cannot be controlled, or interference invalidates the chosen assignment unit |
-| Portability test | Can the organization assign a bounded action without contaminating control, and measure all relevant downstream costs? |
-| Adaptation | In travel, perishable capacity and time-to-departure replace replenishable-stock assumptions; the decision horizon must change |
-The principle is a proposed design hypothesis, not a universal finding established by a single constructed example.
-Hard safety and legal constraints remain structural; the illustrative 10% movement limit is a local scenario choice.
+
+The pattern is **causal confounding dressed as a measurement problem**. A team is asked to optimise a
+number, the number is easy to compute from history, and the historical variation that would identify
+the mechanism is entangled with the reasons the mechanism was invoked. The trap is that everything
+computes. The elasticity, the optimum, the projected saving and the confidence interval are all
+correct arithmetic on an input that does not mean what it appears to mean.
+
+Four habits transfer to any decision of this shape.
+
+*Convert the proposal into a falsifiable threshold before modelling anything.* "The cut requires an
+elasticity of 2.52" took two logarithms and no data, and it immediately reframed the conversation
+from "build a model" to "can we measure 2.52". This is the highest-leverage hour in the project.
+
+*Normalise to the resource that is actually scarce.* The interesting number was not the optimal price
+but the contribution per available unit, and once the inventory cap was recognised the answer changed
+from "cut" to "raise". Every pricing, staffing and capacity decision has this structure: the objective
+is per unit of a constrained resource, and the constraint, not the model, usually determines the
+direction.
+
+*Report the interval, and let it decide.* A point estimate of 2.55 against a boundary of 2.52 is not a
+result, it is a coin flip with a decimal point. The interval said so, the decision rule respected it,
+and the programme deferred rather than shipped.
+
+*Distinguish arithmetic from evidence in the document itself.* Every number here is checkable; none
+of it is evidence. Writing the two categories separately is what allows a reader to trust the
+arithmetic without being misled about the world, and it is the difference between a worksheet and a
+false claim.
+
+The specific numbers are disposable. The structure — threshold first, scarce resource second, interval
+third, evidence label fourth — is the transferable part.
 
 ## 14. Connections & Cross-References
-### 14a. Related cases, theory, and cheat sheets
-| Relationship | Target | Shared mechanism / boundary |
-|---|---|---|
-| Collection | [Pricing case index](INDEX.md) | Other pricing topics are planned, not validated comparisons |
-| Methods | [scikit-learn common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html) | Training-only preprocessing and leakage; does not identify causal effects |
-| Operations | [Google SRE SLO workbook](https://sre.google/workbook/implementing-slos/) | User-centered service indicators; target here remains illustrative |
-| Planned contrast | Airline and hotel revenue management | Perishable inventory and booking horizon change the optimization; no authored case is claimed |
-No completed comparable case in this local catalog is asserted.
 
-### 14b. What this case leaves open
-| Question | Evidence gap | Proposed resolution | Priority / owner |
-|---|---|---|---|
-| What is causal demand response in the pilot range? | No randomized data or retailer observations | Approved price-grid experiment with support checks | Before optimization / pricing science |
-| How much substitution crosses clusters? | No actual basket or market journey data | Inventory-pool mapping and interference study | Before randomization / experimentation |
-| What is the appropriate inventory horizon? | No replenishment or opportunity-cost evidence | Multi-day simulation validated against inventory records | Before scarce-stock rollout / inventory |
-| Are legal and customer safeguards adequate? | No jurisdiction or approved policy defined | Legal determination and end-to-end customer journey review | Before exposure / legal and product |
+**Sibling cases in this collection.** The airline and hotel revenue-management case
+([02_Airline_And_Hotel_Revenue_Management.md](./02_Airline_And_Hotel_Revenue_Management.md)) shares
+this case's core object — a price or a booking limit set against uncertain demand — and differs in
+that its capacity is fixed per departure or per night, so the constraint binds every day rather than
+on a subset. Reading the two together separates the elasticity question from the allocation question.
 
-### 14c. Intense interview pack
-Scoring for each question: 0 incorrect; 1 partial; 2 correct with explicit assumptions; 3 correct and defensible under the follow-up.
-Questions are prompts for a design discussion, not claims of actual interview or project experience.
-#### Q01 — Framing
-- **Candidate prompt:** What decision and baseline are being compared?
-- **Given facts:** One public price applies per SKU, market and trading day; fixed approved pricing is the comparator.
-- **Clarify:** Identify the owner, decision timing and actions before selecting a model.
-- **Strong answer:** The action is one approved SKU-market-day public price; compare constrained policy with the fixed approved rule.
-- **Reasoning check:** Distinguish the recommendation artifact from the merchant-approved customer price.
-- **Acceptable alternative:** A manual review can remain the decision if evidence is weak.
-- **Follow-up:** What if no candidate satisfies current rules?
-- **Follow-up answer:** Publish no invalid price; escalate and use only a rule-validated safe state.
-- **Red flag:** Calling the task pure demand prediction omits the action and constraints.
-- **Scoring:** Full credit requires explaining the no-valid-candidate escalation rather than inventing a fallback.
-- **Answer support:** Sections 1–4.
-#### Q02 — Objective
-- **Candidate prompt:** Why not maximize conversion?
-- **Given facts:** Revenue and conversion are proxies; finance defines mature contribution after variable costs.
-- **Clarify:** Ask which costs and return adjustments vary with price and volume.
-- **Strong answer:** Conversion ignores unit margin, refunds, fulfillment and inventory opportunity cost, so it can choose a lower-contribution price.
-- **Reasoning check:** Use the 90-versus-100 example to show 9,000 versus 8,000 revenue but 2,500 versus 2,800 contribution.
-- **Acceptable alternative:** Revenue may be a secondary metric if finance approves contribution as primary.
-- **Follow-up:** What if fixed costs differ by price?
-- **Follow-up answer:** Include price-dependent costs in the objective before comparing.
-- **Red flag:** Equating more orders with more profit is wrong.
-- **Scoring:** Full credit requires recognizing customer and inventory protections as hard constraints.
-- **Answer support:** Sections 3 and 6.
-#### Q03 — Calculation
-- **Candidate prompt:** Calculate contribution at price 100 with 80 units, cost 60 and variable cost 5.
-- **Given facts:** The hypothetical price, quantity and two unit costs are 100, 80, 60 and 5.
-- **Clarify:** Confirm all 80 units are fulfilled and cost assumptions already include relevant returns.
-- **Strong answer:** Unit contribution is 100−60−5 = 35 currency per unit; 80 × 35 = 2,800 currency per day.
-- **Reasoning check:** Check that currency per unit multiplied by units per day yields currency per day.
-- **Acceptable alternative:** A receipt-level sum is equivalent under the stated constant costs.
-- **Follow-up:** What if cost becomes 70?
-- **Follow-up answer:** The same quantity gives 80 × 25 = 2,000.
-- **Red flag:** Subtracting costs once per day rather than per unit is dimensionally incorrect.
-- **Scoring:** Full credit includes the 2,000 recalculation at merchandise cost 70.
-- **Answer support:** Section 6.
-#### Q04 — Sensitivity
-- **Candidate prompt:** Which candidate wins when unit cost becomes 70, holding the given demand fixed?
-- **Given facts:** The candidate prices are 90, 100 and 110 with respective quantities 100, 80 and 60.
-- **Clarify:** Hold the variable cost at 5 and demand fixed while changing merchandise cost to 70.
-- **Strong answer:** Contributions are 100×15 = 1,500, 80×25 = 2,000, and 60×35 = 2,100; choose 110.
-- **Reasoning check:** Compare 1,500, 2,000 and 2,100 before selecting the highest contribution.
-- **Acceptable alternative:** Choose no change if those assumed demands lack support.
-- **Follow-up:** What if only 50 units can be sold with original costs?
-- **Follow-up answer:** Assuming deterministic demand, contributions become 1,250, 1,750 and 2,250.
-- **Red flag:** Treating that toy cap as expected stochastic sales is invalid.
-- **Scoring:** Full credit distinguishes a conditional calculation from evidence that demand remains fixed.
-- **Answer support:** Section 6.
-#### Q05 — Causal inference
-- **Candidate prompt:** Why is regressing sales on price alone unreliable?
-- **Given facts:** Merchants choose prices while campaigns and expected demand can also affect purchases.
-- **Clarify:** Ask which pre-price information merchants used and how campaigns were allocated.
-- **Strong answer:** Merchants may lower price during campaigns or raise it when demand is already expected to be high; these factors also affect sales.
-- **Reasoning check:** Draw the common causes of price and demand rather than interpreting correlation as response.
-- **Acceptable alternative:** A well-justified observational design can supplement, but does not automatically replace, randomization.
-- **Follow-up:** What if randomized treatment cannot be assigned?
-- **Follow-up answer:** Retain baseline or use a carefully justified quasi-experiment with explicit untestable assumptions.
-- **Red flag:** A high predictive fit does not establish the causal price effect.
-- **Scoring:** Full credit names an identification strategy and its unresolved assumptions.
-- **Answer support:** Sections 5 and 9.
-#### Q06 — Data grain
-- **Candidate prompt:** How do you prevent stockout days from masquerading as zero demand?
-- **Given facts:** The outcome records fulfilled units and inventory availability can change within a day.
-- **Clarify:** Separate listed, in-stock, out-of-stock and telemetry-missing intervals.
-- **Strong answer:** Use product-market-day panels, stock availability timestamps and exposure data; fulfilled sales are censored when stock runs out.
-- **Reasoning check:** Explain why observed sales provide only a lower bound on latent demand during a stockout.
-- **Acceptable alternative:** A censored-demand model is possible if its assumptions are defended.
-- **Follow-up:** What if the product was not listed?
-- **Follow-up answer:** Exclude that period from the eligible opportunity denominator according to preassignment rules.
-- **Red flag:** Dropping all low-stock days after treatment can create selection bias.
-- **Scoring:** Full credit retains assigned stockout days in the policy effect while discussing censoring.
-- **Answer support:** Sections 5a and 9.
-#### Q07 — Leakage
-- **Candidate prompt:** Which timestamp determines whether a cost feature is usable?
-- **Given facts:** A cost can be effective before cutoff but first ingested after that cutoff.
-- **Clarify:** Ask for both effective time and availability time for the cost version.
-- **Strong answer:** The feature must have been available to the decision system by the cutoff, not merely have an earlier business effective date.
-- **Reasoning check:** Reconstruct the decision using only the cost known by cutoff, then reconcile mature costs separately.
-- **Acceptable alternative:** An immutable as-known snapshot or bitemporal join can implement that rule.
-- **Follow-up:** What if late invoices revise past costs?
-- **Follow-up answer:** Use as-known costs for prediction and mature finance data for outcome reconciliation.
-- **Red flag:** Using the latest overwritten cost creates hindsight leakage.
-- **Scoring:** Full credit identifies hindsight leakage even if the late invoice describes an earlier transaction.
-- **Answer support:** Section 5d.
-#### Q08 — Experiments
-- **Candidate prompt:** What would you randomize for a public-price experiment?
-- **Given facts:** Customers see a public market price and substitutes can share stock across clusters.
-- **Clarify:** Map delivery boundaries, substitution and stock pools before choosing independent units.
-- **Strong answer:** Randomize sufficiently independent market-category or inventory-pool clusters in blocks, with public prices consistent within a cluster.
-- **Reasoning check:** Explain why session-level randomization can expose shoppers to inconsistent prices.
-- **Acceptable alternative:** Another unit is valid if it avoids cross-arm price exposure and shared-stock interference.
-- **Follow-up:** What if customers shop across markets?
-- **Follow-up answer:** Measure contamination and enlarge clusters or narrow scope if interference is material.
-- **Red flag:** Independent session prices can break public consistency and contaminate controls.
-- **Scoring:** Full credit specifies cluster assignment and acknowledges residual cross-market interference.
-- **Answer support:** Section 9.
-#### Q09 — Inference
-- **Candidate prompt:** Why not use each product-day as an independent observation?
-- **Given facts:** Assignment occurs at cluster level while observations repeat across products and days.
-- **Clarify:** Ask how many clusters and blocks were randomized and whether cluster sizes vary.
-- **Strong answer:** Repeated days and products within a randomized cluster are correlated; the independent assignment unit governs uncertainty.
-- **Reasoning check:** Explain that correlated outcomes cannot create independent assignments by multiplying days.
-- **Acceptable alternative:** A cluster-aware model or suitable randomization inference can be used when assumptions hold.
-- **Follow-up:** What if there are few clusters?
-- **Follow-up answer:** Use a method suited to the finite assignment design or redesign; report limited precision.
-- **Red flag:** A tiny standard error from pseudoreplication is misleading.
-- **Scoring:** Full credit chooses a finite-cluster-appropriate analysis and reports uncertainty honestly.
-- **Answer support:** Section 9.
-#### Q10 — Sizing
-- **Candidate prompt:** How much batch work is implied by 10,000 SKUs and 11 prices?
-- **Given facts:** The batch has 10,000 decisions and 11 candidate evaluations each over two hours.
-- **Clarify:** Differentiate candidate throughput from shopper read traffic and end-to-end latency.
-- **Strong answer:** There are 110,000 candidate evaluations per day, or about 15.28 per second averaged over two hours.
-- **Reasoning check:** Divide 110,000 by 7,200 seconds, not by the number of decisions.
-- **Acceptable alternative:** Actual sizing requires measured per-evaluation cost, dependency traffic and peak behavior.
-- **Follow-up:** What if all work arrives in the last ten minutes?
-- **Follow-up answer:** The average becomes about 183.33 evaluations per second in that interval, before concurrency or overhead.
-- **Red flag:** Calling the daily average a measured peak capacity is wrong.
-- **Scoring:** Full credit calculates the ten-minute rate and declines to call it measured capacity.
-- **Answer support:** Section 8d.
-#### Q11 — Reliability
-- **Candidate prompt:** A price publish times out; should the client immediately publish a new decision ID?
-- **Given facts:** A timeout does not reveal whether the catalog committed the request.
-- **Clarify:** Ask whether a decision ID identifies immutable content and whether status is queryable.
-- **Strong answer:** First reconcile whether the original write succeeded; retry with the same idempotency key under the bounded retry policy.
-- **Reasoning check:** Explain why retrying the same ID is different from generating a new publication.
-- **Acceptable alternative:** A read-after-write status endpoint can support reconciliation.
-- **Follow-up:** What if the catalog is unavailable and the prior price expired?
-- **Follow-up answer:** Withdraw the affected offer and escalate rather than serve an unvalidated price.
-- **Red flag:** A new ID on every retry can duplicate effects.
-- **Scoring:** Full credit addresses rule validation and withdrawal when no compliant fallback exists.
-- **Answer support:** Section 8.
-#### Q12 — Debugging
-- **Candidate prompt:** Sales fall after a markdown; what would you inspect first?
-- **Given facts:** A markdown and lower fulfilled sales occur together in the hypothetical scenario.
-- **Clarify:** Ask whether the price actually appeared, stock was available and exposure was comparable.
-- **Strong answer:** Compare in-stock time, exposure, actual displayed price and campaign context; stockout, telemetry and true demand changes are competing explanations.
-- **Reasoning check:** Contrast demand response with stockout censoring, logging delay and campaign changes.
-- **Acceptable alternative:** A randomized contrast helps when assignment and exposure are intact.
-- **Follow-up:** What if stockout times are missing?
-- **Follow-up answer:** Treat demand as unidentified for that interval and investigate inventory telemetry.
-- **Red flag:** Declaring negative elasticity from fulfilled sales alone ignores censoring.
-- **Scoring:** Full credit states what evidence distinguishes these explanations without claiming a causal result.
-- **Answer support:** Sections 5 and 12.
-#### Q13 — Governance
-- **Candidate prompt:** How does rollback handle committed orders and changed rules?
-- **Given facts:** Rollback must respect current rules and preserve binding committed order terms.
-- **Clarify:** Identify the authority for incident response and the applicable effective manifest.
-- **Strong answer:** Stop new publications, validate an approved compatible manifest against current rules, restore and reconcile surfaces, and honor applicable committed order terms.
-- **Reasoning check:** Separate stopping new writes from restoring state and honoring accepted orders.
-- **Acceptable alternative:** Withdraw affected offers if no valid manifest exists.
-- **Follow-up:** What if the old schema is no longer accepted?
-- **Follow-up answer:** Use a compatible approved artifact or withdraw; never force an invalid old manifest.
-- **Red flag:** Rewriting past order prices or bypassing current constraints is unsafe.
-- **Scoring:** Full credit requires compatible validated artifacts or withdrawal, not unconditional replay.
-- **Answer support:** Sections 8 and 10.
-#### Q14 — Evaluation
-- **Candidate prompt:** What denominator should the primary experiment metric use?
-- **Given facts:** The pilot assigns policies to clusters and measures mature contribution over a fixed horizon.
-- **Clarify:** Clarify preassignment eligibility, product-day weighting and cluster-level treatment assignment.
-- **Strong answer:** All eligible product-days in randomized clusters, including zero-sale days, for both assigned arms; divide mature contribution by that denominator and account for clustered assignment.
-- **Reasoning check:** Include zero-sale and treatment-induced stockout product-days in the assigned-arm denominator.
-- **Acceptable alternative:** A total contribution estimand can be useful if prespecified and cluster exposure is appropriately handled.
-- **Follow-up:** What if treatment creates stockouts?
-- **Follow-up answer:** Keep those product-days in the intention-to-treat outcome and study stockouts as a mechanism and guardrail.
-- **Red flag:** Restricting to purchasers or available days after assignment induces selection.
-- **Scoring:** Full credit explains how post-treatment filtering changes the estimand.
-- **Answer support:** Section 9.
-#### Q15 — Transfer
-- **Candidate prompt:** How would the design change for perishable hotel rooms?
-- **Given facts:** Hotel capacity expires by room-night and may be shared among booking channels.
-- **Clarify:** Identify booking horizon, cancellation rules and shared inventory before adapting the design.
-- **Strong answer:** Model remaining room-night inventory and booking horizon; unused rooms expire, and capacity constraints are time-specific.
-- **Reasoning check:** Contrast expiring rooms with replenishable goods and the resulting inventory opportunity cost.
-- **Acceptable alternative:** A fixed-rule comparator and bounded randomized policy remain useful if legally and operationally feasible.
-- **Follow-up:** What if different booking channels share capacity?
-- **Follow-up answer:** Randomize or account for shared-capacity interference at a suitable unit.
-- **Red flag:** Copying replenishable inventory assumptions unmodified is not justified.
-- **Scoring:** Full credit retains a credible comparator and addresses interference across booking channels.
-- **Answer support:** Section 13.
-#### Q16 — Uncertainty
-- **Candidate prompt:** Does the toy contribution ranking prove that price 100 is optimal in production?
-- **Given facts:** The demand and cost values in the example were invented for teaching, not estimated.
-- **Clarify:** Ask whether demand is causal, costs mature and each candidate is rule-compliant.
-- **Strong answer:** No; it is conditional arithmetic using invented demand and costs, with no real data, identification, uncertainty or implementation evidence.
-- **Reasoning check:** Show that the 100 ranking depends on the assumed quantities, costs and one-day horizon.
-- **Acceptable alternative:** It is still useful as an auditable example of objective and sensitivity.
-- **Follow-up:** What would change the decision?
-- **Follow-up answer:** Credible causal estimates, uncertainty, mature costs, inventory dynamics and cleared constraints could change the ranking.
-- **Red flag:** Presenting the illustrative 2,800 as actual observed profit fabricates evidence.
-- **Scoring:** Full credit explicitly rejects a production optimality or realized-profit claim.
-- **Answer support:** Sections 6, 7 and 11.
+**Patterns.** The primary pattern is causal confounding: the price coefficient is identified from
+variation that was not randomly assigned. The secondary patterns are evaluation mismatch, because
+revenue and contribution diverge in sign on the same data, and constraint violation, because the
+objective's optimum is regularly outside the feasible set.
+
+**Prerequisites a reader should have.** Contribution margin arithmetic; the log-log demand form and
+its elasticity; two-proportion power calculation; cluster randomisation and design effect; the
+distinction between event time and processing time.
+
+**What this case deliberately does not cover.** Multi-product joint optimisation with a substitution
+matrix, competitive response, markdown optimisation over a season, auctions, and regulated pricing.
+Each is a separate decision with a separate owner, and the unit's index carries them as planned
+commitments rather than compressing them here.
+
+**Where a reader should go next inside this unit.** The revenue-management case for capacity
+allocation; the experimentation sheet for the power and design-effect arithmetic used in section 9;
+the common-issues file for the numerical traps that recur across pricing cases.
+
+### Interview pack
+
+#### Q01 — A merchant proposes a 10% cut and reports a 26% conversion lift. Is that good?
+
+**Answer.** Not necessarily, and on the constructed numbers in this case it is bad. Contribution per
+session falls by about 3.37%, or 8.78% once a per-order cost is included.
+
+**Reasoning.** Conversion is not the objective, contribution is. A price cut reduces the per-unit
+margin, so the volume gain must exceed the margin loss. The margin ratio is 7.07/5.42 = 1.3037, so
+the cut needs 30.4% more units; a 26% conversion lift delivers less than that, and the shortfall
+widens once per-order costs are counted.
+
+**Follow-up.** What conversion lift would make the cut contribution-neutral?
+
+**Red flag.** Accepting the lift as evidence because the number is large and the direction is
+intuitive.
+
+**Scoring.** 3 points for naming contribution as the objective and computing the margin ratio;
+2 more for the 30.4% requirement; 1 more for noticing that per-order cost moves the threshold.
+
+#### Q02 — Compute the elasticity implied by a move from 18.00 with 4.12% conversion to 16.20 with 5.19%.
+
+**Answer.** 2.19, using the log-log (constant-elasticity) form.
+
+**Reasoning.** Price ratio 16.20/18.00 = 0.9, ln = -0.10536. Conversion ratio 5.19/4.12 = 1.2597,
+ln = 0.23088. Elasticity is minus the ratio of the log changes: 0.23088/0.10536 = 2.191. The sign
+convention is that elasticity is reported as a positive magnitude, so the answer is 2.19.
+
+**Follow-up.** Why is this estimate less trustworthy than a four-cell OLS estimate?
+
+**Red flag.** Using simple percentage ratios instead of log ratios, which gives 2.597 and overstates
+the response.
+
+**Scoring.** 3 points for the correct log computation; 1 for the sign convention; 2 for explaining
+why two cells cannot detect curvature.
+
+#### Q03 — Derive the optimal price for constant-elasticity demand.
+
+**Answer.** p* = e·c / [(e−1)·k], with e > 1.
+
+**Reasoning.** Contribution is (k p − c)·A p^(−e). Differentiate: A[−e p^(−e−1)(k p − c) + k p^(−e)]
+= 0, so k p = e(k p − c), giving k p(e − 1) = e c. With e = 2.191, c = 9.40 and k = 0.915, p* =
+20.595/1.08977 = 18.90.
+
+**Follow-up.** What happens to p* as e approaches 1 from above, and what does that tell you about the
+formula's range?
+
+**Red flag.** Quoting the formula without checking e > 1, then applying it to an e of 1.05.
+
+**Scoring.** 3 points for the derivation; 2 for the numeric answer; 2 for the e > 1 condition and the
+divergence at the boundary.
+
+#### Q04 — Is a shelf price the same as a booking limit? Where does the analogy break?
+
+**Answer.** The analogy holds at the level of allocating a scarce unit; it breaks on the direction of
+the control and on the observability of the constraint.
+
+**Reasoning.** Both decisions choose how much of a fixed capacity to sell at a low price and how much
+to reserve for a high one. With a shelf price the seller chooses a number that indirectly determines
+quantity, and demand may exceed or fall short. With a booking limit the seller chooses quantity
+directly and the price is fixed per class. The break matters because a shelf price cannot be revised
+per customer, while a booking limit can be revised per booking, and because shelf-price demand is
+censored by stockouts that the seller caused.
+
+**Follow-up.** Which control would you prefer if you could forecast demand well but could not measure
+elasticity?
+
+**Red Flag.** Asserting they are the same problem because both are "revenue management".
+
+**Scoring.** 2 points for the shared structure; 2 for the control-variable difference; 2 for the
+censoring consequence; 1 for the preference argument.
+
+#### Q05 — Compute the contribution of selling 850 units at 19.39 versus 850 at 18.00.
+
+**Answer.** 7,087.23 versus 6,009.50, an improvement of 1,077.73 or 17.93%.
+
+**Reasoning.** Margin at 19.39 is 0.915×19.39 − 9.40 = 17.742 − 9.40 = 8.342. Times 850 = 7,090.70
+before rounding the price. At 18.00 the margin is 7.07, times 850 = 6,009.50. The difference is
+1,081.20 on unrounded inputs, or about 1,079.50 on the displayed two-decimal price.
+
+**Follow-up.** Why is this comparison more robust than the 0.33% full-supply gain?
+
+**Red flag.** Multiplying the demand-model gain by the constrained quantity, which mixes two
+different counterfactuals.
+
+**Scoring.** 3 points for both contributions; 2 for the ratio; 2 for the robustness argument.
+
+#### Q06 — The elasticity interval is [1.29, 3.81] and the decision boundary is 2.52. What do you do?
+
+**Answer.** Do not act on the price question. The interval contains the boundary, so the test cannot
+resolve the decision, and acting on the point estimate is a bet rather than a finding.
+
+**Reasoning.** The decision needs the sign of the difference between observed and required elasticity.
+An interval that spans the threshold gives no sign. Options are to increase power, to narrow the
+price grid so the effect per step is larger relative to noise, or to defer — and deferral is
+legitimate because the scarcity subset carries independent value.
+
+**Follow-up.** Which of those three options changes the estimand, and which only changes precision?
+
+**Red flag.** Reporting 2.55 as "the elasticity" without the interval, then declaring the cut viable.
+
+**Scoring.** 3 points for refusing to act; 2 for the interval-spans-threshold reasoning; 2 for
+distinguishing estimand changes from precision changes.
+
+#### Q07 — Why can the design effect be 201 for a market-level test?
+
+**Answer.** Because the unit of randomisation is a market-week containing about 133,000 sessions, and
+sessions within a market are highly correlated in conversion.
+
+**Reasoning.** The design effect is 1 + (m − 1)·ICC. With m = 133,333 and ICC = 0.0015, DE = 1 +
+133,332 × 0.0015 = 201. The effective sample is the raw sample divided by the design effect, so 800,000
+sessions per arm become about 3,980 effective. A switchback with 48 blocks reduces the block size and
+the design effect to about 26, restoring 30,771 effective sessions.
+
+**Follow-up.** What assumption must hold for the switchback estimate to be unbiased?
+
+**Red flag.** Computing power from session counts without mentioning clustering.
+
+**Scoring.** 3 points for the design-effect computation; 2 for the effective sample; 2 for the
+switchback comparison; 1 for the time-balance assumption.
+
+#### Q08 — Diagnosis: revenue per session rose 13.4%, contribution per session fell 3.4%. What is
+wrong, and what do you check first?
+
+**Answer.** Nothing is wrong arithmetically; the two metrics measure different things and the price
+cut moved them apart. Check that the contribution definition includes all variable per-order costs,
+then check that the session populations in the two arms are comparable.
+
+**Reasoning.** Revenue per session is price times conversion; contribution per session is margin times
+conversion. A cut raises the first and lowers the second whenever the margin elasticity exceeds the
+volume elasticity. The two candidate explanations for a *further* divergence are an incomplete cost
+basis and a traffic-composition change between arms.
+
+**Follow-up.** What guardrail would have caught the traffic-composition problem before launch?
+
+**Red flag.** Concluding that the measurement is broken because the metrics disagree.
+
+**Scoring.** 2 points for the correct mechanism; 2 for the cost-basis check; 2 for the traffic check;
+1 for naming a concrete guardrail.
+
+#### Q09 — A SKU sold out at 11:00 and its conversion is a third of the category. What is the correct
+inference?
+
+**Answer.** Almost none about demand. The observation is censored: the SKU could not sell after 11:00,
+so measured conversion measures availability, not willingness to pay.
+
+**Reasoning.** Conversion is orders divided by sessions. Fulfilled orders are truncated at stock, while
+sessions continue arriving. The correct estimator uses sessions before the stockout, or a censored
+likelihood that treats demand above stock as unobserved.
+
+**Follow-up.** What field must exist in the data for you to make that correction at all?
+
+**Red flag.** Dropping the row entirely, which conditions the analysis on a post-price outcome.
+
+**Scoring.** 3 points for naming censoring; 2 for the pre-stockout estimator; 2 for the required field.
+
+#### Q10 — The feasible candidate set is empty for a category for three weeks. What happened?
+
+**Answer.** A hard constraint is binding, and the programme has silently reverted to the baseline.
+
+**Reasoning.** Candidates are filtered by the contractual floor and ceiling, the 10% move limit, and
+the safety reserve. A cost shock raises the model's preferred price by more than 10%, so every
+candidate is filtered and the held price is published. Because "no recommendation" and "recommend the
+held price" look identical downstream, the failure is invisible unless reason codes are counted.
+
+**Follow-up.** Which output would you add to make this observable on day one?
+
+**Red flag.** Relaxing the move limit so that a recommendation appears.
+
+**Scoring.** 3 points for naming a binding constraint; 2 for the reason-code mechanism; 2 for the
+correct remediation.
+
+#### Q11 — Justify rejecting a contextual bandit for this pilot.
+
+**Answer.** Because the pilot's purpose is to measure a response, and adaptive allocation degrades
+measurement to improve short-run reward.
+
+**Reasoning.** A bandit concentrates exposure on the arm that currently looks best, which starves the
+contrast needed to narrow the interval. It also interacts with the move limit: arm availability
+depends on the previously published price, so the arm set changes over time and the estimator must
+account for that. And the inference is harder to defend to a finance audience than a fixed
+allocation.
+
+**Follow-up.** Under what conditions would you reverse that judgement?
+
+**Red flag.** "Bandits are more advanced, so use a bandit."
+
+**Scoring.** 3 points for the exploration-versus-exploitation trade; 2 for the constraint interaction;
+2 for the defensibility argument.
+
+#### Q12 — Design the check that distinguishes a stale cache from a version conflict in publication.
+
+**Answer.** A synthetic purchase journey that records price, serving timestamp, and artefact version
+at each of the four surfaces, compared against the published artefact.
+
+**Reasoning.** A stale cache shows one surface with an old timestamp and the correct version. A version
+conflict shows two surfaces with different version identifiers but similar timestamps. Recording both
+fields is what separates them; recording only the price cannot.
+
+**Follow-up.** Which of the two failures would a complaint-volume alert catch first, and why is that
+too late?
+
+**Red flag.** Checking the catalogue table only, which is the one surface that is usually correct.
+
+**Scoring.** 3 points for the journey and the two recorded fields; 2 for the discrimination logic;
+2 for the alerting argument.
+
+#### Q13 — The merchant overrides 40% of recommendations. How does that change your evaluation?
+
+**Answer.** It forces an intention-to-treat analysis, with the per-protocol result reported separately
+and labelled as such.
+
+**Reasoning.** If the evaluation uses the published price, it measures the merchant's judgement
+combined with the model, and the two cannot be separated. If it uses the recommendation, it measures
+the policy as assigned. The difference between the two estimates is the override effect, which is
+itself informative but is not the policy effect.
+
+**Follow-up.** What would a large gap between the two estimates tell you about the model's features?
+
+**Red flag.** Dropping overridden product-days to "clean" the data.
+
+**Scoring.** 3 points for ITT; 2 for per-protocol as secondary; 2 for interpreting the gap.
+
+#### Q14 — Where does the constant-elasticity form fail, and what replaces it?
+
+**Answer.** It fails outside the tested price band, near e = 1, and wherever a competitor or an
+assortment change shifts the demand curve rather than moving along it.
+
+**Reasoning.** The form assumes the percentage response is the same at every price. Real demand
+flattens at very low prices (the product substitutes for everything) and at very high prices (the
+product is abandoned), so a spline or a semiparametric fit is better when the tested band is wide.
+Near e = 1 the implied optimal price diverges, which is a symptom of using the form outside its range.
+A curve shift changes A, not e, and no constant-elasticity model can represent it.
+
+**Follow-up.** What would you plot to detect a curve shift rather than a movement along the curve?
+
+**Red flag.** "Elasticity is a constant, so one estimate serves all prices."
+
+**Scoring.** 3 points for the three failure regions; 2 for the replacement methods; 2 for the shift
+detection.
+
+#### Q15 — A guardrail is breached but contribution improved. Who decides, and on what basis?
+
+**Answer.** The decision owner, on the basis of the guardrail's stated purpose, not on the size of the
+contribution gain. Guardrails are pre-committed for the reason that they would otherwise always lose.
+
+**Reasoning.** A guardrail encodes a cost the objective does not measure — customer trust, legal
+exposure, or operational stability. Trading it against measured contribution at the moment of breach
+is exactly the substitution the guardrail exists to prevent. The owner may suspend the policy while
+investigating; the owner may not accept the breach in exchange for the gain without a recorded
+policy change.
+
+**Follow-up.** What would have to be true for the guardrail itself to be wrong rather than the policy?
+
+**Red flag.** Comparing the breach cost against the contribution gain and accepting the net.
+
+**Scoring.** 3 points for refusing the trade; 2 for the pre-commitment reasoning; 2 for the
+distinction between suspending and amending.
+
+#### Q16 — What single measurement would most change this recommendation?
+
+**Answer.** The share of eligible SKUs whose sellable stock is below predicted demand, because it
+determines whether the programme is a supply problem or a demand-response problem.
+
+**Reasoning.** If that share is large, the scarcity rule captures most of the value and the
+elasticity question is second-order. If it is small, the programme must solve the elasticity problem
+and the current evidence cannot. The measurement is cheap — it needs an inventory snapshot and a
+demand forecast, both of which already exist — and it is not in the case's arithmetic, which is why
+it is the right question to ask.
+
+**Follow-up.** How would you measure it before the demand model exists?
+
+**Red flag.** Naming another model, another feature, or more data as the answer.
+
+**Scoring.** 3 points for the share of constrained SKUs; 2 for the either/or argument; 2 for the
+cheap measurement path.
 
 ## 15. Quick Reference Card
-| Field | Value |
+
+| Item | Value |
 |---|---|
-| Domain | Illustrative ecommerce retail, one product-market-day |
-| Problem type | Constrained public price selection under demand and inventory uncertainty |
-| Method | Enumerate valid candidates; compare expected contribution with a fixed approved-price baseline |
-| Primary result | Not measured; example alone favors 100 under stated assumptions |
-| Key lesson | A causal demand response and mature business objective are needed before trusting optimized prices |
-| Tags | causal-confounding; evaluation-mismatch; model-monitoring |
-| Case ID / version / as-of | CASE-01-06-001 / draft 1 / 2026-11-07 |
-| Evidence level | not-measured / illustrative; no business dataset or run |
-| Implementation stage | proposed / draft-unreviewed; last reviewed null |
-| Baseline / primary metric | Approved fixed rule; measure profit and customer guardrails in a governed randomized test |
-| Key limitation | Price bounds, inventory, customer treatment and legal approval constrain the proposed test; no individual pricing or observed outcome |
-| Review trigger / owner | Changes to eligibility, constraints, experiment, or finance definitions / pricing science lead |
+| Decision | One shelf price per eligible product-market-day for the next trading day |
+| Owner | Pricing director; pricing science recommends, engineering publishes |
+| Objective | Contribution per eligible product-day, not revenue and not conversion |
+| Retention factor | k = 1 − 0.060 − 0.025 = 0.915 applied to revenue |
+| Margin at 18.00 | 0.915×18.00 − 9.40 = 7.07 per unit |
+| Break-even elasticity for a 10% cut | ln(7.07/5.42)/ln(18.00/16.20) = 2.52 |
+| Observed elasticity | 2.19 two-cell; 2.55 four-cell; 95% interval [1.29, 3.81] |
+| Contribution effect of the cut | −3.37% per session; −8.78% with 1.10 per-order cost |
+| Scarcity price at 850 units | 19.39, worth +17.93% over the held price |
+| Decision | Reject the blanket cut; authorise the scarcity rule; commission a switchback test |

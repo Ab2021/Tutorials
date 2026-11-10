@@ -1046,14 +1046,16 @@ one for units.
 **Q8. A survey of 100,000 respondents reports a two percent prevalence under local DP at
 `eps = 0.5`. How precise is it, and would central DP be better?**
 
-Answer: the flip probability is `1/(1+e^0.5) = 0.3775`, so the estimator variance is
-`p(1-p)/(n(2p-1)^2) = 0.2350/(0.060025 * 100,000) = 3.915e-5`, a standard deviation of 0.00626, which is
-626 patients on a count of 2,000. Central DP at the same epsilon has a standard deviation of 2.83
-patients, 221 times smaller. Reasoning: local noise is paid per respondent, so it scales with
-`sqrt(n)` in count terms while central noise is constant. Follow-up: when is local still correct?
-When no party may be trusted with raw responses, in which case the 221 factor is the price of the trust
-model, not a defect. Red flag: recommending local DP "because it is stronger" without the precision
-consequence. Scoring: two points for the variance, two for the comparison, one for the trust argument.
+Answer: the flip probability is `1/(1+e^0.5) = 0.377541`, so `p = 0.622459` and the observed rate at a
+true prevalence of 0.02 is `0.382439`. The estimator variance is
+`q(1-q)/(n(2p-1)^2) = 0.236179/(0.060025 * 100,000) = 3.93730e-5`, a standard deviation of 0.0062748,
+which is 627.5 patients on a count of 2,000. Central DP at the same epsilon has a standard deviation of
+2.82843 patients, `627.48/2.82843 = 221.85` times smaller. Reasoning: local noise is paid per respondent,
+so it scales with `sqrt(n)` in count terms while central noise is constant. Follow-up: when is local
+still correct? When no party may be trusted with raw responses, in which case the 222 factor is the
+price of the trust model, not a defect. Red flag: recommending local DP "because it is stronger" without
+the precision consequence. Scoring: two points for the variance, two for the comparison, one for the
+trust argument.
 
 **Q9. A released table with `k = 10` was re-identified. Which property failed?**
 

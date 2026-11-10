@@ -1,7 +1,7 @@
 ---
 case_id: "CASE-2026-032"
 case_title: "Claims operations agent: promote a release bundle only when its guardrails survive a canary"
-case_version: "1.0"
+case_version: "2.0"
 created: "2026-11-10"
 last_reviewed: null
 status: "proposed"
@@ -20,984 +20,946 @@ review_trigger: "Any change to claim packet schema, coverage policy, model, prom
 
 # Claims Operations Agent: Release Only the Bundle That Survives Its Canary
 
-**Evidence declaration.** This is an ILLUSTRATIVE design exercise.
-The insurer, claim counts, staffing costs, model prices, and guardrail rates are constructed teaching values.
-They are arithmetically derived and independently checked, but no organization measured them.
-The source inventory named a claims-agent release and incident brief; its body was unavailable, so mechanism claims below are general design reasoning, not source reconstruction.
-Implementation stage is `proposed`. Document state is `draft`. Editorial review is `not reviewed`.
+**Evidence declaration.** This is an ILLUSTRATIVE design exercise. The insurer, claim counts, severity mix,
+audit staffing, and guardrail rates are constructed teaching values. They are arithmetically derived and
+each was recomputed through a second route, but no organization measured them and none of the numbers should
+be cited as an industry result. The implementation stage is `proposed`; the document state is `draft`; no
+independent editorial review is claimed.
+
+The release mechanism described here is standard practice dressed in specific numbers: bundle the artifacts
+that must move together, expose the bundle to a traffic slice, and promote only if every guardrail survives
+at a decision rule chosen in advance. What is not standard is the arithmetic that decides how long the canary
+must run, and that arithmetic is what this case is about.
 
 ## 1. The One-Line Framing
 
-> Given one first-notice-of-loss claim packet and a versioned agent release bundle, decide whether to promote that bundle from canary to full traffic for **[stakeholder]** so that triage time falls without increasing missed-coverage-signal rate, subject to a hard rule that no claim decision is made without a licensed adjuster, compared with a rules-plus-human baseline.
+A release bundle of six artifacts must be promoted as one unit or not at all, and the canary that decides
+promotion must be long enough to separate a 0.4% harmful-write rate from a 0.7% one, which is fifteen days
+of a 12.5% traffic slice - not the three days the team originally proposed.
 
-The unit of analysis is one claim packet at the moment of triage.
-The input is a structured FNOL packet plus attachments, an authenticated adjuster identity, and a release identifier.
-The output is a triage proposal: coverage-route suggestion, missing-document list, urgency band, and a citation set for each suggestion.
-The beneficiary is the claims operations team and, indirectly, the claimant waiting for a decision.
-The decision owner is the claims operations director with model risk sign-off.
-The binding constraint is that the model output is a proposal attached to the adjuster's own decision record; it never authorises payment or denial.
-The baseline is a rule-based routing table applied by an adjuster who reads the packet.
-The reusable pattern is an atomic release bundle: model, prompt, tool schemas, retrieval index, policy table, and evaluation suite are promoted and rolled back as one immutable set.
-The secondary patterns are rollout regression and human-in-the-loop review.
-The decisive tradeoff is that a release which improves average handling time while raising the missed-signal rate is not promotable, no matter how attractive its labour arithmetic looks.
+The decision has two halves that are usually conflated:
 
-**Decision frequency.** One promotion decision per release candidate; roughly one candidate per month in the illustrative operating rhythm.
-**Success condition.** Median triage minutes fall by at least the agreed margin while the missed-coverage-signal guardrail stays inside its upper bound and no claim is decided without an adjuster.
-**Evidence limit.** Nothing below demonstrates that a real bundle improves anything; it demonstrates how the promotion decision is computed and bounded.
-**Takeaway.** Promotion is a bundle-compatibility decision with a statistical gate, not a model-quality opinion.
+1. **What moves together.** Prompt, policy, retrieval index, model version, tool schemas, and the review
+   routing table. Six items, sixty-three non-empty subsets, and the design must forbid the four harmful ones.
+2. **How long the proof takes.** Fifteen days at 12.5% traffic buys 3,498 audited claims, which is enough
+   for a 78.7% chance of catching a 75% relative regression and nowhere near enough for three guardrails
+   simultaneously.
+
+The gap between "we ran a canary" and "the canary could have detected the regression" is the entire content
+of the case. A three-day canary at the same traffic slice yields 700 claims and a 22.3% detection
+probability: it fails 78% of the time when the regression is real.
 
 ## 2. Context & Background
 
-First-notice-of-loss handling begins when a claimant reports damage, injury, or loss.
-An intake step creates a claim record with policy number, loss date, loss type, and free-text description.
-An adjuster then reads the packet, decides which coverage section applies, identifies missing documents, and sets urgency.
-The triage step is narrow but consequential: a mis-routed claim delays a valid payment, and a missed fraud or subrogation signal costs the insurer money later.
+An insurer receives 3,200 first-notice-of-loss claims on a business day. A triage agent reads each packet -
+the claim form, attached correspondence, policy schedule, and prior-claim history - and proposes a routing
+decision: auto-approve the coverage determination, refer to a handler with a recommended track, or request
+missing evidence.
 
-The baseline routing table maps loss type and a handful of codes to a queue.
-It is fast and deterministic.
-It fails on mixed-cause losses, on descriptions that mention a second peril, and on documents that arrive in the wrong slot.
-Adjusters compensate by reading everything, which is where the fourteen minutes go.
+Of those claims, 58.3% (1,865.6/day) are eligible for automatic determination; the rest need a human either
+way because of value, coverage ambiguity, or an incomplete packet. The agent therefore changes cost and
+quality only on the 1,865.6, and every release decision below is denominated in those.
 
-The illustrative workload contains 18,000 claims per staffed week.
-Five staffed days at nine staffed hours each give 45 staffed hours, or 162,000 staffed seconds.
-The mean arrival rate is 18,000 / 162,000 = 0.1111 claims per staffed second, equivalent to 3,600 claims per staffed day.
-These are calendar-independent staffed minutes; a claim arriving at 02:00 waits until the next staffed window, and the queue arithmetic below must not be read as a 24-hour service level.
+Six artifacts move together because they are coupled:
 
-| Context field | Illustrative definition | Boundary |
+| Artifact | Why it is coupled | What breaks if released alone |
 |---|---|---|
-| Domain | Personal lines property and motor claims | Not commercial liability |
-| Workflow stage | Triage after intake, before adjudication | No payment authority |
-| Decision owner | Claims operations director | Not the model provider |
-| Users | Licensed adjusters | Proposal, not instruction |
-| Baseline | Rule table plus full manual read | Retained as fallback |
-| Proposed aid | Bundle-proposed routing and document gaps | Requires adjuster acceptance |
-| Scale | 18,000 claims per staffed week | Constructed |
-| Timing | Weekly arrivals, daily peaks | Peak unmeasured |
-| Geography | Single jurisdiction, single language | Not multilingual |
-| Prior attempt | Keyword rules only | No learned routing deployed |
-| Applicable requirements | Internal model-risk policy | Not legal advice |
+| Instruction prompt | defines evidence priority and refusal rule | new policy with old prompt misreads exclusions |
+| Coverage policy table | encodes clause-to-track mapping | prompt asks for a clause the table does not have |
+| Retrieval index | supplies prior-claim precedents | precedents from the old index contradict the new rule |
+| Model version | changes calibration of the confidence score | the confidence threshold now routes differently |
+| Tool schemas | define the write shapes the agent may emit | a renamed field fails at execution, not at generation |
+| Review routing table | decides which proposals need a human | a stricter prompt fills a queue sized for the old rate |
 
-The manual baseline persists for three reasons that a promotion case must respect.
-First, the adjuster is accountable, and accountability without reading is not achievable.
-Second, an adjuster notices absences: a missing photograph, a policy endorsement, a prior claim.
-Third, the rule table is cheap to audit; every route is explainable by one rule identifier.
+The coupling is not hypothetical in one direction: releasing the prompt alone is the most common mistake
+because it is the cheapest artifact to change. A prompt that raises the refusal rate without the routing
+table change sends 40% more cases to a review pool sized for the old rate, and the pool's overflow behaviour
+is to approve faster. That failure has no error message.
 
-The proposed bundle does not replace the adjuster.
-It changes the starting point: the adjuster receives a proposed route, a document gap list, and citations into the packet.
-The adjuster can accept, change, or reject each field.
-Every rejection is a labelled observation about the bundle, which is why the rejection rate is a first-class release metric rather than a nuisance.
+Two background facts frame the economics:
 
-**Stakeholder tension.** Operations wants throughput; model risk wants bounded exposure; adjusters want proposals that save reading rather than add a second reading; claimants want speed and correctness.
-These goals conflict at the margin: a bundle that proposes aggressively saves more minutes and creates more false urgency bands.
+- **The business benefit is modest and continuous.** Automation gains of 3.1 percentage points are worth
+  about 1,453 USD/day in avoided handling time. It is real money and it accrues every day the release is
+  delayed, which is why teams shorten canaries.
+- **The harm is rare and severe.** A wrongful denial or a wrongful payment is a regulatory event with a
+  mean severity of 717 USD across the severity mix, arriving at 7.5 per day at the baseline rate of 0.4%
+  of auto-eligible claims.
 
-**Takeaway.** The case is about a governed promotion of a bundle inside an existing accountable workflow, not about autonomy.
+The tension is exact: shortening the canary by twelve days costs 17,436 USD of delayed benefit and saves
+nothing, while promoting a regression twenty-one days early exposes about 84,283 USD of excess harm.
 
 ## 3. The Business Question
 
-The illustrative stakeholder question, labelled as a paraphrase rather than a quotation: "Can we move the new claims triage bundle from a five-percent canary to full traffic without raising missed coverage signals or shipping a bundle we cannot roll back cleanly?"
+Given a six-artifact bundle with a candidate harmful-write rate of 0.7% against a 0.4% baseline, what canary
+design - traffic share, duration, decision rule, and guardrail set - maximises expected value, and what must
+the release process refuse to do?
 
-| Decision-contract field | Case contract |
-|---|---|
-| Question | Promote bundle R2 to full triage traffic, hold at canary, or roll back to R1 |
-| Owner | Claims operations director with model-risk co-signature |
-| Trigger | R2 canary completed its planned exposure window on the claims population |
-| Available actions | Promote; extend canary; hold; roll back; promote to a narrower segment |
-| Value | Lower triage minutes per claim; fewer missing-document round trips |
-| Downside | Missed coverage signal, wrong urgency band, adjuster rework, rollback ambiguity |
-| Objective | Reduce median triage minutes while keeping the guardrail inside its upper bound |
-| Hard constraint | No claim decision without an adjuster; bundle components promoted together |
-| Scope | Personal lines property and motor, single jurisdiction, staffed hours |
-| Out of scope | Fraud scoring thresholds, payment amounts, reserving, subrogation referral |
+Four sub-questions have to be answered in order, because each constrains the next:
 
-The objective is measured in staffed minutes per accepted proposal, not per offered proposal.
-A bundle that proposes on fewer claims can look fast per proposal while helping almost nobody; the denominator must be eligible claims, and both numbers must be reported.
-The guardrail is defined over eligible claims where the packet contains a coverage signal that the bundle failed to surface and the adjuster later found it.
-The guardrail's numerator is claims with at least one such miss; the denominator is eligible claims in the window; the window is the canary exposure period.
+1. **What is the smallest effect worth detecting?** A 3-percentage-point automation gain is the business
+   case; a 75% relative increase in harmful writes (0.4% to 0.7%) is the harm. The canary must be powered
+   for the harm, because the harm is what is irreversible.
+2. **What sample does that need?** At 0.4% and 0.7%, 80% power and 5% one-sided alpha implies roughly
+   3,498 audited claims.
+3. **How long is that at an affordable traffic share?** 12.5% of 1,865.6 is 233.2 claims a day, so 15 days.
+   Raising the share to 20% would shorten it to 9.4 days but consumes audit capacity at 93% and touches a
+   fifth of the retrieval index with canary data.
+4. **What happens when several guardrails are monitored at once?** Three guardrails at 80% power each need
+   about 12,000 claims, which no canary of this size can supply. The design must therefore choose leading
+   indicators with large effects rather than outcome guardrails with small ones.
 
-**Counterfactual.** Holding the release at R1 costs nothing measurable in labour terms and defers the improvement.
-Extending the canary costs calendar time and consumes reviewer attention, because every canary claim still receives the full labelled review.
-Rolling back costs a release cycle and, if R2 already produced triage proposals that adjusters accepted, some accepted proposals may need re-checking for the specific fields that changed.
-Narrow promotion, for example property-only, is a real option when the regression is concentrated in one loss family.
-
-**Why the obvious framing fails.** The obvious framing asks "is the new model better?" That question cannot be answered usefully, because the bundle changes six things at once and the canary only observes the assembled behaviour.
-A model-only comparison would hold the prompt and index fixed, which is not the release artefact anyone would deploy.
-The promotion question is therefore about the composed bundle's behaviour under the guardrail, plus the ability to identify which component to change if the guardrail fails.
-
-**Takeaway.** Answer a promotion question with a bundle-level comparison, a predeclared guardrail, and a rollback that restores every component.
+The question the case actually settles is the fourth. The naive answer - "monitor six guardrails and promote
+if all pass" - is arithmetically impossible at any affordable canary length, and pretending otherwise is how
+a canary becomes a ritual.
 
 ## 4. Assumptions & Constraints
 
-| ID | Assumption or constraint | Type | Verification plan | Status | Impact if wrong | Fallback | Recheck trigger / owner |
-|---|---|---|---|---|---|---|---|
-| A-01 | Adjuster accept/reject labels are captured per field | Data | Field-level audit of 200 sampled claims | unverified | Rejection analysis impossible; cannot attribute regressions | Manual sample review only | Any UI change / ops analytics |
-| A-02 | The coverage-signal guardrail can be adjudicated from the packet | Data | Dual review of 120 claims with disagreement adjudication | unverified | Guardrail noisy, promotion decision unstable | Widen to team lead adjudication | Policy wording change / model risk |
-| A-03 | Claim packets in canary match full-traffic mix | Data | Compare loss-type and channel mix canary vs trailing four weeks | unverified | Canary result does not transfer | Stratified promotion | Seasonal shift / marketing campaign |
-| A-04 | Bundle components can be pinned and rolled back together | Infrastructure | Staged rollback drill on a shadow lane | unverified | Partial rollback leaves mixed versions | Freeze promotions until drill passes | Registry change / platform team |
-| A-05 | Reviewer capacity exists for labelled canary review | Business | Capacity ledger against arrival rate | unverified | Canary underpowered or delayed | Extend window, reduce scope | Staffing change / ops |
-| A-06 | LLM price and token profile stay fixed during the window | Business | Dated price sheet and token histogram | unverified | Cost arithmetic drifts | Reprice and re-decide | Provider pricing change / finance |
-| A-07 | Missed-signal rate is stationary within the window | Model | Split-window comparison | unverified | Guardrail crossing is time-confounded | Longer window, sequential test | Peril season / catastrophe event |
-| A-08 | No claim decision is produced without an adjuster record | Safety | Executor-side assertion and audit query | unverified | Regulatory and ethical exposure | Disable proposal path | Any workflow change / compliance |
-| C-01 | Promotion requires both operations and model-risk approval | Governance | Approval record with two identities | confirmed by scenario | Single-signature promotion possible | None; block | Policy revision |
-| C-02 | Canary share is capped at 5% of eligible claims | Governance | Assignment service configuration | confirmed by scenario | Blast radius grows | Reduce share | Risk appetite change |
-| C-03 | Full-traffic promotion must be reversible within one staffed hour | Operations | Rollback drill timing | unverified | Containment slower than promised | Pre-stage artifact pins | Registry change |
-| C-04 | Claim packets contain special-category data under retention limits | Privacy | Data-classification record | confirmed by scenario | Logging design invalid | Redact and shorten retention | Retention policy change |
-| C-05 | Guardrail upper bound is 1.20% of eligible claims | Governance | Signed threshold in evaluation manifest | confirmed by scenario | Promotion rule undefined | Re-derive with owners | Annual threshold review |
-| C-06 | Reviewers cannot see model identity during adjudication | Evaluation | Blinded review harness check | unverified | Reviewer bias inflates apparent quality | Re-run blinded | Tooling change |
+All values ILLUSTRATIVE.
 
-The three assumptions most likely to reverse the recommendation are A-03, A-04, and A-07.
-If canary mix differs materially from full traffic, the guardrail estimate transfers poorly, and a stratified or narrower promotion is the correct action.
-If rollback cannot restore all six bundle components, a successful canary does not justify promotion, because containment is part of the promotion contract.
-If the missed-signal rate is non-stationary within the window, for example because a storm event changes the loss mix mid-window, the estimate is confounded and the window must be re-run or analysed by peril stratum.
+| Assumption | Value | Unit | Role |
+|---|---|---|---|
+| Claims per business day | 3,200 | claims/day | volume base |
+| Auto-eligible share | 58.3% | of claims | the only claims the release affects |
+| Auto-eligible volume | 1,865.6 | claims/day | 3,200 x 0.583 |
+| Baseline harmful-write rate | 0.400% | of auto-eligible claims | p0, must not degrade |
+| Candidate rate | 0.700% | of auto-eligible claims | p1, the regression to detect |
+| Severity mix | 55/28/13/4% | of harmful events | four severity bands |
+| Severity by band | 70/320/1,700/9,200 | USD/event | mean 717.1 USD |
+| Canary traffic share | 12.5% | of auto-eligible | w |
+| Audit sample | 100% of canary auto-decisions | of canary | every canary claim is reviewed |
+| Audit time | 65 | seconds/claim | reviewer confirms or reverses |
+| Audit cost rate | 28 | USD/hour | 0.5056 USD/claim |
+| Audit capacity | 400 | claims/day | the binding operational limit |
+| Engineering cost | 9 eng-days at 900 | USD/day | 8,100 USD per bundle cycle |
+| Releases per year | 12 | cycles | cadence target |
+| Reversal window for harm | 21 | days | how long exposure runs before detection |
+| Benefit of release | 1,453 | USD/day | 3,200 x 0.031 x 19 min x 0.771/min |
 
-**Takeaway.** Each critical assumption has a check and a consequence; an unverified assumption is a reason to extend the canary, not a reason to promote.
+Constraints:
+
+- **Promotion is atomic.** No subset of the six artifacts may be promoted; a partial release is treated as a
+  new bundle requiring its own canary. This is a hard rule because the failure it prevents - prompt without
+  routing table - is invisible in the metrics that a partial release would report.
+- **The audit is the measurement.** There is no label for "harmful write" in production telemetry; it exists
+  only because a reviewer looks at the claim. Canary sample size is therefore bounded by audit capacity, not
+  by traffic.
+- **Audit capacity is 400 claims/day.** At a 12.5% share the audit runs at 58.3% utilisation. At 20% it runs
+  at 93.3%, which is a queue, not a plan.
+- **The canary writes to shared state.** Its decisions enter the same retrieval index used by the stable
+  version. Fifteen days of 233.2 claims a day at about 1.5 chunks each is 5,247 chunks; against a 42,000-chunk
+  index that is 12.5% contaminated before promotion is even decided.
+- **No mid-canary threshold changes.** The decision rule is fixed before the first canary claim, because the
+  alternative is an unbounded search for a passing criterion.
 
 ## 5. Data, Tools & Method
 
-### 5a. Data Specification
+### 5a Data Specification
 
-| Field | Specification |
-|---|---|
-| Unit of analysis | One claim packet version at triage time; one row per claim per bundle |
-| Volume and window | 18,000 claims per staffed week (illustrative); canary window expressed in eligible claims |
-| Keys | `claim_id`, `packet_version`, `bundle_id`, `adjuster_id` (pseudonymous), `review_id` |
-| Inputs | Loss type code, loss date, policy effective window, free-text description, attachment manifest, channel |
-| Outcome | Adjuster final route, document requests raised, urgency band, accepted/changed/rejected proposal fields |
-| Guardrail label | Binary: at least one coverage signal present in packet but absent from proposal, adjudicated by two reviewers |
-| Population | Personal lines property and motor claims in the jurisdiction |
-| Exclusions | Claims with no packet at triage; duplicate submissions; claims already in litigation; test accounts |
-| Join semantics | Packet version joined to the review record produced at the same version; later edits never overwrite the reviewed version |
-| Splits | Assignment is by hashed claim identifier with a fixed salt, so the same claim always lands in the same arm |
-| Maturity | Guardrail label is available only after reviewer adjudication, typically next staffed day |
+**Grain.** One row per claim-release decision: `(claim_id, release_id, arm, decision, confidence)`. A claim
+appears in exactly one arm per release. Audit rows join on `claim_id` and carry `reviewer_id`,
+`confirmed_harmful`, and `review_seconds`.
 
-The exclusion list matters for the denominator.
-Claims with no packet at triage are not evidence about the bundle; they are an intake defect and belong to a separate metric.
-Duplicate submissions inflate the numerator if they share a root cause and are counted twice; deduplicate on `claim_id` plus loss date.
-Litigation claims follow a different route with legal involvement and are out of scope for this promotion.
+**Cut-off.** The decision timestamp is `decision_ts`; the audit label arrives up to 21 days later. The canary
+runs on decision timestamps; the harm curve runs on label timestamps. Mixing them is the most common
+analysis error in this domain, and it produces a canary that looks clean because the bad claims have not
+been audited yet.
 
-The split uses a hash of the claim identifier with a salt fixed for the release.
-Hashing rather than random assignment prevents a claim from being re-triaged into the other arm after a packet correction, which would contaminate the comparison.
-The salt is part of the bundle manifest, so a re-run reproduces the same assignment.
+**Population.** Auto-eligible claims in the canary arm, on business days, excluding claims that arrived
+before the release and were re-decided after it (a re-decision on an old packet is not evidence about the
+new bundle's behaviour on new packets).
 
-### 5b. Tools & Stack
+**Keys.** `claim_id`, `release_id`, `artifact_versions` (a six-row map), `audit_id`. The artifact-version map
+is what makes a canary attributable: without it, a regression cannot be assigned to a bundle rather than to
+a coincident change.
 
-| Component | Role in this case | Version pin required |
-|---|---|---|
-| Prompt registry | Stores reviewer-facing instructions per bundle | Prompt hash |
-| Model endpoint | Produces structured triage proposal | Model identifier and snapshot |
-| Tool schemas | Define proposal fields and citation retrieval | Schema hash |
-| Retrieval index | Supplies policy wording fragments for citations | Index build identifier |
-| Policy table | Coverage rules used for validation | Policy version |
-| Evaluation suite | Computes metrics and thresholds | Suite identifier |
-| Assignment service | Applies hash-based canary assignment | Salt and configuration |
-| Review UI | Captures field-level accept/change/reject | UI release |
-| Audit store | Append-only records of proposals and reviews | Retention policy |
-| Rollback harness | Restores the previous bundle pins | Drill record |
+**Units.** Rates as proportions of auto-eligible claims; harm in USD/event; time in days and seconds; cost in
+USD undiscounted. All annualization uses 255 business days.
 
-None of these components is optional, because the promotion contract is a statement about the assembled behaviour.
-A prompt change without an index change still alters citations; an index change without a prompt change still alters which wording the proposal can cite.
-Treating the bundle as one artefact is what makes rollback meaningful.
+**Fields available at decision time.**
 
-### 5c. Method Summary
+| Column | Type | Meaning | Available pre-decision |
+|---|---|---|---|
+| claim_id | string | packet identifier | yes |
+| severity_band | enum 1-4 | exposure band from reserve estimate | yes |
+| confidence | float [0,1] | agent decision confidence | yes |
+| arm | enum control/canary | traffic assignment | yes |
+| decision | enum approve/refer/evidence | proposed routing | yes |
+| artifact_versions | map | six version strings | yes |
+| review_seconds | int | audit time | no |
+| confirmed_harmful | bool | auditor verdict | no (up to 21 days) |
+| reversal_cost | USD | cost when harm is caught late | no |
 
-The method has four stages: assemble and pin, shadow, canary, and decide.
+**What is not available at decision time.** The auditor's verdict, the reversal cost, whether the claim will
+be litigated, and whether a harmed claimant will complain through another channel. Every analysis below that
+uses harm uses the label, which is why harm is reported on a 21-day lag and why the canary's decision rule
+uses audited harm counts rather than production signals.
 
-```text
-[Claim packet v] -> [Validate schema + policy fields]
-                          |
-                          v
-                  [Bundle R2 pinned]
-                          |
-             +------------+-------------+
-             v                          v
-   [Shadow lane: no reviewer]   [Canary lane: 5% + labelled review]
-             |                          |
-   compare proposals offline      compute guardrail + minutes
-             |                          |
-             +------------+-------------+
-                          v
-             [Promotion decision with predeclared rule]
-                          |
-        +-----------------+------------------+
-        v                 v                  v
-   [Promote]        [Extend canary]     [Roll back]
-```
+### 5b Tools & Stack
 
-| Candidate | Evidence considered | Strength | Limitation / avoid when | Status | Revisit if |
-|---|---|---|---|---|---|
-| Rule table only (R1) | Three years of routing rules | Auditable, cheap, deterministic | Misses mixed-cause losses | Baseline | Never; it is the comparator |
-| Rule table plus LLM summary | Shadow comparison | Cheap, low authority | Summary does not route | Rejected: no routing gain measured in design review | If summaries reduce reading independently |
-| Bundle R2 with citations | Canary | Composed behaviour, explainable fields | Needs labelled review capacity | Chosen for canary | Guardrail breach or rollback failure |
-| Model-only upgrade, fixed prompt | Offline suite | Isolates model contribution | Not a deployable artefact | Considered, not tested | If attribution is required after a regression |
-| Manual triage with no rules | Operations log | Maximally careful | Slow, inconsistent | Rejected | If guardrail cannot be measured |
+- **Traffic splitter.** Deterministic hash of `claim_id` into arms, with a versioned salt. Deterministic
+  assignment matters because a claim re-submitted must land in the same arm, and because an independent
+  re-analysis must reproduce the split.
+- **Bundle manifest.** Six artifact versions, a content hash per artifact, and a bundle hash. Promotion
+  writes one manifest row; there is no per-artifact promotion API.
+- **Audit console.** Presents the claim packet, the agent's decision, the cited clause, and a three-way
+  verdict (correct / harmful / needs-human). Every canary claim is reviewed within 48 hours.
+- **Sequential test engine.** A one-sided exact binomial test with a fixed look schedule, plus an SPRT variant
+  evaluated for comparison. The exact test is used because at these rates the normal approximation is
+  anti-conservative in the tail.
+- **Guardrail registry.** Declares every monitored metric with its baseline, threshold, sample requirement,
+  and owner. A metric without a declared sample requirement is a dashboard, not a guardrail.
+- **Rollback controller.** Reverts the manifest to the prior bundle hash and freezes the queue. Measured in
+  minutes, budgeted against the SLO, and exercised in a drill before the first canary.
 
-The method deliberately does not fit a model-comparison experiment.
-The comparison is between two operational policies: R1 plus full manual read, and R2 plus assisted read.
-That is why the canary is the unit of evidence and why the offline evaluation suite is used as a gate rather than a verdict.
+### 5c Method Summary
 
-### 5d. Data provenance, quality, exclusions and leakage controls
+1. Establish the baseline and candidate harmful-write rates and the severity-weighted cost of a harmful event.
+2. Compute the harm of shipping a regression for the reversal window, which is the exposure the canary prevents.
+3. Compute the benefit of shipping earlier, which is the exposure the canary costs.
+4. Choose the decision rule: an exact one-sided binomial test with a fixed critical count at 5% alpha.
+5. For candidate durations, compute the achieved power and the total expected cost of the decision.
+6. Minimise total expected cost over duration, subject to audit capacity and index contamination.
+7. Test whether the guardrail set is jointly evaluable; if not, replace outcome guardrails with leading
+   indicators and declare the substitution.
+8. Stress the three assumptions that carry the answer: independence of claims, absence of contamination, and
+   reversibility of harm.
 
-Provenance begins with the claim record and its packet version.
-Packets are immutable once submitted for triage; corrections create a new version with a new review.
-The guardrail label is derived by two reviewers independently reading the packet and the proposal, then recording whether a coverage signal present in the packet was absent from the proposal.
-Disagreements go to a team lead, and the adjudicated label is stored with both original labels so agreement can be measured.
+### 5d Provenance, Quality, Exclusions, Leakage
 
-Leakage risks in this case are subtle rather than conventional.
-The first risk is label leakage through the proposal text: a reviewer who sees the proposal first may fail to notice signals the proposal omitted, because the proposal anchors attention. The mitigation is that reviewers read the packet first, then the proposal, with the packet read timed and recorded.
-The second risk is outcome leakage through later claim history. A reviewer who knows the claim was paid may infer that coverage applied. The mitigation is that the review record is created before payment activity is visible in the review tool.
-The third risk is assignment leakage through packet corrections; the hash-based split prevents re-randomisation after a correction.
+**Provenance.** The 0.4% baseline and 0.7% candidate come from an illustrative prior release audit. The
+severity mix is constructed to produce a mean of 717.1 USD, which is the only role those four numbers play.
+The audit time of 65 seconds is a work-measurement figure for a three-field verdict on a one-page packet.
 
-Missingness is handled explicitly: claims with an incomplete attachment manifest are reported as a separate stratum, not silently dropped, because the bundle's document-gap feature is most useful exactly there.
-Outliers in description length are retained; truncation policy is part of the bundle and its effect is measured by comparing truncated and untruncated shadow proposals on the same packet.
+**Quality.** Claims within a handler are correlated: the same handler makes similar decisions and the same
+packet format recurs. With 40 handlers, 233.2 canary claims a day gives 5.83 claims per handler per day, and
+an intraclass correlation of 0.05 inflates the variance by a design effect of 1 + (5.83-1) x 0.05 = 1.241,
+so 3,498 audited claims behave like 2,630 independent ones. The power figure above is therefore optimistic
+by roughly the ratio of the sample sizes; the corrected statement is that the design has about 69% power,
+not 78.7%.
 
-### 5e. Reproducibility and method-selection ledger
+**Exclusions.** Claims arriving during the canary that were already in flight before it, claims with a
+regulatory flag (they bypass the agent entirely), and claims whose packets were incomplete at decision time
+so that no determination was made. The last exclusion is not neutral: an incomplete packet is exactly where
+a new prompt is most likely to behave differently.
 
-| Artifact/source ID | Location | Version/date | Purpose | Accessibility | Reproduction limitation |
-|---|---|---|---|---|---|
-| SRC-01 | Internal model-risk policy (illustrative) | current | Defines dual approval | restricted | Cannot be quoted or verified here |
-| SRC-02 | Claims routing rule table (illustrative) | v7 | Baseline comparator | restricted | Rule precedence not reproduced |
-| RUN-01 | Canary guardrail computation | release candidate R2 | Guardrail estimate | constructed | No real claim data used |
-| RUN-02 | Labour arithmetic | this file, Section 6 | Cost comparison | constructed | Prices illustrative |
-| RUN-03 | Rollback drill plan | this file, Section 8d | Containment check | not executed | Drill outcome unknown |
-| EVAL-01 | Evaluation suite manifest | suite 4 | Threshold and power | constructed | Suite composition not reproduced |
+**Leakage.** Three leaks were avoided. (i) The canary's index writes are visible to the canary itself, so a
+mid-canary retrieval improvement cannot be distinguished from bundle performance - mitigated by freezing
+index writes for retrieval purposes and logging them separately. (ii) The audit reviewer sees the arm label
+in the console, which invites confirmation bias; the console must hide the arm. (iii) Re-using the launch
+sample to size the next canary, which makes every subsequent decision depend on the first.
 
-**Claim ledger**
+### 5e Reproducibility & Method-Selection Ledger
 
-| Claim ID | Exact claim and scope | Evidence type | Source/artifact | Supports | Does not establish |
-|---|---|---|---|---|---|
-| CLM-01 | Illustrative canary of 180 eligible claims per day at 5% share | illustrative | RUN-01 | Sizing arithmetic in 6.3 | Any real exposure |
-| CLM-02 | Baseline labour of 4,200 staffed hours per week at 14 minutes per claim | illustrative | RUN-02 | Economics in 6.4 | Real staffing |
-| CLM-03 | Break-even review time of 13.34 minutes | derived | RUN-02 | Sensitivity in 6.5 | Provider performance |
-| CLM-04 | Power-based sample need of 2,905 claims per arm | derived | EVAL-01 | Guardrail gate | Real effect size |
-| CLM-05 | Rollback contract requires six pinned components | derived | manifest design | Containment rule | Actual drill success |
-
-**Takeaway.** The evidence chain is explicit: constructed inputs, derived arithmetic, and an unexecuted drill are labelled as such wherever they influence the recommendation.
+| Decision | Method chosen | Alternative rejected | Why |
+|---|---|---|---|
+| Test | exact one-sided binomial | normal approximation | at 0.4% the normal tail is anti-conservative |
+| Look schedule | single look at a pre-declared n | continuous monitoring | continuous looks inflate alpha to 19%+ |
+| Power target | 80% for the harm outcome | 80% for every guardrail | jointly impossible at this sample |
+| Cost criterion | expected harm plus delayed benefit | significance alone | a powered test that costs more than it saves is wrong |
+| Traffic share | 12.5% | 20% | audit utilisation 58% vs 93% |
+| Clustering | design-effect correction | ignoring handler correlation | 5.83 claims per handler is not negligible |
+| Comparison | fixed sample vs SPRT | fixed only | SPRT cuts expected sample 41% but needs a sequential guard |
 
 ## 6. Analysis Walkthrough
 
-### 6.1 Bundle inventory and compatibility surface
+**Block 1 - the exposure the canary prevents.**
 
-The first step is to enumerate what actually changes between R1 and R2.
+```text
+FORMULA
+  H_21 = V_auto * (p_1 - p_0) * s_bar * T_rev
+WHERE
+  V_auto = auto-eligible claims per day              (claims/day)
+  p_0    = baseline harmful-write rate                (proportion)
+  p_1    = candidate harmful-write rate               (proportion)
+  s_bar  = severity-weighted mean harm per event      (USD/event)
+  T_rev  = reversal window                            (days)
+  H_21   = excess harm from shipping the regression   (USD)
+CONSTRAINT
+  p_1 > p_0; the difference is the only part the release changes; s_bar is constant across arms.
+NUMERICAL EXAMPLE
+  severity mean: 0.55*70 + 0.28*320 + 0.13*1700 + 0.04*9200
+               = 38.50 + 89.60 + 221.00 + 368.00 = 717.10 USD/event
+  delta rate   = 0.007 - 0.004 = 0.003
+  events/day   = 1865.6 * 0.003 = 5.597 excess harmful writes
+  harm/day     = 5.597     * 717.10 = 4,013.6 USD
+  over 21 days = 4,013.6   * 21     = 84,285 USD
+INTERPRETATION
+  Shipping the regression costs about 84,285 USD of excess harm before the
+  reversal window closes, against a benefit of 1,453 USD/day, or 30,513 over
+  the same 21 days. The harm is 2.76 times the benefit, which is the whole
+  case for testing at all.
+```
 
-| Component | R1 | R2 | Compatibility risk |
+Boundary: the formula assumes harm is fully reversed at the end of the window and that no claim escalates to
+litigation. If 2% of harmful events escalate at 40,000 USD, the mean severity rises to
+717.10 + 0.02*40,000 = 1,517.10 and the 21-day exposure becomes 5.597*1,517.10*21 = 178,323 USD. A single
+low-probability escalation class can triple the cost of shipping, which is why severity must be treated as a
+range and not a point.
+
+**Block 2 - the sample a decision needs.**
+
+```text
+FORMULA
+  n = ( z_alpha * sqrt(p_0(1-p_0)) + z_beta * sqrt(p_1(1-p_1)) )^2 / (p_1 - p_0)^2
+WHERE
+  z_alpha = 1.6449 (one-sided, alpha = 0.05)
+  z_beta  = 0.8416 (power 0.80)
+  n       = audited claims needed in the canary arm
+CONSTRAINT
+  Normal approximation; with n*p_0 = 3,498*0.004 = 14 the approximation is marginal,
+  so the operating characteristic is confirmed by an exact binomial enumeration.
+NUMERICAL EXAMPLE
+  sqrt(p_0(1-p_0)) = sqrt(0.004*0.996) = 0.06312
+  sqrt(p_1(1-p_1)) = sqrt(0.007*0.993) = 0.08337
+  numerator = (1.6449*0.06312 + 0.8416*0.08337)^2
+            = (0.10383 + 0.07016)^2 = (0.17399)^2 = 0.030272
+  denominator = (0.003)^2 = 0.000009
+  n = 0.030272/0.000009 = 3,363.6 -> round up to a look at 3,498
+  exact binomial at n = 3,498: reject if X >= 21
+    alpha = P(X >= 21 | p = 0.004) = 0.0473
+    power = P(X >= 21 | p = 0.007) = 0.7873
+INTERPRETATION
+  The exact enumeration gives 78.7% power at alpha 4.73%, close to the normal
+  approximation's 80% - the approximation is adequate for sizing here even
+  though it is not adequate for quoting a p-value at the boundary.
+```
+
+Counterexample: if the candidate rate were 0.55% instead of 0.70% - a 37.5% relative increase rather than
+75% - the required sample rises to about 15,000 claims, or 64 days at the same traffic share. The design
+cannot see small regressions at all, and any release note claiming it can is wrong. The honest statement is
+"this canary detects a 75% relative regression; it is blind to a 30% one."
+
+**Block 3 - duration versus expected cost.**
+
+```text
+FORMULA
+  E[T] = c_benefit * T + (1 - power(T)) * H_21 + c_cycle
+  power(T) = P( X >= k*(T) | p_1 ),  k*(T) = min{ k : P(X>=k | p_0) <= 0.05 }
+  n(T) = round(w * V_auto * T)
+WHERE
+  c_benefit = 1,453 USD/day of delayed benefit
+  H_21      = 84,285 USD of excess harm if the regression ships
+  c_cycle   = 8,100 USD engineering + 1,768 USD audit per cycle
+  w         = 0.125 traffic share
+CONSTRAINT
+  Audit capacity 400/day caps w*V_auto at 400, so w <= 0.2144; k*(T) is integer.
+NUMERICAL EXAMPLE
+   T   n(T)   k*   alpha   power    delay     E[harm]   total
+   3    700    7   0.024   0.223    4,359     65,505    69,864
+   5  1,166    9   0.048   0.430    7,265     48,033    55,298
+   8  1,866   13   0.041   0.544   11,624     38,425    50,049
+  10  2,332   16   0.029   0.566   14,530     36,621    51,151
+  14  3,265   20   0.044   0.754   20,342     20,742    41,084
+  15  3,498   21   0.047   0.787   21,795     17,927    39,722
+  21  4,897   28   0.042   0.880   30,513     10,131    40,644
+INTERPRETATION
+  The total is flat between 14 and 21 days and steep below 10. The optimum is
+  15 days at 39,722; three days costs 69,864, which is 30,142 more per cycle.
+  Across 12 cycles the difference is 361,704 USD a year - larger than the
+  entire engineering budget for the releases.
+```
+
+Boundary: the curve is not smooth because `k*(T)` jumps. At T = 9 the critical count is 14 and power is
+0.607; at T = 10 the count rises to 16 and power falls to 0.566. A longer canary can be *less* powerful than
+a shorter one at fixed alpha, which is why duration must be chosen from a table like this rather than by
+intuition. The rule that "more data is always better" is false under a fixed-alpha integer test.
+
+**Block 4 - whether the guardrail set is jointly evaluable.**
+
+```text
+FORMULA
+  n_g = ( z_alpha * sqrt(p_0(1-p_0)) + z_beta * sqrt(p_1(1-p_1)) )^2 / (p_1-p_0)^2
+  N   = max over guardrails of n_g   (fully powered set)
+  N'  = sum over guardrails of n_g   (each powered separately, split traffic)
+WHERE
+  each guardrail g has its own baseline p_0 and threshold p_1
+  N   = sample needed if every guardrail must reach 80% separately
+  N'  = sample needed if each guardrail gets its own powered canary
+CONSTRAINT
+  N' assumes the traffic can be split without interaction; in practice the guardrails share the same claims.
+NUMERICAL EXAMPLE
+  structured-output validity   0.994 -> 0.979   n_g = 5,000
+  citation coverage            0.972 -> 0.941   n_g = 4,500
+  harmful write                0.004 -> 0.007   n_g = 3,700
+  complex-stratum harm         0.009 -> 0.015   n_g = 2,500
+  latency p95 breach           0.05  -> 0.25    n_g =   200
+  tool-call retry              0.021 -> 0.030   n_g = 1,900
+  queue timeout                0.010 -> 0.019   n_g = 1,200
+  max = 5,000 (validity); sum = 19,000
+  available at 15 days x 233.2/day = 3,498
+INTERPRETATION
+  Only three of the seven guardrails are powered at this canary: latency
+  (200), queue timeout (1,200), and retry (1,900). The two that measure output
+  quality need 4,500-5,000 and would require a 21-day canary at 20% traffic
+  with 93% audit utilisation - and the validity guardrail's effect is in the
+  opposite direction (it should improve), so it is a safety trip, not a test.
+```
+
+Boundary: the max-and-sum framing assumes guardrails are independent. They are not: a prompt change that
+raises refusal rates improves validity and degrades queue timeouts on the same claims. With positive
+correlation the effective number of tests is smaller than seven but the joint false-alarm rate is higher
+than 1-(0.95)^7 = 0.30 suggests, and a Bonferroni correction across six tests inflates each required sample
+by 1.693, pushing every powered guardrail out of reach. The design response is not a better correction; it
+is to nominate one outcome guardrail and defend it.
+
+**Block 5 - sequential monitoring as an alternative.**
+
+```text
+FORMULA
+  LLR(k) = k * ln(p_1/p_0) + (n-k) * ln((1-p_1)/(1-p_0))
+  continue while B < LLR < A
+  A = ln((1-beta)/alpha) = ln(0.80/0.05) = 2.7726
+  B = ln(beta/(1-alpha)) = ln(0.20/0.95) = -1.5581
+WHERE
+  k = observed harmful count, n = audited claims
+  A, B = Wald boundaries for alpha = 0.05, beta = 0.20
+CONSTRAINT
+  Requires i.i.d. Bernoulli claims; breaks under handler clustering, which is why the
+  sequential design is compared and not adopted.
+NUMERICAL EXAMPLE
+  ln(p_1/p_0)         = ln(1.75)      = 0.55962
+  ln((1-p_1)/(1-p_0)) = ln(0.99699)   = -0.003017
+  E[LLR step | p_0] = 0.004*0.55962 + 0.996*(-0.003017) = -0.000766
+  E[LLR step | p_1] = 0.007*0.55962 + 0.993*(-0.003017) =  0.000922
+  ASN under p_0 = ((1-0.05)*(-1.5581) + 0.05*2.7726) / -0.000766 = 1,751
+  ASN under p_1 = (0.80*2.7726 + 0.20*(-1.5581)) / 0.000922     = 2,068
+  fixed-sample equivalent = 3,498
+  saving at p_1 = 1 - 2068/3498 = 0.409
+INTERPRETATION
+  The SPRT reaches a decision in 2,068 claims instead of 3,498 when the
+  regression is real, and 1,751 when it is not - a 41% reduction in expected
+  audit load. The upper boundary is crossed at 4.95 harmful events, so a
+  regression announces itself in about five harmful writes.
+```
+
+Boundary: the SPRT assumes the harmful-event rate is constant within an arm. Under handler clustering the
+effective sample is 2,630 rather than 3,498, so both ASNs understate the work by about 25%, and the ASN
+calculation itself assumes the LLR steps are independent and identically distributed - which clustering
+breaks. The SPRT is therefore the right tool for a pilot and the wrong tool for the release gate until the
+clustering is resolved by per-handler stratification.
+
+**Block 6 - contamination of the shared index.**
+
+```text
+FORMULA
+  C = ( n_canary * c_bar ) / I
+WHERE
+  n_canary = claims decided in the canary arm     (claims)
+  c_bar    = mean retrieved chunks cited per claim (chunks/claim)
+  I        = index size                            (chunks)
+  C        = share of the index that now contains canary-written content
+CONSTRAINT
+  Assumes canary writes are not tagged and excluded from the stable arm's retrieval.
+NUMERICAL EXAMPLE
+  n_canary = 233.2 * 15 = 3,498
+  c_bar    = 1.5
+  chunks   = 3,498 * 1.5 = 5,247
+  I        = 42,000
+  C        = 5,247/42,000 = 0.1249
+  at 7 days:  233.2*7*1.5   = 2,449 -> C = 0.0583
+  at 21 days: 233.2*21*1.5  = 7,345 -> C = 0.1749
+INTERPRETATION
+  A fifteen-day canary contaminates 12.5% of the retrieval index with decisions
+  made by the version under test. If those decisions are wrong, the stable arm
+  inherits the error through retrieval even after the bundle is rolled back -
+  a rollback that reverses the model but not the index is a partial rollback.
+```
+
+Boundary: at C = 0.125 with a 1.8% harmful rate among canary decisions, 5,247*0.018 = 94 poisoned chunks
+remain after rollback. If each is retrieved 1.5 times a day, the stable arm inherits 141 contaminated
+retrievals per day, which is more than the 7.5 harmful events the canary was designed to detect. This is the
+single strongest argument against a long canary on shared state, and it inverts the duration result: the
+optimal canary is long enough to be powered but short enough that its residue is smaller than the effect it
+measures.
+
+**Block 7 - clustering and the design effect.**
+
+```text
+FORMULA
+  deff = 1 + (m - 1) * ICC
+  n_eff = n / deff
+WHERE
+  m    = mean claims per cluster (handler) = 233.2/40 = 5.83
+  ICC  = intraclass correlation of the harmful outcome within handler
+  deff = variance inflation
+CONSTRAINT
+  Requires equal cluster sizes; with unequal sizes use the harmonic mean, which raises deff.
+NUMERICAL EXAMPLE
+  ICC = 0.02: deff = 1 + 4.83*0.02 = 1.097 -> n_eff = 3,498/1.097 = 3,189
+  ICC = 0.05: deff = 1 + 4.83*0.05 = 1.241 -> n_eff = 3,498/1.241 = 2,818
+  ICC = 0.10: deff = 1 + 4.83*0.10 = 1.482 -> n_eff = 3,498/1.482 = 2,360
+  power at n_eff = 2,818, k = 20: P(X>=20|0.004) = 0.0591, P(X>=20|0.007) = 0.7635
+INTERPRETATION
+  At ICC 0.05 the canary's true power is about 76% against a nominal 78.7%, and at
+  ICC 0.10 it needs a 21-day canary to hold 80%. Clustering does not invalidate
+  the design; it moves the operating point, and it must be estimated from the
+  canary itself rather than assumed.
+```
+
+Boundary: ICC estimated from a single canary is itself uncertain - 40 clusters give a very wide interval, and
+an ICC of 0.10 cannot be distinguished from 0.02 with that many groups. The practical answer is to over-design
+by one step (choose 21 days when 15 looks sufficient) and to stratify the randomisation by handler so the
+within-handler contrast carries most of the information.
+
+### 6b Cross-checks on the walkthrough
+
+| Quantity | First route | Second route | Agreement |
 |---|---|---|---|
-| Model | Endpoint A snapshot a1 | Endpoint A snapshot a2 | New tokenizer; length accounting shifts |
-| Prompt | p11 | p14 | Adds citation requirement; output schema tightened |
-| Tool schema | t5 | t6 | `urgency_band` gains a fourth value |
-| Retrieval index | i3 | i4 | 12% of policy fragments re-chunked |
-| Policy table | pol2025-11 | pol2026-02 | One coverage exclusion clarified |
-| Evaluation suite | e2 | e3 | Guardrail definition unchanged; minutes metric adds field-level latency |
-
-Two compatibility facts follow immediately.
-First, the fourth urgency band is a schema change: any downstream consumer that enumerates three bands will either reject or misinterpret the new value.
-Second, the policy table change alters the meaning of a correct proposal for one exclusion, so proposals generated under R1 and reviewed under pol2026-02 are not comparable without restating them.
-
-The compatibility matrix must therefore be part of promotion, not an afterthought.
-
-```text
-[New bundle] -> [Consumer inventory] -> [Schema diff] -> [Compatible consumers] -> promote
-                        |                     |
-                        v                     v
-                 [Incompatible list] -> block or adapt
-```
-
-The count of consumers is small but not zero: the adjuster UI, the document-request service, the reporting extract, and the audit schema all read proposal fields.
-A promotion that ignores the reporting extract produces silent nulls in a weekly report, which is a failure that no guardrail on claims would catch.
-
-### 6.2 Canary share and exposure arithmetic
-
-The canary share is 5% of eligible claims.
-With 3,600 claims per staffed day and 62% eligible, eligible claims per day are 3,600 × 0.62 = 2,232.
-At a 5% share, the canary receives 2,232 × 0.05 = 111.6 eligible claims per day.
-Reviewer capacity in the illustrative ledger is 180 labelled reviews per staffed day, so the canary is reviewable with headroom of 68.4 reviews per day.
-
-The 62% eligibility rate is itself an assumption, not a measurement.
-If eligibility is 55%, canary volume is 3,600 × 0.55 × 0.05 = 99 claims per day, and the time needed for a fixed sample grows proportionally.
-
-### 6.3 Statistical gate on the guardrail
-
-The guardrail is a small-proportion comparison: missed-signal claims per eligible claim, R1 versus R2.
-A decision rule that says "promote if the canary rate is below 1.20%" is a threshold rule on a noisy estimate; it does not control the probability of promoting a bundle whose true rate is above the threshold.
-
-A two-proportion design is more defensible. Using a one-sided test at 5% with 80% power, and illustrative true rates of 0.8% for R1 and 1.6% for R2, the required per-arm sample is
-
-```text
-FORMULA [C-01]: n = (z_alpha + z_beta)^2 * (p1(1-p1) + p2(1-p2)) / (p2 - p1)^2
-WHERE: n is eligible claims per arm; p1, p2 are guardrail proportions;
-       z_alpha = 1.959964 (two-sided 5%); z_beta = 0.841621 (80% power).
-CONSTRAINT: independent claims, stable rates within the window, no interim peeking.
-NUMERICAL EXAMPLE: p1=0.008, p2=0.016;
-  (2.801585)^2 = 7.848881;
-  0.008*0.992 = 0.007936; 0.016*0.984 = 0.015744; sum = 0.023680;
-  n = 7.848881 * 0.023680 / 0.000064 = 0.1858647 / 0.000064 = 2904.1 -> 2,905 per arm.
-INTERPRETATION: about 2,905 canary claims and 2,905 comparable baseline claims are needed
-to distinguish these two rates with the stated error rates.
-```
-
-The baseline arm does not need to be contemporaneous at the same rate of randomisation, but it does need the same adjudication protocol.
-Using a historical baseline with a different reviewer pool is a validity threat, not a shortcut.
-
-At 111.6 canary claims per staffed day, 2,905 canary claims require 2,905 / 111.6 = 26.0 staffed days, about five staffed weeks.
-If the baseline arm must also be reviewed concurrently at the same 5% share, the window doubles in calendar terms unless the baseline review is drawn from the existing audit sample.
-
-A cheaper sequential design is available: a group-sequential or sequential probability ratio test can stop early when the evidence is decisive.
-It changes the decision rule and must be declared before the window opens; a post-hoc "we looked at day nine and it looked fine" is not a decision rule.
-The illustrative case keeps the fixed-sample design for clarity and records the sequential alternative as untested.
-
-### 6.4 Labour economics of the bundle
-
-The economics must be computed on staffed minutes, not on model tokens, because tokens are a rounding error next to adjuster time in this workload.
-
-```text
-FORMULA [C-02]: H_base = N * m_base / 60
-WHERE: H_base staffed hours per week; N claims per week; m_base minutes per claim; 60 minutes/hour.
-NUMERICAL EXAMPLE: N=18,000; m_base=14; H_base = 18,000*14/60 = 4,200 hours.
-INTERPRETATION: 4,200 staffed hours per week at 36 productive hours per FTE is 116.67 FTE-weeks.
-```
-
-The assisted path applies only to eligible claims, and its saving depends on how much reading the proposal removes.
-
-```text
-FORMULA [C-03]: H_assist = [N_e * m_assist + (N - N_e) * m_base] / 60
-WHERE: N_e eligible claims per week; m_assist assisted minutes per eligible claim.
-NUMERICAL EXAMPLE: N_e = 18,000*0.62 = 11,160; m_assist = 6;
-  H_assist = [11,160*6 + 6,840*14]/60 = [66,960 + 95,760]/60 = 162,720/60 = 2,712 hours.
-INTERPRETATION: the assisted path saves 4,200 - 2,712 = 1,488 staffed hours per week.
-```
-
-At an illustrative loaded cost of 52 currency units per staffed hour, the labour difference is 1,488 × 52 = 77,376 per week.
-The model cost for the same week, using 6,200 input tokens and 900 output tokens per eligible claim, priced at 3.00 per million input tokens and 15.00 per million output tokens, is
-
-```text
-FORMULA [C-04]: c_claim = t_in * p_in / 1e6 + t_out * p_out / 1e6
-NUMERICAL EXAMPLE: 6,200*3.00/1e6 = 0.0186; 900*15.00/1e6 = 0.0135;
-  c_claim = 0.0186 + 0.0135 = 0.0321 per eligible claim.
-  Weekly model cost = 11,160 * 0.0321 = 358.24.
-INTERPRETATION: model spend is 0.46% of the labour difference; the decision is not token-price-driven.
-```
-
-Adding an illustrative platform and review-tooling charge of 6,000 per week, the net difference is 77,376 − 358.24 − 6,000 = 71,017.76 per week.
-That number is a modelled difference under constructed assumptions, not a saving anyone realised.
-
-**Check.** 1,488 hours × 52 = 77,376. 11,160 × 0.0321 = 358.236, which rounds to 358.24. 77,376 − 6,358.24 = 71,017.76. All three lines reconcile.
-
-### 6.5 Sensitivity and the break-even review time
-
-The most fragile input is `m_assist`, because it is the quantity the bundle actually changes and the one no offline suite estimates credibly.
-
-```text
-FORMULA [C-05]: m* = m_base - (c_fixed * 60) / (c_hour * N_e)
-WHERE: m* break-even assisted minutes; c_fixed weekly fixed model plus platform cost;
-       c_hour loaded hourly cost; N_e eligible claims per week.
-NUMERICAL EXAMPLE: c_fixed = 6,358.236; c_hour = 52; N_e = 11,160;
-  m* = 14 - (6,358.236*60)/(52*11,160) = 14 - 381,494.16/580,320 = 14 - 0.6574 = 13.34 minutes.
-INTERPRETATION: the assisted path stops paying for itself only if it costs more than
-about 13.3 minutes per eligible claim - that is, if it barely saves any reading at all.
-```
-
-| Assisted minutes per eligible claim | Weekly net difference | Reading of the result |
-|---|---|---|
-| 4.5 | 85,525.76 | Optimistic; requires near-perfect proposal acceptance |
-| 6.0 | 71,017.76 | Base case |
-| 8.0 | 51,673.76 | Still positive; plausible if adjusters re-read documents |
-| 10.0 | 32,329.76 | Positive but modest |
-| 12.0 | 12,985.76 | Thin margin; platform cost assumption dominates |
-| 13.34 | 0 | Break-even |
-| 14.0 | -381.49 | Bundle adds cost with no time benefit |
-
-The economics are robust over a wide range, which is exactly why they must not be the gate.
-A bundle can be strongly economic and still unpromotable because it raises the missed-signal rate.
-Conversely, a bundle with a thin margin and a clean guardrail may be worth promoting for consistency reasons rather than cost.
-
-The second fragility is the review cost of the canary itself: 2,905 labelled reviews at, illustratively, 9 minutes each is 435.75 hours, or about 12.1 FTE-weeks at 36 hours.
-That is a real cost that must be staffed, and it is not in the per-claim economics above.
-
-### 6.6 Capacity and queue consequences
-
-Promotion changes arrival-to-first-touch time if reviewer capacity does not scale with the new workload.
-Under the assisted path, an adjuster handles an eligible claim in 6 minutes instead of 14, so service capacity per staffed hour rises from 60/14 = 4.29 claims to 60/6 = 10 claims for eligible work.
-With 62% eligibility, blended capacity per adjuster-hour is 0.62 × 10 + 0.38 × 4.29 = 6.20 + 1.63 = 7.83 claims, against a baseline of 4.29 claims.
-
-```text
-FORMULA [C-06]: rho = lambda / (c * mu_s)
-WHERE: rho utilisation; lambda arrivals per staffed hour; c adjusters on shift;
-       mu_s claims per adjuster-hour.
-NUMERICAL EXAMPLE: lambda = 3,600/9 = 400 claims per staffed hour;
-  baseline: c=100, mu_s=4.29 -> capacity 429/hour -> rho = 0.932;
-  assisted: mu_s=7.83 -> capacity 783/hour -> rho = 0.511.
-INTERPRETATION: the bundle creates large headroom; it does not by itself reduce queueing delay,
-because the binding constraint becomes document round-trips, not triage minutes.
-```
-
-A utilisation of 0.932 in the baseline implies long queues even before any model change, which is consistent with the operational complaint that started the project.
-The assisted path's 0.511 utilisation is not a service-level guarantee; it is a fluid approximation that assumes constant arrivals, no abandonment, and no document wait.
-
-**Takeaway.** The bundle's labour case is robust, its capacity effect is large, and neither fact licenses promotion without the guardrail.
-
-### 6.7 What we tried first and why it did not settle the question
-
-The first design compared model snapshots on an offline suite of 4,000 historical claims with fixed prompts and indices.
-That comparison is reported as `not tested` for promotion purposes, because it answers a different question: it isolates a model effect that will not exist in the deployed bundle.
-Its legitimate use is as a screening gate: if the offline suite shows a catastrophic guardrail regression, the canary is unnecessary.
-Its illegitimate use is as a promotion verdict, because the composed bundle with the new prompt and index can behave differently in either direction.
-
-A second design considered comparing R2 against R1 on the same claims in a shadow lane.
-That is useful for cost and latency, and it cannot observe adjuster behaviour, which is where the minutes actually change.
-Shadow therefore informs the canary design rather than replacing it.
-
-### 6.8 Robustness table
-
-| Stress or variation | Original condition | Alternative | Change in conclusion | Limitation | Decision consequence |
-|---|---|---|---|---|---|
-| Canary share | 5% | 10% | Sample reached in ~13 staffed days | Blast radius doubles | Risk sign-off required |
-| Eligibility | 62% | 55% | Canary 99/day; window ~29 days | Constructed | Extend window |
-| Guardrail bound | 1.20% | 1.00% | Sample need rises; promotion stricter | Power-dependent | More review capacity |
-| Baseline rate | 0.8% | 1.2% | Smaller detectable difference; larger n | Rate uncertainty | Sequential design |
-| Reviewer minutes | 9 | 6 | Review cost 290.5 hours | Reviewer skill | Staffing plan |
-| Rollback drill | passes | fails | No promotion regardless of canary | Containment | Fix registry first |
-| Loss mix drift | stable | storm week | Guardrail confounded | Stationarity | Stratify by peril |
-
-### 6.9 Document-gap precision as a second, cheaper gate
-
-The document-gap field has a different error structure from the coverage-signal field, and it deserves its own arithmetic rather than being folded into the guardrail.
-A missing-document flag creates a request to the claimant; a correct flag shortens the claim, and a wrong flag costs a needless round trip and annoys the claimant.
-The asymmetry is real but it is not the same as the coverage asymmetry, so the gap field can carry a numeric gate even when the coverage field cannot.
-
-Illustratively, 38% of eligible claims are missing at least one document at triage: 11,160 × 0.38 = 4,240.8 claims per week.
-The baseline rule table catches 55% of those, so it raises 2,332.44 correct requests.
-Suppose the bundle flags a broader set: it raises a request on 71% of the truly-gap claims, and its precision - the share of its flags that are genuinely missing documents - is the unknown that decides whether the field helps.
-
-If the bundle flags `f` claims and its precision is `p`, then the correctly flagged claims are `f × p` and its false flags are `f × (1 − p)`.
-With `f = 4,240.8 × 0.71 = 3,011.0` claims per week, the incremental correct flags over baseline are `3,011.0 × p − 2,332.44`.
-
-```text
-FORMULA [C-08]: net_gap = (f*p - t_base) * c_miss - f*(1-p) * c_false
-WHERE: f flagged claims/week; p precision in [0,1]; t_base baseline correct flags/week;
-       c_miss staffed minutes saved per correctly flagged gap (3.5);
-       c_false staffed minutes lost per false flag (4.0).
-CONSTRAINT: flags are approximately independent across claims; costs are constant;
-            c_false > c_miss because a false request consumes claimant and staff time.
-NUMERICAL EXAMPLE: f=3,011.0, t_base=2,332.44, c_miss=3.5, c_false=4.0.
-  At p=0.90: correct 2,709.9, incremental 377.5 -> +1,321.2 min;
-             false 301.1 -> -1,204.4 min; net +116.8 min/week.
-  At p=0.85: correct 2,559.3, incremental 226.9 -> +794.2 min;
-             false 451.6 -> -1,806.4 min; net -1,012.2 min/week.
-INTERPRETATION: the gap field pays only above 89.5% precision at these costs;
-below that, extra flags cost more in round trips than they save.
-```
-
-| Precision `p` | Correct flags | False flags | Gross saving (min) | False cost (min) | Net (min/week) |
-|---|---|---|---|---|---|
-| 0.70 | 2,107.7 | 903.3 | −786.6 | −3,613.2 | −4,399.8 |
-| 0.80 | 2,408.8 | 602.2 | +267.3 | −2,408.8 | −2,141.5 |
-| 0.835 | 2,514.2 | 496.8 | +636.2 | −1,987.2 | −1,351.0 |
-| 0.85 | 2,559.3 | 451.6 | +794.2 | −1,806.4 | −1,012.2 |
-| 0.90 | 2,709.9 | 301.1 | +1,321.2 | −1,204.4 | +116.8 |
-| 0.95 | 2,860.5 | 150.6 | +1,848.2 | −602.4 | +1,245.8 |
-
-The exact break-even solves `(f p − t_base) × 3.5 = f (1 − p) × 4.0`.
-Expanding, `3.5 f p − 3.5 t_base = 4.0 f − 4.0 f p`, so `7.5 f p = 4.0 f + 3.5 t_base`, and
-
-```text
-p* = (4.0*f + 3.5*t_base) / (7.5*f)
-   = (12,044.0 + 8,163.5) / 22,582.5
-   = 20,207.5 / 22,582.5 = 0.8948.
-```
-
-That threshold sits between the tabulated 0.85 and 0.90 rows, which is why neither row should be described as "the break-even point".
-Reporting "the field helps above 89.5% precision" is the honest form; rounding to "about 85%" would overstate the margin by roughly five points and would promote a field that loses about a thousand staffed minutes per week at that precision.
-
-The sensitivity to the false-flag cost is strong and worth stating explicitly.
-If a false request costs only 2.5 minutes because a clerk rather than the claimant resolves most of them, the threshold falls to 86.9% precision, and the 0.85 row moves from −1,012.5 to −335.0 minutes per week: closer to viability but still negative.
-At 6.0 minutes per false flag, which is plausible when the claimant must be re-contacted, the threshold rises to 91.7% and the 0.90 row turns negative.
-The gate therefore depends on an operational assumption about who absorbs the rework, which is exactly the kind of assumption that a promotion case must verify rather than assume.
-
-### 6.10 Review capacity during the canary
-
-The canary consumes reviewer capacity that would otherwise be available for quality audit.
-With 2,905 canary claims to review and a capacity of 180 labelled reviews per staffed day, of which 111.6 are consumed by new canary arrivals, the spare capacity for clearing the initial sample is 68.4 reviews per day.
-
-```text
-FORMULA [C-09]: T_days = n / (c_capacity - lambda_canary)
-WHERE: n reviews required; c_capacity reviews/day; lambda_canary arrivals/day.
-NUMERICAL EXAMPLE: n=2,905; c_capacity=180; lambda_canary=111.6;
-  T_days = 2,905 / 68.4 = 42.5 staffed days.
-INTERPRETATION: if the sample must be accumulated before adjudication, the window is
-42.5 staffed days, not the 26.0 that dividing by arrivals alone suggests.
-```
-
-The difference between 26.0 and 42.5 staffed days is the difference between an unbounded backlog and a staffing plan.
-Dividing by arrivals assumes that reviews happen instantly and that the sample can be analysed continuously.
-Dividing by spare capacity assumes a queue that must be drained, which is the operational reality when the same reviewers also do routine audit.
-
-Utilisation of the review pool is `111.6 / 180 = 0.62` during the window.
-At that utilisation a fluid queue is stable, and a modest increase in arrival rate or a reviewer absence can push it toward instability.
-The staffing consequence is that the canary should not start in a week with planned reviewer leave, which is a scheduling constraint that the arithmetic makes visible.
-
-### 6.11 What the arithmetic does and does not decide
-
-The labour difference, the break-even assisted time, the gap-precision threshold, and the review-capacity window are four independent quantities.
-They point in different directions under plausible shifts:
-the labour case is robust, the gap field is fragile at low precision, and the evidence window is staffing-bound.
-
-| Quantity | Base value | Dominant sensitivity | Decision role |
-|---|---|---|---|
-| Weekly labour difference | 1,488 hours | Assisted minutes per claim | Economic viability |
-| Break-even assisted time | 13.34 minutes | Fixed cost | Economic boundary |
-| Gap precision threshold | 89.5% | Cost of a false request | Field-level gate |
-| Canary window | 42.5 staffed days | Reviewer spare capacity | Evidence feasibility |
-| Guardrail bound | 1.20% upper bound | True miss rate | Promotion gate |
-
-**Takeaway.** Every material variation either lengthens the evidence window or narrows the promotion, and none turns a guardrail breach into a promotion.
+| mean severity | 0.55x70 + 0.28x320 + 0.13x1700 + 0.04x9200 | 38.5+89.6+221+368 | 717.10 both |
+| excess events/day | 5.597 | 1,865.6x0.007 - 1,865.6x0.004 = 13.059-7.462 | 5.597 both |
+| 21-day exposure | 4,013.6x21 | 5.597x717.1x21 | 84,285 both |
+| audit load/day | 0.125x1,865.6 | 233.2 claims x 65 s / 3,600 | 4.21 h both |
+| canary sample | 233.2x15 | 3,498 = k*/p_1 style sanity: 21/0.007 = 3,000 | 3,498 both |
+| cycle cost | 8,100 + 1,768 | 9x900 + 3,498x65/3,600x28 | 9,868 both |
 
 ## 7. The Finding
 
-The bundle's labour arithmetic is strongly favourable under constructed inputs: 1,488 staffed hours per week, a net modelled difference of 71,017.76 per week, and a break-even assisted time of 13.34 minutes that leaves a wide margin.
-That arithmetic does not answer the business question, because the promotion rule is dominated by the guardrail and by containment.
-The canary as designed needs about 2,905 eligible claims per arm, or roughly 26 staffed days at a 5% share, and the illustrative guardrail rates would be distinguishable at that size.
-No outcome is measured here: the case recommends the staged promotion protocol and its stop conditions, not a promotion.
-The main boundary is that a canary result transfers to full traffic only if the mix is comparable and the rollback drill has passed; if either fails, extend or narrow the promotion rather than promoting on schedule.
+Four findings, ordered by how much they change the release process.
 
-**Interview cue.** State the answer for an operations director in one sentence, then state the one number that could reverse it.
+1. **A three-day canary is not a canary.** It yields 700 audited claims, a critical count of 7, and a 22.3%
+   detection probability against a regression that would cost 84,285 USD. Three days is the duration the
+   team proposed because it fits the release cadence; it does not fit the arithmetic, and the gap is a
+   factor of 3.5 in expected detection.
+
+2. **The optimum is fifteen days, and it is flat.** Totals are 41,084 at 14 days, 39,722 at 15, 40,644 at 21.
+   Any duration in 15-21 days is defensible; anything under 10 is not. The flat region is what makes the
+   decision implementable: the team does not need a precise optimum, it needs to be stopped from choosing 3.
+
+3. **The guardrail set cannot be jointly powered, and pretending otherwise is the real defect.** Three of
+   seven guardrails reach 80% power at 3,498 claims. The two that measure output quality need 4,500-5,000.
+   A release policy that says "promote only if all guardrails pass" therefore either never promotes or
+   promotes on underpowered signals - usually the latter, because a dashboard with a green threshold is
+   easier to read than a power calculation.
+
+4. **The canary's own residue bounds its length.** Fifteen days writes 5,247 chunks into a 42,000-chunk shared
+   index, 12.5% of it, and a rollback that reverses the model does not reverse the index. At a 1.8% harmful
+   rate among canary decisions, 94 poisoned chunks survive, producing about 141 contaminated retrievals a
+   day - more than the 7.5 harmful events the canary was built to detect. The measurement contaminates the
+   thing it measures.
+
+The composite decision: fifteen days at 12.5% traffic, one pre-declared outcome guardrail (harmful write,
+critical count 21), four leading indicators at trip thresholds rather than power targets, index writes
+tagged and excluded from stable-arm retrieval, and a rollback drill before the first canary.
 
 ## 8. System/Solution Design
 
-### 8a. Offline / Training / Batch Path
+**Component 1 - bundle manifest with a single promotion verb.** Six content hashes and one bundle hash. The
+API exposes `promote(bundle_hash)` and no per-artifact write. Rejected subsets are not merely discouraged;
+they are unrepresentable, which is the only reliable way to prevent the prompt-without-routing-table failure.
 
-There is no training step in this design; the bundle uses a hosted model and a retrieval index built from policy documents.
-The offline path is a build-and-gate pipeline.
+**Component 2 - deterministic arm assignment.** `arm = hash(claim_id, salt, bundle_hash) mod 1000 < 125`.
+The salt rotates per release so that the same claims are not always in the canary, and the bundle hash in
+the key prevents arm re-use across releases.
 
-```text
-[Policy documents] -> [Chunk + embed] -> [Index i4] --+
-[Prompt p14] ------------------------------------------+--> [Bundle manifest]
-[Tool schema t6] --------------------------------------+         |
-[Policy table pol2026-02] -----------------------------+         v
-                                                        [Offline suite e3]
-                                                                 |
-                                                    +------------+------------+
-                                                    v                         v
-                                            [Gate passes]             [Gate fails]
-                                                    |                         |
-                                            [Shadow lane]              [Block release]
-```
+**Component 3 - blind audit console.** Reviewers see the packet and the decision, never the arm or the bundle
+version. The verdict is three-way: correct, harmful, needs-human. A two-way verdict forces a false binary on
+ambiguous claims and inflates apparent harm in the canary when reviewers are primed by an unfamiliar layout.
 
-Batch steps and their artefacts:
+**Component 4 - pre-declared decision rule.** The manifest carries the guardrail registry: for each metric,
+baseline, threshold, required sample, and whether it is a *test* (promotion depends on it) or a *trip*
+(rollback depends on it). Exactly one metric is a test. Everything else is a trip, which is a different
+claim: a trip does not need 80% power to detect a small change, it needs a threshold that fires only on an
+obvious one.
 
-| Step | Input | Output | Gate |
-|---|---|---|---|
-| Index build | Policy corpus snapshot | Index i4 with chunk manifest | Chunk coverage check; no empty sections |
-| Prompt assembly | Prompt p14 source | Compiled prompt hash | Schema conformance; citation instruction present |
-| Suite run | 4,000 historical packets | Field-level scores | No catastrophic regression band |
-| Shadow run | Live packets, no reviewer | Proposal log | Latency and cost profile within envelope |
-| Manifest seal | All component hashes | Immutable bundle record | Six components present, none floating |
+**Component 5 - index quarantine.** Canary decisions are written to a tagged namespace and excluded from
+retrieval by the stable arm. Promotion re-tags them. This is the component that makes a fifteen-day canary
+safe; without it, the duration trade-off in Block 6 reverses and the optimum becomes three days for the wrong
+reason.
 
-The suite is a gate, not a verdict: a pass admits the bundle to canary, and a fail blocks it.
-The suite's composition is versioned with the bundle so that a later reviewer can tell which claims were used.
+**Component 6 - rollback controller with a rehearsed budget.** Rollback is a manifest revert plus a queue
+freeze, measured in minutes against the SLO budget. A fifteen-minute rollback consumes 69.4% of the 21.6-
+minute three-day availability budget, so a canary that needs two rollbacks breaches the SLO by 39% on its own.
 
-### 8b. Online / Serving / Real-Time Path
-
-```text
-[Claim packet + adjuster identity] -> [Authenticate + authorize adjuster]
-                                              |
-                                              v
-                                   [Assign arm by claim hash]
-                                              |
-                     +------------------------+------------------------+
-                     v                                                 v
-              [R1 path: rules]                                  [R2 path: bundle]
-                     |                                                 |
-                     |                                    [Retrieve policy fragments]
-                     |                                                 |
-                     |                                    [Propose route + gaps + citations]
-                     |                                                 |
-                     +------------------------+------------------------+
-                                              v
-                                  [Validate proposal against pol2026-02]
-                                              |
-                                  +-----------+-----------+
-                                  v                       v
-                          [Invalid: no proposal]   [Valid: show to adjuster]
-                                                          |
-                                                  [Adjuster accept/change/reject]
-                                                          |
-                                                  [Record review + decision]
-                                                          |
-                                                          v
-                                              [Queue assignment + audit]
-```
-
-Timeouts and degradation are explicit.
-If retrieval exceeds 2,500 ms, the proposal is returned without citations and the UI marks it `unverified`; the adjuster then sees a route suggestion with no supporting text, which is a weaker but non-blocking state.
-If the model endpoint fails, the claim falls back to the rule path and the event is counted in a `bundle_unavailable` counter; the adjuster is never blocked by the bundle.
-If policy validation fails, the proposal is suppressed rather than shown with a warning, because a route that contradicts the current policy table is worse than no route.
-
-Authorization happens at the proposal boundary: the adjuster identity must be entitled to the claim's line of business, and the proposal record stores the identity that saw it.
-The model endpoint receives a packet rendered without direct identifiers where the task permits; the redaction step is part of the bundle and its misses are audited.
-
-### 8c. Key Design Decisions
-
-| Decision ID | Choice | Alternatives | Evidence | Tradeoff | Failure boundary | Revisit trigger |
-|---|---|---|---|---|---|---|
-| DEC-01 | Promote six components atomically | Independent component rollout | Compatibility matrix in 6.1 | Coarser rollback granularity | Any consumer schema mismatch | Registry supports partial pinning |
-| DEC-02 | Hash-based 5% canary assignment | Random per-request assignment | Reproducibility requirement | Slightly uneven daily split | Claim re-triaged after correction | Assignment service change |
-| DEC-03 | Guardrail at 1.20% with power-based sizing | Point-estimate threshold | Statistical reasoning in 6.3 | Longer window | Rate non-stationarity | Threshold review |
-| DEC-04 | Adjuster sees packet before proposal | Show proposal first | Anchoring risk in 5d | Slower per review | Reviewer time pressure | Blinded study result |
-| DEC-05 | Suppress policy-invalid proposals | Show with warning | Safety preference | Fewer proposals | Over-strict validation | Validation error analysis |
-| DEC-06 | Rollback target under one staffed hour | Same-day rollback | Containment promise | Requires pre-staged pins | Registry cold start | Infrastructure change |
-| DEC-07 | No autonomous decision path | Auto-route low-risk claims | Accountability requirement | Higher cost | None permitted | Regulatory change |
-
-### 8d. Architecture artifacts and operational readiness
-
-| Area | Design answer |
-|---|---|
-| Interfaces | Versioned proposal schema; explicit `unverified` flag; 2,500 ms retrieval timeout; audit record per proposal |
-| Data/state | Packet versions immutable; review records append-only; bundle manifest in registry |
-| Reliability | SLI: share of eligible claims receiving a valid proposal within 4 s; target 99% over staffed hours |
-| Resilience | Fallback to rules; circuit breaker on model endpoint; bounded retries with no proposal regeneration |
-| Recovery | Rollback restores six pins; in-flight claims finish under their recorded bundle |
-| Observability | Per-bundle guardrail dashboard; acceptance rate by field; `bundle_unavailable` counter |
-| Deployment | Canary by hash; promotion by registry switch; rollback by pin restore |
-| Security | Adjuster identity at proposal boundary; redaction audit; proposal access logged |
-| Economics | 0.0321 per eligible claim model cost; 6,358.24 weekly fixed |
-| Human workflow | Adjuster authority; team-lead adjudication; model-risk co-signature |
-
-The rollback drill is a specific artefact: restore R1 pins in a shadow lane, replay 200 recorded packets, and confirm that the proposal schema, citations, and queue assignment match the R1 record exactly.
-Passing the drill means the pins restore and the outputs reproduce; it does not prove that a live rollback is instantaneous under load.
-
-**Takeaway.** The design's containment claim is only as good as the drill that demonstrates pin restoration.
+| Component | What it guarantees | What it does not |
+|---|---|---|
+| Bundle manifest | no partial release exists | the bundle is the right set of six |
+| Deterministic arms | reproducible split, stable re-submissions | balance on unobserved confounders |
+| Blind console | verdict independent of arm | reviewer competence |
+| Declared rule | no post-hoc criterion search | the rule is well chosen |
+| Index quarantine | rollback reverses all six artifacts | retrieval behaviour of promoted content |
+| Rollback controller | recovery inside the SLO | the harm already written |
 
 ## 9. Evaluation & Validation
 
-| Evaluation field | Definition |
-|---|---|
-| Primary metric | Median staffed minutes per eligible claim from packet open to route confirmed |
-| Guardrail | Share of eligible claims with at least one packet-present coverage signal absent from the proposal, adjudicated |
-| Secondary | Field-level acceptance rate; document-gap precision; citation coverage; `bundle_unavailable` rate |
-| Baseline | R1 with full manual read, trailing four staffed weeks |
-| Pass rule | Guardrail upper confidence bound ≤ 1.20% and acceptance ≥ 65% with no field below 50% |
-| Test design | Hash-assigned canary with blinded dual adjudication |
-| Sample | 2,905 per arm for the stated difference; actual canary per day 111.6 |
-| Uncertainty | Wilson interval per arm; paired difference where the same claim is reviewed under both bundles in shadow |
-| Validity threat | Anchoring, mix drift, reviewer pool change, packet corrections |
-| Decision | Not executed; canary is proposed |
+**Primary metric - canary detection of the harmful-write regression.**
 
-The pass rule uses an upper confidence bound rather than a point estimate, which encodes the asymmetry between the two errors.
-Promoting a bundle that breaches the guardrail is worse than extending a canary that would have passed, because the breach affects claimants and creates rework.
+- Numerator: audited canary claims with a `confirmed_harmful` verdict.
+- Denominator: audited canary claims in the window. Population: auto-eligible claims assigned to the canary
+  arm, excluding regulatory-flagged and in-flight claims.
+- Window: decision timestamps over the canary duration, with labels given 21 days to mature.
+- Comparator: the control arm over the same calendar window, plus the pre-release baseline over the prior
+  quarter. The control arm is the primary comparator because it shares the calendar and the packet mix.
+- Guardrails: audit utilisation under 0.80; index contamination under 0.15; rollback time under 20 minutes;
+  reviewer agreement (kappa) above 0.60; refusal-rate change within 3 points of the automation gain.
+- Uncertainty: exact one-sided interval on the harmful rate. Eleven harms in 2,400 audited claims gives
+  0.46% with a Wilson interval of 0.26% to 0.82%, which straddles the 0.70% threshold - a canary that lands
+  there has not decided anything and must be extended, not promoted.
+- Status: **not executed.** No measurement exists; the design is `proposed` and every rate is ILLUSTRATIVE.
 
-```text
-FORMULA [C-07]: p_hat +/- z * sqrt(p_hat(1-p_hat)/n)
-NUMERICAL EXAMPLE: 24 misses in 2,905 -> p_hat = 0.008262;
-  se = sqrt(0.008262*0.991738/2905) = sqrt(0.000002820) = 0.001679;
-  upper 95% (one-sided z=1.645) = 0.008262 + 0.002762 = 0.011024 = 1.10%.
-INTERPRETATION: 24 misses in 2,905 is compatible with a true rate below the 1.20% bound.
-```
+**Secondary metric - decision quality at the guardrail level.** For each trip metric, the observed value and
+whether it crossed its trip threshold. Trips are reported as counts of crossings, not as p-values, because
+they were never powered to produce p-values and reporting them as such would be false precision.
 
-```text
-BOUNDARY CHECK: 36 misses in 2,905 -> p_hat = 0.012392;
-  se = sqrt(0.012392*0.987608/2905) = sqrt(0.000004213) = 0.002053;
-  upper = 0.012392 + 0.003377 = 0.015769 = 1.58% -> fails the 1.20% rule.
-```
+**Tertiary metric - audit cost per harmful event found.** 3,498 audits at 0.5056 USD = 1,768 USD per cycle
+against 5.597 excess events a day prevented. Over the fifteen days of a delayed release, the audit costs
+1,768 and the delay costs 21,795 - so audit is 7.5% of the price of the evidence.
 
-The boundary between 24 and 36 misses is 12 claims, which is why the sample size cannot be reduced casually.
-At 2,905 claims the interval half-width is about 0.28 percentage points one-sided, comparable to the entire gap between the base rate and the threshold.
-
-Guardrails beyond quality:
-
-| Guardrail | Threshold | Why |
-|---|---|---|
-| Adjuster override of urgency band | ≤ 12% | Signals calibration failure |
-| Citation precision (sample audit) | ≥ 90% | Wrong citations destroy trust |
-| `bundle_unavailable` rate | ≤ 0.5% of eligible | Availability regression |
-| Rollback drill | pass | Containment |
-| Review backlog | ≤ 1 staffed day | Evidence freshness |
-| Special-category exposure | zero unredacted fields in logs | Privacy |
-
-**Takeaway.** The evaluation is falsifiable: a stated sample, a stated bound, and a stated consequence for failure.
+**Validation of the arithmetic.** Every block was recomputed through a second route where one existed
+(Section 6b). The one route that does not close exactly is the normal-approximation sample size (3,363.6)
+against the exact enumeration (3,498 for a 21-count rule); the difference is the integer critical count and
+the discrete alpha, and the exact figure is the one used.
 
 ## 10. Action Taken
 
-No action taken as of 2026-11-10.
-The case remains a recommendation.
+The decision record adopts a fifteen-day canary with a single pre-declared test and rejects four alternatives.
 
-| Action field | Record |
-|---|---|
-| Recommendation | Run the canary as specified, then decide with the predeclared rule |
-| Approval status | Not submitted; would require operations and model-risk signatures |
-| Implementer | Claims platform team, with evaluation owner |
-| Effective scope | None; no bundle deployed |
-| Release strategy | Proposed: 5% hash canary, then staged 25/50/100 |
-| Stop/rollback | Guardrail upper bound breach, drill failure, or `bundle_unavailable` above 0.5% |
-| Excluded actions | No autonomous routing, no payment effect, no multilingual expansion |
+**Adopted.** Fifteen days, 12.5% share, 3,498 audited claims, critical count 21, alpha 0.0473, power 0.787.
+Index writes quarantined. Four trip metrics with obvious thresholds. Expected cost 39,722 per cycle; annual
+cycle cost including engineering and audit 12 x (21,795 + 1,768 + 8,100) = 379,956.
 
-The exclusion list is part of the decision, not a limitation of the write-up.
-A reviewer who asks why the agent does not simply route low-value claims should be answered with the accountability constraint: the adjuster's record is the decision, and the bundle informs it.
+**Rejected: three-day canary.** Cost 69,864 per cycle against 39,722, i.e. 30,142 more for a 22.3% test. The
+appeal of three days is cadence, and cadence is worth 8,100 of engineering per cycle - 3.7 times less than
+the harm it forgoes.
+
+**Rejected: 20% traffic share to shorten the canary.** At 20%, the same 3,498 claims arrive in 9.4 days, but
+audit utilisation rises from 58.3% to 93.3% and the audit queue becomes the constraint. The queue's coping
+behaviour is to shorten reviews, which lowers label quality, which lowers power - the saving in days is paid
+for in the measurement itself. 12.5% is the largest share that leaves the audit at a sustainable utilisation.
+
+**Rejected: SPRT as the gate.** Expected sample 2,068 against 3,498 is a 41% saving, and it is rejected only
+because the independence assumption fails under handler clustering (effective n 2,630) and because a
+sequential gate invites optional stopping by a release owner who can see the trajectory. The SPRT is adopted
+for the pilot programme, where a 25% underestimate is acceptable, and not for the gate.
+
+**Rejected: promoting on six guardrails at once.** Needs 19,000 claims in aggregate and 5,000 for the binding
+one; a Bonferroni correction across six tests inflates each required sample by 1.693. The policy would either
+never promote or promote on underpowered evidence. Replaced by one test plus trips.
+
+**Funded.** One audit team at 233.2 claims/day capacity 400, one rollback drill per quarter, and a quarterly
+re-estimate of the ICC and the severity mix, because both move the operating point.
 
 ## 11. Outcome & Results
 
-Outcome not yet measured.
+All values ILLUSTRATIVE, USD unless stated.
 
-| Metric | Baseline | After | Absolute change | Relative change | Uncertainty | Evidence | Limitation |
-|---|---|---|---|---|---|---|---|
-| Median triage minutes | 14 (illustrative) | not measured | — | — | — | constructed | No canary run |
-| Guardrail rate | 0.8% (illustrative) | not measured | — | — | — | constructed | No adjudication |
-| Field acceptance | not measured | not measured | — | — | — | none | UI not built |
-| Model cost per claim | 0 | 0.0321 (modelled) | +0.0321 | undefined from zero | price-dependent | derived | Illustrative price |
-| Net weekly difference | 0 | 71,017.76 (modelled) | +71,017.76 | undefined from zero | assumption-dependent | derived | Not realised |
-| Review cost of canary | 0 | 435.75 hours (modelled) | +435.75 | undefined from zero | capacity-dependent | derived | Not staffed |
+| Design | Share | Days | n | k* | Power | Delay | E[harm] | Total per cycle |
+|---|---|---|---|---|---|---|---|---|
+| Cadence-driven | 12.5% | 3 | 700 | 7 | 0.223 | 4,359 | 65,505 | 69,864 |
+| Short | 12.5% | 5 | 1,166 | 9 | 0.430 | 7,265 | 48,033 | 55,298 |
+| Medium | 12.5% | 8 | 1,866 | 13 | 0.544 | 11,624 | 38,425 | 50,049 |
+| Long | 12.5% | 14 | 3,265 | 20 | 0.754 | 20,342 | 20,742 | 41,084 |
+| Adopted | 12.5% | 15 | 3,498 | 21 | 0.787 | 21,795 | 17,927 | 39,722 |
+| Very long | 12.5% | 21 | 4,897 | 28 | 0.880 | 30,513 | 10,131 | 40,644 |
+| Wide | 20% | 10 | 3,731 | 23 | 0.756 | 14,530 | 20,540 | 35,070 |
+| Wide and long | 20% | 14 | 5,224 | 30 | 0.882 | 20,342 | 9,946 | 30,288 |
 
-Relative change from a zero baseline is reported as undefined rather than as an infinite percentage.
-The modelled net difference is not a realised saving; it is the arithmetic that would follow if the assisted minutes equalled six and prices held.
+The wide designs look better on this table and are still rejected, which is the most important reading of it.
+At 20% the audit runs at 93.3% utilisation, and the table's 65-second review time is a *mean under a
+sustainable queue*. Under a saturated queue the mean falls - reviewers cut corners - and the label error
+rises. The table prices the days saved and does not price the label degradation, which is why the decision
+uses the utilisation constraint as a hard filter before the cost comparison.
 
-A measurement plan belongs here because the section is otherwise empty of evidence.
-The plan: run the canary for 26 staffed days, adjudicate every canary claim, sample 2,905 baseline claims from the existing audit pool under the same protocol, compute Wilson bounds, and report median minutes with an interquartile range rather than a mean, because triage time is right-skewed.
-Owner: evaluation lead. Decision trigger: guardrail upper bound crosses 1.20% at any interim analysis with the sequential rule declared in advance.
+**Annual position.** Twelve cycles at the adopted design: engineering 97,200, audit 21,216, delay 261,540,
+expected harm 215,124. Total 595,080. At the three-day design: engineering 97,200, audit 4,243, delay 52,308,
+expected harm 786,060. Total 939,811. The adopted design is 344,731 cheaper per year, and 92% of the
+difference is the expected harm term.
+
+**Benefit-to-cost.** Per cycle, the release benefit over fifteen days is 21,795 against 9,868 of engineering
+and audit: 2.21 to 1. The ratio is thin enough that a 40% error in the benefit estimate would make the whole
+release programme marginal, which is why the benefit is tracked as a guardrail and not assumed.
+
+**Sensitivity - clustering.** At ICC 0.10 the effective sample falls to 2,360 and the adopted design's power
+falls to about 69%. Restoring 80% needs a 21-day canary, whose total is 40,644 - a 2.3% cost increase for
+the design to remain valid. Clustering is therefore affordable to accommodate and expensive to ignore.
+
+**Sensitivity - severity.** If 2% of harmful events escalate at 40,000 USD, mean severity rises to 1,517 and
+the 21-day exposure to 178,323. The three-day design's expected harm rises to 138,595 and its total to
+142,954, while the fifteen-day design's rises to 37,932 and its total to 59,727. The ranking is unchanged
+and the gap widens, so the conclusion is robust to the severity assumption in the direction that matters.
 
 ## 12. Failure Modes & What Went Wrong
 
-| Failure ID | Trigger and symptom | Discriminating test | Cause status | Blast radius | Containment | Prevention / owner | Verification |
-|---|---|---|---|---|---|---|---|
-| F-01 | Proposals omit a coverage signal present in the packet | Dual adjudication on 40 sampled claims | hypothetical | Claimant delay | Revert to R1 for the affected loss type | Guardrail gate; model risk | Canary bound within 1.20% |
-| F-02 | Urgency band value rejected by reporting extract | Schema diff against consumer inventory | hypothetical | Weekly report nulls | Restore R1 reporting mapping | Compatibility gate; platform | Consumer contract test |
-| F-03 | Rollback leaves index i4 active with prompt p11 | Replay 200 packets after pin restore | hypothetical | Mixed behaviour | Freeze promotions; manual pin audit | Drill as promotion prerequisite | Byte-identical proposal replay |
-| F-04 | Canary slower than baseline because adjusters double-read | Time-on-task instrumentation | hypothetical | Adoption stalls | Coaching, then reconsider design | Measure first-read acceptance | Median minutes decline |
-| F-05 | Anchoring suppresses reviewer detection of omissions | Packet-first reading protocol audit | hypothetical | Guardrail understated | Re-run blinded subset | Review UI enforces order | Disagreement rate stable |
-| F-06 | Packet mix drifts during a storm week | Stratified guardrail by peril | hypothetical | Wrong promotion decision | Extend window by stratum | Predeclare stratification | Stratum bounds reported |
-| F-07 | Model endpoint outage blocks triage | `bundle_unavailable` counter | hypothetical | Queue growth | Rule fallback | Circuit breaker; capacity headroom | Fallback latency measured |
-| F-08 | Citations point at superseded policy text | Citation audit against index i4 manifest | hypothetical | Wrong advice to adjuster | Suppress citations for affected section | Index build gate | Citation precision ≥ 90% |
-| F-09 | Review backlog exceeds one day | Review queue depth | hypothetical | Stale evidence | Add reviewers or cut share | Capacity ledger | Depth ≤ 1 day |
-| F-10 | Special-category text reaches logs | Log sampling and pattern scan | hypothetical | Privacy breach | Purge, restrict, notify per policy | Redaction gate | Zero unredacted fields |
-| F-11 | Promotion decided on point estimate | Decision record review | hypothetical | Unsafe promotion | Recompute with bound | Predeclared rule in manifest | Bound recorded |
-| F-12 | Same claim re-triaged into both arms | Assignment audit on corrected packets | hypothetical | Contaminated comparison | Exclude corrected claims | Hash with fixed salt | No claim in two arms |
+**F1 - Canary that cannot detect the regression it was built for.** The team runs three days, sees zero harms,
+and promotes. *Competing causes:* (a) the regression is absent; (b) the sample is too small (22.3% power);
+(c) the audit is incomplete so the numerator is undercounted. *Discriminating check:* compute the achieved
+power before the canary and the audit completion rate after it; a completion rate below 95% means (c),
+a power below 40% means (b), and only after both are excluded is (a) credible. *Correction:* declare the
+required n and k* in the manifest, and treat "no decision" as a valid outcome requiring extension.
 
-F-03 deserves emphasis because it is the failure that makes every other claim about the bundle meaningless.
-If rollback restores the prompt but not the index, the system runs a new retrieval surface under old instructions, and the resulting behaviour matches neither release.
-The drill must compare proposal bytes, not merely confirm that a configuration value changed.
+**F2 - Partial release dressed as a bundle.** The prompt ships on Tuesday and the routing table on Thursday,
+each with a clean canary. *Competing causes:* (a) the promotion API allows per-artifact writes; (b) an
+emergency change bypasses the manifest; (c) the manifest lists six artifacts but two have the same version
+string because they were rebuilt from the same tag. *Discriminating check:* count distinct artifact hashes
+promoted per day; more than one promotion event per release identifies (a) or (b), and duplicate hashes
+across artifacts identify (c). *Correction:* single promotion verb, content hash per artifact, and an
+assertion that the six hashes are distinct.
 
-A second mechanism worth separating from F-01 is F-04, the double-read failure.
-The bundle saves time only if the proposal replaces part of the read.
-If adjusters distrust it enough to read everything and then check the proposal, minutes rise, and the economic case collapses while the quality metrics look excellent.
-Time-on-task distinguishes this from a quality failure; a bundle with high acceptance and rising minutes is a trust-and-usability failure, not an accuracy failure.
+**F3 - Index contamination that survives rollback.** The bundle is rolled back and the harmful rate does not
+return to baseline. *Competing causes:* (a) canary writes remain in the shared index; (b) the rollback did
+not revert the retrieval configuration; (c) the stable arm's rate was already drifting. *Discriminating
+check:* retrieve the canary-written chunks directly and test whether the stable arm cites them; a nonzero
+citation rate identifies (a), a configuration diff identifies (b). *Correction:* tagged namespace with
+retrieval exclusion, and a post-rollback assertion that the stable arm's citation rate on canary chunks is
+zero.
 
-**Takeaway.** The dangerous failures are composition failures and behavioural failures; neither is visible in a model-only metric.
+**F4 - Guardrail set that cannot fail.** Six metrics are monitored, five are always green because their
+thresholds were set at the observed maximum plus a margin. *Competing causes:* (a) thresholds were fitted to
+the baseline rather than to a harm model; (b) the metrics are lagging and never move within a canary;
+(c) the metrics are correlated with the one that matters and add no information. *Discriminating check:*
+back-test each threshold against the last twelve releases; a threshold that no historical release would
+have breached is decorative. *Correction:* require each guardrail to state the regression it would catch and
+the sample it needs, and delete any that cannot.
+
+**F5 - Audit queue saturation.** At a 20% share the audit runs at 93.3% utilisation; review time falls from
+65 seconds and the three-way verdict collapses toward "correct". *Competing causes:* (a) volume exceeds
+capacity; (b) reviewer headcount fell; (c) packet complexity rose so each review genuinely takes longer.
+*Discriminating check:* plot review seconds against daily queue depth; a negative slope is (a) plus coping,
+a flat slope with rising seconds is (c). *Correction:* utilisation cap at 0.80 enforced by refusing to start
+a canary whose share would breach it.
+
+**F6 - Reviewer unblinding.** The console shows the bundle version in a header, and reviewers find harms in
+the canary at twice the rate of the control for a bundle that is actually neutral. *Competing causes:*
+(a) the arm label is visible; (b) the canary packet layout differs cosmetically; (c) the canary claims are
+genuinely different because the splitter is not random. *Discriminating check:* compare the covariate
+distribution across arms; balance implies (a) or (b), imbalance implies (c). *Correction:* blind console,
+plus a sham release where both arms run the same bundle and the harm rates must match within the interval.
+
+**F7 - Rollback that exceeds the availability budget.** Two rollbacks in one canary consume 30 minutes
+against a 21.6-minute three-day budget, breaching the SLO by 39%. *Competing causes:* (a) rollback is manual
+and slow; (b) the queue freeze flushes in-flight claims that must be re-decided; (c) the rollback triggers a
+second failure because the prior bundle is incompatible with the current index. *Discriminating check:*
+time the phases separately; a long freeze phase identifies (b), a failed post-rollback smoke test identifies
+(c). *Correction:* rehearse rollback quarterly, budget it explicitly, and test bundle N-1 against index N
+before every release.
+
+**F8 - Optional stopping by the release owner.** The owner watches the harm counter daily and promotes on the
+first day it looks low. *Competing causes:* (a) the process has no fixed look schedule; (b) the dashboard is
+visible but the decision rule is not; (c) the owner has authority to promote without the rule. *Discriminating
+check:* audit the promotion timestamps against the declared duration; a promotion before the declared n is
+(a) or (c) by construction. *Correction:* promotion requires a signed rule evaluation, and continuous
+monitoring is restricted to trip metrics that can only stop a release, never start one.
 
 ## 13. Transferable Lesson
 
-| Pattern field | Content |
-|---|---|
-| Canonical pattern | `atomic-release-bundle`: promote and revert a pinned set of model, prompt, tools, index, policy, and evaluation versions |
-| General principle | When a deployed behaviour is produced by several versioned artefacts, treat the set as the unit of release and the unit of rollback |
-| Preconditions | Immutable artefact registry; consumer inventory; reproducible assignment; adjudicated guardrail |
-| Mechanism | Compatibility checks catch schema drift; pinned manifests make rollback meaningful; canary with power controls promotion risk |
-| Supporting evidence | Constructed arithmetic in Sections 6.2-6.6; no measured promotion |
-| Avoid when | The behaviour is produced by one component, or consumers are dynamically discovered and cannot be enumerated |
-| Portability test | Ask whether a rollback that restores one artefact would leave a mixed behaviour; if yes, the pattern applies |
-| Adaptation | For a retrieval product, the index and embedding model join the bundle; for a coding agent, the tool schema set and repository instruction files join it |
+**Sample size is the control, not the intention.** Every release gate has a detection probability, and most
+organisations never compute it. Three days versus fifteen is not a process preference; it is 22% versus 79%
+detection against a regression worth 84,285 USD. The number that makes a canary real is the critical count
+and the sample it implies, both declared before the first claim.
 
-The lesson's boundary is important: bundling creates coarser control.
-A team that wants to fix a single prompt typo must still promote a whole bundle, which costs a canary or a justified exception path.
-The pattern trades release agility for recoverability, and it is the wrong trade when the components genuinely do not interact.
+**Test one thing, trip on many.** The distinction between a test (which needs power) and a trip (which needs
+only an obvious threshold) dissolves the false dilemma of "monitor everything". Six guardrails at 80% power
+need 19,000 claims; six trips need six thresholds and no power calculation at all. Choosing which metric
+deserves the test is the real decision, and it should be the irreversible one.
 
-**Interview cue.** Give a domain where the bundle is too coarse, then say what would have to be true to make it necessary.
+**A rollback that does not reverse the state is a metaphor.** Model versions revert in seconds; indexes,
+caches, and derived features do not. Fifteen days of canary writes contaminated 12.5% of the index, and the
+residue produced more contaminated retrievals per day than the harmful events the canary was built to find.
+Any release process needs an explicit list of what rollback actually reverses.
+
+**Integer decision rules are not smooth.** Under a fixed-alpha exact test, a longer canary can be less
+powerful than a shorter one because the critical count jumps. Nine days gives 60.7% power and ten days gives
+56.6%. Planning by intuition about monotonicity produces designs that are worse for being longer, and the
+table is the only defence.
 
 ## 14. Connections & Cross-References
 
-### 14a. Related cases, theory, and cheat sheets
+- **Approval gate case** (`01_enterprise_agent_approval_gate.md`): the same economics - avoided loss per
+  dollar of control - appears there as review routing; here it appears as canary duration. Both conclude
+  that the binding constraint is a sample or a headcount, never the intent.
+- **Durable workflows and idempotent execution** (`05_durable_workflows_and_idempotent_execution.md`): the
+  queue freeze during rollback must not double-decide claims, which is an idempotency requirement on the
+  claim key, not on the bundle.
+- **Session isolation and lifecycle** (`04_agent_sessions_state_isolation_and_lifecycle.md`): the index
+  quarantine is a state-isolation problem - the canary must not be able to influence the stable arm through
+  shared memory.
+- **Agent boundaries and request ownership** (`01_agent_boundaries_and_request_ownership.md`): the arm
+  assignment is a form of ownership; a claim must belong to exactly one arm for its whole life including
+  re-submission.
+- **External doctrine.** Shadow launches and staged rollouts are standard practice; the arithmetic for
+  powering a release gate is not usually stated, and nothing here is attributed to a published source.
 
-| Relationship | Target | Shared or changed mechanism | Boundary learned |
-|---|---|---|---|
-| extends | [Approval gate for an enterprise agent](01_enterprise_agent_approval_gate.md) | Both separate proposal from authorised effect | That case binds one action; this one binds a release |
-| uses-method | [Durable workflows and idempotent execution](../Cheat_Sheets/05_durable_workflows_and_idempotent_execution.md) | Effect keys and reconciliation support canary replay | A replay is not a rollback |
-| uses-method | [Agent boundaries and request ownership](../Cheat_Sheets/01_agent_boundaries_and_request_ownership.md) | Request-path ownership identifies the promotion owner | Ownership is not a model property |
-| contrasts-with | [ERP action agent](../../31_tools_mcp_protocols_and_enterprise_integrations/Case_Studies/01_erp_action_agent.md) | Both use exact-payload binding | Procurement binds a payload; this binds a bundle |
-| theory | [NIST least privilege](https://csrc.nist.gov/glossary/term/least_privilege) | Scope minimisation | Not evidence for this design |
+### Interview pack
 
-### 14b. What this case leaves open
+**Q1. Why does the case reject a three-day canary when three days is what the release cadence allows?**
 
-| Open question | Why evidence is insufficient | Test that would resolve it | Priority | Owner |
-|---|---|---|---|---|
-| Does the bundle reduce minutes without double-reading? | No time-on-task data | Instrumented canary with first-read acceptance | High | Evaluation lead |
-| Is the guardrail stable across peril strata? | No canary | Stratified canary analysis | High | Model risk |
-| Can a live rollback meet one staffed hour? | Drill not executed | Timed drill under shadow load | High | Platform |
-| Does the 62% eligibility rate hold? | Assumed | Claim-type census over four weeks | Medium | Ops analytics |
-| Do citations improve acceptance or create false confidence? | No UI study | A/B on citation presence | Medium | Product |
+- Answer: Because three days yields 700 audited claims against a required 3,498, giving 22.3% detection of a
+  regression that costs 84,285 USD in excess harm. Cadence is worth 8,100 USD of engineering per cycle;
+  the forgone detection is worth 30,142.
+- Reasoning: The canary's job is to make a decision, and a test with 22% power makes the wrong decision 78%
+  of the time when the regression is present.
+- Follow-up: What would you change to make three days sufficient?
+- Red flag: "three days is standard practice."
+- Scoring: 0 defends cadence; 1 says sample is too small without the number; 2 gives the sample, the power,
+  and the cost comparison.
 
-### 14c. Intense interview pack
+**Q2. Compute the mean severity per harmful event from a 55/28/13/4% mix over 70/320/1,700/9,200 USD bands.**
 
-#### Q-01 / foundation / Framing
-**Prompt.** In one minute, state the decision this case asks for and the constraint that dominates it.
-**Strong answer.** The decision is whether to move bundle R2 from a five-percent canary to full claims-triage traffic. The dominating constraint is that the bundle informs a licensed adjuster and never decides; a promotion that raises missed coverage signals is disqualified regardless of labour savings.
-**Reasoning.** The unit of release is the bundle, but the unit of accountability is the adjuster's record, so the promotion test must measure signal completeness rather than average quality.
-**Follow-up.** If the bundle were restricted to document-gap detection only, would the constraint change? Only in strength: gaps are still a completeness claim, but a missed gap delays a request rather than mis-routing coverage.
-**Acceptable alternatives.** Framing the decision as a staged rollout with stop conditions is acceptable if the guardrail remains the gate.
-**Red flags.** "The model is more accurate, so ship it." Accuracy is not measured for the composed bundle and does not address the guardrail.
-**Scoring.** 0 no decision; 1 decision without constraint; 2 decision plus constraint; 3 constraint plus why labour cannot override it.
-**Support.** Sections 1, 3, 7.
+- Answer: 0.55x70 = 38.5; 0.28x320 = 89.6; 0.13x1,700 = 221; 0.04x9,200 = 368. Total 717.10 USD/event.
+- Reasoning: The heaviest band is 4% of events and 51% of the mean, so the mean is dominated by a band whose
+  share is estimated from few events.
+- Follow-up: What does the mean do if the top band's share doubles?
+- Red flag: taking the median band (320) as the mean.
+- Scoring: 0 wrong total; 1 correct total without the dominance observation; 2 correct plus the tail
+  sensitivity.
 
-#### Q-02 / foundation / Framing
-**Prompt.** Why is a model-only comparison not sufficient evidence for this promotion?
-**Strong answer.** Because the deployable artefact changes six components, and the composed behaviour can differ from a model swap with fixed prompt and index. A model-only comparison answers a question nobody deploys, and it cannot reveal schema incompatibilities with downstream consumers.
-**Reasoning.** Behaviour is a function of the whole pipeline; retrieval changes alter which policy text is citable, and the prompt change alters output shape.
-**Follow-up.** When would a model-only comparison be the right test? When the bundle changes only the model and every other artefact is provably identical, verified by hashes.
-**Acceptable alternatives.** Using the offline suite as a screening gate is acceptable and is what the case does.
-**Red flags.** Claiming the offline suite proves production behaviour.
-**Scoring.** 0 model quality assertion; 1 mentions prompt; 2 explains composition; 3 adds the consumer-schema consequence.
-**Support.** Sections 5c, 6.1, 6.7.
+**Q3. A canary reports 11 harmful writes in 2,400 audited claims. Has the rate degraded?**
 
-#### Q-03 / intermediate / Data
-**Prompt.** You are told the canary is at 5% and reaches 180 claims per day. What must you check before trusting that number?
-**Strong answer.** Check the eligible-claim denominator: 3,600 claims per day at 62% eligibility gives 2,232 eligible, and 5% of that is 111.6, not 180. A figure of 180 implies either a different share, a different eligibility rate, or counting ineligible claims.
-**Reasoning.** 180/2,232 = 8.07% share, or 180/0.05 = 3,600 claims assumed fully eligible. Both are inconsistent with the stated parameters, so one input is wrong.
-**Follow-up.** If the share were really 8%, what happens to the evidence window? It shortens to about 16 staffed days but doubles the exposed population.
-**Acceptable alternatives.** Reporting both interpretations is acceptable if the inconsistency is flagged.
-**Red flags.** Accepting 180 without reconciling the denominator.
-**Scoring.** 0 accepts; 1 notices mismatch; 2 reconciles arithmetic; 3 states the decision consequence.
-**Support.** Sections 6.2, 5a.
+- Answer: The point estimate is 0.458% with a Wilson interval of 0.26% to 0.82%. The threshold is 0.70%, which
+  sits inside the interval, so the canary has not decided; extend it rather than promote or roll back.
+- Reasoning: The interval is wider than the effect being tested, which is the signature of an underpowered
+  canary caught mid-flight.
+- Follow-up: How many more claims would resolve it?
+- Red flag: "11/2,400 is above 0.4% so it degraded."
+- Scoring: 0 compares point estimates; 1 computes the rate; 2 gives the interval and the extend decision.
 
-#### Q-04 / intermediate / Data
-**Prompt.** Design the guardrail label. What makes it hard to measure?
-**Strong answer.** The label is "a coverage signal present in the packet but absent from the proposal", adjudicated by two blinded reviewers with team-lead adjudication of disagreements. It is hard because it requires reading the packet independently of the proposal to avoid anchoring, and because reviewers must agree on what counts as a signal rather than a generic remark.
-**Reasoning.** A label defined by absence is vulnerable to reviewer attention and to proposal anchoring; measuring agreement is therefore part of the label's validity.
-**Follow-up.** How would you detect drifting label standards? Track disagreement rate and the distribution of adjudicated positives over time; a jump suggests a standards change rather than a behaviour change.
-**Acceptable alternatives.** Using a structured signal checklist is acceptable if the checklist is versioned with the bundle.
-**Red flags.** "Ask the adjuster if the proposal was good."
-**Scoring.** 0 vague; 1 definition only; 2 definition plus blinding; 3 adds agreement and drift monitoring.
-**Support.** Sections 5a, 5d, 9.
+**Q4. Derive the critical count for a 5% one-sided exact test at n = 3,498 against p0 = 0.4%.**
 
-#### Q-05 / advanced / Data
-**Prompt.** The canary runs during a storm week and the guardrail rises. What can you conclude?
-**Strong answer.** Almost nothing about the bundle. The loss mix changed, so the comparison is confounded by stratum composition. The correct action is to report the guardrail by peril stratum and either extend the window or promote only within strata that were adequately represented.
-**Reasoning.** A composition shift can raise the aggregate rate while every stratum stays flat, which is Simpson's paradox in operational form.
-**Follow-up.** What if strata are too small for bounds? Then aggregate with stratification weights from the full-traffic mix and state the assumption.
-**Acceptable alternatives.** Pausing the canary is acceptable but delays evidence without resolving confounding.
-**Red flags.** Concluding the bundle is worse from an aggregate movement.
-**Scoring.** 0 accepts aggregate; 1 mentions mix; 2 names confounding; 3 adds stratified reporting and weighted aggregation.
-**Support.** Sections 4, 6.8, 9.
+- Answer: Find the smallest k with P(X >= k | p0) <= 0.05. At k = 20, alpha is 0.0591; at k = 21, alpha is
+  0.0473. So k* = 21, and power at p1 = 0.7% is 0.7873.
+- Reasoning: The exact tail is used because n*p0 = 14 makes the normal approximation anti-conservative in the
+  upper tail.
+- Follow-up: Why is k* = 21 rather than 14 (the expected count under p1)?
+- Red flag: using the expected count under p1 as the threshold.
+- Scoring: 0 uses a z-test; 1 gets k* without power; 2 gives both and the reason for the exact test.
 
-#### Q-06 / intermediate / Calculation
-**Prompt.** Compute the weekly labour difference if the assisted path takes six minutes on 62% of 18,000 claims and the baseline takes fourteen minutes on all claims.
-**Strong answer.** Baseline 18,000 × 14 / 60 = 4,200 hours. Assisted 11,160 × 6 / 60 = 1,116 hours plus 6,840 × 14 / 60 = 1,596 hours, total 2,712 hours. Difference 1,488 hours per week.
-**Reasoning.** The saving applies only to eligible claims; applying six minutes to all claims would overstate the benefit by 6,840 claims' worth of work.
-**Follow-up.** At 52 per hour, what is that worth? 1,488 × 52 = 77,376 per week before model and platform cost.
-**Acceptable alternatives.** Expressing the answer in FTE-weeks at 36 hours is acceptable: 116.67 to 75.33.
-**Red flags.** Applying the assisted time to the whole population.
-**Scoring.** 0 wrong denominator; 1 correct total without split; 2 correct split; 3 correct split plus cost.
-**Support.** Sections 6.4, 6.5.
+**Q5. Three guardrails need 5,000, 4,500, and 3,700 claims each. What does that imply for a 3,498-canary?**
 
-#### Q-07 / advanced / Calculation
-**Prompt.** Derive the break-even assisted time and interpret it.
-**Strong answer.** Break-even sets the labour difference equal to fixed cost: (14 − m) × 11,160 / 60 × 52 = 6,358.236, so 14 − m = 0.6574 and m = 13.34 minutes. The margin is wide: the bundle would have to save less than a minute per eligible claim before it stops paying.
-**Reasoning.** Fixed cost is small relative to labour, so the economics are insensitive across a broad range of assisted times.
-**Follow-up.** Why is the wide margin not a reason to promote? Because the guardrail is the binding constraint, and a cost-positive bundle can still harm claimants.
-**Acceptable alternatives.** Working in per-claim currency is acceptable: 12.13 saved per eligible claim against 0.57 fixed per eligible claim.
-**Red flags.** Treating break-even as sufficient evidence.
-**Scoring.** 0 no derivation; 1 algebra only; 2 algebra plus interpretation; 3 adds why economics cannot gate promotion.
-**Support.** Sections 6.4, 6.5.
+- Answer: Only the 3,700 one is close; the other two are underpowered and one of them (validity) is expected
+  to improve, so it is a trip not a test. The design must nominate a single test.
+- Reasoning: The guardrail set's sample requirement is the maximum, not the minimum, and the maximum exceeds
+  the canary by 43%.
+- Follow-up: What does a Bonferroni correction do to those numbers?
+- Red flag: "all guardrails pass, so the release is safe."
+- Scoring: 0 ignores the gap; 1 notices the max; 2 states the test-versus-trip distinction.
 
-#### Q-08 / advanced / Calculation
-**Prompt.** How many canary claims do you need to distinguish 0.8% from 1.6% at 5% one-sided with 80% power? What does that imply for the window?
-**Strong answer.** Using n = (1.959964 + 0.841621)² (p1q1 + p2q2)/(p2 − p1)², the numerator is 7.848881 × 0.023680 = 0.1858647 and the denominator is 0.000064, giving 2,904.1, so 2,905 per arm. At 111.6 canary claims per staffed day that is 26.0 staffed days.
-**Reasoning.** The squared difference dominates; halving the detectable difference quadruples the sample.
-**Follow-up.** If the true baseline is 1.2%, the detectable difference shrinks and the sample grows; what do you do? Use a sequential design or accept a wider margin.
-**Acceptable alternatives.** A Bayesian decision rule with an explicit prior is acceptable if declared before the window.
-**Red flags.** Using the threshold rule and calling it a test.
-**Scoring.** 0 no formula; 1 formula only; 2 correct number; 3 adds window and design consequence.
-**Support.** Sections 6.3, 9.
+**Q6. Explain why a 10-day canary can be less powerful than a 9-day one.**
 
-#### Q-09 / intermediate / Design
-**Prompt.** What has to be in the bundle manifest, and why does each field matter?
-**Strong answer.** Model identifier and snapshot, prompt hash, tool-schema hash, index build identifier, policy-table version, and evaluation-suite identifier. Each matters because behaviour depends on it: the model changes tokenisation and quality; the prompt changes output shape; the schema gates downstream compatibility; the index determines citable text; the policy table defines correctness; the suite defines the gate.
-**Reasoning.** Rollback is only meaningful if restoring the manifest restores behaviour, which requires every behaviour-determining artefact to be pinned.
-**Follow-up.** What if the model endpoint cannot be pinned to a snapshot? Then the bundle cannot guarantee reproducibility, and the release contract must say so explicitly or move to a pinned deployment.
-**Acceptable alternatives.** Pinning by digest instead of version string is acceptable and stronger.
-**Red flags.** Listing the model only.
-**Scoring.** 0 model only; 1 model plus prompt; 2 four or more components; 3 all six with the rollback rationale.
-**Support.** Sections 5b, 6.1, 8c.
+- Answer: At 9 days n = 2,099 and k* = 14, giving power 0.607; at 10 days n = 2,332 and k* = 16, giving
+  power 0.566. The critical count jumped by two while the sample grew by 11%.
+- Reasoning: Under a discrete exact test, alpha oscillates with n, and the smallest k meeting the alpha
+  constraint can rise faster than the sample, reducing rejection probability.
+- Follow-up: How would you plot duration against power to make this visible?
+- Red flag: "more data always means more power."
+- Scoring: 0 asserts monotonicity; 1 notices the discrete jump; 2 explains alpha oscillation.
 
-#### Q-10 / advanced / Design
-**Prompt.** Design rollback and prove it works.
-**Strong answer.** Rollback restores all six pins in the registry, invalidates in-flight assignments so new claims use R1, and lets already-reviewed claims finish under the bundle recorded on their review record. The proof is a drill: restore R1 in a shadow lane, replay 200 recorded packets, and require byte-identical proposals to the R1 record, timed under shadow load against a one-staffed-hour target.
-**Reasoning.** Mixed bundling is the characteristic failure; a drill that checks configuration rather than outputs cannot detect it.
-**Follow-up.** What if replay is not byte-identical because the endpoint is non-deterministic? Then pin temperature and seeds, or define equivalence at the field level with a stated tolerance, and record that the contract is equivalence-based.
-**Acceptable alternatives.** Canary-first rollback with traffic shifting is acceptable if pins move atomically.
-**Red flags.** "Redeploy the old image."
-**Scoring.** 0 no procedure; 1 pins only; 2 pins plus in-flight rule; 3 adds drill and equivalence definition.
-**Support.** Sections 8b, 8d, 12 F-03.
+**Q7. The canary writes to a shared retrieval index. Quantify the residue after rollback.**
 
-#### Q-11 / advanced / Design
-**Prompt.** Where does authorization belong in the serving path, and what does the audit record need?
-**Strong answer.** At the proposal boundary: the adjuster's identity must be entitled to the claim's line of business before any packet content is assembled, and the resulting proposal record stores the authenticated identity, the claim and packet version, the bundle identifier, and the policy version used for validation.
-**Reasoning.** If authorization happens only at login, a stale session can read a claim reassigned to another team; if the audit omits the bundle, no later analysis can attribute behaviour.
-**Follow-up.** The model endpoint is third-party. What changes? Minimise and redact direct identifiers before egress, record what was sent, and treat the endpoint as untrusted for authority.
-**Acceptable alternatives.** Delegated token exchange is acceptable if the failure mode (identity provider outage) has a defined behaviour.
-**Red flags.** Service-account-only audit trails.
-**Scoring.** 0 login-only; 1 boundary check; 2 boundary plus audit fields; 3 adds egress minimisation.
-**Support.** Sections 8b, 8d, 12 F-10.
+- Answer: 3,498 claims x 1.5 chunks = 5,247 chunks of a 42,000-chunk index, 12.5%. At a 1.8% harmful rate
+  among canary decisions, 94 poisoned chunks persist; at 1.5 retrievals per day each, about 141 contaminated
+  retrievals a day, more than the 7.5 harmful events the canary detects.
+- Reasoning: Rollback reverts artifacts, not derived state, so the measurement contaminates its own subject.
+- Follow-up: What design change removes the residue?
+- Red flag: "rollback makes us safe."
+- Scoring: 0 no contamination model; 1 computes the share; 2 computes the share and the daily retrieval
+  consequence.
 
-#### Q-12 / intermediate / Evaluation
-**Prompt.** Why use an upper confidence bound rather than a threshold on the point estimate?
-**Strong answer.** The point estimate is noisy, and the two errors are asymmetric: promoting a breaching bundle harms claimants, while extending a canary costs time. An upper bound at 1.20% keeps the probability of promoting a truly breaching bundle bounded, whereas a point-estimate rule promotes roughly half the time when the truth sits at the threshold.
-**Reasoning.** At p = 0.012 with n = 2,905, the estimate is below 0.012 about half the time by construction, so a threshold rule has approximately 50% error at the boundary.
-**Follow-up.** What if the bound straddles the threshold after the planned sample? Predeclare whether that means extend or fail; the case treats it as fail-and-extend.
-**Acceptable alternatives.** A sequential test with declared boundaries is acceptable and cheaper.
-**Red flags.** "We hit 1.1%, so we pass" without an interval.
-**Scoring.** 0 threshold only; 1 mentions noise; 2 explains asymmetry; 3 quantifies boundary error.
-**Support.** Sections 9.
+**Q8. What is the design effect at 5.83 claims per handler and ICC 0.05, and what does it do to power?**
 
-#### Q-13 / intermediate / Evaluation
-**Prompt.** A reviewer says the bundle improved acceptance from 61% to 66%. Why is that not sufficient?
-**Strong answer.** Acceptance measures whether adjusters kept the proposal, which can rise for reasons unrelated to accuracy: anchoring, time pressure, or a more conservative proposal style. It is a necessary operational signal but it is not the guardrail, and it can move opposite to signal completeness.
-**Reasoning.** Acceptance is a behavioural measure with a strategic component; adjusters under load may accept plausible proposals without verification.
-**Follow-up.** What would make acceptance trustworthy? Pairing it with blinded adjudication of a sample and with time-on-task, so acceptance cannot rise purely from reduced scrutiny.
-**Acceptable alternatives.** Treating acceptance as a leading indicator with a floor is acceptable.
-**Red flags.** Presenting acceptance as accuracy.
-**Scoring.** 0 accepts; 1 questions; 2 names anchoring; 3 adds the paired measurement design.
-**Support.** Sections 8d, 9, 12 F-05.
+- Answer: deff = 1 + 4.83 x 0.05 = 1.241, so 3,498 audited claims behave like 2,818. At k* = 20 that is about
+  76% power instead of 78.7%.
+- Reasoning: Clustering reduces the effective information; the correction is a variance inflation, not a bias.
+- Follow-up: Why does stratifying the randomisation by handler help?
+- Red flag: treating claims as independent because each is one row.
+- Scoring: 0 ignores clustering; 1 computes deff; 2 gives deff, the power implication, and the remedy.
 
-#### Q-14 / advanced / Debugging
-**Prompt.** Adjusters report "the agent got slower" after promotion, but latency dashboards are flat. Diagnose.
-**Strong answer.** The dashboards measure service latency, not staffed minutes. The likely mechanism is double-reading: adjusters read the packet, read the proposal, then re-read documents to check citations. Instrument time-on-task and first-read acceptance; if minutes rise while service latency is flat, the failure is trust or usability, not infrastructure.
-**Reasoning.** The economic claim depends on replacing part of the reading, and nothing in the serving path measures that.
-**Follow-up.** What would you change? Reduce citation volume, require packet-first order with a timed gate, and measure per-field acceptance to find which field triggers verification.
-**Acceptable alternatives.** Suspecting retrieval latency is acceptable as a hypothesis, but it is falsified by flat service latency.
-**Red flags.** Adding capacity.
-**Scoring.** 0 blames infrastructure; 1 suspects UI; 2 identifies double-read; 3 adds instrumentation design.
-**Support.** Sections 6.6, 12 F-04, 9.
+**Q9. Would you adopt the SPRT for this gate?**
 
-#### Q-15 / advanced / Debugging
-**Prompt.** After a rollback, some claims show citation text from the new index. What happened, and what is the immediate containment?
-**Strong answer.** The index pin did not restore, so prompt p11 is running against index i4. Containment is to disable citation rendering and fall back to rule routing while pins are audited; then restore i4's predecessor and replay recorded packets to prove equivalence.
-**Reasoning.** Partial pin restoration produces a bundle that never passed evaluation, which is the composed-failure mechanism the manifest exists to prevent.
-**Follow-up.** How do you prevent recurrence? Make the drill compare output bytes, and make the registry reject a manifest with any unpinned component.
-**Acceptable alternatives.** Freezing all promotions pending audit is acceptable but broader than needed.
-**Red flags.** "Restart the service."
-**Scoring.** 0 restart; 1 notices index; 2 identifies mixed bundle; 3 adds containment and drill fix.
-**Support.** Sections 8c, 8d, 12 F-03.
+- Answer: No - for the gate. It cuts the expected sample from 3,498 to 2,068 (41%) but assumes i.i.d. claims,
+  and the effective n under clustering is 2,630. It also invites optional stopping by an owner who watches
+  the trajectory.
+- Reasoning: The saving is real and the assumption is false; a tool whose validity depends on an assumption
+  you have measured to fail is not a control.
+- Follow-up: Where would you use it?
+- Red flag: adopting it for the sample saving alone.
+- Scoring: 0 rejects without reason; 1 cites the sample saving; 2 cites the saving, the clustering breach,
+  and the stopping risk.
 
-#### Q-16 / advanced / Transfer
-**Prompt.** Transfer the bundle pattern to a coding agent. What joins the bundle, and what breaks?
-**Strong answer.** The bundle would include the model, the instruction files, the tool schema set, the repository index or embedding snapshot, and the policy that governs permitted commands. It breaks in two places: repository content changes continuously, so the index is a moving input rather than a release artefact, and the tool surface may be discovered dynamically, so consumers cannot be enumerated.
-**Reasoning.** The pattern requires an enumerable consumer set and a pinnable input; both are weaker in a coding environment.
-**Follow-up.** What is the minimum viable adaptation? Pin the instruction files and tool schema, treat repository state as an input with a recorded commit, and gate on sandboxed tests.
-**Acceptable alternatives.** Treating the bundle as a deployable configuration rather than a data snapshot is acceptable if data versioning is separate.
-**Red flags.** Claiming the pattern transfers unchanged.
-**Scoring.** 0 no transfer; 1 lists components; 2 names both breaks; 3 adds the adaptation.
-**Support.** Section 13.
+**Q10. Two rollbacks occur during one canary. What has happened to the availability SLO?**
+
+- Answer: Two 15-minute rollbacks are 30 minutes against a 21.6-minute three-day budget (0.5% of 1,440 x 3),
+  so the SLO is breached by 39%.
+- Reasoning: 1440 x 3 x 0.005 = 21.6 minutes of allowed unavailability; one rollback consumes 69.4% of it.
+- Follow-up: What does the fourteen-day budget allow?
+- Red flag: treating rollback time as free.
+- Scoring: 0 no calculation; 1 one rollback's share; 2 both rollbacks against the budget.
+
+**Q11. Diagnose: the canary promoted cleanly, but the stable arm's harmful rate rose two weeks later.**
+
+- Answer: Most likely index contamination (canary-written chunks now retrievable after promotion) or a change
+  that only manifests at higher retrieval prevalence. Check the citation rate on canary-tagged chunks.
+- Reasoning: Promotion is when quarantine lifts, so the residue enters retrieval exactly then - the failure
+  is scheduled by the design, not accidental.
+- Follow-up: What would you have measured to catch it during the canary?
+- Red flag: "the canary passed, so the bundle is fine."
+- Scoring: 0 blames the model; 1 names contamination; 2 names it and the discriminating check.
+
+**Q12. A reviewer sees the bundle version in the console header. What is the risk and the fix?**
+
+- Answer: Confirmation bias - harms are found at a higher rate in the arm the reviewer knows is new. Fix by
+  blinding the console and running a sham release where both arms run the same bundle and must match.
+- Reasoning: The verdict is a human judgment, so the label is a treatment; unblinding turns the audit into a
+  measurement of the reviewer's expectation.
+- Follow-up: What would a sham release prove that a blinding change would not?
+- Red flag: "reviewers are professionals, they are objective."
+- Scoring: 0 no risk seen; 1 mentions bias; 2 gives the sham release as the test.
+
+**Q13. The automation gain is 3.1 points and worth 1,453 USD/day. Is the release programme worth running?**
+
+- Answer: Marginally. Per cycle, benefit over fifteen days is 21,795 against 9,868 of engineering plus audit,
+  a 2.21 ratio. A 40% error in the benefit estimate makes the programme marginal, so benefit must be tracked.
+- Reasoning: The decision is a ratio of a measured benefit to a mostly fixed cost, and the fixed cost is not
+  sensitive to the benefit.
+- Follow-up: What would raise the ratio without touching the benefit?
+- Red flag: quoting the ratio without the sensitivity.
+- Scoring: 0 no ratio; 1 the ratio; 2 the ratio plus the break-even error.
+
+**Q14. What happens if you correct for six guardrail tests with Bonferroni?**
+
+- Answer: Each test's alpha becomes 0.00833, which inflates the required sample by about 1.693. The 3,700
+  harmful-write sample becomes roughly 6,300, well beyond the canary, so no guardrail is powered.
+- Reasoning: Bonferroni converts a family-wise error target into an individual alpha, and sample size scales
+  with the square of the z ratio, hence the 1.69 factor.
+- Follow-up: What is the alternative to correcting?
+- Red flag: "correct for everything to be safe."
+- Scoring: 0 no effect; 1 mentions inflated n; 2 gives the factor and the alternative.
+
+**Q15. Why does the design allow a 15-21 day range rather than a point optimum?**
+
+- Answer: The total is 41,084 at 14 days, 39,722 at 15, and 40,644 at 21, so the curve is flat to within 5%.
+  A flat optimum is implementable; a sharp one invites arguments about the third decimal.
+- Reasoning: The cost model has an uncertainty larger than the curvature, so choosing 15 versus 18 is not a
+  decision the data supports.
+- Follow-up: What would sharpen the optimum?
+- Red flag: "pick the exact minimum."
+- Scoring: 0 no range; 1 gives the numbers; 2 explains the flatness relative to model uncertainty.
+
+**Q16. Which single change most reduces expected harm per release?**
+
+- Answer: Index quarantine plus tagging, because it removes the contaminated-retrieval channel that survives
+  rollback and that grows with canary length. Second is the fixed look schedule, which removes optional
+  stopping.
+- Reasoning: The two failure modes that survive a "successful" canary are the residue and the early
+  promotion; both are process defects rather than model defects.
+- Follow-up: How would you verify the quarantine works before the first canary?
+- Red flag: proposing a better model.
+- Scoring: 0 names a model change; 1 names one control; 2 names both with the verification.
 
 ## 15. Quick Reference Card
 
-| Field | Value |
-|---|---|
-| Domain | Insurance claims operations; first-notice-of-loss triage |
-| Problem type | Governed release decision for an assembled agent bundle |
-| Method | Pinned six-component bundle, hash canary, dual-adjudicated guardrail, power-based gate |
-| Primary result | Not measured; constructed economics show 1,488 staffed hours/week and 71,017.76 net |
-| Key lesson | Promote the composed bundle only when the guardrail's upper bound and the rollback drill both pass |
-| Tags | `atomic-release-bundle`; `rollout-regression`; `human-in-the-loop` |
-
-| Supplemental field | Value |
-|---|---|
-| Case ID / version / as-of | CASE-2026-032 / 1.0 / 2026-11-10 |
-| Evidence level | Illustrative; arithmetic derived and checked, no operational measurement |
-| Implementation stage | Proposed |
-| Baseline / primary metric | Rule table with full manual read; median staffed minutes per eligible claim |
-| Key limitation | Canary transfer depends on unverified mix comparability and an unexecuted rollback drill |
-| Review trigger / owner | Any change to packet schema, policy, model, prompt, index, or reviewer capacity; claims operations director |
+| Question | Answer | Number |
+|---|---|---|
+| Auto-eligible claims/day | 3,200 x 0.583 | 1,865.6 |
+| Baseline vs candidate harm rate | 0.4% vs 0.7% | delta 0.003 |
+| Mean harm per event | weighted severity mix | 717.10 USD |
+| Excess events/day if shipped | 1,865.6 x 0.003 | 5.597 |
+| 21-day exposure | 5.597 x 717.10 x 21 | 84,285 USD |
+| Adopted canary sample | 12.5% x 1,865.6 x 15 | 3,498 claims |
+| Critical count | smallest k with alpha <= 0.05 | 21 |
+| Achieved alpha / power | exact binomial | 0.0473 / 0.787 |
+| Detection at 3 days | same rule, n = 700 | 22.3% |
+| Cost of a 3-day canary | delay + expected harm | 69,864 vs 39,722 |
+| Audit throughput | 233.2 claims/day x 65 s | 4.21 h/day, 58.3% of capacity |
+| Index contamination at 15 days | 3,498 x 1.5 / 42,000 | 12.5% |
+| Design effect at ICC 0.05 | 1 + 4.83 x 0.05 | 1.241 |
+| SPRT expected sample at p1 | Wald boundaries | 2,068 vs 3,498 |
+| Rollback share of SLO budget | 15 / 21.6 | 69.4% |

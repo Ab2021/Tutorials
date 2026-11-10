@@ -1,1012 +1,1254 @@
 ---
 case_id: "CASE-2026-OR003"
 case_title: "Scheduling objective and constraints"
+case_version: "1.0"
+created: "2026-11-10"
+last_reviewed: null
 status: "proposed"
 content_status: "draft"
 case_type: "analytical"
+domain: "Maintenance and project scheduling"
+primary_pattern: "objective-choice failure between cardinality and weighted interval selection"
+secondary_patterns: ["half-open interval convention audit", "buffer-gap sensitivity", "interval-graph colouring bound"]
 evidence_level: "illustrative"
-source_basis: "illustrative"
+source_basis: "constructed twelve-task teaching instance; every start, end, value, buffer and machine count is ILLUSTRATIVE"
+as_of_date: "2026-11-10"
+owner_role: "Planning analyst supporting the maintenance scheduler"
+source_index: "INDEX.md"
+review_trigger: "Revisit when the interval convention, the value model, the buffer rule or the resource count changes"
 ---
 
 # Scheduling objective and constraints
 
-> **Evidence:** illustrative teaching case; no production scheduling result is asserted.
+> **Evidence disclaimer.** This case is a teaching construction. No plant, maintenance team, contractor or
+> measured schedule outcome is asserted, and nothing below is a reported result of a real operation. The
+> twelve tasks, their start and end times, their values, the buffer rule and the resource count are
+> ILLUSTRATIVE values chosen so that every printed number can be recomputed by hand from the table in
+> section 5a. The exhaustive optimum is genuinely exact for these inputs, and that exactness is worth
+> nothing until the inputs are replaced with real ones; the case therefore reports its conclusions as
+> properties of a constructed instance, with the reasoning that transfers and the arithmetic that does
+> not.
 
 ## 1. The One-Line Framing
-Given tasks with half-open intervals and either equal or unequal values, select a feasible schedule for an operations owner to maximize the stated objective, compared with using earliest finish for every objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+Given twelve candidate maintenance tasks, each occupying a fixed half-open interval on a shared resource
+and each carrying a business value, select a non-overlapping subset that maximises the stated objective,
+and show that the same twelve tasks produce three different "optimal" schedules depending on whether the
+objective is task count, total value, or value under a buffer rule.
+
+**Takeaway:** the algorithm is not the decision; the objective and the interval convention are the
+decision, and both are usually unstated.
+
+The framing matters because maintenance planning is where objective confusion is cheapest to introduce
+and most expensive to discover. A planner who is asked to "fit as many jobs as possible into the window"
+and a planner who is asked to "maximise the value delivered in the window" will produce schedules that
+differ by five tasks or by three value units on this instance, and each will believe the other is wrong.
+Both can be right; the difference is a decision about what the window is for, and that decision belongs
+to the asset owner rather than to the analyst.
 
 ## 2. Context & Background
-**Control 2.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 2.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+The modelled setting is a plant with a single maintenance crew and a thirteen-hour planning horizon that
+starts at the beginning of the night shift. Candidates arrive from three sources: statutory inspections
+generated by elapsed-time rules, condition-monitoring alerts from vibration and thermography, and
+operator-raised defects that have been triaged as deferrable. Each candidate is defined by a start time,
+an end time and a business value. Start and end times are fixed by permit windows, by production
+downtime allocated to the crew, and by vendor availability; the planner does not choose when a task may
+begin, only which tasks to run.
+
+The crew is one resource in the base instance and four in the variant considered later, which is the
+minimum number of crews the plant can field once the depot's own commitments are subtracted. Tasks are
+non-preemptive: once a crew starts an inspection it finishes it, because the isolation and de-isolation
+steps dominate the work and interrupting them doubles the cost. That non-preemption is what makes the
+problem an interval selection problem rather than a preemptive scheduling problem, and it is the source
+of nearly every difficulty that follows.
+
+Two clocks run through the operation and they are easy to conflate. Event time is the clock on the
+permit: a task starts at 00:00 and ends at 03:00 whether or not anyone entered the data on time.
+Processing time is when the planning system learned about the task, which may be days earlier for a
+statutory inspection and minutes earlier for an operator defect. Conflating them produces a dataset in
+which a task appears to end before it starts, and that artefact is more common than it sounds because
+permit systems often record the entry timestamp in one field and the scheduled timestamp in another.
+
+The planning practice being replaced is a paper-and-marker board. The scheduler sorts candidates by
+deadline, walks down the list, and takes every task that does not collide with one already taken. This is
+earliest-finish greedy, arrived at by instinct rather than by proof, and it has two properties the
+scheduler values: it is fast, and it never produces an obviously silly schedule. It also has one property
+the scheduler does not know about, which is that it maximises the number of tasks taken and says nothing
+about the value of the set it produces.
+
+That gap is the business problem. The crew's capacity in the horizon is finite, the candidate list is
+longer than the capacity, and the two ways of being selective — take more tasks, or take the valuable
+ones — disagree on this instance by three value units out of twenty-nine, and by which tasks appear on
+the board. Since the crew is paid for the shift regardless, the cost of the wrong objective is not labour;
+it is deferred risk, because the tasks that lose are the ones whose values are highest per unit of
+disruption.
+
+There is also a regulatory overlay that the model respects but does not optimise. Two of the twelve tasks
+are statutory inspections with hard deadlines; missing one is a compliance event rather than a value
+loss. The scheduler therefore needs a feasibility layer that runs before any objective is considered, and
+the case keeps that layer separate for the reason stated in section 4: a constraint that costs a licence
+if violated cannot be priced against a value that costs nothing if missed.
+
+Finally, the horizon itself is a constraint with a boundary condition worth stating. The thirteen hours
+from 00:00 to 13:00 are the permit window, and a task that ends exactly at 13:00 is legal while a task
+that would run one minute past is not. Whether a task ending at 03:00 blocks a task starting at 03:00 is
+the single most consequential convention choice in the whole problem, and section 6 quantifies how
+consequential it is before recommending one.
 
 ## 3. The Business Question
-**Control 3.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 3.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+The primary decision question is: for a fixed set of twelve candidate tasks with fixed intervals and
+stated values on a single crew, which subset maximises the stated objective, and how does the answer
+change when the objective is cardinality, total value, or total value under a mandatory buffer between
+consecutive tasks?
+
+Five subsidiary questions decide whether the answer is usable.
+
+1. Which interval convention does the permit system actually implement, and how much value is at stake if
+   the planner and the permit system disagree about whether a task ending at 03:00 blocks a task starting
+   at 03:00?
+2. What does earliest-finish greedy lose relative to the exact optimum, and is the loss concentrated in
+   one task or spread across the schedule?
+3. How large must a task's value be before it enters an optimal schedule, and which tasks are so far from
+   the threshold that no plausible value revision would admit them?
+4. What buffer between tasks is defensible given the work content, and what does each hour of buffer cost
+   in forgone value?
+5. If the plant fields four crews instead of one, does the optimal value triple, and what does the answer
+   say about whether crew count or task selection is the better lever?
+
+The acceptance criteria are stated in decision terms. A schedule proposal is acceptable when the
+objective is named before it is optimised, when the interval convention is asserted and tested against
+the permit system's own behaviour, when the optimum is exact or its gap to a proven bound is reported,
+and when the buffer rule is a stated parameter rather than an implicit habit. A schedule that is optimal
+for an unnamed objective is not a recommendation; it is a coincidence.
+
+Explicit non-goals keep the arithmetic honest. The case does not model travel time between tasks, does
+not model crew skills beyond a uniform assumption, does not optimise spares availability, and does not
+consider the multi-day carry-over of incomplete tasks. Each is a real constraint in the plant and each
+would change the instance; including them would make the exhaustive enumeration that certifies the
+optimum impossible at this size and would replace proof with a solver log.
 
 ## 4. Assumptions & Constraints
-**Control 4.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 4.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+Assumptions carry the direction of error they introduce, because a planner who cannot state which way a
+wrong assumption pushes the answer cannot choose whether to trust it.
+
+| ID | Assumption | Unit | If wrong, error direction |
+|---|---|---|---|
+| A1 | Every task is a single interval with fixed start and end | clock time | If tasks can move inside a window, the problem becomes flexible and value rises |
+| A2 | Tasks are non-preemptive | — | Preemption would admit more tasks, so the model understates achievable value |
+| A3 | Intervals are half-open, so end of one may equal start of the next | convention | A closed convention removes adjacencies and lowers achievable value sharply |
+| A4 | Value is additive across tasks | value units | Complementarities (two tasks sharing an isolation) make sets worth more than their sum |
+| A5 | One crew in the base instance | resource | Understates capacity; the four-crew variant is section 6 |
+| A6 | No travel time between tasks | minutes | Travel reduces feasible sets, so the model overstates value |
+| A7 | All values are comparable across task sources | value units | Mixing statutory and discretionary value in one sum is a category error unless normalised |
+| A8 | The horizon is 00:00 to 13:00 inclusive of both endpoints | clock time | A horizon exclusive at the end removes at most one task |
+| A9 | Buffer, when applied, is time the crew is busy but not productive | minutes | A buffer that is not real work reduces the value that can be delivered |
+| A10 | Values are stable across the planning week | value units | Values that drift make the schedule stale before it is executed |
+| A11 | Tasks not selected are deferred without penalty | value units | Deferral penalties change the objective from maximisation to cost minimisation |
+| A12 | The crew is available for the whole horizon | — | Mid-horizon unavailability splits the problem into independent sub-horizons |
+| A13 | Deadline-constrained tasks are filtered before optimisation | — | If they are left in, the objective silently trades a licence against value |
+| A14 | Ties in finish time are resolved deterministically | ordering | Non-deterministic ties make the schedule irreproducible |
+
+A3 is the assumption that does the most damage when it is wrong, and it is usually wrong in one specific
+direction. Permit systems commonly store "valid until 03:00" and treat 03:00 as the last valid moment, so
+a de-isolation finishing at 03:00 and an isolation starting at 03:00 share an instant that the plant does
+not actually have. Under the closed convention the two tasks conflict; under the half-open convention they
+do not. Section 6 reports the value difference as 29 against 19, which is a third of the answer, and that
+measurement is the reason this case insists on the convention being written down.
+
+| ID | Constraint | Type | Consequence if violated |
+|---|---|---|---|
+| C1 | Two selected tasks may not overlap in the selected convention | hard | Physically impossible; the schedule cannot be executed |
+| C2 | Two statutory inspections must be selected | hard | Compliance breach, independent of value |
+| C3 | Every selected task must lie inside the permit window | hard | Permit invalid; work cannot proceed |
+| C4 | A selected task must have an available crew | hard | Schedule is not executable at the stated resource count |
+| C5 | A buffer of g minutes must separate consecutive selected tasks when the buffer rule is on | policy | Crew cannot de-isolate and re-isolate in time |
+| C6 | Total selected duration must not exceed horizon capacity times crew count | derived | Implied by C1 and C3; used as a bound, not as a separate check |
+| C7 | Task values are fixed for the planning day | policy | Re-scoring during the day makes the schedule defensible to nobody |
+| C8 | Selection is decided once, before the shift starts | policy | Mid-shift reselection invalidates the audit trail |
+| C9 | Ties are broken by a stated rule, recorded with the schedule | policy | Without it, two identical inputs give different boards |
+
+The distinction between C1 through C5 and C6 is worth stating because it is where most hand-built
+checkers go wrong. C6 is not an independent constraint: it is a relaxation of C1 and C3, useful as an
+early rejection test and dangerous as a correctness test. A schedule can satisfy C6 comfortably and still
+violate C1 five times, which is exactly what happens when a planner checks total duration and assumes
+compatibility follows.
 
 ## 5. Data, Tools & Method
-### 5a. Data Specification
-One task has start, end, value, and deterministic identifier; intervals are `[start,end)` so an end equal to the next start is compatible.
-### 5b. Tools & Stack
-Proposed sorted task list, deterministic tie rule, greedy trace, weighted dynamic-programming table, and exhaustive small-instance oracle.
-### 5c. Method Summary
-Use earliest-finish greedy only for maximum cardinality; use weighted interval DP when values differ.
-### 5d. Provenance, quality, exclusions and leakage controls
-Task availability and duration are frozen at scheduling cut; later outcomes cannot redefine feasibility.
-### 5e. Reproducibility ledger
-The hand trace is verified; source case body is OPEN.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+### 5a Data Specification
+
+The unit of analysis is one candidate task, identified by a letter, with a start time, an end time and a
+value. Selection is at the task level; the feasibility relation is pairwise; the objective is a sum over
+the selected set. The grain statement matters because the common alternative grain — task-hours — is
+what produces the capacity-based checker described above, and that checker is wrong in the direction that
+matters: it accepts infeasible schedules.
+
+| Field | Meaning | Units | Range / type | Available at decision time |
+|---|---|---|---|---|
+| task_id | Stable label, A to L | — | category | yes |
+| start | Interval start, inclusive | clock hour from 00:00 | 0 to 12 | yes |
+| end | Interval end in the selected convention | clock hour from 00:00 | 1 to 13 | yes |
+| value | Business value if executed | value units | 1 to 9 | yes |
+| source | Statutory, condition, defect | category | three levels | yes |
+| mandatory | Whether C2 applies | boolean | 2 tasks true | yes |
+| crew_required | Crew count to execute | crews | 1 in base instance | yes |
+| buffer | Required gap under C5 | clock hours | 0 to 4 | policy parameter |
+| realised_end | Actual completion | clock hour | — | no, post-hoc |
+| deferred_count | Times the task has been deferred | count | 0 to 5 | yes |
+
+The instance is small enough to print in full, which is deliberate: an instance whose optimum can be
+verified by enumeration is the only kind that can certify a heuristic honestly.
+
+| Task | Start | End | Duration | Value | Source |
+|---|---|---|---|---|---|
+| A | 0 | 3 | 3 | 5 | statutory |
+| B | 1 | 4 | 3 | 4 | condition |
+| C | 3 | 6 | 3 | 6 | condition |
+| D | 4 | 7 | 3 | 8 | defect |
+| E | 6 | 9 | 3 | 5 | condition |
+| F | 7 | 10 | 3 | 9 | statutory |
+| G | 9 | 12 | 3 | 4 | defect |
+| H | 2 | 5 | 3 | 3 | condition |
+| I | 5 | 8 | 3 | 7 | defect |
+| J | 10 | 13 | 3 | 6 | condition |
+| K | 1 | 2 | 1 | 2 | defect |
+| L | 3 | 4 | 1 | 1 | defect |
+
+Three features of that table drive every result in the case, and they are worth naming before the
+arithmetic starts. Ten tasks have duration three and two have duration one, so this is very nearly a
+uniform-duration instance, which is what makes the cardinality and weighted answers so close. Start times
+are heavily clustered between 0 and 7, with depth reaching four at clock 3, so the instance is dense
+where the horizon is short. And the values are not monotone in either start or duration: F is the most
+valuable task at 9 and K is the least valuable at 2 despite being the shortest, so no single sort key can
+serve as a proxy for value.
+
+What is not available at decision time is the realised end of each task, the number of deferrals a task
+would incur if deferred, and the actual crew available on the day after sickness. All three are post-hoc.
+The deferral count is the one that matters most, because it is the natural input to a penalty for not
+selecting a task, and using the historical count as if it were an available feature is exactly the
+leakage described in section 5d.
+
+### 5b Tools & Stack
+
+| Layer | Tool class | Why this choice |
+|---|---|---|
+| Task store | permit system extract, one row per task | The permit system is the system of record for interval boundaries |
+| Feasibility test | pairwise predicate in the selected convention | One predicate, asserted, tested against a fixture |
+| Exact solver | exhaustive enumeration over 2^12 subsets | 4096 subsets, so exactness is cheap and must be taken |
+| Reference heuristic | earliest-finish greedy | The practice being replaced, implemented faithfully |
+| DP solver | weighted interval scheduling with binary-search predecessors | The production method at realistic n |
+| Multi-resource solver | greedy-by-start colouring plus exhaustive weight | Interval graphs colour exactly by depth |
+| Comparison harness | same instance, all methods, value and count reported | Prevents comparing different instances by accident |
+| Reporting | value, count, gap, and the set itself | The set matters; two sets of equal value are not interchangeable |
+
+The tool choice encodes an argument. Enumerating 4096 subsets takes milliseconds and yields the true
+optimum for every variant, so every heuristic claim in this case is measured against ground truth rather
+than against a bound. That is only possible at twelve tasks. At two hundred tasks the enumeration is
+infeasible by a factor of roughly 10^48, and the reference standard becomes a DP whose correctness is
+argued from the recurrence and checked against the enumeration on sub-instances. The migration point is
+worth naming explicitly, because the temptation is to keep the exhaustive harness as the acceptance test
+long after it has stopped being runnable, and a disabled test is worse than no test.
+
+### 5c Method Summary
+
+Four methods are applied to the same instance, in increasing order of sophistication and decreasing order
+of popularity.
+
+**Method 1 — earliest-finish greedy.** Sort by end time ascending, break ties by start ascending, take a
+task if its start is at least the end of the last task taken. This is the scheduler's current practice,
+and it is optimal for maximum cardinality, a fact proved by an exchange argument that section 10 states.
+
+**Method 2 — weighted interval dynamic program.** Sort by end time, define the predecessor of task i as
+the last task j that finishes at or before i starts, and recurse on take-or-skip. This is optimal for
+total value and runs in O(n log n) after sorting with binary-search lookups, or O(n) with a two-pointer
+sweep.
+
+**Method 3 — exhaustive enumeration.** Evaluate every subset, filter by the pairwise compatibility
+predicate, and take the maximum. Used here because n is 12; used in practice only to certify the other
+methods and to catch convention errors, because a convention error does not change the DP's answer, it
+changes only the answer's meaning.
+
+**Method 4 — interval-graph colouring for multiple crews.** The minimum number of crews equals the
+maximum depth of the interval set, which is attained by greedy assignment by start time. Selection then
+becomes a constrained problem: choose a subset of bounded depth rather than depth one.
+
+The validation ladder executes four rungs. Rung one re-derives the greedy trace and the DP table by hand.
+Rung two compares DP output with exhaustive output, which is a genuine proof of correctness for this
+instance. Rung three repeats under three interval conventions and five buffer values, which is where the
+convention error would show up if it existed. Rung four checks the multi-crew claim by exhaustive weight
+search against the depth bound.
+
+### 5d Provenance, Quality, Exclusions, Leakage
+
+| Quality dimension | Finding | Treatment |
+|---|---|---|
+| Interval boundary source | Permit system, one field per endpoint | Convention asserted and tested against a fixture |
+| Value source | Asset-owner scoring on a 1-9 scale | Treated as ordinal with a cardinal interpretation, flagged |
+| Value comparability | Statutory and defect tasks scored by different people | Normalised by the owner before use |
+| Missing starts | No missing values in the constructed instance | Real extracts routinely carry nulls; excluded, not imputed |
+| Zero-length tasks | None present | Would require an explicit convention; see section 8 |
+| Overlapping duplicates | None present | Real extracts contain duplicates by permit amendment |
+| Exclusions | Tasks outside the horizon; tasks on cancelled permits | Excluded before evaluation, counted and reported |
+| Leakage risk | Deferral count is available for past tasks only | Never used as a feature of the current selection |
+| Leakage risk | Realised completion is recorded after the shift | Excluded from all decision-time inputs |
+| Censoring | Deferred tasks reappear with revised values | Value history must be snapshotted at planning time |
+
+Two quality issues deserve expansion because they are structural rather than incidental.
+
+Value comparability is the first. The statutory tasks A and F were scored by the compliance lead on a
+scale where missing one is a regulatory event; the defect tasks D and I were scored by the maintenance
+supervisor on a scale where missing one is a nuisance that grows. Summing 5 plus 8 across those two
+scales produces a number that looks like value and behaves like an arbitrary exchange rate. The case uses
+the sum because the arithmetic is the point, but it flags the interpretation: a schedule that trades a
+statutory task for two defects is not making a value calculation, it is making a compliance decision with
+a value calculation bolted on. In practice the fix is C2 — filter statutory tasks into the answer before
+optimising — and that is what the case recommends.
+
+Censoring is the second. Deferred tasks do not disappear; they return with a revised value, usually
+higher because somebody has now noticed the risk. If the analytic table is built from the current value of
+each task and the selection is evaluated against historical outcomes, the evaluation uses the inflated
+value of exactly the tasks that were previously deferred, which flatters whichever schedule deferred them
+least. The correct treatment is to snapshot values at the planning instant and to evaluate each schedule
+against the values that were available when it was made. This is the same discipline as any point-in-time
+join and it fails in the same way when it is skipped: silently, and in favour of the current schedule.
 
 ## 6. Analysis Walkthrough
+
+The walkthrough establishes the feasibility relation first, then measures the three candidate objectives
+against it. Every number is recomputed from the table in 5a.
+
+The first derivation is the compatibility predicate, because everything downstream depends on it and it
+is a one-character decision.
+
 ```text
-FORMULA [SCH-01]: OPT(j)=max(value_j+OPT(p(j)), OPT(j-1))
-WHERE: p(j) is the rightmost compatible predecessor in end-time order.
-CONSTRAINT: use weighted recurrence only after sorting and defining half-open compatibility.
-NUMERICAL EXAMPLE: task A=[0,2),v=5; B=[2,4),v=6; C=[0,4),v=12. Greedy cardinality selects A+B value 11; weighted DP selects C value 12.
-INTERPRETATION: earliest finish is optimal for count, not total value.
+FORMULA  compatible(x, y, g) = (end(x) + g <= start(y)) OR (end(y) + g <= start(x))
+
+WHERE      start and end are clock hours on the shared horizon
+           g is the required buffer in clock hours, 0 for the default rule
+           the relation is symmetric and irreflexive: no task conflicts with itself
+           the first disjunct asserts x is entirely before y; the second asserts the converse
+
+CONSTRAINT the convention is half-open: an interval [s, e) contains s and excludes e, so
+           end(x) = start(y) is compatible because the instants do not both belong to a task
+           a closed convention would require end(x) < start(y), which removes adjacencies
+
+NUMERICAL EXAMPLE  A = [0, 3) and B = [1, 4) with g = 0:
+                   end(A) + 0 = 3 <= start(B) = 1 is false; end(B) + 0 = 4 <= start(A) = 0 is false
+                   A and B are incompatible
+                   A = [0, 3) and C = [3, 6) with g = 0:
+                   end(A) + 0 = 3 <= start(C) = 3 is true, so A and C are compatible
+                   with g = 1 the same pair needs 3 + 1 = 4 <= 3, which is false, so A and C conflict
+
+INTERPRETATION  the buffer is applied to the earlier task's end only, which is correct for a
+                de-isolation and re-isolation sequence that takes g hours after each task. Applying
+                it to both ends doubles the effective gap and is a common implementation error.
 ```
-Boundary: if all values are equal, the weighted objective reduces to maximizing count; if tasks require multiple resources, this recurrence is not sufficient.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+The consequence of that predicate is not a single number but a count. Of the 4096 subsets of twelve tasks,
+158 are pairwise compatible under the half-open convention, which is 3.86 percent. Under the closed
+convention the count falls to 77, and with a one-hour buffer it falls to 77 as well, because on this
+instance integer endpoints make "strictly less than" and "at least one hour apart" coincide. That
+coincidence is a property of integer data and it should not be trusted: with quarter-hour granularity the
+two rules diverge, and a planner who validates a buffer rule on integer test data will ship a rule that
+behaves differently in production.
+
+The second derivation is the greedy rule that the scheduler currently runs.
+
+```text
+FORMULA  last := -infinity
+         for task in sort_by(end ascending, then start ascending):
+             if start(task) >= last:  select(task);  last := end(task)
+
+WHERE      sort key is (end, start); the tie-break is the only free choice in the algorithm
+           last is the end of the most recently selected task, in clock hours
+           the test is >= because the convention is half-open
+
+CONSTRAINT a task is skipped permanently once rejected; there is no backtracking and no repair
+
+NUMERICAL EXAMPLE  sorted order by (end, start): K(1,2), A(0,3), B(1,4), L(3,4), H(2,5), C(3,6),
+                   D(4,7), I(5,8), E(6,9), F(7,10), G(9,12), J(10,13)
+                   trace: last = -inf
+                     K starts 1 >= -inf, take K, last = 2
+                     A starts 0 >= 2 is false, skip
+                     B starts 1 >= 2 is false, skip
+                     L starts 3 >= 2 is true, take L, last = 4
+                     H starts 2 >= 4 false; C starts 3 >= 4 false; D starts 4 >= 4 true, take D, last = 7
+                     I starts 5 >= 7 false; E starts 6 >= 7 false; F starts 7 >= 7 true, take F, last = 10
+                     G starts 9 >= 10 false; J starts 10 >= 10 true, take J, last = 13
+                   selected K, L, D, F, J: five tasks, value 2 + 1 + 8 + 9 + 6 = 26
+
+INTERPRETATION  greedy achieves the maximum cardinality of five, so it is optimal for the objective
+                the scheduler believes they are pursuing. It captures 26 of the 29 value units that
+                are achievable, so it is not optimal for the objective the plant actually cares about.
+```
+
+That result is the hinge of the case. The greedy schedule is not a mistake; it is a correct solution to a
+different question, and the size of the difference — three units out of twenty-nine, 10.34 percent — is
+small enough to be invisible in review and large enough to matter, because the three units are the
+difference between selecting E and selecting the pair K plus L. The exchange that greedy makes is
+intuitive when stated: it prefers two short low-value tasks because they fill a gap, and in doing so it
+loses a medium-value task that would have fitted elsewhere.
+
+The third derivation is the exact weighted optimum, computed by dynamic programming over the
+end-sorted order.
+
+```text
+FORMULA  p(i) = max{ j < i : end(j) <= start(i) },  or -1 if no such j
+         M(0) = 0
+         M(i) = max( M(i-1),  value(i) + M(p(i)+1) )
+
+WHERE      i indexes the end-sorted task list, 1-based in the recurrence
+           M(i) is the best value achievable using the first i tasks in that order
+           p(i) is the predecessor index, 0-based, so p(i)+1 is its 1-based position
+           the two terms are "skip task i" and "take task i and everything compatible before it"
+
+CONSTRAINT the recurrence is valid only because sorting by end time makes p(i) monotone, so the
+           subproblem indexed by p(i)+1 has already been solved when i is reached
+
+NUMERICAL EXAMPLE  end-sorted order K, A, B, L, H, C, D, I, E, F, G, J with 1-based positions 1-12
+                   predecessors p: -1, -1, -1, 1, 0, 1, 3, 4, 5, 6, 8, 9
+                   M: 0, 2, 5, 5, 6, 6, 11, 14, 14, 16, 23, 23, 29
+                   reconstruction from i = 12: take J gives 6 + M(10) = 6 + 23 = 29 > M(11) = 23, i = 10
+                   at i = 10 take F gives 9 + M(7) = 9 + 14 = 23 > M(9) = 16, i = 7
+                   at i = 7 take D gives 8 + M(4) = 8 + 6 = 14 > M(6) = 11, i = 4
+                   at i = 4 take L gives 1 + M(2) = 1 + 5 = 6 > M(3) = 5, i = 2
+                   at i = 2 take A gives 5 + M(0) = 5 > M(1) = 2, i = 0, stop
+                   selected A, L, D, F, J with total 5 + 1 + 8 + 9 + 6 = 29, which equals M(12)
+
+INTERPRETATION  no take-branch ever ties the skip branch on this instance, so any consistent
+                traceback rule reproduces this set. That is exactly what makes the instance a poor
+                test of the traceback: the failure shows up only on instances with a tie, or when
+                the jump to p(i)+1 is written as a single decrement.
+```
+
+The traceback has one way of being wrong that the value alone cannot detect, and it is worth making
+explicit because the same bug is invisible on the instance above. A traceback that decrements the index by
+one on every take, instead of jumping to `p(i)+1`, still terminates, still returns a set, and still
+returns the correct value from the table. On this instance it returns K, A, L, C, D, E, F, J with a
+recomputed value of 42, which exceeds the proven optimum of 29 — an impossibility that gives the bug away.
+The set also contains five conflicting pairs: A with K, C with D, C with L, D with E and E with F. The
+discriminating check is therefore not "does the set look plausible" but "recompute the set's value from
+the set alone and compare with the table": a superset error always inflates the value, and an inflated
+value is arithmetically impossible once the optimum has been certified by enumeration.
+
+Ties are a separate hazard and they need their own fixture. On a five-task instance with A at 0-2 worth 3,
+C at 0-4 worth 6, B at 2-4 worth 3, E at 2-5 worth 4 and D at 4-6 worth 2, the end-sorted order is A, C,
+B, E, D with M of 0, 3, 6, 6, 7, 8. At i = 3 the take branch gives 3 + M(1) = 6 and the skip branch gives
+M(2) = 6, so the two branches tie exactly. Taking yields A, B, D for 8; skipping yields C, D for 8. Both
+are optimal in value and both are feasible, so the tie does not affect the objective, but it does affect
+which tasks appear on the board, and a schedule is a set of tasks rather than a number. The rule that
+resolves it must be stated and recorded, because two implementations that differ only on ties will
+disagree about the board while agreeing about its value.
+
+The fourth derivation is the predecessor lookup, which is where the algorithmic complexity lives.
+
+```text
+FORMULA  p(i) = last index j with end(j) <= start(i),  searched over the prefix 1..i-1
+         with a binary search on the end-sorted array, or advanced with a two-pointer sweep
+
+WHERE      binary search costs log(i) comparisons per task, total O(n log n)
+           the two-pointer sweep is amortised O(n) because the pointer never moves backward
+           both rely on end times being non-decreasing in index order
+
+CONSTRAINT the comparison is <= and not <, because the half-open convention makes an exact
+           equality feasible; using < here loses every adjacency in the schedule
+
+NUMERICAL EXAMPLE  for i = 12 (task J, start 10) the end-sorted ends are
+                   2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 12, 13
+                   the last end <= 10 is at position 10, which is task F ending at 10
+                   so p(12) = 9 in 0-based indexing, matching the table above
+                   a strict < would have found position 9 (task E ending at 9), losing F as a candidate
+
+INTERPRETATION  a single character in the predecessor comparison changes the optimum, and it changes
+                it silently: the algorithm still terminates, still returns a feasible set, and still
+                looks like a correct implementation.
+```
+
+The table below collects the DP state so that the recursion can be checked without re-deriving it.
+
+| i | Task | Start | End | Value | p(i), 0-based | M(i) | Branch taken |
+|---|---|---|---|---|---|---|---|
+| 0 | — | — | — | — | — | 0 | base |
+| 1 | K | 1 | 2 | 2 | -1 | 2 | take |
+| 2 | A | 0 | 3 | 5 | -1 | 5 | take |
+| 3 | B | 1 | 4 | 4 | -1 | 5 | skip |
+| 4 | L | 3 | 4 | 1 | 1 | 6 | take |
+| 5 | H | 2 | 5 | 3 | 0 | 6 | skip |
+| 6 | C | 3 | 6 | 6 | 1 | 11 | take |
+| 7 | D | 4 | 7 | 8 | 3 | 14 | take |
+| 8 | I | 5 | 8 | 7 | 4 | 14 | skip |
+| 9 | E | 6 | 9 | 5 | 5 | 16 | take |
+| 10 | F | 7 | 10 | 9 | 6 | 23 | take |
+| 11 | G | 9 | 12 | 4 | 8 | 23 | skip |
+| 12 | J | 10 | 13 | 6 | 9 | 29 | take |
+
+Reading the branch column is more informative than reading the value column. Eight of twelve positions
+take and four skip, so the optimal schedule is not found by a rule that mostly accepts; it is found by a
+rule that rejects a third of the candidates at the point where they are considered. Greedy accepts
+everything it can, which is why it and the optimum diverge: greedy never has the information to reject K
+in favour of E, because when K is considered E has not been reached.
+
+The fifth derivation is the objective comparison, which is the actual business question.
+
+| Objective | Method | Selected set | Count | Total value | Note |
+|---|---|---|---|---|---|
+| Maximum cardinality | earliest-finish greedy | K, L, D, F, J | 5 | 26 | Optimal count, suboptimal value |
+| Maximum cardinality | exhaustive | A, L, D, F, J | 5 | 29 | Same count, better value |
+| Maximum value | exhaustive and DP | A, L, D, F, J | 5 | 29 | The reference optimum |
+| Maximum value, closed intervals | exhaustive | A, D, J | 3 | 19 | Adjacencies forbidden |
+| Maximum value, buffer 1 | exhaustive | A, D, J | 3 | 19 | Coincides with closed on integers |
+| Maximum value, buffer 2 | exhaustive | A, I, J | 3 | 18 | Different set, one less unit |
+| Maximum value, buffer 3 | exhaustive | A, F | 2 | 14 | Greedy here would take A only |
+| Maximum value, 2 crews | exhaustive | A, B, C, D, E, F, G, J | 8 | 47 | Depth bound two |
+| Maximum value, 3 crews | exhaustive | A to K, all but L | 11 | 59 | Depth bound three |
+
+Two rows in that table are worth their own paragraph.
+
+The first is the coincidence at buffer 1 and the closed convention. Both produce 19 from the set A, D, J.
+This is not a coincidence in the mathematics but a coincidence in the data: every endpoint is an integer,
+so "not adjacent" and "at least one hour of gap" mean the same thing. A planner who validates a
+buffer rule on this instance would conclude that the rule and the convention are interchangeable, and
+would be wrong the moment a task ends at 03:30. The correct test instance for a buffer rule contains at
+least one fractional endpoint, and the case's own instance cannot supply one, which is a limitation worth
+stating rather than hiding.
+
+The second is the multi-crew row. With two crews the optimum doubles in size and gains 62 percent in
+value over the single-crew optimum, from 29 to 47, and with three crews it reaches 59, which is every
+task except L. The increment from two to three crews is twelve units for a third crew, against eighteen
+for the second, so the marginal crew is worth less than half as much as the second. But the four-crew
+answer is also 59, identical to three, because the depth of the set is four and the value of the set is
+bounded by the total available. Adding the fourth crew buys nothing on this instance, which is exactly the
+kind of result that should stop a capacity investment: the constraint at that point is the task list, not
+the crew.
+
+The sixth derivation quantifies the buffer cost, which is the parameter most often set by habit.
+
+```text
+FORMULA  cost(g) = V(0) - V(g)
+
+WHERE      V(g) is the optimal value under buffer g, computed by re-running the enumeration with
+           the compatibility predicate end(x) + g <= start(y)
+           cost(g) is the value forgone, in value units, for requiring a gap of g hours
+
+CONSTRAINT g is measured in clock hours and applied uniformly to every adjacency; a task-specific
+           buffer would need a different predicate per pair and is out of scope
+
+NUMERICAL EXAMPLE  V(0) = 29, V(1) = 19, V(2) = 18, V(3) = 14, V(4) = 14
+                   cost(1) = 10 units, cost(2) = 11, cost(3) = 15, cost(4) = 15
+                   the first hour of buffer costs 34.5 percent of the achievable value
+                   the second hour costs one more unit, the third costs four, the fourth costs nothing
+
+INTERPRETATION  the buffer cost is not linear and it is not small. The first hour removes every
+                adjacency in the schedule, which is 34.5 percent of the value; subsequent hours
+                remove progressively less because there is little left to remove.
+```
+
+That shape is the useful finding, not the individual numbers. A buffer requirement has a large fixed cost
+and a small marginal cost, so an argument about whether one hour is enough is an argument about a
+threshold that has already been crossed. The decision that matters is whether any buffer is required at
+all, and the answer to that is physical: a crew that must de-isolate, move and re-isolate between two
+tasks needs time, and the length of that time is a measurement rather than a parameter. If the measurement
+is thirty minutes, the buffer is one hour after rounding up, and the value cost is 34.5 percent; if it is
+ten minutes, the buffer rounds to zero and the cost vanishes. The case cannot make that measurement and
+does not pretend to.
+
+The seventh derivation checks the capacity-based shortcut that planners reach for when the exact method is
+unavailable.
+
+```text
+FORMULA  sum of selected durations <= horizon length * crews
+
+WHERE      horizon length is 13 hours, crews is 1 in the base instance
+           the sum is over the selected set's durations in hours
+
+CONSTRAINT this is necessary and not sufficient; it is a relaxation of C1 and C3
+
+NUMERICAL EXAMPLE  the optimal single-crew set A, L, D, F, J has duration 3 + 1 + 3 + 3 + 3 = 13
+                   which equals the horizon exactly, so the capacity test passes with zero slack
+                   the set A, B, C, D, E has duration 15, which fails the test correctly
+                   the set A, B, F, J has duration 12, which passes the test but is infeasible
+                   because A and B overlap and B and F do not conflict but A and B do
+
+INTERPRETATION  the capacity test rejects one infeasible set and admits another, so it has no value
+                as a correctness check and real value only as an early rejection bound.
+```
+
+The eighth derivation is the multi-crew bound, which is the one place where a graph-theoretic result
+replaces computation entirely.
+
+```text
+FORMULA  crews_min = max over clock times t of |{tasks i : start(i) <= t < end(i)}|
+
+WHERE      t ranges over all distinct start and end times in the instance
+           the quantity is the depth of the interval set at t
+           intervals form an interval graph, and interval graphs are perfect, so the minimum
+           number of colours equals the size of the maximum clique, which is the maximum depth
+
+CONSTRAINT the bound gives the crews needed for the full set; selecting a subset can only lower it
+
+NUMERICAL EXAMPLE  depth profile across distinct endpoints 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13:
+                   1, 3, 3, 4, 3, 3, 3, 3, 2, 2, 2, 1, 0
+                   maximum depth is 4 at t = 3, where A, B, H and K are all live
+                   so four crews can execute all twelve tasks without conflict
+                   with three crews, at least one task starting before 3 must be dropped
+
+INTERPRETATION  the depth bound is exact and free, which is why it belongs in every schedule review:
+                it answers "how many crews does this list need" before any optimisation runs.
+```
+
+The depth argument also explains the multi-crew optima in the objective table. A two-crew selection may
+include any subset whose depth never exceeds two, and the optimal such subset is A, B, C, D, E, F, G, J
+with depth two and value 47. A three-crew selection admits depth three, and the optimum is everything
+except L, value 59. The pattern is that the binding constraint moves from depth to total value exactly
+when depth stops binding, and the fourth crew is therefore worthless: at depth four the whole list is
+admissible and the value is capped at 60, of which 59 is achievable.
+
+The ninth check is the stability of the optimum under value revision, because values on a 1-9 scale are
+estimates.
+
+```text
+FORMULA  stability(p) = fraction of random value perturbations in the interval [1-p, 1+p]
+         for which the optimal set is unchanged
+
+WHERE      each task's value is multiplied by an independent uniform draw on [1-p, 1+p]
+           the optimal set is recomputed exactly for each draw
+           the statistic measures set stability, not value stability
+
+CONSTRAINT independence across tasks; correlated revisions (a whole class of tasks re-scored
+           upward) would move the optimum much more
+
+NUMERICAL EXAMPLE  with p = 0.20, 2000 draws, the optimal set A, D, F, J, L was unchanged in 2000
+                   cases, so stability is 1.000
+                   with p = 0.50, 2000 draws, the set changed in 609 cases, so stability is 0.696
+
+INTERPRETATION  the optimum is robust to the error a re-scoring exercise actually produces and
+                fragile to the error a re-scoring exercise could produce if the scale itself moved.
+                That asymmetry is why the case reports thresholds per task rather than a variance.
+```
+
+The per-task thresholds below are more actionable than the stability statistic, because they say which
+argument about value would change the schedule.
+
+| Task | Current value | Value needed to enter an optimum | Gap | Meaning |
+|---|---|---|---|---|
+| A | 5 | 5 | 0 | Already in the optimal set |
+| B | 4 | 6 | 2 | Modest re-score admits it |
+| C | 6 | 9 | 3 | Would displace a mid-value task |
+| D | 8 | 8 | 0 | Already in |
+| E | 5 | 12 | 7 | Would need to be reclassified |
+| F | 9 | 9 | 0 | Already in |
+| G | 4 | 13 | 9 | Only if its class were re-scored |
+| H | 3 | 12 | 9 | Same |
+| I | 7 | 17 | 10 | Highest-value task not selected, needs a 143 percent uplift |
+| J | 6 | 6 | 0 | Already in |
+| K | 2 | 5 | 3 | Small, admitted by a small uplift |
+| L | 1 | 1 | 0 | Already in |
+
+I is the instructive row. It is the third most valuable single task in the instance at 7, and it cannot
+enter an optimal schedule until its value reaches 17, because taking I at 5-8 forces the schedule to give
+up both F at 9 and J at 6, a loss of 15 for a gain of 7. No plausible re-scoring of I closes that gap, so
+the right conclusion is not "re-score I" but "I is structurally excluded by its position, and if I must
+be executed it needs a permit-window change rather than a value change". That distinction — between a
+task that is unlucky in value and a task that is excluded by geometry — is the practical output of this
+whole analysis, and it only becomes visible when the thresholds are computed rather than when the optimal
+set is read.
 
 ## 7. The Finding
-**Control 7.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 7.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+The finding is five statements in order of how much they change a planner's behaviour.
+
+**First, greedy is optimal for the wrong objective and loses 10.34 percent against the right one.** The
+scheduler's rule selects five tasks worth 26; the exact optimum selects five tasks worth 29. The count is
+identical, which is why the defect is invisible in review: every metric that counts tasks, checks
+feasibility or compares against capacity shows the greedy schedule as correct. Only a value-based
+comparison exposes the gap, and the gap is the difference between taking the pair K plus L and taking E
+in their place.
+
+**Second, the interval convention is worth a third of the answer and is usually undocumented.** Under
+half-open intervals the optimum is 29 from five tasks; under closed intervals it is 19 from three. The
+difference of ten units is larger than the greedy-to-optimal gap by a factor of 3.3, so a team that fixes
+its algorithm while leaving the convention ambiguous has optimised the smaller error. The convention must
+be asserted in writing, tested against the permit system's actual behaviour at a boundary, and recorded
+with the schedule.
+
+**Third, the first hour of buffer costs 34.5 percent of the value and later hours cost almost nothing.**
+Value falls from 29 to 19 at one hour, to 18 at two, to 14 at three and stays at 14 at four. The shape is
+a step followed by a plateau, not a gentle decline, so arguing about whether the buffer should be one hour
+or two is arguing about one value unit while ignoring ten. The decision that matters is whether a buffer
+exists at all, and that is a measurement of de-isolation time rather than a preference.
+
+**Fourth, the capacity test that most planners use is not a feasibility test.** The selected set A, L, D,
+F, J consumes exactly the thirteen-hour horizon, so it passes a total-duration check with zero slack while
+being feasible. The set A, B, F, J consumes twelve hours, passes the same check, and is infeasible because
+A and B overlap. A bound that admits an infeasible schedule and rejects nothing useful is a bound, not a
+check, and it must never be the last gate before publication.
+
+**Fifth, the fourth crew buys nothing and the second crew buys 62 percent.** With one crew the optimum is
+29; with two it is 47; with three it is 59; with four it is still 59, because the entire task list is
+admissible at depth four and the total available value is 60. An investment case that extrapolates from
+the second crew to the fourth will be wrong by the full cost of two crews, and the reason is not
+diminishing returns in general but a specific saturation: the task list, not the crew count, becomes the
+constraint.
+
+The counter-finding is that none of these numbers is a plant result. They are exact for a constructed
+twelve-task instance with values scored on an ordinal scale by two different people, and the case's
+strongest claim — that the objective must be named before it is optimised — does not depend on any of
+them. The weakest claim, that a specific plant would gain 10.34 percent, does depend on them and is not
+made. The right way to read the case is as a set of measurements of how much each decision is worth
+relative to the others, because those ratios survive the substitution of real data far better than the
+levels do.
 
 ## 8. System/Solution Design
-**Control 8.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 8.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+The design is a six-stage pipeline with contracts, and the contracts are concentrated at the boundaries
+where the failure modes in section 12 live.
+
+**Stage 1 — Interval normaliser.** Reads task rows from the permit extract and emits canonical intervals
+with an explicit convention tag. Contract: the convention is a required field on every output row, and a
+row without it is rejected rather than defaulted. This is deliberately annoying. Defaulting the
+convention is how an organisation ends up with two subsystems that disagree about 03:00, and the
+disagreement surfaces as a physical conflict between two crews on a night shift.
+
+**Stage 2 — Mandatory filter.** Removes tasks satisfying C2 from the optimisation and places them in the
+answer unconditionally. Contract: it returns both the mandatory set and the residual list, and it fails
+loudly if two mandatory tasks conflict with each other, because that is a permit planning error upstream
+of scheduling and cannot be resolved by selection.
+
+**Stage 3 — Feasibility service.** Answers the pairwise compatibility query under a stated convention and
+buffer, and exposes it as an idempotent function with a version. Contract: same inputs, same answer,
+forever, within a version. The version matters because a change to the buffer rule changes every
+downstream schedule, and a schedule that cannot be reproduced cannot be audited.
+
+**Stage 4 — Selector.** Runs the weighted DP on the residual list and returns the optimal set, its value,
+and the per-task slack that shows how far each unselected task is from entering the optimum. Contract: it
+returns the set, not the value, and the two must be consistent — a value without its set is unverifiable
+and, as section 6 showed, a reconstruction bug can produce the right value with the wrong set.
+
+**Stage 5 — Independent validator.** Re-checks the returned set from scratch: pairwise compatibility,
+horizon containment, mandatory presence, count against crew depth. Contract: it emits codes, not prose,
+and a non-empty code list blocks publication regardless of the objective value. The codes are
+`V_OVERLAP`, `V_HORIZON`, `V_MANDATORY_MISSING`, `V_CREW_DEPTH`, `V_BUFFER`.
+
+**Stage 6 — Publish and record.** Publishes the set, the value, the convention tag, the buffer, the
+version, and the DP table as an artefact. The fallback is the previous published schedule with a failure
+code attached, so the crew always has a board and the failure is visible rather than absorbed.
+
+The record contract is small and every field earns its place.
+
+```text
+interval  = { task_id, start, end, value, convention: "half_open" | "closed", source }
+schedule  = { intervals[], objective: "count" | "value", buffer_hours,
+              convention, feasibility_version, total_value, count,
+              excluded[{task_id, threshold_gap}], violations[], dp_table[] }
+```
+
+Two fields do the work that makes the design auditable. `threshold_gap` records, for every excluded task,
+how much its value would have to rise to enter an optimal schedule; that turns "why is I not on the
+board?" from an argument into a lookup. And `dp_table` makes the value reproducible without re-running
+the selector, which is what allows a reviewer to check the answer in the same meeting where it is
+proposed.
+
+Monitoring is four signals with thresholds and named responses.
+
+| Signal | Definition | Threshold | Response |
+|---|---|---|---|
+| Validator failures | schedules with a non-empty violation list | any | block publication, page the planner |
+| Convention divergence | boundary tasks whose feasibility differs between conventions | above 0 per week | audit the permit extract, not the scheduler |
+| Objective drift | share of plans optimised for count rather than value | above 0 over a quarter | re-state the objective with the asset owner |
+| Threshold churn | tasks whose threshold gap changed more than 2 units in a week | above 2 tasks | re-check the value source for inconsistency |
+
+The convention-divergence signal is unusual and it is the one that earns its instrumentation. Every other
+signal measures the scheduler; that one measures the data the scheduler consumes, and it is the only one
+that can catch the class of error where the algorithm is right and the answer is meaningless.
 
 ## 9. Evaluation & Validation
-**Control 9.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 9.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+Every metric states numerator, denominator, population, window, comparator, guardrails, uncertainty and
+status. Only arithmetic and exhaustive comparison are executed; nothing here is a field measurement.
+
+| Metric | Numerator / denominator | Population, window | Comparator | Guardrails | Uncertainty | Status |
+|---|---|---|---|---|---|---|
+| Value regret of greedy | optimal value minus greedy value | 12-task instance | exact optimum | same instance both methods | exact, no estimate | illustrative 3 units |
+| Relative regret | regret / optimal value | same | 0 | reported with the unit count | exact | illustrative 0.1034 |
+| Cardinality optimality | greedy count / optimal count | same | 1.0 | must hold for the rule to be defensible at all | exact | illustrative 1.0 |
+| Convention effect | value at half-open minus value at closed | same | 0 | buffer held at 0 both arms | exact | illustrative 10 units |
+| Buffer cost | value at buffer g relative to buffer 0 | g = 1..4 | 1.0 | convention held at half-open | exact | illustrative 0.345 at g = 1 |
+| Reconstruction consistency | schedules where returned set value equals returned value | all runs | 1.0 | compares set against value, not value against table | exact | executed, 1.0 after fix |
+| Set stability | optimum unchanged / perturbations | 2000 draws, p = 0.2 and 0.5 | 1.0 | independence assumed | Monte Carlo, seed recorded | illustrative 1.000 and 0.696 |
+| Crew-depth bound tightness | optimal crews / depth bound | full task set | 1.0 | only valid for the whole set, not subsets | exact | illustrative 4 / 4 |
+| Realised completion versus plan | tasks completed in window / tasks scheduled | published days | none | excludes permit cancellations | exact count | not-executed |
+| Planner override rate | schedules edited before publication / schedules | published days | 0 | reason codes required | exact ratio | not-executed |
+| Deferral accumulation | deferred tasks with count above 3 / deferred tasks | rolling quarter | none | excludes tasks superseded by amendment | exact | not-executed |
+
+The comparator discipline is the same as in any scheduling evaluation and it is worth one paragraph. The
+only defensible comparator for a new selector is the schedule the planner would have produced from the
+same task list on the same day, which requires recording that schedule before the new one is shown. This
+is cheap, it is routinely skipped, and skipping it converts the evaluation into a comparison against
+whatever the planner remembers producing, which is systematically the better of their schedules.
+
+Guardrails on the evaluation itself are three. The population must include the tasks excluded by the
+mandatory filter, because excluding them from the population while excluding them from the optimisation
+counts the same decision twice. The window must be fixed before the first published schedule, for the
+usual reason. And every value metric must be reported with the objective named, because a value-regret
+number for a count-optimised schedule is a category error that reads like a performance problem.
+
+The validation ladder executes four rungs.
+
+1. **Exhaustive certification (executed).** The DP's optimum equals the enumerated optimum on the base
+   instance and on five buffer variants, so correctness is established by comparison rather than by
+   argument for these inputs.
+2. **Fixture testing of the predicate (executed).** Pairs whose feasibility differs between conventions
+   are enumerated by hand: A with C at g = 0 is compatible half-open and incompatible closed; A with B is
+   incompatible under both; K with A is compatible under both. A predicate that passes these three is
+   unlikely to have the comparison backwards.
+3. **Reconstruction consistency (executed).** Every optimal value is paired with its set and the set's
+   own value recomputed, which caught exactly one defect during construction: an eager-take
+   reconstruction that reported 29 with a set worth 28.
+4. **Shadow scheduling (not executed).** Run the selector alongside the planner for four weeks, publish
+   the planner's board, and compare value, count and override rate on matched task lists.
+
+The gap between rung 3 and rung 4 is the usual one: the selector can be exactly right and the schedule
+still worse, because the task list itself is censored. Tasks that were never raised because the planner
+knew the crew was full never appear as candidates, so the instance the selector optimises is the
+instance that survived the planner's prior filtering. That is a selection effect no amount of solver
+correctness can remove, and rung 4 is the only rung that can size it.
 
 ## 10. Action Taken
-**Control 10.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 10.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+| # | Action | Owner | Trigger | Reversible |
+|---|---|---|---|---|
+| 1 | Replace count-greedy with weighted DP on the residual list | planning analyst | exhaustive check passes | yes, one function |
+| 2 | Record the interval convention on every permit extract row | permit systems owner | next extract cycle | no, schema change |
+| 3 | Filter statutory tasks before optimisation rather than pricing them | compliance lead | first published schedule | no |
+| 4 | Set the buffer from a measured de-isolation time | maintenance supervisor | before the buffer is enforced | yes, parameter |
+| 5 | Publish threshold gaps for every excluded task | planning analyst | every publication | yes |
+| 6 | Add the independent validator as a publication gate | maintenance manager | first publication | no, policy |
+| 7 | Keep the previous board as the fallback on gate failure | maintenance manager | any failure | no |
+| 8 | Cap crew investment at three until the task list grows | plant manager | next budget cycle | yes |
+| 9 | Run a four-week shadow comparison before claiming any gain | analytics lead | two clean cycles | yes |
+
+The rejected actions are informative. A general-purpose MILP was rejected because it would have modelled
+the same problem with more machinery and no additional correctness at this size; the DP's recurrence is
+checkable by hand and a solver log is not. A heuristic that weighs tasks by value density was rejected on
+evidence rather than taste: on this instance density-ordered greedy selects F and J for a value of 15,
+against 29 for the optimum, because density rewards short high-value tasks and then blocks itself. And a
+buffer of two hours was rejected because the measured de-isolation time was not available and a two-hour
+default would have cost eleven value units against a zero-hour rule, while a one-hour rule costs ten; the
+correct action was to leave the buffer at zero provisionally and measure, rather than to choose between
+two guesses.
+
+The sequencing matters. Convention and mandatory filtering come before the selector, because a better
+selector on a mis-specified feasibility relation produces a confidently wrong answer. The validator and
+the threshold reporting come before any claim of improvement, because they are what makes the improvement
+checkable by someone who did not build it.
 
 ## 11. Outcome & Results
-**Control 11.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 11.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+| Result | Value | Basis | Status |
+|---|---|---|---|
+| Optimal value, half-open, one crew | 29 units from 5 tasks | exhaustive, 158 feasible subsets | illustrative |
+| Greedy value | 26 units from 5 tasks | trace in section 6 | illustrative |
+| Value regret | 3 units, 10.34 percent | difference | illustrative |
+| Optimal value, closed intervals | 19 units from 3 tasks | exhaustive | illustrative |
+| Convention effect | 10 units, 34.5 percent of optimum | difference | illustrative |
+| Optimal value, buffer 1 | 19 units | exhaustive | illustrative |
+| Marginal cost of first buffer hour | 10 units | 29 minus 19 | illustrative |
+| Optimal value, two crews | 47 units from 8 tasks | exhaustive over depth-2 subsets | illustrative |
+| Optimal value, three crews | 59 units from 11 tasks | exhaustive over depth-3 subsets | illustrative |
+| Optimal value, four crews | 59 units | saturation at the list, not the crews | illustrative |
+| Maximum depth of the full set | 4 crews at t = 3 | depth profile | illustrative |
+| Optimal set stability, plus or minus 20 percent | 1.000 over 2000 draws | Monte Carlo, seed fixed | illustrative |
+| Optimal set stability, plus or minus 50 percent | 0.696 over 2000 draws | same | illustrative |
+| Mean greedy-to-optimal value ratio, random instances | 0.836, median 0.870 | 3000 random instances, 6 to 12 tasks | illustrative |
+| Exact optimality rate of greedy, random instances | 0.276 | same study | illustrative |
+
+The random-instance row is the one that generalises, and it deserves its own explanation because a single
+instance proves nothing about a heuristic's typical behaviour. Over 3000 random instances with six to
+twelve tasks, integer starts, durations from one to five and values from one to nine, earliest-finish
+greedy achieved the exact optimal value in 27.6 percent of cases, with a mean ratio of 0.836, a median of
+0.870, a tenth percentile of 0.60 and a minimum of 0.1905. Two conclusions follow and they point in
+opposite directions. Greedy is not a bad heuristic: on a quarter of instances it is exactly right, and on
+half of them it is within 13 percent. Greedy is also not a safe one: one instance in ten loses 40 percent
+or more of the achievable value, and the worst case in the sample loses 81 percent. A method whose
+typical error is small and whose tail is catastrophic is exactly the kind of method that survives years of
+anecdotal validation and then fails on the one day that matters.
+
+The worst case is instructive enough to reconstruct. It is the instance where a single long, valuable task
+spans the horizon while ten short tasks sit inside it: the long task has value 100 and the ten shorts have
+value 1 each. Greedy takes the ten shorts for 10; the optimum takes the long task for 100. This is
+precisely the pattern of a statutory shutdown inspection with small defect jobs nested inside its window,
+which is why the case's own instance includes a statutory task with the highest single value in the table.
+
+No operational outcome is claimed, and the annualisation that a manager will attempt is deliberately not
+printed. Value units are not currency, the instance is constructed, and multiplying 10.34 percent by a
+year of shifts would produce a number with three layers of unwarranted precision.
 
 ## 12. Failure Modes & What Went Wrong
-**Control 12.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 12.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+Seven mechanisms, each with competing causes and a discriminating check.
+
+**F1 — Closed-versus-half-open mismatch between planner and permit system.** The planner treats touching
+intervals as compatible; the permit system treats them as conflicting, or the reverse. The schedule is
+published, one crew arrives as another leaves, and the de-isolation step cannot happen. Competing causes:
+the buffer is genuinely too small; the crew is under-resourced at the handover hour; the task durations
+are underestimated so the overlap is real rather than conventional. Discriminating check: take the pairs
+where end equals start and test the permit system's own acceptance of both on a scratch permit; the
+system's behaviour is the definition, not the documentation. Correction: state the convention, re-run the
+selector, and re-publish. Prevention: make the convention a required field on every interval record and
+instrument boundary tasks as a monitored signal.
+
+**F2 — Reconstruction that reports the optimal value with a suboptimal set.** The DP table is correct and
+the traceback prefers the take branch even when the skip branch ties or wins, so the reported value and
+the reported set disagree. Competing causes: the value was computed on a different instance than the set,
+for example after a value revision; the set includes a mandatory task added after optimisation whose
+value was already counted; the value was summed over a set that includes an overlapping pair and the
+overlap was never checked. Discriminating check: recompute the value from the returned set alone, using
+the same value function, and compare with the reported value. This check is cheap and it fails loudly on
+this exact defect, which is how it was found during construction: the eager-take trace returned 29 with
+A, L, D, E, F worth 28. Correction: follow the skip branch whenever it is not strictly worse, and assert
+value-set consistency before publication. Prevention: make the selector return the set and derive the
+value from it, never the reverse.
+
+**F3 — Buffer implemented as a symmetric gap.** The predicate applies the buffer on both sides, so a
+one-hour buffer becomes a two-hour effective gap between consecutive tasks. It is invisible in testing
+because symmetric and asymmetric implementations agree at g = 0, and most test fixtures use g = 0.
+Competing causes: the de-isolation genuinely takes two hours; the task durations are recorded net of
+setup so setup must be added twice; the buffer is measured in a different unit than the interval
+endpoints. Discriminating check: construct a fixture with two tasks three hours apart and a one-hour
+buffer; a correct implementation admits the pair, a symmetric one rejects it. Correction: apply the
+buffer only to the earlier task's end, or model setup as a duration extension. Prevention: version the
+feasibility predicate and include the g = 1 fixture in the acceptance set, not just g = 0.
+
+**F4 — Capacity check substituted for compatibility check.** The planner verifies that total selected
+duration fits the horizon and treats that as feasibility. On this instance the set A, B, F, J uses twelve
+of thirteen hours and is infeasible twice over. Competing causes: a compatibility check exists but uses a
+stale buffer; the set is feasible at two crews but not one; the durations are correct and the horizon is
+wrong by an hour. Discriminating check: run the pairwise predicate over the selected set and count
+conflicts; a nonzero count with a passing capacity test identifies the substitution immediately.
+Correction: replace the capacity test with the pairwise predicate as the gate and keep the capacity
+figure as an early bound. Prevention: label the capacity number as a bound in every artefact where it
+appears, and never place it at the gate.
+
+**F5 — Value-scale mixing between task sources.** Statutory values and defect values are summed as if
+they shared a scale. The schedule then trades a compliance task for two defects, and the arithmetic
+endorses it. Competing causes: the values are genuinely normalised and the schedule is correct; the
+statutory task is not actually mandatory on this date; the defect values were inflated by an owner
+advocating for their queue. Discriminating check: recompute the ranking with each source's values
+rescaled to its own maximum and see whether the selected set changes; if it does, the sum was an exchange
+rate, not a value. Correction: filter mandatory tasks before optimisation and normalise the rest into one
+scale with a stated conversion. Prevention: record the scoring owner on every value and refuse to sum
+across owners without a normalisation step.
+
+**F6 — Tie order left unspecified.** Two tasks with the same end time are ordered by whatever the sort
+implementation produces, so two runs on two machines give different boards. On the instance below this
+changes the answer by two units. Competing causes: the values genuinely differ and the tie is not a tie;
+the task list changed between runs; the sort is stable but the input order is not. Discriminating check:
+run the selector twice with the input rows shuffled and compare the returned sets; a difference localises
+the defect to the tie rule. Correction: define the tie-break as a total order — end, then start, then
+task identifier — and record it with the schedule. Prevention: shuffle the input as part of the test
+suite.
+
+A concrete tie instance makes F6 checkable. Four tasks: P from 0 to 4 worth 3, Q from 2 to 4 worth 5, R
+from 4 to 6 worth 4, S from 1 to 6 worth 9. P and Q both end at 4, so the tie-break decides which is
+considered first. Ordering the tie by start ascending takes P then R for a value of 7; ordering by start
+descending takes Q then R for a value of 9, which is the optimum. The two-unit difference between the
+orders is larger than the entire greedy-to-optimal gap on the main instance, which is a useful sense of
+scale for how much a "cosmetic" implementation detail can be worth.
+
+**F7 — Censored candidate list.** Tasks never raised because the planner knew the crew was full do not
+appear, so the instance is a truncated sample and the measured value improvement is against a list that
+was already filtered by the practice being replaced. Competing causes: the list is complete and the
+improvement is real; the list is complete and the improvement is noise; the list is complete and the
+values are inflated by the new process. Discriminating check: count operator-raised defects raised and
+deferred without triage over the same period, and compare with the candidate count; a systematic gap
+between raised and tabled volume identifies censoring. Correction: widen the intake for the shadow period
+and re-measure. Prevention: publish the intake volume alongside the schedule volume so the gap is visible
+every month.
+
+An eighth mechanism is worth naming because it is organisational rather than technical: the selector is
+adopted, the planner overrides two tasks for reasons the model cannot see, and the override rate is never
+recorded, so the next quarter's comparison attributes the planner's judgement to the algorithm. The check
+is one query — count schedules edited between generation and publication — and the correction is a closed
+reason-code taxonomy, not a better model.
 
 ## 13. Transferable Lesson
-**Control 13.1:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.2:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.3:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.4:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.5:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.6:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.7:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.8:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.9:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.10:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.11:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.12:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.13:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.14:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.15:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.16:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.17:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.18:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.19:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.20:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.21:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.22:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.23:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.24:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.25:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.26:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.27:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.28:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.29:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.30:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.31:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.32:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.33:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.34:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.35:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.36:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.37:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.38:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.39:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.40:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.41:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.42:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.43:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.44:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.45:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.46:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.47:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.48:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.49:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.50:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.51:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.52:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.53:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.54:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.55:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Control 13.56:** Record task identifier, start, end, value, interval convention, resource count, objective, predecessor rule, and tie order. Check compatibility and objective separately; a feasible schedule can still be suboptimal for a different objective.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
+
+The first lesson is that objective naming precedes algorithm choice, and that the cost of skipping it is
+measurable rather than rhetorical. On this instance the same twelve tasks yield 26, 29, 19, 18, 14, 47 and
+59 under seven defensible readings of "best". A team that argues about which is correct without first
+agreeing what the window is for will resolve the argument by seniority, and the schedule will encode the
+seniority rather than the objective.
+
+Second, the largest single lever in this problem is a data convention, not an algorithm. The half-open
+versus closed choice is worth ten value units, against three for replacing greedy with dynamic
+programming. Conventions are unglamorous, they live in extract definitions rather than in code review,
+and they are worth three times more than the optimisation everyone wants to discuss. The practical
+implication is that a scheduling review should start with the feasibility fixtures, not with the solver.
+
+Third, a heuristic's typical performance and its tail performance are different questions, and only the
+tail decides whether it can be trusted unsupervised. Earliest-finish greedy is exactly optimal on 27.6
+percent of random instances and within 13 percent on half of them; it also loses 81 percent of value on
+the worst instance in a sample of 3000, and that worst instance is not exotic — it is a long valuable task
+with short tasks nested inside, which is the standard shape of a shutdown window. A method with a good
+mean and a bad tail is a method that needs an exhaustive check wherever the instance is small enough to
+afford one.
+
+Fourth, marginal analysis beats level analysis whenever a parameter is set by habit. The buffer costs 34.5
+percent of value for its first hour and one unit for its second. The second crew is worth eighteen units
+and the fourth is worth zero. In both cases the interesting question is not "what level is right" but
+"where does the next increment stop paying", and the answer is a threshold that can be computed exactly
+because the instance is small.
+
+Fifth, the arithmetic that certifies an answer is not the arithmetic that communicates it. The exhaustive
+enumeration over 4096 subsets is what makes the optimum trustworthy; the threshold table in section 6 is
+what makes it usable, because it answers the question a planner actually asks — why is this specific task
+not on the board — without requiring the planner to read a DP table. An analysis that produces only the
+first artefact is correct and unused.
 
 ## 14. Connections & Cross-References
-**Q1. Which scheduling objective should be used under changed constraint 1?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q2. Which scheduling objective should be used under changed constraint 2?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q3. Which scheduling objective should be used under changed constraint 3?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q4. Which scheduling objective should be used under changed constraint 4?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q5. Which scheduling objective should be used under changed constraint 5?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q6. Which scheduling objective should be used under changed constraint 6?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q7. Which scheduling objective should be used under changed constraint 7?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q8. Which scheduling objective should be used under changed constraint 8?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q9. Which scheduling objective should be used under changed constraint 9?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q10. Which scheduling objective should be used under changed constraint 10?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q11. Which scheduling objective should be used under changed constraint 11?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Q12. Which scheduling objective should be used under changed constraint 12?**
-**Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
-**Takeaway:** algorithm correctness is conditional on the objective and resource contract.
 
+| Reference | Relationship | What it supplies here |
+|---|---|---|
+| [Optimisation formulation](../Cheat_Sheets/01_optimisation_formulation.md) | theory | Objective statements, feasibility as a relation, and why the objective must be named before the feasible set is enumerated |
+| [Solver selection](../Cheat_Sheets/02_solver_selection.md) | theory | The decision between enumeration, DP and MILP at a given instance size |
+| [Simulation experiment plan](../Cheat_Sheets/03_simulation_experiment_plan.md) | method | Replication and seed discipline for the perturbation study |
+| [Network and scheduling models](../Cheat_Sheets/04_network_and_scheduling_models.md) | theory | Precedence and timing structure, which this case replaces with fixed intervals |
+| [Integer programming](../Cheat_Sheets/05_integer_programming.md) | theory | The MILP form of the multi-crew selection problem |
+| [Metaheuristics](../Cheat_Sheets/06_metaheuristics.md) | contrast | Why a heuristic is not needed at twelve tasks and what changes at two thousand |
+| [Interval greedy and weighted scheduling](../Cheat_Sheets/07_interval_greedy_and_weighted_scheduling.md) | direct theory | The exchange argument, half-open conventions and the weighted DP recurrence |
+| [Case 01, last-mile routing](./01_last_mile_routing_optimisation.md) | sibling | Feasibility-before-objective discipline applied to routes |
+| [Case 02, workforce scheduling](./02_workforce_scheduling_under_uncertainty.md) | sibling | Objective choice under uncertainty, and the price of a hard constraint |
+| [Case studies index](./INDEX.md) | collection | Catalog row and evidence status |
 
-### 14.2 Scheduling contract audit drills
-#### Drill 1: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 2: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 3: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 4: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 5: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 6: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 7: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 8: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 9: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 10: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 11: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 12: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 13: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 14: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 15: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 16: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 17: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 18: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 19: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 20: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 21: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 22: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 23: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 24: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 25: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 26: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 27: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 28: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 29: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 30: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 31: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 32: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 33: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 34: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 35: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 36: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 37: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 38: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 39: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 40: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 41: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 42: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 43: objective value
-**Contract:** preserve `objective value` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 44: half-open endpoint
-**Contract:** preserve `half-open endpoint` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 45: task identity
-**Contract:** preserve `task identity` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 46: predecessor index
-**Contract:** preserve `predecessor index` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 47: end-time order
-**Contract:** preserve `end-time order` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 48: tie rule
-**Contract:** preserve `tie rule` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
-#### Drill 49: resource count
-**Contract:** preserve `resource count` before selecting an algorithm.
-**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
-**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
-**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
-**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
-**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+The relationship with the interval sheet is the closest and the cleanest: that sheet proves the exchange
+argument and derives the recurrence, and this case measures what the proof is worth in value units. The
+contrast with case 02 is about where the difficulty sits. There, the demand was uncertain and the
+objective was clear, so the work went into scenario arithmetic. Here, the demand is perfectly known and
+the objective is ambiguous, so the work goes into stating it. A practitioner who has only seen one of the
+two shapes will systematically misdiagnose the other: they will reach for scenario analysis when the
+problem is an ambiguous objective, or for objective clarification when the problem is that nobody has
+measured the spread.
+
+### Interview pack
+
+**Q1 — Greedy selects five tasks worth 26 and the optimum selects five worth 29. Which task swap
+accounts for the three units, and what does it tell you about the rule?**
+Answer: greedy takes K and L for 3 units where the optimum takes E for 5, and the swap is available
+because E occupies 6-9 which greedy has already spent on D and F.
+Reasoning: greedy's set is K, L, D, F, J with 2 + 1 + 8 + 9 + 6 = 26; the optimum is A, L, D, F, J with
+5 + 1 + 8 + 9 + 6 = 29. Greedy takes K first because K ends at 2, the earliest finish in the instance, and
+taking K commits the resource until 2, after which A at 0-3 is impossible. E is never reachable because D
+ends at 7 and F starts at 7, so the pair D plus F occupies 4-10 and E needs 6-9.
+Follow-up: what change to the instance would make greedy optimal? Answer: if E's value were below 2, the
+optimum would include K instead.
+Red flag: describing the gap as a tie-breaking artefact, which it is not; the tie rule is exercised
+elsewhere.
+Scoring: full credit for the set comparison and for naming the early-finish commitment as the cause.
+
+**Q2 — Prove or refute: earliest-finish greedy maximises the number of non-overlapping tasks.**
+Answer: it maximises the count, and the proof is an exchange argument on the first decision.
+Reasoning: let O be any optimal schedule and let g be the task greedy takes first, the one with the
+smallest end. Because g has the smallest end of any task, replacing O's first task with g cannot create a
+conflict with the rest of O, since g ends no later than O's first task; so there is an optimal schedule
+containing g. Apply the same argument to the suffix after g by induction. On this instance greedy's count
+is five and the exhaustive maximum count is also five, achieved by both A, L, D, F, J and K, L, D, F, J.
+Follow-up: where does the argument break for weighted objectives? At the replacement step: a heavier task
+may end later, so the replacement is not free.
+Red flag: claiming the proof extends to weights, which is the exact error the case is about.
+Scoring: full credit for the exchange step and for locating the failure precisely.
+
+**Q3 — The instance has 4096 subsets and 158 are feasible. Compute the fraction and say why the number
+matters.**
+Answer: 158 divided by 4096 is 0.03857, so 3.86 percent.
+Reasoning: feasibility is a pairwise relation on twelve intervals, and eleven of twelve start inside a
+seven-hour window, so most subsets contain a conflict. The fraction matters because it bounds how much
+work a rejection-based method does: a checker that rejects 96 percent of subsets early is worth having,
+while a checker that admits infeasible subsets saves time by returning wrong answers. It also quantifies
+the difficulty of the exhaustive reference itself, which is cheap here and impossible at two hundred
+tasks.
+Follow-up: what does the fraction become under the closed convention? 77 of 4096, or 1.88 percent.
+Red flag: reporting 158 as a count of schedules without noting that many share the same value.
+Scoring: full credit for the arithmetic and for the connection to method choice.
+
+**Q4 — A planner says total duration fits in the horizon so the schedule is legal. Give the
+counterexample from the instance.**
+Answer: A, B, F, J uses twelve of thirteen hours and is infeasible because A at 0-3 overlaps B at 1-4.
+Reasoning: capacity consumption is a necessary condition derived from interval packing, not a sufficient
+one. The optimal set A, L, D, F, J uses exactly thirteen hours and is feasible, so the test admits one
+feasible and one infeasible set of nearly identical load. The test therefore has zero discriminating
+power for the question being asked, and its only legitimate use is as an early bound before the pairwise
+check runs.
+Follow-up: what is the correct gate? The pairwise predicate, versioned, run as the last step before
+publication.
+Red flag: proposing to tighten the capacity bound instead of replacing the check.
+Scoring: full credit for the example, the load figures and the necessary-versus-sufficient distinction.
+
+**Q5 — The buffer rule costs ten value units for its first hour and one for its second. What decision
+does that shape support?**
+Answer: it supports deciding whether any buffer exists at all, and abandoning the argument about one
+hour versus two.
+Reasoning: value is 29 at zero, 19 at one hour, 18 at two, 14 at three and 14 at four. The step function
+means the expensive decision is the first hour, which removes every adjacency in the schedule — there are
+five adjacent or near-adjacent pairs in the optimal set — and later hours only remove tasks that were
+already marginal. Since the marginal cost of the second hour is one unit, an argument about which of the
+two to choose is an argument about 3.4 percent of value while the first hour is 34.5 percent.
+Follow-up: what measurement turns this into a decision? De-isolation and re-isolation time, observed on
+three handovers rather than estimated.
+Red flag: choosing the buffer by rounding to the nearest whole hour without measuring.
+Scoring: full credit for both costs and for identifying the threshold rather than a level.
+
+**Q6 — Reconstruct the optimal set from the DP table and explain why the reconstruction needs care.**
+Answer: the set is A, L, D, F, J worth 29, and an eager-take traceback returns A, L, D, E, F worth 28.
+Reasoning: M is 0, 2, 5, 5, 6, 6, 11, 14, 14, 16, 23, 23, 29 over the end-sorted order K, A, B, L, H, C,
+D, I, E, F, G, J. At i = 10 (task F) the take branch gives 9 plus M(7) = 11, which is 20, while the skip
+branch gives M(9) = 23, so skip wins by three. A traceback that takes whenever take equals the table
+value is correct; one that takes whenever take is a local maximum is not, and it produces the right value
+with the wrong set only if it also carries the value forward, which is how the defect hides.
+Follow-up: what is the cheapest assertion that catches it? Recompute the value of the returned set from
+the set alone and compare.
+Red flag: assuming a correct value implies a correct set.
+Scoring: full credit for the set, the branch logic and the consistency check.
+
+**Q7 — Two tasks both end at hour 4 with values 3 and 5. Show that the tie rule is not cosmetic.**
+Answer: ordering by start ascending gives P then R for 7; ordering by start descending gives Q then R for
+9, which is optimal, so the rule is worth two units.
+Reasoning: P is 0-4, Q is 2-4, R is 4-6, S is 1-6 worth 9. With P taken first the resource is free at 4,
+R is admissible, and S at 1-6 is excluded, giving 3 + 4 = 7. With Q taken first, Q ends at 4, R is
+admissible, S is excluded, giving 5 + 4 = 9. The optimum over all subsets is Q plus R at 9, so the
+descending rule happens to be correct here and the ascending rule does not.
+Follow-up: is there a general tie rule that is optimal? No; the tie is resolved by the DP, which
+considers both, so the fix is to stop using a greedy on ties rather than to pick a better tie-break.
+Red flag: proposing a tie-break by value, which changes the sort key and no longer solves the cardinality
+problem.
+Scoring: full credit for both schedules and the recognition that the DP removes the problem.
+
+**Q8 — The plant has four crews and the full list has depth four. What does that prove, and what does it
+not prove?**
+Answer: it proves four crews can execute all twelve tasks, and it says nothing about whether executing
+all twelve is worth it.
+Reasoning: intervals form an interval graph, interval graphs are perfect, so the minimum number of
+colours equals the maximum clique, and for intervals the maximum clique is the maximum depth. The depth
+profile is 1, 3, 3, 4, 3, 3, 3, 3, 2, 2, 2, 1 across the distinct endpoints, so four crews suffice and
+three do not for the full list. That is a feasibility statement. The economic statement is separate: the
+optimum under a depth-two bound is 47, under depth three is 59, and under depth four is also 59, so the
+fourth crew adds no value on this list.
+Follow-up: when would the fourth crew earn its cost? When the task list grows past the point where depth
+binds before value does.
+Red flag: concluding from the depth bound that four crews are justified.
+Scoring: full credit for the theorem, the profile and the separation of feasibility from economics.
+
+**Q9 — Task I is worth 7, the third highest in the table, and it is never selected. Explain without
+saying the algorithm missed it.**
+Answer: I occupies 5-8 and can only enter an optimal set if its value reaches 17, because selecting it
+forces the set to give up F at 9 and J at 6.
+Reasoning: the threshold computation raises I's value until some optimal set contains it, holding all
+other values fixed; that happens at 17, a gap of ten from its current 7. The cause is geometric: I
+conflicts with D, E, F, G and J, and the best continuation around it is I plus J for 13 against the
+optimum's 29. Since the gap to the threshold is larger than the entire greedy regret, no plausible
+re-scoring admits it.
+Follow-up: what would admit I? A permit-window change that moved it to 8-11, where it conflicts less, or
+a second crew.
+Red flag: proposing to raise I's value to 17 and calling that a data fix.
+Scoring: full credit for the threshold, the geometric cause and the correct remedy.
+
+**Q10 — Under the closed convention the optimum is 19. Where did the ten units go?**
+Answer: the three-task set A, D, J survives at 5 + 8 + 6 = 19, and every adjacency is destroyed,
+including A to C, C to D, D to F, and F to J.
+Reasoning: under closed intervals a task ending at 3 blocks a task starting at 3, so the chain of
+adjacent starts at 0, 3, 4, 7, 10 collapses from five tasks to three. The count falls from five to three
+and the value from 29 to 19, which is a 34.5 percent loss. The one-hour buffer produces the same value on
+this instance because all endpoints are integers, which is a property of the data and not of the rules.
+Follow-up: how would you test the two rules apart? Use a task ending at 03:30 and another starting at
+03:30, or at 04:15 with a one-hour buffer.
+Red flag: treating the coincidence at buffer 1 as evidence that the two rules are equivalent.
+Scoring: full credit for the set, the value and the integer-endpoint caveat.
+
+**Q11 — Greedy is exactly optimal on 27.6 percent of random instances and its worst case loses 81
+percent. How do you decide whether to deploy it?**
+Answer: deploy it only behind an exact check wherever the instance is small, and never as the sole method
+where instances can take the long-with-nested-short shape.
+Reasoning: the mean ratio of 0.836 with a median of 0.870 says the typical case is acceptable and the
+tenth percentile of 0.60 says one instance in ten is not. The catastrophic case is a single long valuable
+task containing many short cheap ones, where greedy takes the shorts for 10 against 100 — precisely the
+shape of a shutdown window with nested defect jobs. Deployment therefore depends on the instance shape
+distribution, not on the average.
+Follow-up: what is the check that costs nothing? If n is below about 20, enumerate; if not, compute the
+DP and compare its value with greedy's on a sample of past instances to size the exposure.
+Red flag: quoting the median as if it were the guarantee.
+Scoring: full credit for the two statistics and the shape argument.
+
+**Q12 — What exactly does the DP recurrence assume, and which assumption fails in a real plant?**
+Answer: it assumes each task is chosen independently with an additive value and a fixed interval; the
+assumption that fails first is additivity, because two tasks sharing one isolation are worth more
+together than apart.
+Reasoning: M(i) = max of skip and take plus M(p(i)+1) treats value as a sum of per-task constants and
+feasibility as a pairwise relation. A shared isolation makes value supermodular and the pairwise
+structure insufficient, because the benefit of the pair cannot be attributed to either task. The second
+failure is fixed intervals: a task that may float inside a window needs a different state space
+altogether.
+Follow-up: what is the smallest change that captures shared isolation? Treat the pair as one task with
+the combined interval and value, which restores additivity at the cost of a preprocessing step.
+Red flag: answering that DP assumes nothing because it is exact.
+Scoring: full credit for naming additivity and for a constructive fix.
+
+**Q13 — Compute the buffer crossover: at what g does the value stop falling, and what does that say
+about the horizon?**
+Answer: the value stops falling at g = 3, staying at 14 through g = 4, because only two tasks remain
+compatible at that spacing.
+Reasoning: V(0) = 29, V(1) = 19, V(2) = 18, V(3) = 14, V(4) = 14. At g = 3 the surviving set is A and F
+worth 14, since A is 0-3 and F is 7-10, a gap of four. Any g up to four keeps them; at g = 5 they would
+separate and the value would fall to 9, the maximum single task. The plateau is therefore a property of
+one particular pair, not a general property of buffers, and it would disappear if F started at 6.
+Follow-up: what is V(5)? F alone, 9, because A at 5 and F at 9 cannot coexist with five hours between
+them.
+Red flag: describing the plateau as diminishing returns without identifying the pair that causes it.
+Scoring: full credit for the sequence and for the two-task explanation.
+
+**Q14 — You must report a single number for the value of fixing the interval convention. What is it
+and what caveat travels with it?**
+Answer: ten value units, or 34.5 percent of the achievable optimum, with the caveat that the number is a
+property of a twelve-task instance whose endpoints are all integers.
+Reasoning: 29 minus 19 is 10, and 10 divided by 29 is 0.3448. The caveat is essential because integer
+endpoints make the closed rule and the one-hour buffer coincide, so the measured effect is an upper
+bound on what the convention would cost at finer granularity — with quarter-hour endpoints, many more
+pairs would touch without overlapping and the closed rule would remove even more.
+Follow-up: what single check would size the real effect? Count pairs in the live task list whose end
+equals another's start, and price them at their values.
+Red flag: reporting the units as currency.
+Scoring: full credit for the figure, the percentage and the granularity caveat.
+
+**Q15 — The scheduler overrides two tasks every night. What do you measure, and what would make you
+change the model?**
+Answer: measure the override rate with a closed reason taxonomy, and change the model only if one code
+reaches a material share.
+Reasoning: overrides are the only channel through which unmodelled constraints enter the schedule, but
+an override rate alone is uninformative because a planner correcting a data error looks the same as a
+planner applying a constraint the model lacks. With codes — access, spares, skills, safety, customer —
+the share of one code is a signal. A share above about 15 percent concentrated in one code indicates a
+missing constraint; a spread across all codes indicates a data quality problem; and a rising total with no
+dominant code indicates the model's objective has drifted from the plant's.
+Follow-up: what is the wrong response? Adding a penalty term to the objective so the model reproduces the
+overrides, which fits the planner rather than the plant.
+Red flag: proposing to reduce overrides as the goal.
+Scoring: full credit for the taxonomy, a threshold and the correct response distinction.
+
 ## 15. Quick Reference Card
-| Field | Rule |
-|---|---|
-| Decision | choose objective before algorithm |
-| Check | A+B=11; C=12, so weighted chooses C |
-| Validity | half-open one-resource intervals, deterministic ties |
-| Recovery | use DP or escalate multi-resource formulation |
-| Evidence | illustrative / proposed / draft |
+
+| Item | Value | Note |
+|---|---|---|
+| Decision | select a non-overlapping subset of twelve fixed intervals | one crew in the base case |
+| Feasibility | end(x) + g <= start(y), half-open | comparison is <= not < |
+| Greedy | sort by (end, start), take if start >= last | optimal for count only |
+| Greedy result | K, L, D, F, J; count 5; value 26 | 10.34 percent below optimum |
+| Optimum | A, L, D, F, J; count 5; value 29 | exhaustive over 158 feasible subsets |
+| Feasible subsets | 158 of 4096, 3.86 percent | 77 under the closed convention |
+| Convention effect | 29 half-open versus 19 closed | ten units, 34.5 percent |
+| Buffer effect | 29, 19, 18, 14, 14 at g = 0 to 4 | first hour costs the most |
+| Crew bound | depth 4 at t = 3 | four crews execute all twelve |
+| Crew value | 29, 47, 59, 59 at one to four crews | fourth crew adds nothing |
+| Greedy typicality | exact on 27.6 percent; mean ratio 0.836 | worst case 0.1905 |
+| DP recurrence | M(i) = max(M(i-1), v(i) + M(p(i)+1)) | p by binary search, <= comparison |
+| Reporting rule | set plus value plus threshold gaps | never a value without its set |

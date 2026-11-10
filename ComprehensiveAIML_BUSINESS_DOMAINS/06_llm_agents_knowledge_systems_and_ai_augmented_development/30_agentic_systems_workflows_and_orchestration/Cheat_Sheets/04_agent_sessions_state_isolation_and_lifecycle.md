@@ -1,1211 +1,1016 @@
 ---
-collection: "30_agentic_systems_workflows_and_orchestration"
-file_id: "04"
+title: "Agent Sessions, State Ownership, Isolation and Run Lifecycle"
 topic: "Agent sessions, state ownership, isolation and run lifecycle"
-level: 3
-status: "draft"
-version: "1.0"
-created: "2026-11-07"
-reviewed: null
-review_trigger: "Change in identity, storage consistency, tool contracts or retention policy"
-notation_style: "plain-text"
-prerequisites: []
-pattern_tags: [agent, control-plane, session, state, lifecycle]
-source_status: "OPEN"
-owner_role: "Agent platform engineering"
-source_index: "INDEX.md"
+collection: "30_agentic_systems_workflows_and_orchestration"
+level: "advanced"
+evidence: "DERIVED"
+created: "2026-11-10"
+last_reviewed: null
+content_status: "draft"
 ---
+
 # Agent Sessions, State Ownership, Isolation and Run Lifecycle
 
 ## 1. File Header
-> **Purpose:** Design and troubleshoot durable agent runs without confusing model context with authoritative state.
-> **Prerequisites:** Basic HTTP authentication, database transactions, distributed failure and access control; see [PostgreSQL concurrency control](https://www.postgresql.org/docs/current/mvcc.html).
-> **Key outcome:** Given tenant, session, run and tool requirements, trace ownership and recovery, choose isolation and estimate retained state.
-> **This file does NOT cover:** Model training, a specific agent framework's API, or legal advice on retention.
-> **Level:** 3 — Advanced / Production.
-> **Version / reviewed:** 1.0 / not reviewed; draft.
-> **Evidence:** DERIVED invariants and illustrative examples; external normative behavior is sourced individually. Production performance NOT MEASURED.
-> **Retrieval cue:** For duplicate side effects use Section 8; for sizing use Sections 4, 5 and 9.
 
-The decision is whether to resume, retry, stop or reconcile a run without exposing another principal's state or repeating an external action.
-The control plane owns identity, admission and policy decisions; an execution worker performs assigned work under that authority.
-A session can outlive a run, while an external payment or ticket can outlive both.
-A model response is not an authorization decision or a durable source of truth.
-**Takeaway:** Define the ownership and recovery boundary before choosing storage or an agent framework.
+> **Purpose:** decide, for a given request, who owns the state, which copy is authoritative, and what a restart is allowed to redo.
+> **Prerequisites:** HTTP identity, database transactions and isolation levels, at-least-once delivery, filesystem and object-store permissions.
+> **Key outcome:** trace ownership from caller to external effect, choose an isolation mechanism per boundary, and size retained state.
+> **Not covered:** model training, one vendor's agent SDK, jurisdictional legal advice on retention.
+> **Level:** advanced; assumes production incident experience.
+> **Evidence:** invariants are DERIVED from stated preconditions; every numeric example is ILLUSTRATIVE and marked; no production benchmark is claimed.
+> **Retrieval cues:** duplicate side effects → F-08, F-09, F-15; sizing → §4.3 variant B and §9.2; stale worker after failover → §4.3 variant D and F-10.
+
+The engineering decision in this sheet is narrow and repeatable: given a session that survived a crash, choose resume, retry, cancel or reconcile.
+Everything else — token budgets, prompt layout, framework choice — is downstream of that choice.
+Two facts make the choice hard. First, the model context is derived data that may contain untrusted text; treating it as authority converts a prompt injection into an authorization decision.
+Second, a database commit and an external API call cannot be made atomic without a contract the external system honours.
+So the design separates three layers that beginners conflate: the ownership record (who may act), the durable execution record (what happened), and the conversation artefacts (what was said).
+A session outlives a run; a run outlives an attempt; an external effect outlives all three.
+**Takeaway:** the control plane decides authority, the store decides truth, the worker decides nothing durable.
+
+Reading order for a practitioner under pressure: §2 for the mental model in one diagram, §4.1 for the base predicate, §8 for the symptom you are actually seeing.
+Reading order for a designer: §4.3 for variants, §7 for the selection table, §9 for the cost model, then §11 to test yourself.
 
 ## 2. Concept Map / Mental Model
+
 ```text
-Authenticated caller
-    | request + tenant identity
-    v
-Control plane --authorize/admit--> session record (tenant, owner, policy)
-    |                                |
-    | creates run                    | versioned references
-    v                                v
-Run state machine <----checkpoint--- durable state store
-    | dispatch + scoped capability
-    v
-Worker --> model context (derived, untrusted content included)
-    |          |
-    |          +--> model proposal, not authority
-    v
-Policy check --> tool adapter --> external system of record
-    |                 |                |
-    |                 +-- effect key --+
-    +-- audit/receipt --> durable run history
+caller (verified principal, tenant claim already resolved)
+   |
+   | 1. admission: authenticate, resolve tenant, apply quota
+   v
+control plane ============================ policy bundle (versioned)
+   |            \                              |
+   | 2. create   \ 3. state transition         | 4. decide authority per action
+   v              v                            v
+run state machine --> durable store (session, run, version, checkpoint)
+   |                        ^
+   | 5. dispatch with scoped, short-lived capability
+   v                        | 6. checkpoint commit (before effect)
+worker ---------------------+
+   |            \
+   | 7. build    \ 8. propose action
+   v              v
+model context   action intent (canonical payload + effect key)
+(untrusted text)     |
+                     | 9. authority re-check at effect boundary
+                     v
+                tool adapter --> external system of record
+                     |                   |
+                     | 10. receipt       | 11. effect key retained by receiver
+                     v                   v
+                durable run history   remote dedup window
 ```
-Arrows denote request or data flow, not causal guarantees; durable commit boundaries matter.
-The authorization boundary is checked on each read and action, not just when the session is created.
-A run is a finite attempt to advance a session, and an approval may suspend that attempt.
-A restart reconstructs working context from committed records rather than trusting worker memory.
-The central invariant is that every visible state transition is attributable to the right tenant and run version.
-The external effect boundary is separate: a database commit cannot by itself atomically commit an unrelated external API.
-**Takeaway:** A model can suggest the next step, but the control plane decides what can be committed or executed.
+
+Read the diagram as two loops, not one pipeline. The upper loop is authority and versioning; it is cheap, synchronous and must be correct.
+The lower loop is execution; it is expensive, asynchronous and is allowed to fail and repeat.
+A restart re-enters at step 3 using committed rows only. It never re-enters by trusting what a worker held in memory, because that memory died with the process.
+The dashed conceptual line between "model context" and "action intent" is where most production incidents happen: a proposal acquires authority it was never granted.
+Retrieved documents, tool outputs, and prior user turns all reach the model as data. None of them can widen a capability; only the control plane can.
+An approval is a first-class state, not a message: it has an actor, a canonical payload digest, a policy version and an expiry.
+A cancellation is also a state, not a signal: it requests a transition and the transition is completed only when in-flight effects are dispositioned.
+**Takeaway:** authority flows down through the diagram; evidence flows up. Neither direction is allowed to skip a version check.
+
+Three common misreadings of the diagram, each with the correction that matters:
+
+- "The worker owns the session while it runs." Correction: the worker holds a lease on a version; the store holds ownership.
+- "The queue is the state." Correction: the queue holds deliveries; replaying a delivery must be harmless, so state lives elsewhere.
+- "The model context is the transcript." Correction: context is a per-call selection of transcript plus retrieved material, with its own retention.
 
 ## 3. Foundational Definitions
 
-### Control plane
-- **Definition:** Authority that admits, schedules and governs runs.
-- **Type / units:** logical service; identifiers are opaque, not secret proofs.
-- **Example:** A scheduler's authenticated admission decision.
-- **Nonexample:** A model response is not an authority.
-- **Operational check:** Inspect policy version and admission record.
-
-### Data plane
-- **Definition:** Execution path that invokes models or tools.
-- **Type / units:** worker process and network calls; identifiers are opaque, not secret proofs.
-- **Example:** A worker receives a scoped run assignment.
-- **Nonexample:** A worker is not the tenant owner.
-- **Operational check:** Inspect dispatch and runtime identity.
-
-### Tenant
-- **Definition:** Administrative isolation domain.
-- **Type / units:** opaque tenant identifier; identifiers are opaque, not secret proofs.
-- **Example:** Organization A and organization B.
-- **Nonexample:** A user can belong to more than one tenant.
-- **Operational check:** Verify authenticated tenant binding.
-
-### Principal
-- **Definition:** Authenticated human or service identity.
-- **Type / units:** subject identifier; identifiers are opaque, not secret proofs.
-- **Example:** A support agent authenticated through SSO.
-- **Nonexample:** A session identifier is not an identity credential.
-- **Operational check:** Inspect identity issuer and subject.
+Each term below gets the same treatment: what it is, what it is not, and the check that distinguishes them at 3 a.m.
 
 ### Session
-- **Definition:** Durable interaction container with ownership and policy.
-- **Type / units:** tenant-scoped session identifier; identifiers are opaque, not secret proofs.
-- **Example:** A support conversation spanning several requests.
-- **Nonexample:** An individual worker process is not the session.
-- **Operational check:** Read the session owner and version.
+- **Definition:** an owned, durable interaction container scoped to one tenant and one conversation identity.
+- **Not:** a connection, a process, or a token window.
+- **Check:** does a row exist with tenant, owner, policy version and creation time before any run starts?
 
 ### Run
-- **Definition:** Bounded execution advancing a session toward a requested outcome.
-- **Type / units:** run identifier and state; identifiers are opaque, not secret proofs.
-- **Example:** One response generation and its tool calls.
-- **Nonexample:** A run is not the whole conversation.
-- **Operational check:** Inspect terminal state and attempt lineage.
+- **Definition:** one bounded execution that advances a session toward a goal, with its own budget and terminal state.
+- **Not:** a retry, and not the whole conversation.
+- **Check:** every effect carries a run identifier and a version; two runs on one session must not interleave writes silently.
 
 ### Attempt
-- **Definition:** One execution of a run or step, potentially retried.
-- **Type / units:** attempt identifier and ordinal; identifiers are opaque, not secret proofs.
-- **Example:** Worker restart after a crash.
-- **Nonexample:** A new attempt is not automatically a new intended action.
-- **Operational check:** Compare attempt and effect identifiers.
+- **Definition:** a single dispatch of a run to a worker; attempts are numbered and each has its own start, heartbeat and outcome.
+- **Not:** a user-visible retry.
+- **Check:** the attempt table count for a run equals the number of dispatches, including ones that timed out without a response.
 
 ### State owner
-- **Definition:** Component authoritative for a particular state field.
-- **Type / units:** owner and write contract; identifiers are opaque, not secret proofs.
-- **Example:** Ticket system owns ticket status.
-- **Nonexample:** A cached copy is not necessarily authoritative.
-- **Operational check:** Read the ownership map and conflict rule.
-
-### Transcript
-- **Definition:** Ordered recorded messages and tool events.
-- **Type / units:** sequence of timestamped records; identifiers are opaque, not secret proofs.
-- **Example:** User request followed by tool result.
-- **Nonexample:** The model prompt may include only a subset.
-- **Operational check:** Inspect persisted event sequence.
-
-### Context
-- **Definition:** Material assembled for a model invocation.
-- **Type / units:** ordered tokens with provenance; identifiers are opaque, not secret proofs.
-- **Example:** A selected history, policy and retrieved excerpts.
-- **Nonexample:** Context is not necessarily complete durable history.
-- **Operational check:** Record assembly version and source IDs.
+- **Definition:** the single component permitted to write a given state fragment, enforced by credential scope rather than convention.
+- **Not:** the component that reads it most often.
+- **Check:** can a worker write the terminal run state directly? If yes, ownership is not enforced.
 
 ### Checkpoint
-- **Definition:** Committed recovery position and state snapshot or references.
-- **Type / units:** versioned durable record; identifiers are opaque, not secret proofs.
-- **Example:** Run paused before approval.
-- **Nonexample:** A log line alone may not be a recoverable checkpoint.
-- **Operational check:** Restore in a controlled exercise.
+- **Definition:** a committed snapshot of enough state to continue without redoing committed work.
+- **Not:** a log of intentions, and not a save of the model context.
+- **Check:** does resuming from checkpoint N ever re-emit an effect already recorded as committed after N?
+
+### Transcript
+- **Definition:** the append-ordered record of interaction events, retained under a stated policy.
+- **Not:** the model's context window, and not an authority record.
+- **Check:** is the transcript readable only under the same tenant predicate as the session?
+
+### Context
+- **Definition:** the specific sequence of material sent in one model call, assembled from transcript, retrieval and instructions.
+- **Not:** durable, not complete, not trusted.
+- **Check:** can you reconstruct which documents and tool outputs were in the context for a given call?
 
 ### Lease
-- **Definition:** Time-bounded claim on work.
-- **Type / units:** holder, expiry and generation; identifiers are opaque, not secret proofs.
-- **Example:** Worker A owns a run until expiry.
-- **Nonexample:** Lease expiry alone does not stop a partitioned worker.
-- **Operational check:** Enforce fencing at the write boundary.
+- **Definition:** a time-bounded claim by a worker that it may act on a version; expiry allows another worker to act.
+- **Not:** a lock that stops a paused process from running.
+- **Check:** after expiry, does the previous holder's next write get rejected?
 
 ### Fencing token
-- **Definition:** Monotonically ordered ownership generation.
-- **Type / units:** integer per protected resource; identifiers are opaque, not secret proofs.
-- **Example:** Generation 8 rejects a late generation 7 write.
-- **Nonexample:** A random request ID is not necessarily ordered.
-- **Operational check:** Check receiver rejects older generations.
+- **Definition:** a monotonically increasing generation value attached to protected writes so receivers can reject stale holders.
+- **Not:** a timestamp, and not a substitute for authorization.
+- **Check:** does the storage layer compare the token, or only log it?
 
 ### Idempotency key
-- **Definition:** Stable identifier for one intended effect.
-- **Type / units:** scoped opaque key; identifiers are opaque, not secret proofs.
-- **Example:** One order submission across retries.
-- **Nonexample:** A fresh key per retry defeats deduplication.
-- **Operational check:** Query receiver's key scope and retention.
+- **Definition:** a stable identifier for one intended effect, used by a receiver or adapter to collapse repeats.
+- **Not:** a request identifier that changes on each retry, and not a cache key.
+- **Check:** does the key survive process restart and retry, computed from canonical action content?
 
 ### Approval
-- **Definition:** A principal's scoped authorization of a specific proposed action.
-- **Type / units:** decision plus payload hash, actor and expiry; identifiers are opaque, not secret proofs.
-- **Example:** Approve one exact refund request.
-- **Nonexample:** General agreement to help is not approval for arbitrary effects.
-- **Operational check:** Compare approved hash with executed payload.
-
-### Retention
-- **Definition:** Policy for how long data remains available before deletion.
-- **Type / units:** time duration and hold rules; identifiers are opaque, not secret proofs.
-- **Example:** Transcript expires after a configured period.
-- **Nonexample:** Expiration of a cache is not deletion everywhere.
-- **Operational check:** Trace copies, backups and legal holds.
+- **Definition:** a recorded decision by an authorized actor permitting a specific canonical action within a validity window.
+- **Not:** a chat message, and not a blanket permission for a run.
+- **Check:** change one material field of the payload; is the approval invalidated?
 
 ### Reconciliation
-- **Definition:** Process comparing local intent with external outcome.
-- **Type / units:** bounded query or operator workflow; identifiers are opaque, not secret proofs.
-- **Example:** Find whether a timed-out submission created an order.
-- **Nonexample:** Blind retry is not reconciliation.
-- **Operational check:** Match effect key to external receipt.
+- **Definition:** the process of resolving an unknown external outcome by querying, comparing receipts and writing a disposition.
+- **Not:** a blind retry, and not a manual database edit.
+- **Check:** is there a durable queue of unresolved effects with an owner and an age metric?
 
 ### Isolation
-- **Definition:** Prevention of unauthorized cross-scope access or interference.
-- **Type / units:** policy and enforcement boundary; identifiers are opaque, not secret proofs.
-- **Example:** Tenant-scoped read and write checks.
-- **Nonexample:** A unique identifier alone is not access control.
-- **Operational check:** Attempt cross-tenant operations under test identities.
+- **Definition:** the property that no read or write performed under one tenant or principal scope can observe or alter another's state.
+- **Not:** a UI filter, and not "we use separate schemas".
+- **Check:** does the enforcement point sit below the code that could forget to add a predicate?
 
-**Takeaway:** Each identifier, record and boundary has a distinct role; none substitutes for authorization.
+### Retention
+- **Definition:** the rule that determines when state, transcript, checkpoints and audit records become unreadable or are destroyed.
+- **Not:** a backup policy, and not "we keep everything for debugging".
+- **Check:** can you delete one tenant's session and prove no copy survives in caches, exports or replicas?
+
+### Terminal state
+- **Definition:** a run or session state with no outgoing transitions; further work requires a new run or an explicit reopen with audit.
+- **Not:** "quiet" or "no active worker".
+- **Check:** is the transition table the only writer of terminal states, and is it a single conditional update?
+
+### Effect boundary
+- **Definition:** the point where a proposal becomes an irreversible external change; the last place authority and deduplication can be enforced together.
+- **Not:** the API client call site inside business logic.
+- **Check:** is every outbound irreversible call funnelled through one adapter that checks policy, key and destination?
+
+### Disposition
+- **Definition:** the recorded judgement about an ambiguous effect: committed, not committed, or unknown-pending-reconciliation.
+- **Not:** an inference from a timeout.
+- **Check:** does the run history contain a disposition row for every timed-out irreversible call?
 
 ## 4. Core Formulas with Full Derivation
-### 4.1 Simplest / Base Case
-**Mechanism — compare-and-set transition.**
-Preconditions: authoritative storage atomically compares the current version and writes the new state; one tenant-scoped run key is selected.
-Input: tenant T, run R, expected version v, allowed transition s to s-prime, and authenticated actor A.
-Algorithm: authorize A for T and R; read state s and v; validate transition; atomically update only if T, R, s and v still match.
-On success persist s-prime and v+1 in the same transaction with the audit event.
-On a zero-row update return a conflict and reload; never silently overwrite the newer value.
-Output: a committed transition or an explicit conflict; validation and retry loops must have a bounded deadline.
-Invariant: at most one concurrent compare-and-set can change the same version when the database provides atomic conditional updates.
-Justification: the first successful update changes v; the predicate for another update expecting v is then false.
-Trace: workers A and B both see version 4; A commits version 5; B's predicate version=4 matches zero rows.
-Boundary: this protects this database record, not an external side effect already sent by B.
-A storage backend must actually implement the required atomicity; do not assume it from a generic key-value interface.
 
-**Sizing equation S1 — retained payload only.**
-Validity: constant number of closed sessions, constant mean raw bytes per session, same retention for all, no deletion lag or replicas.
-Derivation: sum the per-session bytes across N sessions; constant average B yields N times B.
-[1] FORMULA: P = N * B.
-[2] WHERE: P is payload bytes, N is retained session count, B is mean payload bytes/session.
-[3] CONSTRAINT: N and B are nonnegative; B excludes metadata, indexes and replication unless explicitly included.
-[4] NUMERICAL EXAMPLE: N=100 sessions and B=2,000 bytes/session gives P=200,000 bytes.
-[5] INTERPRETATION: This is the lower-bound logical payload, not physical disk provisioned.
-Boundary: a heavy-tailed size distribution can make mean-based planning insufficient for per-session limits.
+Each block uses the same anatomy: FORMULA, WHERE, CONSTRAINT, NUMERICAL EXAMPLE, INTERPRETATION. Numbers are ILLUSTRATIVE and chosen so the arithmetic can be re-done by hand.
 
-### 4.2 General Case
-**Sizing equation S2 — cohort retention and physical multiplier.**
-Validity: independent daily cohorts with retention D days and stationary daily arrivals A; each retained session has mean B bytes; multiplier M represents measured physical overhead and replica copies.
-Derivation: D daily cohorts each contribute A sessions, so N=A*D; substitute into S1 and multiply physical overhead by M.
-[1] FORMULA: C = A * D * B * M.
-[2] WHERE: C is physical bytes; A is sessions/day; D is days; B is bytes/session; M is dimensionless.
-[3] CONSTRAINT: consistent cohort granularity, stationary rates and an explicit definition of M; backups and holds must be separately included if omitted from M.
-[4] NUMERICAL EXAMPLE: A=1,000/day, D=30 days, B=10,000 bytes/session, M=3 gives C=900,000,000 bytes.
-[5] INTERPRETATION: Approximately 900 MB in decimal units is a planning estimate, not a measured disk footprint.
-Boundary: event growth during an active session, churn, legal holds or backups require cohort-specific sums.
-More generally sum arrival cohort times surviving fraction times mean cohort bytes, then apply the relevant storage multiplier.
-For a single retained cohort with M=1, S2 reduces to S1 with N=A*D.
+### 4.1 Base case
 
-### 4.3 Key Special Cases / Variants
-| Variant | Difference | Preconditions | Use when | Avoid when |
-|---|---|---|---|---|
-| Stateless request | No persistent interaction state | Request contains all needed inputs | Simple read-only task | Continuation or audit is required |
-| Single-writer session | One authorized sequencer | Correct lease and fencing | Ordering matters | Receiver cannot enforce fencing |
-| Optimistic versions | Concurrent contenders compare versions | Atomic conditional update | Conflicts are uncommon | Side effects happen before commit without safeguards |
-| Serialized queue | One ordered partition per key | Broker and consumer preserve required order | Per-session ordering is essential | One hot session must scale without a plan |
-| Append-only events | Append events and reconstruct projections | Event schema and replay semantics are maintained | Audit and recovery matter | Deletion and schema migration are not designed |
-| Snapshot plus log | Replay suffix after snapshot | Snapshot and offset form a consistent boundary | Long histories make full replay costly | Snapshot can get ahead of durable events |
+```text
+FORMULA
+  allow_read(u, s) = [tenant(u) = tenant(s)]
+                     AND [principal(u) in owners(s)]
+                     AND [policy_version(u) >= min_version(s)]
+                     AND [state(s) not in DELETED]
 
-### 4.4 Asymptotic / Limiting Behaviour and Counterexample
-If A or D is zero, S2 yields zero retained cohort payload; standing indexes or minimum provisioned capacity may still exist.
-If D doubles while all other assumptions stay fixed, C doubles; this is not a prediction under nonstationary workloads.
-If the external service executed an operation but the worker crashed before recording its receipt, a local version check cannot determine the external outcome.
-Reconcile against the external system, using a stable effect key when supported; otherwise hold for manual resolution rather than assert exactly-once delivery.
-A lease with no fencing lets an expired worker continue writing after a replacement starts.
-A timeout is evidence that a response was not observed, not proof that the action did not happen.
-**Takeaway:** Local atomicity is useful but does not cross an independent side-effect boundary.
+WHERE
+  u   = verified request identity    (tuple: tenant, subject, roles, policy_version)
+  s   = target session record        (tuple: tenant, owners, min_version, state)
+  allow_read is boolean; there is no partial credit and no "log only" mode
+
+CONSTRAINT
+  tenant(u) must come from the authentication layer, not from a header,
+  not from a query parameter, and not from the model's output.
+  owners(s) must be membership records, not free-text strings.
+
+NUMERICAL EXAMPLE
+  request: tenant A, subject sam, roles {support}, policy_version 7
+  session: tenant A, owners {sam, dara}, min_version 5, state active
+  [A = A] true; [sam in {sam, dara}] true; [7 >= 5] true; [active not deleted] true
+  -> allow_read = true
+
+  same request, session owners {dara}: [sam in {dara}] false
+  -> allow_read = false, and the record must not be returned even as an empty stub
+
+INTERPRETATION
+  The predicate is conjunctions of independently checkable facts.
+  Its weakness is that a single missing term is easy to hide: with four terms,
+  forgetting the tenant term fails only for cross-tenant traffic, which happy-path
+  tests do not generate.
+```
+
+```text
+FORMULA (retained state, base case)
+  L = S * D * B * M
+
+WHERE
+  S = new sessions per day          (sessions/day)
+  D = retention window              (days)
+  B = logical bytes retained per session-day (bytes)
+  M = physical multiplier           (dimensionless: indexes, WAL, replicas, snapshots)
+  L = steady-state logical-then-physical footprint (bytes)
+
+CONSTRAINT
+  valid only for a stationary arrival cohort: daily new sessions and per-session
+  byte growth must both be roughly constant across the retention window.
+  If transcripts grow superlinearly per session, S*B is not a constant and the
+  product understates the tail.
+
+NUMERICAL EXAMPLE
+  S = 2,400 sessions/day, D = 30 days, B = 12,000 bytes, M = 2.4
+  session-days   = 2,400 * 30            = 72,000
+  logical bytes  = 72,000 * 12,000       = 864,000,000
+  physical bytes = 864,000,000 * 2.4     = 2,073,600,000
+  decimal GB     = 2.0736 GB
+  GiB            = 2,073,600,000 / 1,073,741,824 = 1.9312 GiB
+
+INTERPRETATION
+  Per retained session the footprint is 12,000 * 2.4 = 28,800 bytes, which is the
+  most useful derived quantity: it converts a capacity question into a per-session
+  cost. At 1.9 GiB this design fits a modest instance; the same formula at
+  D = 365 days gives 25.2 GB and forces partitioning by tenant or by month.
+```
+
+### 4.2 General case
+
+The general case replaces "one session, one owner, one write" with a versioned machine that several workers may touch over time.
+
+```text
+FORMULA (conditional transition)
+  T(s, v, to) = update session set state = to
+                where id = s and version = v and state in ALLOWED_FROM(to)
+  rows_affected = 1  -> transition committed, version becomes v + 1
+  rows_affected = 0  -> either version moved or the current state forbids the edge
+
+WHERE
+  ALLOWED_FROM(to) is the set of predecessor states for the target state
+  version is an integer column incremented in the same statement
+  the caller must not read version and then write it back in a second statement
+
+CONSTRAINT
+  only works if the store evaluates the predicate and the increment atomically,
+  and only if every writer uses this statement rather than a read-modify-write.
+
+NUMERICAL EXAMPLE
+  two workers both hold version 4 and both attempt completed
+  worker one: update ... where version = 4 -> 1 row, version now 5
+  worker two: update ... where version = 4 -> 0 rows, must reload
+  without the predicate both updates succeed and the second silently overwrites
+  whatever worker one wrote, including its effect receipt
+
+INTERPRETATION
+  The conditional statement converts a race into a retry. It says nothing about
+  the external effect performed under version 4; that effect still needs an
+  effect key, because the database never saw it.
+```
+
+```text
+MECHANISM BLOCK (state machine with absorbing terminals)
+  preconditions:
+    finite state set Q, declared transition relation ALLOWED subset of Q x Q
+    one writer component (the transition service), credentialed to update state
+  state transition:
+    apply T(s, v, to) from 4.2; on 0 rows, reload and re-decide
+  invariant:
+    terminal states have out-degree zero, and every non-terminal state is
+    reachable from created through allowed edges only
+  justification:
+    a run that can leave a terminal state makes "finished" unreliable and lets
+    duplicate work appear legal; a disconnected non-terminal state is a run that
+    no operator can ever advance or close
+  worked trace:
+    Q = {created, admitted, running, waiting_approval, paused, cancelling,
+         completed, failed, cancelled, expired}         (10 states)
+    allowed edges = 17
+    ordered pairs possible = 10 * 9 = 90
+    density = 17 / 90 = 0.1889
+    terminals: completed, failed, cancelled, expired -> out-degree 0 each
+  failure boundary:
+    a compensating action (refund, ticket close) needs a new run against the
+    session; reopening a terminal run would make audit counts non-monotonic
+```
+
+```text
+FORMULA (isolation defect rate under independent layers)
+  P(leak per unauthorised request) = PRODUCT over l in 1..L of (1 - c_l)
+
+WHERE
+  L   = number of independent enforcement layers on the read path
+  c_l = probability that layer l blocks an unauthorised read (0..1)
+
+CONSTRAINT
+  independence is the whole argument, and it is usually false: layers that share
+  one defaults file, one ORM session or one middleware skip together.
+
+NUMERICAL EXAMPLE
+  three layers, c = 0.9 each, independent
+    P(leak) = 0.1 * 0.1 * 0.1 = 0.001
+  same layers, single shared default that disables all three at once
+    P(leak) = 1 - 0.9 = 0.1
+  probes per week = 2,000 requests/day * 7 = 14,000
+    independent:      14,000 * 0.001 = 14 leaked responses
+    correlated:       14,000 * 0.1   = 1,400 leaked responses (100x)
+  per-tenant cache key omission with 3 tenants and 1 shared cache:
+    collision exposure = 3 * 2 = 6 ordered tenant pairs, not 3
+
+INTERPRETATION
+  Defence in depth buys one order of magnitude only when the layers fail
+  independently. Architecturally the layer that matters is the one that fails
+  closed by default, which is why the enforcement point belongs in storage.
+```
+
+### 4.3 Variants
+
+```text
+VARIANT A (attempts with a retry cap)
+  P(success within n) = 1 - (1 - s)^n
+  E[attempts, capped at n] = SUM over k = 1..n of (1 - s)^(k-1)
+
+WHERE
+  s = per-attempt success probability, assumed constant and independent
+  n = attempt cap from the run budget
+
+NUMERICAL EXAMPLE (s = 0.85, n = 3)
+  P(success) = 1 - 0.15^3 = 1 - 0.003375 = 0.996625
+  E[attempts] = 1 + 0.15 + 0.0225 = 1.1725
+  escalation rate = 0.003375; at 2,400 sessions/day that is 8.1 sessions/day
+  cost multiple versus single attempt = 1.1725 / 1.0 = 1.1725
+
+INTERPRETATION
+  The cap dominates the tail: raising n from 3 to 5 lowers the escalation rate to
+  0.15^5 = 0.0000759, a 44.5x reduction, while lifting the attempt expectation from
+  1.1725 to 1 + 0.15 + 0.0225 + 0.003375 + 0.00050625 = 1.17638125, which is a
+  0.33% increase in model spend. The arithmetic looks free; it is not, because an
+  attempt is not a fixed cost - it re-sends the accumulated context, so attempt 4
+  carries more tokens than attempt 1 and the expectation understates the spend.
+```
+
+```text
+VARIANT B (checkpoint interval and redo)
+  redo_expected = C / 2            (crash time uniform within an interval)
+  redo_fraction = C / (2 * T)
+  checkpoints = floor(T / C)
+  checkpoint_bytes_per_run = checkpoints * K
+
+WHERE
+  T = nominal run duration (s), C = checkpoint interval (s), K = checkpoint size (B)
+
+NUMERICAL EXAMPLE
+  T = 1,800 s, C = 90 s, K = 40 KiB
+  checkpoints        = 1,800 / 90 = 20
+  redo_expected      = 45 s
+  redo_fraction      = 45 / 1,800 = 0.025 (2.5%)
+  bytes per run      = 20 * 40 * 1,024 = 819,200 B = 800 KiB
+  long runs per day  = 0.08 * 2,400 = 192
+  checkpoint bytes   = 192 * 819,200 = 157,286,400 B/day
+  session bytes/day  = 2,400 * 12,000 = 28,800,000 B/day
+  ratio              = 157,286,400 / 28,800,000 = 5.46
+
+INTERPRETATION
+  Halving C to 45 s doubles checkpoint bytes to 314.6 MB/day and halves redo to
+  1.25%. The exchange rate is exact here: 1% of redo avoided costs 2% more
+  checkpoint storage, so the decision belongs to recovery-time budget, not storage.
+```
+
+```text
+VARIANT C (transcript compaction)
+  tokens(t) = t * R                        before compaction
+  compaction turn = ceil(K / R)
+  post_compaction = H + w * R
+
+WHERE
+  R = mean tokens added per turn, K = context budget, H = summary size,
+  w = turns retained verbatim after the summary
+
+NUMERICAL EXAMPLE
+  R = 350, K = 24,000, H = 2,000, w = 6
+  compaction turn = ceil(24,000 / 350) = ceil(68.57) = 69
+  post-compaction tokens = 2,000 + 6 * 350 = 4,100
+  tokens saved at that point = 69 * 350 - 4,100 = 24,150 - 4,100 = 20,050
+  turns between compactions = 69 - 6 = 63
+
+INTERPRETATION
+  Compaction is lossy by construction: the summary is generated material, so it
+  must never carry an approval, a capability or a number whose correctness is
+  audited. Keep those in structured state, which does not get summarised.
+```
+
+```text
+VARIANT D (fencing window)
+  overlap = max(0, pause_max - ttl)
+  writes_at_risk = overlap * write_rate
+
+WHERE
+  ttl = lease time-to-live (s), pause_max = longest tolerated holder pause (s)
+  write_rate = protected writes per second by the stale holder
+
+NUMERICAL EXAMPLE
+  ttl = 30 s, pause_max = 45 s (stop-the-world GC plus network partition)
+  overlap = 45 - 30 = 15 s
+  write_rate = 3 writes/s
+  writes_at_risk = 15 * 3 = 45
+  with a monotonic fence token, rejected = 45 of 45
+  without fencing, corrupted = 45 of 45
+
+INTERPRETATION
+  Fencing does not shorten the overlap; it makes the overlap harmless where the
+  receiver enforces the token. A receiver that only logs the token converts the
+  problem into a detective control with a 45-write detection lag.
+```
+
+### 4.4 Limits and counterexamples
+
+The base storage formula breaks at exactly the moment transcripts stop being stationary: sessions that append tool output without bound.
+Concretely, let each session accumulate g = 6,000 bytes/day instead of holding B = 12,000 bytes flat.
+A session that is d days old holds g·d bytes, so the cohort in the retention window holds an average of g·D/2 bytes rather than g·D.
+With g = 6,000, D = 30 and M = 2.4 the true steady state is 2,400 × 6,000 × 2.4 × (30 × 31 / 2) = 2,400 × 6,000 × 2.4 × 465 = 16,070,400,000 bytes = 16.07 GB.
+The flat formula applied with the day-30 value instead gives 2,400 × 180,000 × 2.4 × 30 = 31,104,000,000 bytes = 31.1 GB, and applied with the day-1 value gives 2,400 × 6,000 × 2.4 × 30 = 1,036,800,000 bytes = 1.04 GB.
+So the flat product can overstate by 1.94× or understate by 15.5× depending on which sample day you chose, and neither error is visible in the result.
+The general statement: a formula that multiplies a per-day constant by D treats a flow as a stock, and the error factor is D/2 divided by the measurement day.
+```text
+FORMULA (growth stock)
+  L_growth = S * g * M * D * (D + 1) / 2
+
+WHERE
+  S = 2,400 sessions/day, g = 6,000 B/day/session, M = 2.4, D = 30 days
+  the sum d = 1..D equals D(D+1)/2 = 465, the cohort's total session-days
+
+CONSTRAINT
+  requires linear per-session growth and a stationary arrival cohort; exponential
+  growth invalidates it entirely and needs a compounding term instead.
+
+NUMERICAL EXAMPLE
+  L_growth = 2,400 * 6,000 * 2.4 * 465 = 16,070,400,000 B = 16.07 GB
+  flat with day-30 sample  = 31,104,000,000 B -> ratio 1.935
+  flat with day-1 sample   =  1,036,800,000 B -> ratio 0.0645, understates 15.5x
+
+INTERPRETATION
+  Both the flat and the growth formula are defensible; choosing without stating
+  which one you used is not, because the two answers differ by a factor of 30.
+```
+The independence assumption in the leakage formula fails in a way that is easy to see in code review: one helper that builds queries with an optional tenant filter, called from three services, collapses three layers into one.
+The retry-cap formula fails when attempts are correlated. If one expired credential makes every attempt fail, s is not constant, the geometric model promises 99.66% recovery at n = 3, and the observed recovery is 0%.
+The checkpoint redo formula assumes uniform crash time inside the interval; when crashes correlate with activity, such as memory pressure during a large tool response, they cluster just before the next checkpoint and expected redo approaches C = 90 s rather than C/2 = 45 s.
+The fencing formula assumes a monotonic token the receiver enforces; against a third-party API with no such parameter the overlap arithmetic is irrelevant and only key-based deduplication or single-writer serialisation is safe.
+The transition-machine invariant fails if operators can edit state directly: once a terminal state is reachable by hand, "terminal" is a convention and out-degree zero is a claim about code that no longer describes the system.
 
 ## 5. Worked Numerical Example
-**ILLUSTRATIVE / DERIVED:** A support-assistant platform needs a 30-day storage budget and safe order-submission recovery.
-All numbers below are constructed inputs, not measured traffic or results.
-Daily new sessions A: 1,000 sessions/day.
-Retention D: 30 days, with no holds or delayed purge.
-Mean recorded session payload B: 10,000 bytes/session.
-Physical multiplier M: 3, explicitly assumed to include all replicas and index overhead but not backups.
-Applying S2 yields 1,000 * 30 * 10,000 * 3 = 900,000,000 bytes.
-In decimal units this is 900 MB; in binary units it is approximately 858.31 MiB.
-Independent check: 30,000 sessions * 30,000 physical bytes/session = 900,000,000 bytes.
-An unreplicated calculation of 300 MB would omit the assumed physical multiplier.
-A 20% headroom policy applied to this estimate yields 1,080,000,000 bytes, not a guarantee of sufficient capacity.
-If the mean grows to 15,000 bytes and all else is unchanged, the S2 result grows to 1,350,000,000 bytes before headroom.
-Real sizing also needs active-session growth, percentile distributions, compression, backup copies, restore staging and deletion lag.
-**ILLUSTRATIVE lifecycle trace:** Tenant T owns session S; principal P has permission to propose a purchase.
-1. Admission binds T, P and S after checking membership; the client-supplied session ID is only a lookup key.
-2. The control plane creates run R in `queued` with version 0 and policy version 12.
-3. A worker claims R under lease generation 7; the claim and expiry are persisted.
-4. R moves to `running` at version 1 through conditional update.
-5. The worker assembles selected context, recording source references and version; retrieved text is untrusted.
-6. The model proposes a purchase of item X for 40 currency units; this is a proposal, not an authorized order.
-7. The policy requires approval; a canonical payload and hash H are persisted with R in `waiting_approval` at version 2.
-8. An authorized approver approves H before expiry; identity, decision and expiration are durable.
-9. Resume checks current membership, policy, hash, expiry and run version; an altered price requires a new approval.
-10. The worker derives effect key K for this single intended order and durably records intent before sending.
-11. The order API receives K and creates order O; its reply is lost before the worker records the receipt.
-12. Worker lease 7 expires; a successor receives generation 8 and reconstructs the run from durable state.
-13. The successor asks the external system for K; if a trustworthy lookup returns O, it records the receipt rather than submitting again.
-14. If lookup is unavailable and the receiver offers no applicable deduplication contract, R enters `reconciliation_required` for human resolution.
-15. With a confirmed receipt, R commits `completed` using the current version and generation; late generation 7 writes are rejected where fencing is supported.
-The trace does not prove external exactly-once behavior; that depends on the actual order API contract and key lifetime.
-A cancellation requested after step 11 cannot guarantee that the already-sent order was not created.
-An independent operational check compares the local intent and external order ledger before closing any ambiguous case.
-**Takeaway:** Sizing and lifecycle correctness depend on explicit scope, assumptions and the independent external system.
+
+**ILLUSTRATIVE end-to-end trace.** One tenant, one session, one run that crosses an approval, a worker crash and an ambiguous external call. All numbers are constructed for teachability.
+
+Setup used throughout the trace:
+
+- Tenant T1, principal `sam`, roles {support}, policy version 12.
+- Session `S-4471` created at 09:00:00Z, retention 30 days.
+- Run `R-118` admitted at 09:00:04Z with attempt cap 3 and token budget 200,000.
+- External action: issue a refund of 4,200 minor units to a stored destination.
+- Checkpoint interval 90 s; lease TTL 30 s; worker write rate 3 writes/s.
+
+Step 1, admission arithmetic. Admission performs 4 predicate checks (tenant binding, quota, policy version, session state) in one statement.
+At 2,400 sessions per day and 1.0 run per session, that is 9,600 checks/day, or 9,600 / 86,400 = 0.111 checks/s — irrelevant as load, and therefore safe to make synchronous and strict rather than eventually consistent.
+
+Step 2, storage for the session. Logical bytes 12,000, physical multiplier 2.4, so 28,800 bytes retained per session.
+1,000 sessions of this shape in the 30-day window occupy 1,000 × 28,800 = 28,800,000 bytes (28.8 MB).
+That equals one day of full arrivals (2,400 × 12,000 = 28,800,000) only because 1,000 × 2.4 = 2,400; the match is an identity in the parameters, not a validation of the model, and treating a parameter coincidence as a check is how wrong multipliers survive review.
+
+Step 3, run progress. Attempt 1 starts at 09:00:05Z and reaches a refund proposal at 09:02:35Z, 150 s later.
+Checkpoints fall at multiples of 90 s from attempt start: 09:01:35 (first, committed) and 09:03:05 (never reached).
+So exactly floor(150 / 90) = 1 checkpoint is committed, at 09:01:35Z, and at 40 KiB it holds 40 × 1,024 = 40,960 bytes.
+
+Step 4, approval. The proposal pauses into `waiting_approval` with a canonical payload digest covering tenant, destination, amount 4,200, currency and expiry at 09:17:35Z (900 s validity).
+The state transition is one conditional update: version 3 → 4, one row affected.
+
+Step 5, crash. At 09:06:00Z the worker is killed. Lease expires 30 s later at 09:06:30Z. A second worker acquires fence generation 8 and resumes from the checkpoint committed at 09:01:35Z.
+Expected redo under uniform crash timing is C/2 = 45 s, but the crash landed 09:06:00 − 09:01:35 = 265 s after the checkpoint, so actual redo is 265 s, worse than the mean by 265 / 45 = 5.89×.
+
+Step 6, effect attempt. At 09:07:10Z worker two dispatches the refund under effect key `S-4471/R-118/refund/v1`, derived from the canonical payload hash rather than from request time.
+The provider times out at 09:07:40Z after 30 s. Disposition is `unknown-pending-reconciliation`, not `failed`.
+Note the crash and the timeout are separate events 70 s apart; a single "the call failed" narrative would merge them and lose the fact that the retry after the crash carried a key that predated it.
+
+Step 7, reconciliation arithmetic. Reconciliation polls by effect key at 30 s intervals with a cap of 10 polls, so the window is 10 × 30 = 300 s and the poll cost is 10 requests per unresolved effect.
+If the provider's deduplication window is 24 h, a duplicate dispatch inside it is collapsed; if it retains keys for 600 s, any retry after 600 s risks a second refund, and the 300 s poll window sits safely inside it by 300 s.
+The decision therefore depends on one provider number that this sheet cannot derive: OPEN until the provider contract is read.
+
+Step 8, resolution. The poll at 09:08:10Z returns the provider receipt with its own identifier, so disposition becomes `committed`.
+The run writes terminal `completed` at 09:08:12Z, giving total wall clock of 09:08:12 − 09:00:04 = 488 s = 8 min 8 s from admission.
+
+**Independent arithmetic re-check of the headline quantities.**
+
+```text
+check 1 (per-session footprint)
+  12,000 * 2.4 = 28,800
+  division cross-check: 28,800 / 2.4 = 12,000  -> recovers B
+  ratio cross-check:    28,800 / 12,000 = 2.4  -> recovers M
+
+check 2 (wall clock)
+  09:00:04 -> 09:08:12 is 8 min 8 s
+  seconds = 8 * 60 + 8 = 488
+  segment audit: proposal at 09:02:35 (151 s), crash at 09:06:00 (356 s),
+  dispatch 09:07:10 (426 s), timeout 09:07:40 (456 s), receipt 09:08:10 (486 s),
+  terminal 09:08:12 (488 s) -> every offset is within the total, monotone
+
+check 3 (checkpoints and redo)
+  floor(150 / 90) = 1 committed checkpoint at 09:01:35
+  redo = 09:06:00 - 09:01:35 = 4 min 25 s = 265 s
+  mean redo at C = 90 s is 45 s; ratio 265 / 45 = 5.888... -> 5.89x
+  checkpoint bytes = 1 * 40 * 1,024 = 40,960 B
+
+check 4 (approval validity)
+  09:02:35 + 900 s = 09:02:35 + 15 min = 09:17:35  -> matches stated expiry
+  the run completed at 09:08:12; from 09:08:12 to 09:17:35 is 9 min 23 s = 563 s,
+  so the approval was consumed 563 s before expiry and no renewal was required
+```
+
+Every offset in check 2 was recomputed from the clock times rather than from the narrative, which is the only way the timeline stays internally consistent when a step is later moved.
+
+**Sensitivity.** Four parameters move the outcome, and only one of them is under the team's control cheaply.
+
+- Checkpoint interval: 90 s → 45 s lowers expected redo to 22.5 s but doubles checkpoint bytes from 157.3 MB/day to 314.6 MB/day at the observed long-run share of 8%.
+- Attempt cap: 3 → 2 reduces worst-case model spend but raises escalation from 0.3375% to 15% = 0.0225, i.e. from 8.1 to 54 escalations per day at 2,400 sessions/day; the escalation queue, not the spend, is the constraint.
+- Lease TTL: 30 s → 15 s shortens crash recovery by 15 s but tolerates only 15 s of pause; the same 45 s GC pause then yields 30 s of overlap instead of 15 s, doubling writes at risk from 45 to 90.
+- Provider retention: 24 h versus 600 s changes the safe retry horizon by a factor of 144; it is the only parameter here whose uncertainty can produce a duplicated irreversible effect.
 
 ## 6. Visual / Geometric Intuition
+
+Think of the run as a narrow corridor with three widths.
+
+The first width is authority: how many identities may act at once. It is ideally one. When two workers hold live leases, the corridor has two travellers and the collision is not visible until both write.
+The second width is time: the interval between the last committed checkpoint and the crash. Recovery cost is proportional to the area of that gap, not to its height.
+The third width is scope: how many resources a compromised capability can touch. Narrowing scope does not slow anything down, which is why it is the cheapest control in the sheet.
+
 ```text
-Time  ------------------------------------------------------------->
-Worker A  claim(g=7) -> intent(K) -> send(K) -> timeout --- late write(g=7)
-Database  g=7       -> intent saved             -> g=8 -> reject old generation
-Order API                           -> order O created -> lookup(K) returns O
-Worker B                                      claim(g=8) -> reconcile -> complete
+timeline (trace from Section 5, offsets in seconds from admission at 09:00:04)
+
+t+0      admission, run created, version 0
+t+91     09:01:35  cp1 committed (40,960 B); it is the last durable point
+t+151    09:02:35  proposal formed, transition paused -> waiting_approval (v3 -> v4)
+t+356    09:06:00  worker killed; nothing after cp1 survives
+t+386    09:06:30  lease expires; fence generation 8 issued to worker two
+t+426    09:07:10  effect dispatched under key S-4471/R-118/refund/v1
+t+456    09:07:40  provider timeout -> disposition unknown
+t+486    09:08:10  receipt received -> disposition committed
+t+488    09:08:12  terminal completed
+
+redo duration = 265 s (t+356 minus t+91), not an event on the timeline
+redo gap compared with the 45 s mean at C = 90 s -> 265/45 = 5.89x worse
 ```
-Caption: schematic crash-window timeline, not to scale; g is a fencing generation and K an effect key.
-The lost reply does not undo order O, and worker B must not equate missing local receipt with absent external effect.
-The old worker can still contact a system that does not enforce fencing; a database fence is not a network kill switch.
-```text
-queued --> running --> waiting_approval --> running --> completed
-   |          |                 |              |
-   +----------+-----------------+--------------+--> cancel_requested
-              |                                |          |
-              +--> failed                      +--> reconciliation_required
-```
-Caption: illustrative application state machine; transition rules are design choices, not framework defaults.
-Cancellation requires separate handling for a not-yet-sent effect and an effect with an unknown outcome.
-**Takeaway:** Draw time and trust boundaries explicitly; a clean state diagram cannot erase a partial external failure.
+
+Two geometric readings follow, and both are decisions.
+
+First, area under the gap is what you pay in repeated model calls. The replay after checkpoint 1 re-sends the whole assembled context, not the elapsed time: replaying 9,500 tokens costs the same whether 3 s or 265 s elapsed, which is why a slow crash is cheaper per second than a fast one.
+Second, the corridor is not a queue. Adding workers does not widen authority; it only shortens the time to the next attempt. If the bottleneck is a 30 s provider timeout, adding workers raises the number of ambiguous effects per minute without reducing the 30 s.
+
+A third reading concerns the transcript. Picture the context window as a fixed-height window sliding over an unbounded transcript tape; compaction replaces the tape behind the window with a label.
+The window position is not the session position, and confusing them produces the classic bug where a resumed run re-asks a question the user already answered three turns before the compaction boundary.
 
 ## 7. Comparison / Selection Table
-| Approach | Preconditions | Guarantee / boundary | Cost and use | Avoid when | Evidence |
-|---|---|---|---|---|---|
-| Stateless baseline | Inputs reproducible per request | No durable continuation | Small state burden; simple reads | Approval or cross-request history needed | DERIVED |
-| Shared DB, tenant predicates | Enforced on every path | Logical separation depends on policy | Operationally simple | Untrusted admin access bypasses safeguards | DERIVED |
-| Database row security | Correct database roles and policy | Database enforces applicable row policies | Central policy; test privileged roles | Bypass roles or missing tenant context | SOURCED [S2] |
-| Separate tenant databases | Provisioning and routing per tenant | Stronger operational separation, not automatic network isolation | Higher management cost | Tenant count makes operations unaffordable | HEURISTIC |
-| Isolated worker sandbox | Boundaries for process, filesystem and network | Contains only permissions actually enforced | Useful for untrusted code | Credentials or network remain broadly shared | DERIVED |
-| Serialized session processing | Partitioned queue, bounded worker lease | Limits concurrent mutation per session | Predictable ordering; hot-key risk | Very high single-session write concurrency | DERIVED |
 
-Selection priority:
-1. Reject any option unable to enforce required tenant isolation, data residency or external-effect authorization.
-2. Choose stateless processing for truly independent read-only requests; do not introduce a session for convenience alone.
-3. Use tenant-scoped shared storage when its enforcement and operational access meet the threat model.
-4. Escalate to separate databases or stronger runtime isolation when contractual risk or blast-radius requirements demand it.
-5. Add serialized processing or atomic versioning when concurrent runs can mutate shared state.
-6. Choose the simplest mechanism that satisfies correctness; benchmark realistic skew before scaling it.
-7. If options conflict, security and irreversible-effect safety take priority over throughput; record owner and decision.
-Comparable production performance is **NOT MEASURED**; benchmark the same workload, versions, hardware, concurrency, payload distribution and fault injection across options.
-Measure unauthorized access attempts blocked, successful run rate, conflict rate, tail latency, cost per useful completion and recovery time; preserve sample counts and uncertainty.
-**Takeaway:** Isolation is a threat-model decision first and an infrastructure-cost decision second.
+### 7.1 Concurrency control for session state
+
+| Mechanism | Guarantees | Fails when | Operate cost | Choose when |
+|---|---|---|---|---|
+| Optimistic version predicate | one winner per version | writer ignores rows-affected | low | default for session rows |
+| Single-writer queue per session | serialised transitions | failover creates two consumers | medium | ordering within a session matters |
+| Advisory lock held across a call | mutual exclusion | long call outlives connection | high | never across a network call |
+| Lease plus fence token | stale holder rejected by receiver | receiver ignores token | medium | multiple workers, shared external store |
+| Database serialisable isolation | no interleaved anomalies | retry storms under contention | high | money-adjacent multi-row updates |
+
+Rule of selection: pick the cheapest mechanism whose failure mode is detectable by a metric you already collect. A fence token whose rejections are not counted is theatre.
+
+### 7.2 Isolation enforcement points
+
+| Point | Blocks | Misses | Test that proves it |
+|---|---|---|---|
+| Authentication claim resolution | forged tenant | a legitimate user in the wrong tenant | two synthetic tenants, cross reads |
+| Query predicate in repository | cross-tenant rows | raw SQL and admin tools | direct SQL as app role |
+| Row-level security in database | anything bypassing the repository | table owner and bypass roles | connect as owner, retry |
+| Per-tenant key prefix in object store | cross-prefix reads | signed URL reuse | replay a URL as another tenant |
+| Cache key including tenant and version | private cache bleed | pre-warmed shared entries | prime as A, fetch as B |
+| Egress allowlist on tool adapter | exfiltration to unknown hosts | an allowlisted host that proxies | resolve destination at call time |
+
+Two rows are usually enough in production: the repository predicate plus row-level security. The others exist because those two are configuration, and configuration drifts.
+
+### 7.3 Recovery strategy selection
+
+| Situation | Evidence available | Action | Forbidden action | Residual risk |
+|---|---|---|---|---|
+| Crash before any dispatch | checkpoint, no effect rows | resume from checkpoint | none | duplicated model spend only |
+| Crash after commit, before receipt | effect row with key, no receipt | reconcile by key | retry as new effect | provider lacks key lookup |
+| Timeout, unknown remote outcome | outbound request id, no response | park as unknown, poll | mark failed and move on | double effect if retried |
+| Duplicate delivery of same event | two deliveries, same event id | collapse by id, ack both | process second as new | receiver dedup window |
+| Cancel requested mid-effect | cancel state, in-flight marker | finish disposition, then cancel | mark cancelled immediately | user sees later reversal |
+| Stale worker after lease expiry | old fence generation | reject writes at receiver | trust heartbeat freshness | receiver without fencing |
+
+Every "forbidden action" cell is a rule that exists because the alternative looks correct in code review and is wrong under failure.
+
+### 7.4 Runtime identity patterns
+
+| Pattern | Narrowing effect | Blind spot | Deployment note |
+|---|---|---|---|
+| Long-lived service account | none | no tenant binding at all | only for platform-level reads |
+| Token exchange per run | audience and scope | exchange service is a deputy | needs policy at exchange |
+| Per-tool scoped credential | one resource family | aggregation across tools | issue at dispatch, expire at TTL |
+| Signed single-use URL | one object, one verb | long TTL silently widens | cap TTL below incident response time |
+| Impersonation with audit actor | attribution kept | escalation if unapproved | require two-person rule |
 
 ## 8. Failure Modes & Edge Cases
-The following cases are HYPOTHETICAL teaching diagnostics, not reported incidents.
-Each includes a discriminating signal, bounded response and a verification target.
-A negative signal rules out only the specific hypothesis tested; preserve evidence and escalate unresolved ambiguity.
-The collection's final Common Issues artifact is planned, not yet written.
 
-### F-01 — Cross-tenant session lookup
-- **Trigger / symptom:** A user sees a different organization's conversation.
-- **Candidate mechanism:** A lookup trusts session ID without tenant predicate.
-- **Competing hypothesis:** A routing error can also return the wrong storage shard.
-- **Discriminating diagnostic:** Replay the read with the same session ID under two isolated tenant identities.
-- **Expected signal:** The unauthorized identity must get no record even if the identifier is known.
-- **Immediate mitigation:** Block affected route and rotate exposed secrets if disclosure is confirmed.
-- **Correction / prevention:** Enforce tenant binding in the query and authorization layer.
-- **Verification:** Test reads writes exports and cache hits under both identities.
-- **Boundary / escalation:** A passing application test does not validate privileged database roles; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+Each entry states the symptom an operator would actually see, the mechanism, a competing cause, and a check that separates them. All are HYPOTHETICAL teaching cases; none is a reported incident.
 
-### F-02 — Forged tenant header
-- **Trigger / symptom:** Caller sets a tenant header for an organization they do not belong to.
-- **Candidate mechanism:** Server treats an untrusted header as identity.
-- **Competing hypothesis:** Misconfigured gateway identity propagation is another possibility.
-- **Discriminating diagnostic:** Compare signed principal claims with the resolved tenant at admission.
-- **Expected signal:** The requested tenant must be a verified membership or explicitly delegated scope.
-- **Immediate mitigation:** Reject the request and preserve the gateway trace.
-- **Correction / prevention:** Derive tenant context from trusted authentication and validate membership.
-- **Verification:** Exercise direct backend access as well as gateway access.
-- **Boundary / escalation:** A signed token can still have stale membership; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-01 — Session ID treated as a capability
+- **Symptom:** a support user with a session URL reads a conversation from another tenant.
+- **Mechanism:** the read path uses the identifier to locate the row and never re-checks tenant.
+- **Competing cause:** a routing bug that sends the query to the wrong shard also returns a foreign row.
+- **Discriminating check:** re-issue the exact read under tenant B's identity with tenant A's ID; a routing bug fails for both identities, an authorization gap fails only for the wrong one.
+- **Numbers:** with 2 tenants and 1 missing predicate, exposure is 1 ordered pair out of 2; with 40 tenants it is 39 pairs.
+- **Containment:** disable the deep-link route; rotate any secret embedded in affected transcripts.
+- **Fix:** resolve tenant from the authenticated principal and add it to the query predicate; add row-level security beneath it.
+- **Verification:** cross-tenant test matrix of 2 tenants × 3 roles × 5 routes = 30 assertions, all denials required.
+- **Provenance:** HYPOTHETICAL; unmeasured.
 
-### F-03 — Shared cache key collision
-- **Trigger / symptom:** A cached answer appears in the wrong tenant.
-- **Candidate mechanism:** Cache key omits tenant or authorization scope.
-- **Competing hypothesis:** Incorrect cache invalidation can mimic this symptom.
-- **Discriminating diagnostic:** Inspect exact key construction and source tenant of the cached value.
-- **Expected signal:** Different tenant scopes must never resolve to the same private cache entry.
-- **Immediate mitigation:** Disable or partition the affected cache.
-- **Correction / prevention:** Include tenant authorization and relevant resource version in the cache key.
-- **Verification:** Prime as one tenant then fetch as another under test identities.
-- **Boundary / escalation:** Public immutable content can have different sharing rules; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-02 — Tenant claim taken from a request header
+- **Symptom:** a client-sent `X-Tenant` value selects storage with no membership check.
+- **Mechanism:** the gateway forwards the header and the service trusts it after authentication.
+- **Competing cause:** a legitimate SSO user whose membership was revoked an hour ago; identity sync lag mimics forgery.
+- **Discriminating check:** compare the signed token's tenant claim with the header value; equality means the defect is elsewhere, mismatch is decisive.
+- **Numbers:** header trust converts 1 authenticated credential into access to as many tenants as existence checks permit, potentially all 40.
+- **Containment:** strip the header at the edge and reject requests carrying it.
+- **Fix:** derive tenant from verified claims and load membership server-side at admission.
+- **Verification:** send a valid token with a foreign tenant header and assert a 403 at the service, not only at the gateway.
+- **Provenance:** HYPOTHETICAL; teaching scenario.
 
-### F-04 — Object storage path traversal
-- **Trigger / symptom:** An export request reads another tenant's object.
-- **Candidate mechanism:** Client-controlled path escapes its permitted prefix.
-- **Competing hypothesis:** A stale signed URL may also grant access.
-- **Discriminating diagnostic:** Resolve the canonical object key and compare its authorized resource binding.
-- **Expected signal:** A rejected traversal should never reach the object read.
-- **Immediate mitigation:** Disable the vulnerable export route and revoke affected URLs.
-- **Correction / prevention:** Construct object paths server-side and enforce object-store permissions.
-- **Verification:** Test encoded separators and cross-tenant object IDs.
-- **Boundary / escalation:** A prefix string check alone may not handle normalization; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-03 — Cache key omits tenant and policy version
+- **Symptom:** an answer generated under role `analyst` appears for role `auditor` in the same tenant, or across tenants.
+- **Mechanism:** key is `hash(prompt)` while the rendered result depends on authorization-filtered retrieval.
+- **Competing cause:** stale entry from before a policy change; both produce "wrong answer" but different blast radius.
+- **Discriminating check:** inspect the exact key material and the cached value's source identity; a key without tenant discriminates immediately.
+- **Numbers:** 40 tenants × 3 roles = 120 distinct scopes collapsing into 1 key space; the collision probability for a random pair is 1 − 1/120 ≈ 0.9917.
+- **Containment:** flush the affected keyspace and serve from the retrieval path until fixed.
+- **Fix:** include tenant, role digest and retrieval corpus version in the key; never cache material assembled under a filter without the filter in the key.
+- **Verification:** prime as tenant A role analyst, fetch as tenant B; assert miss, then assert the second fetch is correct.
+- **Provenance:** HYPOTHETICAL; unmeasured.
 
-### F-05 — Unauthorized resume
-- **Trigger / symptom:** A previously authorized user resumes after access was revoked.
-- **Candidate mechanism:** Resume trusts the original session authorization indefinitely.
-- **Competing hypothesis:** A delayed identity synchronization can produce similar behavior.
-- **Discriminating diagnostic:** Compare current membership and approval policy with the original admission.
-- **Expected signal:** The resumed action must fail if current authorization is absent.
-- **Immediate mitigation:** Pause affected runs and revoke outstanding capabilities.
-- **Correction / prevention:** Reauthorize on resume and before privileged tool use.
-- **Verification:** Revoke membership between pause and resume in a controlled test.
-- **Boundary / escalation:** Historical records remain subject to their own access policy; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-04 — Export path traversal
+- **Symptom:** an export request returns an object whose key belongs to a different tenant prefix.
+- **Mechanism:** client-supplied path segments are concatenated without normalisation, so `../` escapes the prefix.
+- **Competing cause:** a signed URL issued earlier for the other tenant, replayed inside its validity window.
+- **Discriminating check:** log the canonicalised object key and the authorization decision; traversal shows a rejected key, URL replay shows an authorised key.
+- **Numbers:** a 900 s URL TTL means a leaked link is exploitable for 15 minutes; dropping the TTL to 60 s cuts the window by 15×.
+- **Containment:** disable exports, revoke outstanding URLs, audit access logs for prefix violations.
+- **Fix:** construct keys server-side from opaque identifiers; enforce object-store policy in addition to application checks.
+- **Verification:** replay encoded separators (`%2e%2e%2f`), double-encoded variants, and absolute keys; all must 404 at the object store.
+- **Provenance:** HYPOTHETICAL; constructed example.
 
-### F-06 — Approval payload substitution
-- **Trigger / symptom:** The user approves one payment but the worker submits another.
-- **Candidate mechanism:** Approval is attached to a run rather than an immutable payload.
-- **Competing hypothesis:** A serialization difference can produce false hash mismatches.
-- **Discriminating diagnostic:** Compare canonical approved fields with the actual outgoing request.
-- **Expected signal:** Any material change must invalidate the approval.
-- **Immediate mitigation:** Stop the send and request approval for the changed payload.
-- **Correction / prevention:** Bind approval to canonical action tenant destination amount and expiration.
-- **Verification:** Change one protected field and confirm resume is rejected.
-- **Boundary / escalation:** Canonicalization must include all semantically relevant fields; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-05 — Resume trusts the original authorization
+- **Symptom:** a paused run resumes after the initiating user's access was revoked.
+- **Mechanism:** resume validates run ownership as recorded at admission but not current membership.
+- **Competing cause:** a delegated approval granted later under a new policy version.
+- **Discriminating check:** compare current membership and policy version with the values stamped at admission; divergence is the defect, equality points to delegation.
+- **Numbers:** approval queue at p95 240 s means a revocation has a 4-minute window on each paused run; 60 paused runs per day gives 240 run-minutes of exposure.
+- **Containment:** pause all runs whose initiator lost access; revoke outstanding tool capabilities.
+- **Fix:** reauthorize at resume and again immediately before the privileged effect; record both policy versions.
+- **Verification:** in a controlled test, revoke membership between pause and resume; assert the transition to running is refused with an audit row.
+- **Provenance:** HYPOTHETICAL; no incident record.
 
-### F-07 — Expired approval
-- **Trigger / symptom:** A delayed run executes after its approval window.
-- **Candidate mechanism:** Resume checks decision but not expiry.
-- **Competing hypothesis:** Clock skew can create ambiguous boundary cases.
-- **Discriminating diagnostic:** Compare trusted server time with the stored expiry and clock health.
-- **Expected signal:** An expired approval cannot authorize a fresh effect.
-- **Immediate mitigation:** Pause the action and obtain a new decision.
-- **Correction / prevention:** Validate expiry at the effect boundary using trusted time.
-- **Verification:** Resume just before and after expiration under controlled clock conditions.
-- **Boundary / escalation:** Time validity does not replace current principal authorization; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-06 — Approval bound to a run, not to a payload
+- **Symptom:** the approved amount is 4,200 but the submitted amount is 42,000.
+- **Mechanism:** the approval row references the run id; the worker recomputes the payload after approval.
+- **Competing cause:** canonicalisation difference producing a hash mismatch on an identical action, which fails safe and looks similar in logs.
+- **Discriminating check:** recompute the digest of the intended payload and compare with the digest stored at approval time; a mismatch with identical semantics is a canonicalisation bug, a mismatch with different numbers is substitution.
+- **Numbers:** with 6 material fields, one unprotected field is 1/6 of the payload surface but potentially 10× the value at risk.
+- **Containment:** halt the adapter for that action type; re-approve pending items.
+- **Fix:** bind approval to a digest over tenant, actor, destination, amount, currency, action type and expiry; verify at dispatch.
+- **Verification:** mutate each material field in turn, 6 cases, each must invalidate the approval.
+- **Provenance:** HYPOTHETICAL; illustrative.
 
-### F-08 — Duplicate purchase after timeout
-- **Trigger / symptom:** Two orders appear after an API timeout.
-- **Candidate mechanism:** Retry creates a fresh effect key or receiver does not deduplicate.
-- **Competing hypothesis:** A user may have intentionally submitted two separate requests.
-- **Discriminating diagnostic:** Compare intent IDs effect keys external receipts and payloads.
-- **Expected signal:** One intended effect should map to one durable effect key across attempts.
-- **Immediate mitigation:** Stop automatic retries and reconcile all matching external records.
-- **Correction / prevention:** Persist the key before send and use the provider's documented deduplication contract.
-- **Verification:** Inject lost responses and compare order ledger to intent ledger.
-- **Boundary / escalation:** A key outside the receiver's retention window may no longer deduplicate; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-07 — Expired approval executed
+- **Symptom:** a refund is issued 20 minutes after the approver's window closed.
+- **Mechanism:** resume checks that a decision exists and not whether its validity covers the current time.
+- **Competing cause:** clock skew between the approval service and the worker makes a valid approval appear expired or vice versa.
+- **Discriminating check:** compare trusted server time, stored expiry and measured skew; a consistent 2 s skew cannot explain a 1,200 s gap.
+- **Numbers:** TTL 900 s; a 20-minute delay is 1,200 s, exceeding validity by 300 s (33.3% beyond the window).
+- **Containment:** freeze the action type, reconcile everything approved in the last hour.
+- **Fix:** evaluate expiry at the effect boundary using a single trusted clock; treat expiry as a state transition to `expired`, not as a silent discard.
+- **Verification:** resume at TTL ± 5 s; assert refuse-then-require-new-decision on both sides of the boundary.
+- **Provenance:** HYPOTHETICAL; constructed.
 
-### F-09 — Idempotency key collision
-- **Trigger / symptom:** An unrelated request receives an old result.
-- **Candidate mechanism:** The key scope is too broad or reused for distinct intent.
-- **Competing hypothesis:** An external API may scope keys differently than the client assumes.
-- **Discriminating diagnostic:** Compare tenant operation destination key and payload hash.
-- **Expected signal:** Distinct intended actions must not share a key within receiver scope.
-- **Immediate mitigation:** Suspend affected key generation and inspect returned receipts.
-- **Correction / prevention:** Use high-entropy keys with explicit tenant and operation scope.
-- **Verification:** Send two different payloads with deliberately repeated key in a sandbox.
-- **Boundary / escalation:** Never assume a provider rejects mismatched payloads without documentation; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-08 — Duplicate effect after timeout
+- **Symptom:** two refunds, 60 s apart, for the same session.
+- **Mechanism:** the timeout is interpreted as failure and the retry generates a new key from the current timestamp.
+- **Competing cause:** the provider's own retry policy re-sent after its 30 s timeout.
+- **Discriminating check:** list both requests with their effect keys and the provider receipt ids; identical keys with two receipts is a provider bug, different keys is an adapter bug.
+- **Numbers:** retry cap 3 at 30 s timeouts creates up to 3 sends in 90 s; if the provider dedup window is 600 s, the safe retry horizon is 600 s and 90 s is inside it.
+- **Containment:** stop the adapter, enumerate unresolved effects, reverse duplicates externally.
+- **Fix:** derive the key from canonical action content and the run id, persist it before the first send, and reuse it across attempts.
+- **Verification:** kill the worker between send and response in a fault-injection test; assert one external effect and two recorded attempts.
+- **Provenance:** HYPOTHETICAL; teaching case.
 
-### F-10 — Unknown send outcome
-- **Trigger / symptom:** Run is stuck after the remote API times out.
-- **Candidate mechanism:** The remote action may have completed despite missing response.
-- **Competing hypothesis:** The request may also never have left the worker.
-- **Discriminating diagnostic:** Inspect client trace and independently query the external ledger by effect key.
-- **Expected signal:** A timeout alone must not be interpreted as a failed effect.
-- **Immediate mitigation:** Hold the run in reconciliation-required state.
-- **Correction / prevention:** Build a lookup or operator review path before enabling the action.
-- **Verification:** Simulate lost response after remote commit and observe resolution.
-- **Boundary / escalation:** A missing lookup result may itself be eventually consistent; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-09 — Idempotency key collision across payloads
+- **Symptom:** a second, different action is silently absorbed and never executed.
+- **Mechanism:** the key is built from session id plus action type, so two distinct refunds on one session share a key.
+- **Competing cause:** a receiver that treats any key replay as success without comparing payload digest.
+- **Discriminating check:** send two different payloads with one key; if the second returns the first's receipt, the key space is too coarse.
+- **Numbers:** one session with 4 distinct refunds collapses to 1 executed effect; the loss rate is 3/4 = 75%.
+- **Containment:** audit all effects for the affected action type in the retention window.
+- **Fix:** include a canonical payload digest or a monotonic intent ordinal in the key; document the key's scope.
+- **Verification:** property test that distinct canonical payloads never map to one key, over a corpus of 1,000 examples.
+- **Provenance:** HYPOTHETICAL; unmeasured.
 
-### F-11 — Concurrent session updates
-- **Trigger / symptom:** One user's latest message disappears.
-- **Candidate mechanism:** Two runs write full session snapshots from the same version.
-- **Competing hypothesis:** Incorrect projection rebuild can look similar.
-- **Discriminating diagnostic:** Inspect expected and committed versions for competing updates.
-- **Expected signal:** The second stale update must conflict instead of overwriting.
-- **Immediate mitigation:** Stop unsafe writers and reconstruct from durable records where possible.
-- **Correction / prevention:** Use atomic compare-and-set or per-session serialization.
-- **Verification:** Race two writes from the same version and confirm one conflict.
-- **Boundary / escalation:** A correct local update does not serialize an external system; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-10 — Stale worker writes after lease expiry
+- **Symptom:** a run's state goes backwards from `waiting_approval` to `running` minutes after failover.
+- **Mechanism:** the paused worker's process resumes and writes with a read-modify-write path that ignores version.
+- **Competing cause:** two consumers on one partition after a rebalance, both alive and healthy.
+- **Discriminating check:** compare lease generation in the write with the store's current generation; a lower generation is decisive, equal generations points to duplicate consumers.
+- **Numbers:** 45 s pause against a 30 s TTL yields a 15 s overlap; at 3 writes/s that is 45 writes at risk, all rejected with a fence check.
+- **Containment:** fence and block the stale worker's credential; replay the transition table for the last hour.
+- **Fix:** require the version predicate on every write and enforce a monotonic fence at the storage layer.
+- **Verification:** freeze a worker process for 60 s with SIGSTOP-style tooling, then thaw; assert zero accepted writes from generation 7.
+- **Provenance:** HYPOTHETICAL; constructed.
 
-### F-12 — Stale lease holder
-- **Trigger / symptom:** A former worker changes run state after reassignment.
-- **Candidate mechanism:** Lease expiry was treated as process termination.
-- **Competing hypothesis:** A misconfigured clock can trigger early reassignment.
-- **Discriminating diagnostic:** Compare writer generation with the current resource generation.
-- **Expected signal:** The receiver must reject an older generation even if worker A is alive.
-- **Immediate mitigation:** Disable the stale worker credentials and contain writes.
-- **Correction / prevention:** Use monotonically increasing fencing tokens at each protected write boundary.
-- **Verification:** Partition worker A then reassign and attempt its old write.
-- **Boundary / escalation:** A third-party tool that ignores the token remains unfenced; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-11 — Checkpoint committed after the effect
+- **Symptom:** after restart, the run re-executes an effect that already succeeded.
+- **Mechanism:** checkpoint ordering is written after the tool call returns, so the crash window excludes the effect record.
+- **Competing cause:** asynchronous checkpointing that returns before durable write.
+- **Discriminating check:** compare checkpoint commit timestamp with the effect receipt timestamp; commit-after-receipt means ordering, commit-before but missing effect row means loss.
+- **Numbers:** at 90 s interval and 30 s effect duration, up to 33.3% of a run's effects can sit in the uncommitted gap.
+- **Containment:** pause resumes for the affected run family; reconcile by effect key.
+- **Fix:** write intent (key plus canonical payload) durably before dispatch, then commit the receipt; resume treats intent-without-receipt as unknown.
+- **Verification:** inject a crash exactly between dispatch and receipt; assert the resumed run reconciles rather than re-sends.
+- **Provenance:** HYPOTHETICAL; illustrative.
 
-### F-13 — Split-brain scheduler
-- **Trigger / symptom:** Two workers both believe they own one run.
-- **Candidate mechanism:** Leadership or ownership changes lack a consistent authority.
-- **Competing hypothesis:** Duplicate queue delivery alone is also plausible.
-- **Discriminating diagnostic:** Compare claim transaction IDs and ownership generations.
-- **Expected signal:** Only one generation should be accepted for a protected transition.
-- **Immediate mitigation:** Pause dispatch and preserve lease records.
-- **Correction / prevention:** Make ownership assignment atomic and fence all subsequent writes.
-- **Verification:** Exercise failover during an active run.
-- **Boundary / escalation:** A lease reduces concurrent work but cannot guarantee one execution; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-12 — Replay executes side effects
+- **Symptom:** rebuilding a run from the event log creates new tickets.
+- **Mechanism:** the replay handler calls the same tool adapter as live execution.
+- **Competing cause:** a duplicate event delivered twice by the broker, which also creates two effects but with identical ids.
+- **Discriminating check:** compare event ids; a distinct id with an identical payload is a replay, a repeated id is a duplicate delivery.
+- **Numbers:** a 7-day log with 40,000 run events replayed naively produces 40,000 dispatches; with an effect-key guard it produces 0 new effects and 40,000 suppressed attempts.
+- **Containment:** revoke the replay service's write credential for external adapters.
+- **Fix:** separate replay into a pure state-reconstruction mode with no adapter credentials; make suppression observable as a counter.
+- **Verification:** replay a recorded day into a sandbox provider and assert zero new provider objects and a nonzero suppression counter.
+- **Provenance:** HYPOTHETICAL; no measurement.
 
-### F-14 — Checkpoint before durable event
-- **Trigger / symptom:** Resume skips a tool call whose intent was never committed.
-- **Candidate mechanism:** Snapshot offset advances before its referenced events are durable.
-- **Competing hypothesis:** A projection bug may make an existing event invisible.
-- **Discriminating diagnostic:** Read snapshot offset and confirm all referenced events exist durably.
-- **Expected signal:** Every event at or before the snapshot boundary must be recoverable.
-- **Immediate mitigation:** Stop advancing snapshots and recover from the last consistent point.
-- **Correction / prevention:** Commit snapshot and event position atomically or use a safe protocol.
-- **Verification:** Crash between each persistence step during a restore exercise.
-- **Boundary / escalation:** A snapshot is not automatically consistent merely because it is recent; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-13 — Poison event blocks the session
+- **Symptom:** one session never advances and its queue depth grows by one per minute.
+- **Mechanism:** a malformed event fails deserialisation and is retried indefinitely in place, blocking its partition.
+- **Competing cause:** a downstream timeout that also causes repeated retries but advances the offset.
+- **Discriminating check:** inspect per-partition offset lag versus per-session attempt counts; a fixed offset with a rising attempt count is poison, a moving offset is a timeout.
+- **Numbers:** 1 poison event at 60 retries/hour accumulates 1,440 attempts/day and blocks every session behind it on that partition.
+- **Containment:** move the event to a quarantine topic after a bounded attempt count.
+- **Fix:** bound attempts per event, record the failure, and continue; a session-level dead-letter state is a better outcome than a stalled partition.
+- **Verification:** publish a corrupt payload and assert offset advance within the attempt bound plus one dead-letter record.
+- **Provenance:** HYPOTHETICAL; teaching case.
 
-### F-15 — Replay repeats an effect
-- **Trigger / symptom:** A restored run submits a tool request again.
-- **Candidate mechanism:** Replay executes side effects instead of consuming recorded receipts.
-- **Competing hypothesis:** An earlier intent may genuinely have no external outcome.
-- **Discriminating diagnostic:** Compare replay mode and the stored intent receipt pair.
-- **Expected signal:** A confirmed receipt must suppress re-execution for the same intent.
-- **Immediate mitigation:** Disable effectful replay and reconcile the external system.
-- **Correction / prevention:** Separate deterministic reconstruction from live tool execution.
-- **Verification:** Restore a run after an effect and check that no second call occurs.
-- **Boundary / escalation:** Unconfirmed effects require reconciliation rather than silent suppression; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-14 — Out-of-order tool results overwrite state
+- **Symptom:** an older price quote replaces a newer one in the session state.
+- **Mechanism:** results are applied in arrival order with no sequence comparison.
+- **Competing cause:** a retried request that legitimately returns a newer value, which arrival order would handle correctly.
+- **Discriminating check:** compare tool request sequence numbers with the applied state sequence; a lower applied sequence is decisive.
+- **Numbers:** two in-flight calls with 400 ms spread and 2 s response variance reorder with probability near 0.5 on a busy link, so half of all such pairs land wrong.
+- **Containment:** freeze state application for the affected tool, rebuild from the authoritative store.
+- **Fix:** tag each result with (call id, sequence, observed-at) and apply only if newer per field, not per message.
+- **Verification:** invert response order in a test harness; assert the final state reflects the higher sequence.
+- **Provenance:** HYPOTHETICAL; unmeasured.
 
-### F-16 — Poison event blocks recovery
-- **Trigger / symptom:** Every resume fails at the same history position.
-- **Candidate mechanism:** The event schema is malformed or no longer supported.
-- **Competing hypothesis:** Storage corruption can produce a similar parse error.
-- **Discriminating diagnostic:** Inspect event version bytes checksum and decoder error.
-- **Expected signal:** A supported historical event must decode under the declared migration policy.
-- **Immediate mitigation:** Quarantine the run without discarding history.
-- **Correction / prevention:** Version event schemas and provide tested upcasters or migrations.
-- **Verification:** Replay representative historical fixtures with the new reader.
-- **Boundary / escalation:** Do not mutate immutable audit evidence just to make a parser pass; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-15 — Cancellation reported before effects settle
+- **Symptom:** the UI says cancelled while the provider confirms a refund ten minutes later.
+- **Mechanism:** the cancel handler transitions to `cancelled` on request receipt rather than on disposition of in-flight effects.
+- **Competing cause:** a provider that retried internally after the client abandoned the request.
+- **Discriminating check:** compare cancel timestamp with the last effect receipt time; a receipt after cancellation means the terminal state was premature.
+- **Numbers:** cancel at 09:06:00Z with a 30 s in-flight timeout and a 10 s poll interval gives up to 40 s of undetermined effects, i.e. 4 poll cycles.
+- **Containment:** reclassify affected runs to `cancelling` and notify the requester of the discrepancy.
+- **Fix:** model cancellation as `cancelling` with a disposition wait; only the disposition writes `cancelled`.
+- **Verification:** cancel during a known slow tool and assert two states observed in order with exactly one terminal write.
+- **Provenance:** HYPOTHETICAL; constructed.
 
-### F-17 — Out-of-order tool results
-- **Trigger / symptom:** The transcript attaches a result to the wrong request.
-- **Candidate mechanism:** Responses are matched by arrival order instead of call ID.
-- **Competing hypothesis:** The tool itself may emit an incorrect correlation ID.
-- **Discriminating diagnostic:** Compare request and response correlation IDs and timestamps.
-- **Expected signal:** Each result must bind to the original invocation ID.
-- **Immediate mitigation:** Pause downstream decisions and recover the correct mapping.
-- **Correction / prevention:** Persist unique call IDs and validate response correlation.
-- **Verification:** Delay and reorder responses in a sandbox.
-- **Boundary / escalation:** Timestamp ordering alone cannot establish a causal match; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-16 — Overbroad worker identity
+- **Symptom:** a defect in one tool handler can read every tenant's object store.
+- **Mechanism:** the worker runs with a platform-wide service account; tenant scoping happens only in application code.
+- **Competing cause:** an admin-only tool exposed to general runs, which is a policy error rather than an identity error.
+- **Discriminating check:** attempt a cross-tenant read from a run's own credential; success means the identity is overbroad, refusal with a policy-denied code means scoping works.
+- **Numbers:** 40 tenant prefixes reachable instead of 1 gives a blast-radius ratio of 40:1; narrowing to a per-run token reduces it to 1:1.
+- **Containment:** rotate the service credential, revoke long-lived tokens, review access logs for cross-prefix reads.
+- **Fix:** issue a per-run capability scoped to tenant, action family and TTL; keep the platform identity for control-plane tasks only.
+- **Verification:** an automated assertion that every outbound call carries a token whose scope set is a subset of the run's granted scopes.
+- **Provenance:** HYPOTHETICAL; illustrative.
 
-### F-18 — Duplicated queue delivery
-- **Trigger / symptom:** A run starts twice after broker redelivery.
-- **Candidate mechanism:** Consumer treats message delivery as unique execution.
-- **Competing hypothesis:** Two genuinely separate submissions can have different request IDs.
-- **Discriminating diagnostic:** Compare run ID message ID and attempt lineage.
-- **Expected signal:** Duplicate delivery should not create a second run for the same admission key.
-- **Immediate mitigation:** Stop duplicate consumers if effects are at risk.
-- **Correction / prevention:** Make run admission and step transitions idempotent.
-- **Verification:** Redeliver the identical message and check persisted state.
-- **Boundary / escalation:** At-least-once delivery does not imply one execution; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
+### F-17 — Secret persisted in a checkpoint
+- **Symptom:** a database backup contains a bearer token in cleartext.
+- **Mechanism:** the checkpoint serialises the whole worker state, including the credential object used for a tool call.
+- **Competing cause:** transcript logging capturing the same token through a debug header.
+- **Discriminating check:** grep the checkpoint payload and the transcript independently; presence in both indicates two distinct leaks needing two fixes.
+- **Numbers:** a 40 KiB checkpoint per 90 s across 192 long runs/day yields 157.3 MB/day of payload; a single leaked token in that stream is enough for compromise.
+- **Containment:** revoke the token, re-encrypt or purge affected objects according to retention rules.
+- **Fix:** keep credentials out of serialised state; resolve them at call time from a broker, and scan checkpoint payloads in CI.
+- **Verification:** a schema-level test that serialised state matches a whitelist of fields, failing on any unknown key.
+- **Provenance:** HYPOTHETICAL; teaching scenario.
 
-### F-19 — Unbounded retry storm
-- **Trigger / symptom:** Queue depth and upstream errors rise together.
-- **Candidate mechanism:** Every failure triggers immediate synchronized retries.
-- **Competing hypothesis:** A real arrival spike can produce similar queue growth.
-- **Discriminating diagnostic:** Measure retry attempt counts error classes and backoff distribution.
-- **Expected signal:** Retry traffic should be separately visible from original requests.
-- **Immediate mitigation:** Apply admission limits and stop unsafe retries.
-- **Correction / prevention:** Use capped exponential backoff with jitter and a deadline.
-- **Verification:** Inject an outage and verify attempts remain within configured budgets.
-- **Boundary / escalation:** Backoff is not a remedy for permanent authorization failures; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-20 — Permanent error retried
-- **Trigger / symptom:** A run repeatedly calls a tool with invalid credentials.
-- **Candidate mechanism:** All errors are classified as transient.
-- **Competing hypothesis:** A temporary credential service outage may look similar.
-- **Discriminating diagnostic:** Inspect error code provider contract and credential validity.
-- **Expected signal:** A permanent denial should terminate or request intervention.
-- **Immediate mitigation:** Pause the run and repair credentials or permission.
-- **Correction / prevention:** Classify retryable errors by documented tool semantics.
-- **Verification:** Inject a permission denial and verify no blind repeated calls.
-- **Boundary / escalation:** Error classifications can change with provider behavior; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-21 — Cancellation race
-- **Trigger / symptom:** A cancelled run still causes an external effect.
-- **Candidate mechanism:** Cancellation arrived after dispatch or was not checked at the send boundary.
-- **Competing hypothesis:** The external service may have already accepted the action.
-- **Discriminating diagnostic:** Compare cancellation timestamp intent send and remote commit.
-- **Expected signal:** A pre-send cancellation should prevent a new dispatch under the designed protocol.
-- **Immediate mitigation:** Stop future steps and reconcile any in-flight action.
-- **Correction / prevention:** Define cancellation checkpoints and explicit post-send semantics.
-- **Verification:** Cancel before dispatch during dispatch and after remote commit.
-- **Boundary / escalation:** Cancellation cannot retroactively guarantee reversal; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-22 — Cancellation marked complete too early
-- **Trigger / symptom:** UI reports cancelled while a payment is still processing.
-- **Candidate mechanism:** Terminal status ignores unresolved in-flight actions.
-- **Competing hypothesis:** A delayed status projection can also mislead.
-- **Discriminating diagnostic:** Inspect in-flight effect intents and cancellation state.
-- **Expected signal:** Terminal cancellation requires a defined disposition for each outstanding effect.
-- **Immediate mitigation:** Expose pending reconciliation instead of a false terminal result.
-- **Correction / prevention:** Separate cancel-requested from cancelled and reconciliation-required.
-- **Verification:** Inject a slow external response while cancelling.
-- **Boundary / escalation:** Some external systems provide no reliable cancellation mechanism; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-23 — Infinite tool loop
-- **Trigger / symptom:** Run consumes budget without useful progress.
-- **Candidate mechanism:** Model repeatedly proposes the same unsuccessful action.
-- **Competing hypothesis:** A long but legitimate task may have many distinct steps.
-- **Discriminating diagnostic:** Inspect repeated normalized calls and remaining budget.
-- **Expected signal:** Repeated identical failures without state change indicate no progress.
-- **Immediate mitigation:** Stop the run and surface a bounded failure.
-- **Correction / prevention:** Set step token time and cost budgets plus loop detection.
-- **Verification:** Feed a repeating tool response and confirm termination.
-- **Boundary / escalation:** A repetition detector may need exceptions for legitimate polling; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-24 — Context truncation loses approval
-- **Trigger / symptom:** The model claims approval exists but the control plane has none.
-- **Candidate mechanism:** Important history is missing or model inferred authorization.
-- **Competing hypothesis:** A genuine approval may exist in an independent record.
-- **Discriminating diagnostic:** Query the approval store by run and payload hash.
-- **Expected signal:** Only a valid durable approval can authorize the action.
-- **Immediate mitigation:** Block the tool call and request verification.
-- **Correction / prevention:** Keep approval state outside model context and check it at the tool gate.
-- **Verification:** Remove the approval message from context and confirm enforcement remains correct.
-- **Boundary / escalation:** Adding more prompt tokens does not establish authority; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-25 — Prompt injection via retrieval
-- **Trigger / symptom:** Retrieved document tells the agent to disclose another tenant's data.
-- **Candidate mechanism:** Untrusted source text is promoted into instructions or tool authority.
-- **Competing hypothesis:** An ordinary quoted instruction may be harmless if not acted upon.
-- **Discriminating diagnostic:** Trace source provenance model proposal and enforcement decision.
-- **Expected signal:** A tool action outside authorized scope must be rejected regardless of text.
-- **Immediate mitigation:** Disable the affected tool path and assess exposure.
-- **Correction / prevention:** Treat retrieved text as data and enforce permissions outside the model.
-- **Verification:** Place a malicious instruction in a test document and verify denial.
-- **Boundary / escalation:** Prompt wording alone is not a complete security boundary; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-26 — Tool output injection
-- **Trigger / symptom:** A tool response instructs the agent to send secrets elsewhere.
-- **Candidate mechanism:** External tool text is treated as a trusted system directive.
-- **Competing hypothesis:** A compromised tool endpoint may also fabricate structured fields.
-- **Discriminating diagnostic:** Inspect raw tool response provenance and subsequent tool calls.
-- **Expected signal:** The downstream authorization layer must deny unapproved exfiltration.
-- **Immediate mitigation:** Revoke exposed credentials and quarantine the tool response.
-- **Correction / prevention:** Constrain outbound destinations and validate structured tool outputs.
-- **Verification:** Return hostile content from a sandbox tool and observe denied action.
-- **Boundary / escalation:** Output validation cannot prove arbitrary natural language is safe; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-27 — Overbroad service identity
-- **Trigger / symptom:** Every run can access all tenant records.
-- **Candidate mechanism:** Worker uses a shared administrator credential.
-- **Competing hypothesis:** An access proxy may nevertheless enforce per-request authorization.
-- **Discriminating diagnostic:** Inspect effective credentials and resource-level authorization logs.
-- **Expected signal:** A tenant-scoped run should lack unrelated tenant privileges.
-- **Immediate mitigation:** Revoke the broad credential and pause sensitive actions.
-- **Correction / prevention:** Issue short-lived scoped capabilities and apply least privilege.
-- **Verification:** Attempt cross-tenant access from a worker identity.
-- **Boundary / escalation:** A scoped token still requires secure issuance and revocation; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-28 — Secret in transcript
-- **Trigger / symptom:** An API key appears in persisted conversation history.
-- **Candidate mechanism:** Raw tool arguments or output are logged without redaction.
-- **Competing hypothesis:** A user may have intentionally pasted the secret.
-- **Discriminating diagnostic:** Trace secret origin through ingress logs tool events and exports.
-- **Expected signal:** The original secret should be considered compromised once exposed.
-- **Immediate mitigation:** Revoke the credential and restrict access to affected records.
-- **Correction / prevention:** Use secret references and minimize capture before persistence.
-- **Verification:** Inject a test credential and search authorized storage surfaces.
-- **Boundary / escalation:** Redaction does not erase immutable backups already containing a secret; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-29 — Stale policy at resume
-- **Trigger / symptom:** A run uses an old permission after policy was tightened.
-- **Candidate mechanism:** Policy was captured at creation and never revalidated.
-- **Competing hypothesis:** A policy cache propagation delay may also cause it.
-- **Discriminating diagnostic:** Compare effective policy versions at admission resume and effect dispatch.
-- **Expected signal:** The defined current-policy rule must be enforced at the action boundary.
-- **Immediate mitigation:** Pause privileged runs until policy propagation is confirmed.
-- **Correction / prevention:** Record policy version and explicitly reauthorize on resume.
-- **Verification:** Change policy while a run waits then attempt its action.
-- **Boundary / escalation:** Policy migration semantics must be decided for already-approved work; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-30 — Lost audit event
-- **Trigger / symptom:** A state change is visible without a corresponding audit record.
-- **Candidate mechanism:** State commit and audit publication are independent writes.
-- **Competing hypothesis:** A delayed consumer might make a valid event temporarily invisible.
-- **Discriminating diagnostic:** Compare database transaction records with audit stream offsets.
-- **Expected signal:** Committed transitions should have a durable corresponding audit entry.
-- **Immediate mitigation:** Stop high-risk transitions if audit is mandatory.
-- **Correction / prevention:** Persist audit event transactionally or use an outbox in the same transaction.
-- **Verification:** Crash after the state write and verify eventual audit publication.
-- **Boundary / escalation:** An outbox gives reliable publication only with correct consumer handling; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-31 — Audit log tampering
-- **Trigger / symptom:** An operator can silently alter recorded approvals.
-- **Candidate mechanism:** The same broad identity can modify operational and audit records.
-- **Competing hypothesis:** A legitimate retention job may also change availability.
-- **Discriminating diagnostic:** Compare access logs immutable storage controls and approved deletion records.
-- **Expected signal:** Unauthorized alteration should be prevented or detectable.
-- **Immediate mitigation:** Preserve evidence and restrict administrative access.
-- **Correction / prevention:** Separate duties and use tamper-evident retention controls.
-- **Verification:** Attempt unauthorized modification with a test operator role.
-- **Boundary / escalation:** Tamper evidence does not prove the original event was truthful; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-32 — Tenant deletion incomplete
-- **Trigger / symptom:** Deleted user data remains searchable.
-- **Candidate mechanism:** A deletion flow misses derived indexes caches exports or backups.
-- **Competing hypothesis:** A valid legal hold may explain retention.
-- **Discriminating diagnostic:** Trace the data inventory and deletion receipts by resource ID.
-- **Expected signal:** All in-scope copies should follow the documented deletion or hold policy.
-- **Immediate mitigation:** Disable access and begin tracked remediation.
-- **Correction / prevention:** Maintain a deletion graph including derived stores and backup expiry.
-- **Verification:** Create a marked test record delete it and inspect all documented copies.
-- **Boundary / escalation:** Backup restoration must not reintroduce deleted data without controls; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-33 — Cross-region state leakage
-- **Trigger / symptom:** Session data appears outside its required region.
-- **Candidate mechanism:** A global cache or failover path ignores residency routing.
-- **Competing hypothesis:** Replicated control metadata may be mistaken for content.
-- **Discriminating diagnostic:** Classify the actual data copied and inspect region routing.
-- **Expected signal:** Restricted content must stay in approved locations under the applicable policy.
-- **Immediate mitigation:** Disable the affected route and assess contractual impact.
-- **Correction / prevention:** Enforce region-aware storage cache logging and failover rules.
-- **Verification:** Run region-failure exercises with tagged synthetic records.
-- **Boundary / escalation:** Metadata may also be regulated depending on context; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-34 — Hot session partition
-- **Trigger / symptom:** One session's runs queue while the rest remain healthy.
-- **Candidate mechanism:** All its events serialize on one hot key.
-- **Competing hypothesis:** A single slow downstream tool can cause the same shape.
-- **Discriminating diagnostic:** Compare per-key queue depth processing time and tool latency.
-- **Expected signal:** A concentrated queue with normal downstream latency supports hot-key contention.
-- **Immediate mitigation:** Throttle the session and preserve fairness for other tenants.
-- **Correction / prevention:** Bound per-session concurrency and redesign independent work where safe.
-- **Verification:** Load-test skewed keys with the actual serialization rule.
-- **Boundary / escalation:** Splitting a key can violate required ordering; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-35 — Unbounded transcript growth
-- **Trigger / symptom:** Context assembly and storage latency climb throughout a long session.
-- **Candidate mechanism:** Every turn rereads the entire history.
-- **Competing hypothesis:** A slow database or retrieval service may be responsible.
-- **Discriminating diagnostic:** Plot bytes read per invocation against session event count.
-- **Expected signal:** Linear growth in bytes per call supports full-history reread.
-- **Immediate mitigation:** Cap request size and pause oversized sessions safely.
-- **Correction / prevention:** Use bounded context selection and consistent snapshots with explicit provenance.
-- **Verification:** Replay a growing synthetic history and measure read bytes and latency.
-- **Boundary / escalation:** Summaries can omit facts; retain authoritative records separately; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-36 — Stale summary
-- **Trigger / symptom:** The agent acts on a summary that omits a recent correction.
-- **Candidate mechanism:** Summary is not invalidated after a new event.
-- **Competing hypothesis:** A bad summarization model can create the same symptom.
-- **Discriminating diagnostic:** Compare summary coverage offset with the latest relevant event.
-- **Expected signal:** The summary must not claim coverage past its actual source offset.
-- **Immediate mitigation:** Rebuild the context from authoritative events for the affected run.
-- **Correction / prevention:** Version summaries and record their source event ranges.
-- **Verification:** Append a correction after summarization and confirm it is visible.
-- **Boundary / escalation:** A fresh summary can still be semantically inaccurate; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-37 — Checkpoint contains secrets
-- **Trigger / symptom:** A recovery snapshot exposes tool credentials to broad readers.
-- **Candidate mechanism:** Runtime environment or token values were serialized wholesale.
-- **Competing hypothesis:** A secret may instead originate from a user message.
-- **Discriminating diagnostic:** Inspect snapshot schema and the credential access path.
-- **Expected signal:** Recovery state should hold references rather than reusable secrets.
-- **Immediate mitigation:** Revoke exposed credentials and restrict snapshot access.
-- **Correction / prevention:** Whitelist checkpoint fields and encrypt sensitive state.
-- **Verification:** Create a synthetic secret and inspect restored snapshot access.
-- **Boundary / escalation:** Encryption at rest does not restrict authorized overly broad readers; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-38 — Misrouted tool response
-- **Trigger / symptom:** One run receives another run's tool result.
-- **Candidate mechanism:** Correlation keys omit tenant or run identity.
-- **Competing hypothesis:** A shared tool adapter may return a wrong request identifier.
-- **Discriminating diagnostic:** Trace tenant run call ID and adapter response mapping.
-- **Expected signal:** A result must match its originating authorized invocation.
-- **Immediate mitigation:** Quarantine both runs and stop affected adapter traffic.
-- **Correction / prevention:** Bind responses to tenant run and call ID with authenticated transport.
-- **Verification:** Interleave responses from two tenants in a sandbox.
-- **Boundary / escalation:** A globally unique ID reduces collision risk but does not authorize access; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-39 — Orphaned waiting approval
-- **Trigger / symptom:** A run remains paused long after the decision window.
-- **Candidate mechanism:** No expiry worker or resume trigger handles the waiting state.
-- **Competing hypothesis:** A human reviewer may simply be unavailable.
-- **Discriminating diagnostic:** Compare approval expiry queue status and trigger delivery.
-- **Expected signal:** Expired work should follow a defined timeout transition.
-- **Immediate mitigation:** Escalate the pending item and stop any unsafe dispatch.
-- **Correction / prevention:** Persist deadlines and run a durable expiry mechanism.
-- **Verification:** Disable and restart the scheduler across the deadline.
-- **Boundary / escalation:** Expiry handling must be idempotent under duplicate triggers; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-40 — Duplicate approval webhook
-- **Trigger / symptom:** Two identical approvals produce two resumed attempts.
-- **Candidate mechanism:** Webhook delivery is treated as a unique event every time.
-- **Competing hypothesis:** Two separate approval decisions may be legitimately distinct.
-- **Discriminating diagnostic:** Compare event ID approval ID payload hash and run version.
-- **Expected signal:** Only one valid transition should consume a decision for one run version.
-- **Immediate mitigation:** Pause effectful steps and reconcile attempts.
-- **Correction / prevention:** Deduplicate delivery and use an atomic state transition.
-- **Verification:** Deliver the same signed webhook twice and inspect transitions.
-- **Boundary / escalation:** Signature validation alone does not prevent replay; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-41 — Approval from wrong actor
-- **Trigger / symptom:** A valid-looking approval comes from an unauthorized principal.
-- **Candidate mechanism:** The system verifies webhook origin but not approver entitlement.
-- **Competing hypothesis:** A stale group membership cache may cause the same failure.
-- **Discriminating diagnostic:** Check actor identity membership at decision time and delegation policy.
-- **Expected signal:** The actor must possess authority over this action and tenant.
-- **Immediate mitigation:** Suspend the approval and seek an authorized decision.
-- **Correction / prevention:** Authorize the approver independently of the requester.
-- **Verification:** Submit the same decision from authorized and unauthorized test identities.
-- **Boundary / escalation:** Separation of duties may additionally prohibit self-approval; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-42 — Stale tool schema
-- **Trigger / symptom:** A resumed run sends parameters incompatible with the current adapter.
-- **Candidate mechanism:** A stored plan refers to an older tool version.
-- **Competing hypothesis:** A malformed model response can also fail validation.
-- **Discriminating diagnostic:** Compare stored tool schema version with adapter version and validation error.
-- **Expected signal:** Unsupported stored requests should not be silently reinterpreted.
-- **Immediate mitigation:** Pause and require migration or a fresh proposal.
-- **Correction / prevention:** Version tool contracts and define compatibility on resume.
-- **Verification:** Resume a historical checkpoint against the new adapter in staging.
-- **Boundary / escalation:** Passing JSON validation does not guarantee equivalent side effects; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-43 — Credential expiry mid-run
-- **Trigger / symptom:** A tool call fails after a long approval wait.
-- **Candidate mechanism:** A short-lived credential was persisted instead of refreshed.
-- **Competing hypothesis:** Access may have been intentionally revoked.
-- **Discriminating diagnostic:** Inspect token expiry and current authorization independently.
-- **Expected signal:** A refreshed token must still satisfy present policy.
-- **Immediate mitigation:** Pause the call and obtain a current scoped credential.
-- **Correction / prevention:** Keep credential references out of checkpoints and reissue on resume.
-- **Verification:** Wait past token expiry in a controlled scenario.
-- **Boundary / escalation:** Refreshing credentials must not restore revoked privileges; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-44 — Partial multi-tool workflow
-- **Trigger / symptom:** One system updates while the second update fails.
-- **Candidate mechanism:** Independent systems do not share a transaction.
-- **Competing hypothesis:** A retry may also have created duplicate first-system effects.
-- **Discriminating diagnostic:** Compare receipts and current state in both systems.
-- **Expected signal:** The run must expose partial completion rather than claim atomic success.
-- **Immediate mitigation:** Reconcile and apply a preapproved compensation where safe.
-- **Correction / prevention:** Design explicit saga steps compensation and manual escalation.
-- **Verification:** Fail the second action after the first commits.
-- **Boundary / escalation:** Compensation may itself fail or have irreversible consequences; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-45 — Incorrect compensation
-- **Trigger / symptom:** A rollback creates a second business error.
-- **Candidate mechanism:** Compensating action assumes no intervening external changes.
-- **Competing hypothesis:** The first action might not have committed at all.
-- **Discriminating diagnostic:** Read current external state and version before compensation.
-- **Expected signal:** Compensation requires a confirmed effect and valid preconditions.
-- **Immediate mitigation:** Pause automated reversal and involve the business owner.
-- **Correction / prevention:** Model compensation as a separately authorized idempotent action.
-- **Verification:** Change the external state before triggering compensation.
-- **Boundary / escalation:** A compensating action is not a database rollback; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-46 — Model output treated as final state
-- **Trigger / symptom:** A dashboard marks work complete based only on model text.
-- **Candidate mechanism:** Narrative output is mistaken for a committed tool receipt.
-- **Competing hypothesis:** The tool may have completed but receipt capture failed.
-- **Discriminating diagnostic:** Compare the claimed outcome against authoritative system state.
-- **Expected signal:** Completion requires the specified durable evidence.
-- **Immediate mitigation:** Mark the result unverified and reconcile.
-- **Correction / prevention:** Derive completion from receipts and state transitions not prose.
-- **Verification:** Return a fabricated success sentence without a tool call.
-- **Boundary / escalation:** A valid receipt can still require later business settlement; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-47 — Inconsistent run terminal state
-- **Trigger / symptom:** A completed run still has unresolved effects.
-- **Candidate mechanism:** Terminal transition ignores pending intent records.
-- **Competing hypothesis:** A slow projection may display older data.
-- **Discriminating diagnostic:** Query the authoritative run state and all intent dispositions.
-- **Expected signal:** No unresolved effect should be hidden by a success status.
-- **Immediate mitigation:** Reopen or flag the case for reconciliation according to policy.
-- **Correction / prevention:** Gate terminal completion on defined effect disposition.
-- **Verification:** Inject an unresolved intent before terminal transition.
-- **Boundary / escalation:** Some workflows may intentionally complete with explicit partial results; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-48 — Backpressure failure
-- **Trigger / symptom:** Admission continues while workers cannot drain the queue.
-- **Candidate mechanism:** Queue capacity and downstream saturation are not tied to admission.
-- **Competing hypothesis:** A monitoring delay may overstate backlog.
-- **Discriminating diagnostic:** Compare arrival rate service rate queue age and admission decisions.
-- **Expected signal:** Persistent arrivals above service capacity must grow backlog absent shedding.
-- **Immediate mitigation:** Throttle new work and prioritize safe recovery.
-- **Correction / prevention:** Use quotas bounded queues and overload responses.
-- **Verification:** Sustain an illustrative overload then verify admission control.
-- **Boundary / escalation:** Storage capacity alone cannot fix a sustained throughput deficit; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-49 — Duplicate user submission
-- **Trigger / symptom:** A network retry creates two runs for the same request.
-- **Candidate mechanism:** Admission has no client request idempotency contract.
-- **Competing hypothesis:** The user may intend two distinct requests.
-- **Discriminating diagnostic:** Compare request keys principal payload hashes and timestamps.
-- **Expected signal:** Same intended admission should resolve to one run within the declared scope.
-- **Immediate mitigation:** Stop duplicates before side effects and ask for clarification if ambiguous.
-- **Correction / prevention:** Persist a scoped admission key with payload binding.
-- **Verification:** Retry an identical admission after losing the first response.
-- **Boundary / escalation:** Never merge distinct requests solely because their text matches; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-50 — Long-lived signed URL
-- **Trigger / symptom:** A revoked user retains access to an exported transcript.
-- **Candidate mechanism:** A bearer URL outlives user membership or intended access.
-- **Competing hypothesis:** The export may have been copied before revocation.
-- **Discriminating diagnostic:** Check URL expiry audience restrictions and object access logs.
-- **Expected signal:** Revocation expectations must match the actual URL capabilities.
-- **Immediate mitigation:** Revoke or delete the object where feasible.
-- **Correction / prevention:** Use short expiry and authenticated download for sensitive exports.
-- **Verification:** Revoke a user and test previously issued download links.
-- **Boundary / escalation:** A downloaded copy cannot be recalled by URL revocation; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-51 — Unexpected tool destination
-- **Trigger / symptom:** A model proposes sending private data to an attacker-controlled endpoint.
-- **Candidate mechanism:** Tool allows arbitrary network destinations.
-- **Competing hypothesis:** A legitimate integration may have a newly changed endpoint.
-- **Discriminating diagnostic:** Compare destination against an independently managed allowlist and action approval.
-- **Expected signal:** Unapproved egress must be denied even when the model requests it.
-- **Immediate mitigation:** Block egress and investigate attempted disclosure.
-- **Correction / prevention:** Use destination allowlists scoped credentials and network policy.
-- **Verification:** Attempt a forbidden destination from the execution sandbox.
-- **Boundary / escalation:** Allowlisted services can themselves be compromised; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-52 — Data source ownership conflict
-- **Trigger / symptom:** Two services disagree about the current order status.
-- **Candidate mechanism:** A session cache is mistaken for the order system of record.
-- **Competing hypothesis:** The external system may be eventually consistent.
-- **Discriminating diagnostic:** Compare source version freshness and authoritative ownership contract.
-- **Expected signal:** The designated authority wins subject to documented consistency.
-- **Immediate mitigation:** Avoid irreversible action until the discrepancy is resolved.
-- **Correction / prevention:** Document ownership freshness and conflict handling per field.
-- **Verification:** Change the source record and inspect the session projection.
-- **Boundary / escalation:** An authoritative source can still contain erroneous business data; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-53 — Metrics hide tenant skew
-- **Trigger / symptom:** Aggregate success rate looks healthy while one tenant fails.
-- **Candidate mechanism:** Aggregated counts conceal a small affected cohort.
-- **Competing hypothesis:** A tenant may have a legitimately different workload.
-- **Discriminating diagnostic:** Break down outcomes by tenant cohort and error class with access controls.
-- **Expected signal:** Compare like workloads and sample sizes before concluding a regression.
-- **Immediate mitigation:** Support the affected tenant and preserve scoped traces.
-- **Correction / prevention:** Track fairness and isolation-safe cohort diagnostics.
-- **Verification:** Inject a failure for one synthetic tenant and check the alert.
-- **Boundary / escalation:** Per-tenant labels may create high cardinality or privacy exposure; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-54 — Unsafe retry after key expiry
-- **Trigger / symptom:** A delayed run repeats a previously successful external action.
-- **Candidate mechanism:** The receiver has forgotten the old idempotency key.
-- **Competing hypothesis:** A new intended transaction may legitimately reuse the same payload.
-- **Discriminating diagnostic:** Compare original send time provider key retention and external ledger.
-- **Expected signal:** Expired deduplication protection cannot establish absence of the old effect.
-- **Immediate mitigation:** Hold for reconciliation instead of automatically retrying.
-- **Correction / prevention:** Set retry deadline below the documented deduplication horizon.
-- **Verification:** Resume beyond the horizon in a sandbox and verify safe handling.
-- **Boundary / escalation:** Provider key retention and lookup guarantees must be verified; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-55 — Version counter reset
-- **Trigger / symptom:** An old worker's generation becomes valid after resource recreation.
-- **Candidate mechanism:** A new resource reuses the same identifier and starts generation from zero.
-- **Competing hypothesis:** A stale cache can also report an old generation.
-- **Discriminating diagnostic:** Compare resource incarnation and generation in all writes.
-- **Expected signal:** A generation is meaningful only within a unique resource incarnation.
-- **Immediate mitigation:** Disable stale workers and isolate the recreated resource.
-- **Correction / prevention:** Include an immutable incarnation ID in fencing checks.
-- **Verification:** Delete and recreate a test run then replay an old write.
-- **Boundary / escalation:** Monotonic counters alone do not protect across reset without incarnation scope; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-56 — Failure hidden by retry
-- **Trigger / symptom:** A dashboard shows eventual success while many attempts fail.
-- **Candidate mechanism:** Metrics count only terminal outcomes.
-- **Competing hypothesis:** The model or tool may be degrading without total failure.
-- **Discriminating diagnostic:** Compare per-attempt errors and latency against per-run outcomes.
-- **Expected signal:** Rising attempts per success can indicate masked degradation.
-- **Immediate mitigation:** Limit retries and investigate the failing dependency.
-- **Correction / prevention:** Instrument attempt-level and run-level outcomes separately.
-- **Verification:** Inject transient failures and inspect both metric families.
-- **Boundary / escalation:** Retry success can be acceptable within an explicitly budgeted policy; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-57 — Tool result not persisted
-- **Trigger / symptom:** A model uses a result that is lost during worker crash.
-- **Candidate mechanism:** Tool output was kept only in process memory.
-- **Competing hypothesis:** The tool may not be reproducible on a later invocation.
-- **Discriminating diagnostic:** Compare invocation receipt persistence time with model continuation time.
-- **Expected signal:** Required inputs must be durably recorded before dependent continuation.
-- **Immediate mitigation:** Pause and reconstruct from the authoritative tool if possible.
-- **Correction / prevention:** Commit tool result or a durable reference before advancing the run.
-- **Verification:** Crash after tool response and before model continuation.
-- **Boundary / escalation:** Sensitive tool outputs still need minimization and retention controls; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-58 — Overshared model context
-- **Trigger / symptom:** A run includes another tenant's retrieved documents.
-- **Candidate mechanism:** Retrieval filter or index namespace is missing.
-- **Competing hypothesis:** A document may itself contain incorrectly labeled content.
-- **Discriminating diagnostic:** Trace document IDs tenant metadata and retrieval authorization.
-- **Expected signal:** Every included private document must pass the current tenant scope.
-- **Immediate mitigation:** Stop affected retrieval and investigate exposure.
-- **Correction / prevention:** Apply authorization at retrieval and verify returned document ownership.
-- **Verification:** Seed two tenant corpora with distinctive markers and attempt cross-retrieval.
-- **Boundary / escalation:** A relevant result is not necessarily an authorized result; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-59 — Unbounded approval wait
-- **Trigger / symptom:** A run holds scarce worker resources for days.
-- **Candidate mechanism:** Waiting is implemented as a blocking worker task.
-- **Competing hypothesis:** A normal brief approval delay is not necessarily a defect.
-- **Discriminating diagnostic:** Inspect worker occupancy while runs are in waiting state.
-- **Expected signal:** Durable waiting should release compute resources when possible.
-- **Immediate mitigation:** Drain waiting tasks into durable state.
-- **Correction / prevention:** Persist continuation and schedule resume on decision or timeout.
-- **Verification:** Pause many test approvals and observe worker slot usage.
-- **Boundary / escalation:** Durable waits still consume storage and operational attention; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-60 — Incompatible snapshot deployment
-- **Trigger / symptom:** New workers fail to restore old checkpoints.
-- **Candidate mechanism:** A schema or serializer change breaks backward compatibility.
-- **Competing hypothesis:** A corrupted checkpoint can produce similar errors.
-- **Discriminating diagnostic:** Compare checkpoint version and supported decoder versions.
-- **Expected signal:** Each retained checkpoint version needs a supported migration or explicit retirement.
-- **Immediate mitigation:** Route affected runs to a compatible worker or pause safely.
-- **Correction / prevention:** Test rolling deployment with historical snapshots and migrations.
-- **Verification:** Restore old snapshots on the candidate release.
-- **Boundary / escalation:** Rollback also needs compatibility with state written by the newer release; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-### F-61 — Hidden manual override
-- **Trigger / symptom:** An operator fixes a run without an attributable record.
-- **Candidate mechanism:** Administrative intervention bypasses normal transition logging.
-- **Competing hypothesis:** An audit exporter outage can make a legitimate record temporarily invisible.
-- **Discriminating diagnostic:** Compare database changes operator identity and audit stream.
-- **Expected signal:** Every privileged override must be attributable and reviewable.
-- **Immediate mitigation:** Freeze further overrides and preserve forensic evidence.
-- **Correction / prevention:** Provide a controlled break-glass path with reason and audit.
-- **Verification:** Exercise the override under a test role and inspect the durable trail.
-- **Boundary / escalation:** An authenticated operator can still make an incorrect change; escalate if the outcome remains ambiguous.
-- **Provenance:** HYPOTHETICAL; no incident or measured result is asserted.
-
-**Takeaway:** Diagnose with correlated evidence, contain the unsafe boundary, and verify a specific invariant rather than merely retrying.
+### F-18 — Retention deletion leaves copies
+- **Symptom:** a deletion request completes but the tenant's conversation is still retrievable from a cache or export bucket.
+- **Mechanism:** the delete path covers primary rows only; caches, replicas, exports and search indexes have independent lives.
+- **Competing cause:** a soft-delete flag the API honours but background jobs ignore.
+- **Discriminating check:** enumerate every store that received the session and query each with the deleted id; a hit in one store localises the gap.
+- **Numbers:** 6 stores (primary, replica, cache, search, export, audit) means 6 checks per deletion; covering 5 of 6 leaves 16.7% of the surface unverified.
+- **Containment:** purge confirmed copies, extend the deletion runbook, notify the requester per policy.
+- **Fix:** maintain a per-session store inventory at write time so deletion can enumerate rather than guess.
+- **Verification:** a deletion test that asserts absence in all 6 stores and fails on store count drift.
+- **Provenance:** HYPOTHETICAL; unmeasured.
 
 ## 9. Complexity & Cost Analysis
-### 9a. Algorithmic Complexity
-Let E be the number of persisted events in a run, K the number replayed after the latest snapshot, and B the bytes of selected context.
-These are logical operation counts, not observed latency; database indexes, contention and network round trips change elapsed time.
-| Operation | Input size | Time | Auxiliary memory | I/O and assumptions |
-|---|---|---|---|---|
-| Admit and lookup | One indexed key | Expected indexed lookup, backend-dependent | O(1) excluding response | Authentication and authorization calls may dominate |
-| Replay full log | E events | O(E) event applications | O(state size), excluding stored log | Reads all relevant event bytes; assumes constant-time application per event |
-| Replay from snapshot | K suffix events | O(K) plus snapshot decode | O(snapshot size) | Correct only if snapshot covers the stated log prefix |
-| Assemble context | B selected bytes | O(B) to read/copy selected material | O(B) if materialized | Retrieval and tokenizer cost may add work |
-| Conditional state update | One indexed run key | Backend-dependent lookup and atomic write | O(1) client state | Conflicts cause additional attempts; no fixed worst-case latency claimed |
-| Reconcile effects | J unresolved intents | O(J) external lookups in a simple sequential scan | O(1) working state if streamed | Remote latency, rate limits and pagination dominate |
 
-### 9b. Back-of-Envelope Sizing
-**ILLUSTRATIVE:** Extend Section 5's 900 MB physical storage estimate, with the same stated assumptions.
-Daily admission is 1,000 sessions per 86,400 seconds, an average of approximately 0.01157 sessions/second.
-That average does not characterize bursts, concurrency or the maximum queue length.
-If each session adds an average of 10 events, the 30-day cohort contains 300,000 events.
-If the average event requires two indexed writes, this simplified accounting predicts 600,000 logical writes across the retained cohort.
-The writes include neither retry attempts nor updates, compaction, deletion, audit export or database internal amplification.
-**DERIVED queue calculation Q1.** Validity: initially empty queue, constant arrival rate a and service rate s, no losses, a greater than s, and sufficient capacity during the interval.
-Starting from backlog change per second a-s and integrating a constant rate for t seconds gives Q=(a-s)*t.
-[1] FORMULA: Q = (a - s) * t.
-[2] WHERE: Q is added queued tasks; a and s are tasks/second; t is seconds.
-[3] CONSTRAINT: a > s and rates stay constant; this is a fluid approximation, not a tail-latency model.
-[4] NUMERICAL EXAMPLE: a=120 tasks/s, s=100 tasks/s, t=300 s gives Q=20*300=6,000 tasks.
-[5] INTERPRETATION: The system needs overload control or increased service capacity; a larger queue only postpones saturation.
-Boundary: when rates change, use the integral of net rate while accounting for the zero-backlog floor; dropped or retried tasks require separate accounting.
-If the 6,000 tasks each occupy 2,000 bytes of payload, the payload is 12,000,000 bytes before queue metadata and replicas.
-That multiplication is an illustrative payload estimate, not a provisioned queue capacity or latency claim.
-Environment for measurement remains OPEN: actual database, broker, hardware, region, software versions and autoscaling configuration are not specified.
-Budget remains OPEN: define end-to-end deadline, per-tenant fairness, recovery objective, storage budget and external API quota before production selection.
-Benchmark plan: replay realistic size and key-skew distributions; record admitted and completed runs, queue age, retries, p50/p95/p99 latency and error counts.
-Inject a lost external response, a worker crash and a tenant authorization failure under the same workload.
-Report repetitions and uncertainty, resource usage, region, price date and all software versions.
-Economic measure: total attributable currency cost divided by successfully completed and accepted tasks; include model, storage, egress, labor and external tool charges where available.
-This ratio is NOT MEASURED and should not be inferred from raw run count or token count alone.
-**Takeaway:** Count physical storage, retries, queue growth and recovery work separately; neither big-O nor averages establish production latency.
+### 9.1 Asymptotic behaviour of the operations that matter
+
+- Conditional state transition: one indexed row update, effectively O(1) per transition with a B-tree lookup of depth about 3–4 for millions of rows.
+- Isolation check per read: O(1) predicate evaluation at the storage layer, but O(k) in the number of joins if ownership is checked through a membership table of k rows.
+- Transcript append: O(1) amortised with an append-only structure, O(n) if each append rewrites a document, which is the usual cause of quadratic session writes.
+- Context assembly: O(c) in context tokens c per call, since every token must be serialised; this dominates all other per-call costs by an order of magnitude.
+- Retention sweep: O(sessions deleted) per sweep; a full-table scan is O(total sessions) and is the reason sweeps must be keyed by deletion time.
+- Reconciliation poll: O(unresolved effects × polls) with a hard cap; unbounded polling converts a storage problem into a rate-limit problem.
+
+### 9.2 Back-of-envelope sizing
+
+**ILLUSTRATIVE.** Keep the Section 5 parameters and vary one at a time.
+
+```text
+base case (2,400 sessions/day, 30 days, 12,000 B, 2.4x)
+  logical per day   = 28,800,000 B  = 28.8 MB
+  physical per day  = 69,120,000 B  = 69.12 MB
+  steady state      = 2,073,600,000 B = 2.0736 GB
+  per session       = 28,800 B
+
+checkpoints (192 long runs/day, 20 per run, 40 KiB)
+  per day           = 157,286,400 B = 157.29 MB
+  share of total    = 157,286,400 / (157,286,400 + 28,800,000) = 0.8453
+
+storage price probe (0.12 currency units per GB-month, ILLUSTRATIVE rate)
+  monthly for base  = 2.0736 * 0.12 = 0.2488 per month
+  monthly with cp   = 0.2488 + 0.1573 * 0.12 = 0.2677 per month
+```
+
+Checkpoint payloads dominate at 84.5% of stored bytes, which inverts the usual intuition that transcripts are the storage problem. The reason is arithmetic, not opinion: 20 snapshots per run of 40 KiB exceeds 12,000 bytes of session state per day by more than an order of magnitude for the 8% of runs that are long.
+
+Two consequences that change design:
+
+- Deduplicate checkpoints by content hash; repeated snapshots of an unchanged state are common when a run waits on an approval, and a wait of 900 s produces 10 identical snapshots at 90 s intervals.
+- Shorten checkpoint interval only for the expensive part of a run. A single global interval forces transcript snapshots at tool-call frequency, which is the expensive choice.
+
+### 9.3 Cost per completed run
+
+Model spend dominates and is driven by replayed context, so the useful unit is cost per accepted outcome, not cost per call.
+
+```text
+ILLUSTRATIVE unit economics for the Section 5 run shape
+  model calls per attempt        = 6
+  mean context per call          = 9,500 tokens (2,000 summary + 6 turns + retrieval)
+  tokens per attempt             = 6 * 9,500 = 57,000
+  attempts per run               = 1.1725 (Section 4.3 variant A)
+  tokens per run                 = 57,000 * 1.1725 = 66,832.5
+  replayed tokens after crash    = 9,500 (one call re-issued from checkpoint)
+  total incl. crash replay       = 66,832.5 + 9,500 = 76,332.5
+  storage per run (30 day share) = 28,800 B
+```
+
+The recovery overhead is 9,500/76,332.5 = 12.4% of token spend, which is large enough that checkpoint placement (before expensive calls, not after) is a cost decision and not only a correctness one.
+
+Environment for any real measurement remains OPEN: database engine and version, broker, hardware class, region and autoscaling behaviour are all unspecified here.
+Benchmark plan if the design must be validated: replay a realistic mix where 8% of runs are long, inject one worker crash per 500 runs, one provider timeout per 200 effects, and one revoked-membership resume per 1,000 runs; report p50/p95/p99 for resume latency, duplicate suppression counts and unresolved-effect age.
+Report sample size, run dates, software versions and price date with any cost figure; a cost without a price date is not reproducible.
 
 ## 10. Key Theorems / Results Reference
-| Result | Statement and hypotheses | Practical use | Does not imply | Source |
+
+| Result | Statement and hypotheses | Use | Does not imply | Source |
 |---|---|---|---|---|
-| Atomic compare-and-set invariant | Given one atomic conditional update on a version, only one contender can change that specific version | Detect conflicting transitions | External effects are atomic with the database | DERIVED in Section 4.1; verify backend semantics |
-| Little's law | For a stable system with well-defined long-run averages, average number in system equals arrival rate times average time in system | Cross-check measured queue and processing populations | A bound on tail latency or validity during growing backlog | [S3](https://doi.org/10.1287/opre.9.3.383) |
-| Row security policy | PostgreSQL applies row security policies under its documented role and bypass rules when row security is enabled | Implement an additional database enforcement layer | Table owners or bypass roles are always subject to the same policy | [S2](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) |
-| Idempotent HTTP methods | HTTP defines idempotency in terms of intended effect of repeated identical requests | Reason about transport retry semantics when the endpoint follows the specification | Any POST or arbitrary business action is automatically safe to repeat | [S4](https://www.rfc-editor.org/rfc/rfc9110#section-9.2.2) |
+| Atomic conditional update | one predicate-guarded update changes at most one row per version | exactly one winner per transition | external effects are atomic with it | DERIVED §4.2 |
+| Little's law | L = λW for stable long-run averages | cross-check concurrency against measured latency | tail latency or behaviour under growing backlog | Little (1961) |
+| Geometric attempt model | P(success ≤ n) = 1 − (1−s)^n for independent constant s | set attempt caps and escalation budgets | independence when failures share a cause | DERIVED §4.3 |
+| Row security policies | server-side policies apply to statements subject to role and bypass rules | second enforcement layer below application code | table owners are always constrained | PostgreSQL documentation |
+| Idempotent method semantics | HTTP defines idempotence in terms of intended effect of repeats | reason about transport retries | any POST is safe to repeat | RFC 9110 §9.2.2 |
+| Lease plus fencing | monotonic token lets a receiver reject a stale holder | safe failover on shared storage | fencing works where the receiver ignores the token | DERIVED §4.3 variant D |
+| Zero-trust resource focus | authorization is evaluated per resource and request, not per network location | placement of enforcement points | a specific product satisfies it | NIST SP 800-207 |
 
 ### Source and evidence registry
-- **S1 — Scope crosswalk:** [Agents Stack Infra Module 03](../../../../Templates/directory.txt), lines naming control planes, ownership, state, isolation and lifecycle; directory inventory, not implementation evidence.
-- **S2 — PostgreSQL documentation:** [Row security policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html), current documentation; supports the qualified database-policy statement only; version and deployment role behavior must be pinned for use.
-- **S3 — Little (1961):** [A Proof for the Queuing Formula L = λW](https://doi.org/10.1287/opre.9.3.383), Operations Research 9(3); supports the stable long-run relationship, not the illustrative workload.
-- **S4 — HTTP Semantics (2022):** [RFC 9110 §9.2.2](https://www.rfc-editor.org/rfc/rfc9110#section-9.2.2); supports the definition of idempotent method semantics, not any particular vendor's deduplication behavior.
-- **S5 — Security guidance:** [OWASP LLM Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/); relevant to untrusted input and constrained privileges, not a claim that one mitigation eliminates injection.
-- **S6 — Authorization design:** [NIST SP 800-207 Zero Trust Architecture](https://csrc.nist.gov/pubs/sp/800/207/final), 2020; informs resource-focused authorization, not a certification of this design.
-- Source versions marked current are mutable; confirm the deployed version and role configuration before implementation.
-- Review date: not reviewed; no external performance claim or benchmark has been validated for this workload.
-- OPEN: external provider's idempotency scope, retention window, lookup semantics and cancellation behavior require its primary API contract.
-- OPEN: organization-specific data classification, deletion, backup hold, approval and residency requirements require owner confirmation.
-**Takeaway:** A theorem or standard is useful only within its hypotheses and does not certify a particular deployment.
+
+- **S1 — PostgreSQL row security:** <https://www.postgresql.org/docs/current/ddl-rowsecurity.html>, current docs; supports only the qualified statement about policy application and bypass roles; the deployed version and role configuration must be pinned.
+- **S2 — Little, J. D. C. (1961):** "A Proof for the Queuing Formula L = λW", Operations Research 9(3); supports the stable long-run identity, not any workload in this sheet.
+- **S3 — RFC 9110 §9.2.2:** <https://www.rfc-editor.org/rfc/rfc9110#section-9.2.2>; supports the definition of idempotent method semantics, not a vendor's deduplication behaviour.
+- **S4 — NIST SP 800-207 (2020):** Zero Trust Architecture; informs per-resource authorization, not a certification of this design.
+- **S5 — OWASP LLM Top 10, prompt injection:** <https://genai.owasp.org/llmrisk/llm01-prompt-injection/>; supports treating retrieved text as untrusted input, not a claim that any single mitigation is sufficient.
+- **S6 — Internal scope crosswalk:** unit `INDEX.md` topic list; inventory evidence only, not implementation evidence.
+
+All illustrative numbers in §§4, 5 and 9 were derived here from the stated parameters; none was measured on a deployed system.
+Provider-specific behaviour — idempotency key retention, lookup-by-key support, cancellation semantics — is OPEN and requires the provider's primary contract before any retry policy is fixed.
+Organisation-specific rules — data classification, deletion deadlines, legal hold, cross-region residency — are OPEN and require owner confirmation.
 
 ## 11. Interview / Exam Questions
 
-**Interviewer scoring for each question:** 0 = incorrect or unsafe; 1 = partially correct but omits a critical boundary; 2 = correct with assumptions; 3 = correct and defends a tradeoff and verification. Candidate-facing prompts precede each answer. Unless a specific source is named, answers are supported by Sections 3–10.
+Scoring per question: 0 unsafe or wrong; 1 partially correct with a critical gap; 2 correct with stated assumptions; 3 correct, defends a tradeoff and names a verification. Answers below are independent; the numbers differ deliberately.
 
-**Alternative designs:** Accept a different mechanism when it enforces the stated invariant and the candidate identifies its failure boundary. For example, a serialized session queue can replace optimistic concurrency for ordinary updates only if single-writer ownership and failover are actually enforced; it does not by itself make an external effect atomic.
+### Q01. What distinguishes a session from a run, and why does the distinction change recovery?
+**Answer:** a session is the durable, owned container; a run is one bounded execution with its own budget and terminal state. Recovery operates on runs and must not delete or reopen the session.
+**Reasoning:** conflating them makes "retry" look like "restart the conversation", so retries re-ask the user and duplicate effects that belong to an earlier run.
+**Worked check:** one session with 3 runs at 1.1725 attempts each implies 3.5 attempts total; the effect keys must embed the run id, giving 3 distinct key families, not 1.
+**Boundary:** a compensating action is a new run, never a transition out of `completed`.
 
-### Q01. What is the difference between a session and a run?
-**Answer:** A session is an owned durable interaction container; a run is one bounded execution that advances it. Several runs can share a session, and a run can fail without deleting that session.
-**Boundary / follow-up:** A process or model context is neither an ownership record nor necessarily durable.
+### Q02. A caller knows a valid session id. What stops them reading it?
+**Answer:** the read predicate binds tenant from verified claims and checks membership; the id only locates a candidate row.
+**Reasoning:** identifiers are not secrets and leak through logs, URLs and support tickets, so authorization must not depend on their secrecy.
+**Worked check:** with 40 tenants, a missing predicate exposes 39 ordered pairs; a test matrix of 2 tenants × 3 roles × 5 routes gives 30 assertions, all requiring denial.
+**Boundary:** privileged database roles bypass application checks, so the database layer needs its own policy and its bypass roles must be enumerated.
 
-### Q02. How would you prevent a known session ID from granting access?
-**Answer:** Bind the authenticated principal to the tenant and check authorization for the session on every relevant read and write. Use the identifier only to locate a resource.
-**Boundary / follow-up:** Test both direct APIs and cache/export paths with an unauthorized tenant.
+### Q03. Two workers read version 8 and both write. What exactly happens under optimistic control?
+**Answer:** both issue `where version = 8`; the first affects 1 row and moves to 9; the second affects 0 and must reload and re-decide.
+**Reasoning:** the predicate is the concurrency control; a read-modify-write in two statements has no such property.
+**Worked check:** at 5 conflicting writes/s against one hot session with 0.4 s service time, Little's law gives L = 5 × 0.4 = 2 writers in flight on average; every overlapping pair yields one row-affected-0, so reloads approach the arrival rate rather than staying a rare path, and the retry loop itself becomes the load.
+**Boundary:** the guard protects the row, not an external call made under that version — that still needs an effect key.
 
-### Q03. Two workers read version 4; how can they avoid a lost update?
-**Answer:** Each conditionally updates only when the version is still 4. The first success changes it to 5, making the second update match zero rows; the loser reloads or reports a conflict.
-**Boundary / follow-up:** This protects only the store enforcing the atomic predicate.
+### Q04. What does a 30-second lease fail to guarantee once a worker pauses for 45 seconds?
+**Answer:** it does not stop the paused worker from executing. It only lets another worker take over, creating a 15-second overlap.
+**Reasoning:** expiry is a permission change, not a process signal, and a partitioned process cannot be told it lost the lease.
+**Worked check:** overlap 45 − 30 = 15 s; at 3 writes/s, 45 writes are at risk; a monotonic fence rejects 45 of 45.
+**Boundary:** if the external receiver ignores the fence token, only key-based deduplication or single-writer serialisation is safe.
 
-### Q04. What does a lease fail to guarantee?
-**Answer:** Lease expiry does not stop a partitioned worker from executing. A receiver must enforce a monotonically ordered fencing generation on protected writes.
-**Boundary / follow-up:** A third-party service that ignores fencing needs a separate safe-effect strategy.
+### Q05. An effect call times out after the request was sent. Enumerate the dispositions.
+**Answer:** committed, not committed, or unknown. Only the provider's receipt or a key lookup can distinguish them; a timeout by itself says nothing about remote state.
+**Reasoning:** the response is an observation about the network path, not about the remote transaction.
+**Worked check:** 3 sends at 30 s timeouts inside a 600 s dedup window are safe; the same 3 sends with a 90 s window are not, and the failure appears only after 600 s expires.
+**Boundary:** with no lookup capability, park as unknown and reconcile out-of-band; never map unknown to failed.
 
-### Q05. An external call times out after send; should you retry?
-**Answer:** Not blindly. The remote action may have committed; query by stable effect key or use the provider's documented deduplication contract and retention scope. If no reliable resolution exists, hold for reconciliation.
-**Boundary / follow-up:** A timeout is an observation about the response, not proof of remote failure.
+### Q06. How is an approval made non-transferable?
+**Answer:** bind it to actor, tenant, canonical payload digest, policy version and expiry, and re-verify all five at dispatch.
+**Reasoning:** an approval keyed only to a run is a capability to do whatever the worker later decides.
+**Worked check:** with 6 material fields, mutating each in turn gives 6 invalidation tests; a design passing 5 of 6 leaves 16.7% of the surface unprotected.
+**Boundary:** canonicalisation must cover semantically relevant fields; a digest over a lossy rendering fails safe but blocks legitimate work.
 
-### Q06. What should an approval bind to?
-**Answer:** Bind the authenticated authorized actor, tenant, run, canonical action payload including destination and amount, policy context and expiry. Revalidate these at dispatch.
-**Boundary / follow-up:** Changing a material field invalidates the approval; a model's assertion is not approval.
+### Q07. Can a local transaction make an external effect exactly-once?
+**Answer:** no, not across an independent service without a shared protocol or receiver-supported key. The achievable guarantee is at-most-once per key at the receiver plus reconciliation.
+**Reasoning:** two-phase commit needs both participants; a provider API is not a participant.
+**Worked check:** persisting intent before dispatch and receipt after reduces the unknown set to intents without receipts; at 1 timeout per 200 effects and 2,400 effects/day that is 12 unknowns/day needing reconciliation.
+**Boundary:** dedup is bounded by the receiver's key retention, so the retry horizon must be shorter than that retention.
 
-### Q07. Can you guarantee exactly-once effects with a local database transaction?
-**Answer:** No, not across an independent service without a suitable shared protocol or receiver contract. Persist intent, use stable keys, reconcile receipts and explicitly handle unknown outcomes.
-**Boundary / follow-up:** Deduplication is bounded by the receiver's scope and key retention.
+### Q08. Why is the transcript not the model context, and where do approvals live?
+**Answer:** the transcript is the durable event record; context is a per-call selection that may be summarised or truncated. Approvals live in structured state, never only inside the context.
+**Reasoning:** anything summarised away is not auditable, and a summariser is a generative component whose output is not evidence.
+**Worked check:** 350 tokens/turn against a 24,000-token budget compacts at turn 69, discarding 20,050 tokens of detail; if an approval were only in the discarded region, it would vanish.
+**Boundary:** retrieval may re-insert approved content, but the authority record must exist independently of retrieval success.
 
-### Q08. What is the difference between transcript and model context?
-**Answer:** The transcript is the recorded sequence of interaction events; context is the selected material sent to a particular model call. It may omit history or contain retrieved untrusted material.
-**Boundary / follow-up:** Authorization and durable state must not depend solely on whether a prompt contains a message.
+### Q09. Cancel is requested while an effect is in flight. What is the correct sequence?
+**Answer:** record `cancelling`, stop new dispatches, wait for disposition of in-flight effects, then write `cancelled`.
+**Reasoning:** a terminal state that precedes disposition makes the system's own record wrong, which is worse than a slow cancellation.
+**Worked check:** 30 s effect timeout plus 10 s poll interval bounds the disposition wait at 40 s for one in-flight call.
+**Boundary:** if the effect is irreversible and confirmed, cancellation becomes a reversal run, not a state edit.
 
-### Q09. How do you safely cancel an in-flight run?
-**Answer:** Persist cancel-requested, stop future dispatches, check at defined safe points and determine whether any already-sent effects committed. Mark a terminal state only under the documented disposition rules.
-**Boundary / follow-up:** A cancellation request cannot undo an irreversible external effect.
+### Q10. Size retained state for 2,400 sessions/day, 30 days, 12,000 B, multiplier 2.4 — and say what breaks first.
+**Answer:** 2,400 × 30 × 12,000 × 2.4 = 2,073,600,000 bytes (1.9312 GiB); what breaks first is checkpoint storage, at 157.3 MB/day.
+**Reasoning:** 20 snapshots × 40 KiB per long run exceeds per-session state for the 8% of runs that are long, so checkpoints reach 84.5% of bytes.
+**Worked check:** per session 12,000 × 2.4 = 28,800 B; 72,000 session-days × 28,800 = 2,073,600,000 B, agreeing with the product form.
+**Boundary:** the formula assumes stationary cohorts; accumulating transcripts makes it understate by an order of magnitude.
 
-### Q10. How would you size thirty days of state for 1,000 sessions daily at 10,000 bytes and multiplier 3?
-**Answer:** Use S2: 1,000 * 30 * 10,000 * 3 = 900,000,000 physical bytes, assuming stationary cohorts and the stated multiplier.
-**Boundary / follow-up:** This excludes backups and other omitted overhead and is not measured usage.
+### Q11. Policy tightens while a run waits in `waiting_approval`. What must change?
+**Answer:** re-evaluate authorization and the payload against the current policy at resume and again at the effect boundary; if it no longer qualifies, transition to `paused` or request a fresh approval.
+**Reasoning:** the approval was issued under a policy version, and the policy version is part of the authority tuple.
+**Worked check:** with a 900 s TTL and a p95 queue of 240 s, 26.7% of the validity window is consumed waiting; a policy change in that window affects every queued run at once.
+**Boundary:** historic approvals remain valid records; they are not valid authority after a tightening.
 
-### Q11. What changes when policy is tightened while a run waits for approval?
-**Answer:** Reauthorize the principal and action under the defined current policy on resume and again at the privileged boundary. If policy or payload no longer qualifies, pause or request a new approval.
-**Boundary / follow-up:** Record policy versions; do not assume an earlier authorization remains valid indefinitely.
+### Q12. Session p99 latency rose from 3 s to 30 s; hot-key contention or slow tool?
+**Answer:** separate the signals: per-session attempt concurrency and lock wait time indicate contention; tool latency distribution and error rate indicate a downstream problem.
+**Reasoning:** both produce queue growth, so queue depth alone is not discriminating.
+**Worked check:** Little's law with λ = 12 runs/s and W = 40 s gives L = 480 in system; if measured L is 480 while tool p99 stays at 800 ms, the delay is internal.
+**Boundary:** a throttled downstream can present as internal queueing when the adapter's retry loop holds the worker slot.
 
-### Q12. How would you distinguish hot-key contention from a slow external tool?
-**Answer:** Compare per-session queue depth and worker execution time with external tool latency and error rate. Concentration on one key with normal downstream latency supports a serialization bottleneck.
-**Boundary / follow-up:** Correlation alone is not proof; reproduce with controlled skew and account for rate limits.
+### Q13. Why does an append-only log alone not make recovery safe?
+**Answer:** it needs durable ordering, version-compatible readers, a checkpoint boundary and a rule that replay reconstructs state without invoking adapters.
+**Reasoning:** the log records intent; it cannot prove what a remote system committed, so replay of effects repeats them.
+**Worked check:** 40,000 events replayed naively produce 40,000 dispatches; with an effect-key guard, 0 new effects and 40,000 suppressed attempts.
+**Boundary:** suppression counts must be observable, otherwise the guard's failure is invisible until a duplicate appears.
 
-### Q13. Why is an append-only log not enough for safe recovery?
-**Answer:** The log needs durable ordering, version-compatible readers, a consistent checkpoint boundary and explicit rules for external effects. Replay should reconstruct state rather than blindly execute side effects.
-**Boundary / follow-up:** Logs can record intent without proving what the remote system committed.
+### Q14. Write the tenant isolation test matrix and say what a green run proves.
+**Answer:** 2 synthetic tenants × 3 roles × 7 paths (read, write, list, retrieve, export, resume, tool call) = 42 cases; green proves denial on those paths under those identities only.
+**Reasoning:** isolation is a property of enforcement points, so the matrix must name points; unlisted paths and privileged roles remain unproven.
+**Worked check:** covering 5 of 6 stores leaves 16.7% of the deletion surface unverified, which is the same arithmetic as path coverage.
+**Boundary:** background jobs, admin routes and database owner roles must be added explicitly or the result overstates coverage.
 
-### Q14. How would you test tenant isolation?
-**Answer:** Create two synthetic tenants with distinct identities and markers, then exercise reads, writes, retrieval, caches, exports, resume and tool calls across boundaries. Verify both denials and legitimate access.
-**Boundary / follow-up:** Tests must include privileged roles, background jobs and administrative routes in scope.
-
-### Q15. What should be measured before declaring the design production-ready?
-**Answer:** Measure task completion, authorization denials, unresolved effects, per-attempt retries, queue age, tail latency, resource consumption and cost per accepted outcome under realistic skew and faults.
-**Boundary / follow-up:** Report workload, versions, sample size and uncertainty; the examples here are not benchmarks.
-
-**Takeaway:** Strong answers state the authority, atomic boundary, failure window and evidence required to resolve uncertainty.
+### Q15. What evidence makes this design production-ready?
+**Answer:** measured resume latency distribution, duplicate suppression counts, unresolved-effect age, cross-tenant denial tests including privileged roles, deletion proofs across every store, and cost per accepted outcome.
+**Reasoning:** each metric maps to a specific invariant in §4; an invariant without a metric is an intention.
+**Worked check:** with 2,400 runs/day and a 1-in-500 crash rate, 4.8 crashes/day give about 144 resume observations a month — enough for a p95, not for a p99.
+**Boundary:** any figure quoted without workload, versions and dates is not evidence.
 
 ## 12. Quick Reference Card
+
 | Item | Value |
 |---|---|
-| Topic | Agent session ownership, isolation and run recovery |
-| Core formula | `C = A * D * B * M` for storage; authorize each state access and effect |
-| Key assumption | Storage estimate assumes stationary cohorts and a stated multiplier; external effects need their own contract |
-| Complexity | Per transition: one conditional state update plus applicable authorization and audit; actual latency is not measured |
-| Use when | Designing durable, tenant-scoped runs with explicit approval and recovery |
-| Avoid when | Provider effect semantics are unknown and the design assumes a timeout proves no action occurred |
-| Go deeper | [Collection index](INDEX.md); specific framework contracts remain outside this sheet |
-| Recovery guardrail | Fence stale writers where receivers enforce fencing; reconcile ambiguous external effects |
-| Approval guardrail | Bind actor, tenant, payload, policy and expiry; recheck at dispatch |
-| Evidence | Examples are illustrative; no production benchmark or outcome is established |
+| Core predicate | tenant from verified claims ∧ membership ∧ policy version ∧ not deleted |
+| Core storage formula | L = S × D × B × M; per session = B × M = 28,800 B at the worked values |
+| Transition rule | one conditional update on `version`; 0 rows means reload, never overwrite |
+| Lease rule | expiry permits takeover; fencing makes the overlap harmless where enforced |
+| Checkpoint rule | persist intent before dispatch; a checkpoint after the effect loses the window |
+| Effect rule | stable key from canonical payload + run id, persisted before first send |
+| Terminal rule | only the transition service writes terminals; no operator edits |
+| Isolation rule | enforcement below the code that could forget it, tested as a matrix |
+| Sizing warning | checkpoints, not transcripts, dominated at 84.5% of stored bytes here |
+| Evidence | all numbers ILLUSTRATIVE; provider semantics OPEN; nothing measured |

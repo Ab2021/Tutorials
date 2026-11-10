@@ -1,0 +1,4 @@
+| Timestamp (UTC) | Artifact | Status | Lint | Note |
+|---|---|---|---|---|
+| 2026-11-10T14:14Z | Cheat_Sheets/07_bounded_traversal_and_entity_resolution.md | revised | pass | full rewrite per T0047; 12 sheet headings, 1,825 lines, 1,393 distinct prose; derived blocking completeness 1−C(B−b,b)/C(B,b), F-S weights, bridge damage a·b, frontier growth, cap saturation, LSH banding, reach propagation; replaced all repeated interview/symptom blocks with 15 distinct answered questions and 14 failure entries |
+| 2026-11-10T14:14Z | Cheat_Sheets/02_graph_data_model_patterns.md | revised | pass | expanded per T0042 from 683 to 1,555 distinct prose lines; added partition duplication 2−1/p, edge-cut replication p(1−(1−1/p)^d), dense-vs-CSR ratio n²/(n+m), information floor log2 C(m+n−1,n−1), 16 failure entries with competing causes, 15 answered questions; all numbers recomputed |

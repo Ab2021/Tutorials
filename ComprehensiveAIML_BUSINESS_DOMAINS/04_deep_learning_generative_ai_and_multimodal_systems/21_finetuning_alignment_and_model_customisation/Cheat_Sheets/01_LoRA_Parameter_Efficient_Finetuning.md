@@ -289,8 +289,9 @@ NUMERICAL EXAMPLE: M_adapter at 36,831,232 parameters in bf16 = 73,662,464 bytes
        = 70.25 MiB. Adding gradient in bf16 and two AdamW moments in fp32 gives
        2 + 2 + 4 + 4 = 12 bytes per parameter = 441,974,784 bytes = 421.5 MiB.
        Adding an fp32 master copy raises the factor to 16 bytes = 562.0 MiB.
-INTERPRETATION: Trainable state is 4.9% to 5.1% of the 10.81 GiB frozen base in bf16.
-       The adapter is not the memory problem; the base and the activations are.
+INTERPRETATION: Trainable state is 3.81% (12 B/param) to 5.08% (16 B/param) of the
+       11,072 MiB frozen base in bf16. The adapter is not the memory problem; the base and
+       the activations are.
 ```
 
 **Variant 2: parameter-free scale changes and their cost.**
@@ -502,9 +503,11 @@ trainable share of base: 421.50 MiB / (10.807 * 1024 MiB) = 3.81%
 ```text
 KV cache per token: 2 * 32 * 1024 * 2 B = 131,072 B = 128 KiB
 KV cache, 8192 tokens, one sequence: 128 KiB * 8192 = 1,048,576 KiB = 1.000 GiB
-activations, batch 2, bf16, no checkpointing, one tensor per block of shape d:
+activations, batch 2, bf16, no checkpointing, LOWER BOUND of one width-d tensor per block:
   2 * 32 * 4096 * 8192 * 2 B = 4,294,967,296 B = 4.000 GiB
-with full checkpointing the retained subset is about half: 2.000 GiB, plus recompute
+a real step retains four to six such tensors per block, so 16 to 24 GiB, which is the term
+that decides whether the run fits; with checkpointing only the network input is retained
+  (1.000 GiB for the same batch) and each block's internals exist transiently on recompute
 ```
 
 **Independent arithmetic re-check.** The per-block total is recomputed from the ratio form F3 applied to each
@@ -1022,9 +1025,10 @@ count, which is negligible at thousands of steps and material at tens.
 ### Q5. You must fit a training run in 24 GiB with a 10.8 GiB bf16 base. What dominates, and what do you cut?
 **Answer:** Activations dominate, and the adapter is not the lever.
 **Reasoning:** Adapter state at 36.8M parameters and 16 bytes per parameter is 562 MiB, about 2.3% of the budget. A
-batch-2, 8192-token forward retains roughly 4 GiB of block activations without checkpointing and about 2 GiB with it,
-plus 1 GiB of KV cache per sequence and allocator slack. Cutting rank from 16 to 8 saves 281 MiB; cutting sequence
-length from 8192 to 4096 saves about 1 GiB of activations and 0.5 GiB of cache.
+batch-2, 8192-token forward retains at least 4 GiB of block activations without checkpointing — four to six such
+tensors per block makes it 16 to 24 GiB — against 1 GiB of retained input with checkpointing, plus 1 GiB of KV cache
+per sequence and allocator slack. Cutting rank from 16 to 8 saves 281 MiB; halving the sequence length halves the
+retained input and the cache, and halves the recompute transient.
 **Trap:** Halving rank and expecting the out-of-memory error to disappear.
 **Follow-up:** What is the smallest configuration change that buys the most memory? Shortening the training sequence or
 enabling checkpointing, both of which act on the dominant term.

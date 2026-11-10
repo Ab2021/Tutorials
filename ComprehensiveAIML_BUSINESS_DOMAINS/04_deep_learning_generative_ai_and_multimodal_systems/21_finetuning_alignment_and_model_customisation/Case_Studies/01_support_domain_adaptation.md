@@ -157,6 +157,22 @@ First, eight points is measured against the current prompt, not against the impr
 
 That is a complete answer, and it is only available because every one of those four numbers was computed before the pilot started.
 
+### 3.5 The question the lead actually has to answer, stated plainly
+
+Underneath the sponsor's question sits a simpler one: given a fixed engineering budget for the quarter, is a marginal accuracy point on the drafting path the best use of it?
+
+The answer depends on what the alternatives are. The same forty percent of an engineer, applied to retrieval, plausibly moves acceptance by several points because retrieval sets the ceiling. Applied to the adapter, it moves acceptance by a smaller amount because the adapter is already near the ceiling retrieval imposes. The lead is therefore not comparing two models, but two uses of the same scarce resource, and the adapter loses that comparison for reasons that have nothing to do with the adapter's quality.
+
+Writing the question this way also exposes a trap. If the engineer is already allocated, the programme appears free at the margin and the comparison disappears. That is the accounting illusion that funds most adaptation work: the cost is real and it is paid in the alternative that was not built.
+
+### 3.6 What evidence would settle the question without a pilot
+
+Two pieces of evidence could settle it without spending the pilot budget, and a decision-maker should ask for them first because they are cheap.
+
+The first is a measured rewrite time from a stopwatch study on fifty edited drafts. That single number moves the per-point value across a range of $4,838 to $14,398, which is wide enough to change the decision. Fifty observations do not produce a precise estimate, but they do produce one precise enough to rule out the extreme values, and ruling out extremes is what changes actions.
+
+The second is the current disposition mix, which presumably exists in ticket metadata and has simply never been aggregated. If acceptance is already 0.75 rather than 0.60, the whole analysis shifts: the remaining headroom is smaller, the grounding change has less to gain, and the adapter has less room above it. Neither study requires a model, a reviewer, or a programme.
+
 ## 4. Assumptions & Constraints
 
 ### 4.1 The assumption register
@@ -202,6 +218,23 @@ Distinguishing the two classes prevents a common failure: treating a controllabl
 
 The case does not evaluate safety classifiers, does not score replies for tone, does not model customer churn, and does not attempt a cost of harm. Those are real considerations and they are out of scope because including them would require invented severities. Their absence is a limitation, not a finding: this case can show that the adapter fails on minutes, and it cannot show that it is safe.
 
+### 4.6 The stress grid: how each assumption moves the answer
+
+The table below re-derives the break-even volume under one-at-a-time perturbations. Each row changes exactly one input and holds the rest at their central values, which is a weak sensitivity analysis but enough to identify which inputs are load-bearing.
+
+| Perturbed input | Central | Stressed | Per-point value | Break-even delta | Break-even volume |
+|---|---|---|---|---|---|
+| Rewrite time | 4.50 min | 3.00 min | $4,838 | 17.1 pts | 7,984/day |
+| Rewrite time | 4.50 min | 6.00 min | $14,398 | 5.74 pts | 2,683/day |
+| Manual time | 3.20 min | 2.60 min | $9,027 | 9.15 pts | 1,602/day (crossover 0.265) |
+| Eligible volume | 1,400/day | 2,000/day | $12,895 | 6.40 pts | n/a |
+| Loaded rate | $41.00/h | $29.00/h | $6,384 | 12.9 pts | 2,265/day |
+| Blocked fraction | 7.5% | 15.0% | $8,295 | 9.96 pts | 1,744/day |
+
+Two rows deserve comment. The manual-time row leaves the break-even volume unchanged at 1,602 because the fixed cost and the per-point value both contain the same `t_rew` dependency; the parameter that actually moves is the crossover, which falls from 0.382 to 0.265 because the gap between manual work and a rejected draft narrows. The blocked-fraction row is the one that would quietly break the model: doubling blocking reduces per-point value by 8% but also means the model helps on fewer tickets, so the two effects compound rather than cancel.
+
+The loaded-rate row is the most useful for negotiation. A decision-maker who argues for a lower loaded rate — because the marginal agent hour is cheaper than the average — is arguing for a *worse* adapter case, not a better one, since the value of a saved minute falls while the fixed cost does not.
+
 ## 5. Data, Tools & Method
 
 ### 5a. Data Specification
@@ -219,6 +252,10 @@ The case does not evaluate safety classifiers, does not score replies for tone, 
 **Not available at decision time.** The post-freeze tickets, the agents' true disposition mix (never instrumented before the pilot), the rewrite time distribution, and the policy clauses that will be superseded after the freeze. Any design that imputes these from the training window is assuming stationarity that Section 6.6 refutes.
 
 **Volume arithmetic.** 48,000 labelled pairs at 420 tokens each is 20,160,000 tokens for one epoch, which is 20.16 million tokens. At two epochs the training run sees 40.32 million tokens.
+
+**What the join can and cannot support.** The ticket store and the policy service share a clause identifier, so a training pair can be annotated with the clause versions that were current when its reply was sent. They do not share a customer identifier in a form that permits cross-entity linkage, which means the corpus cannot be filtered by customer segment and the case cannot measure whether the adapter helps some segments more than others. That is a real limitation: a segment-specific benefit would change the economics, and this design would not detect it.
+
+**Class balance and the tail.** The 48,000 pairs are not evenly distributed across question types. Roughly 61% are account, billing and access questions with short factual replies; 27% are how-to questions whose replies quote a procedure; 12% are complaint-adjacent questions where the reply structure matters more than the content. The adapter's acceptance delta will not be uniform across those three groups, and an aggregate figure hides the possibility that the gains and losses are concentrated in different groups. The pilot therefore stratifies its report by question type even though the promotion threshold is stated on the aggregate, because a stratified report is cheap and an unstratified surprise is not.
 
 ### 5b. Tools & Stack
 
@@ -602,6 +639,95 @@ The same artifact produces a 29% story, a 10% story and a 4% story depending on 
 
 The last two rows are the same artifact with two different comparators. The right-hand column is why the sponsor's framing and the decision-maker's framing disagree, and it is also why the comparator must be written into the decision contract before the analysis starts.
 
+### 6.13 Derivation 6: the fixed-cost decomposition that makes $82,588
+
+The headline fixed cost is worth unpacking because its composition determines which lever would make the adapter viable. It is not a GPU bill and it is not a licence fee.
+
+```text
+FORMULA
+  C_year1 = n_round * (C_train + C_eval) + C_eng
+  C_eval  = n_pairs * C_pair
+  C_eng   = f_eng * salary_loaded
+
+WHERE
+  n_round  = 12 retraining rounds per year
+  C_train  = $4.52 per round (Section 6.8)
+  n_pairs  = 1,596 scored pairs per round
+  C_pair   = $0.55 per pair (reviewer time and adjudication)
+  f_eng    = 0.40 full-time-equivalent
+  salary_loaded = $180,000
+
+CONSTRAINT
+  C_eval assumes the review pool already exists and is paid for by another
+  budget line. If reviewers were hired for this programme, C_pair would
+  include recruitment and ramp and the total would be roughly 1.6x higher.
+
+NUMERICAL EXAMPLE
+  C_eval  = 1,596 * 0.55 = $877.80
+  per round = 4.52 + 877.80 = $882.32
+  12 rounds = $10,587.84
+  C_eng   = 0.40 * 180,000 = $72,000
+  C_year1 = 10,587.84 + 72,000 = $82,587.84 -> $82,588
+
+INTERPRETATION
+  87.2% of the fixed cost is engineering coordination, 12.8% is compute and
+  review, and 0.005% is the gradient steps. The only lever that moves this
+  number materially is reducing the retraining cadence, which couples the
+  adapter to a base build it was not trained on.
+```
+
+The decomposition produces a counterintuitive conclusion about cost reduction. A team that wants to cut the programme cost will usually propose cheaper training, which is 0.005% of the total. The only material lever is cadence, and cadence is not free: moving from twelve rounds a year to four saves $70,600 and leaves the adapter stale against three base refreshes. That trade is examined quantitatively in Section 6.15.
+
+### 6.14 The cadence–staleness trade
+
+Retraining cadence and base-refresh cadence interact multiplicatively, and the interaction is not obvious. If the adapter retrains on a schedule that is not a multiple of the base refresh, some adapter versions are trained on a base build that has already been replaced, and those versions are either withheld from serving or served with a degraded binding.
+
+Over an 8,190-day horizon with a 63-day base cadence, a 42-day adapter cadence leaves the adapter stale on 16.67% of days because two adapter cycles fit inside each base cycle and neither aligns with it. A 63-day adapter cadence leaves 0% staleness but costs twelve rounds a year. A 126-day cadence — exactly two base cycles — also aligns, but the adapter then runs on a base build up to 63 days old before retraining, and leaves 50% of days with a superseded binding because the base moves at the midpoint.
+
+The arithmetic is unforgiving in a specific way: the aligned cadences are the divisors of the base period, and the cost of alignment is that the adapter is always either freshly retrained or up to one full period old. There is no cadence that is both cheap and always current, which is why the design in Section 8.6 uses an event-driven trigger on base promotion rather than a calendar.
+
+### 6.15 Derivation 7: value of reducing the retraining cadence
+
+```text
+FORMULA
+  C_cadence(k) = k * (C_train + C_eval) + C_eng
+  E_stale(k)   = fraction of days on which an adapter is bound to a
+                 superseded base, computed by calendar alignment
+  C_expected   = C_cadence(k) + E_stale(k) * H * n_drafts_stale
+
+WHERE
+  k = rounds per year, H = harm proxy per stale draft (not modelled in $)
+
+CONSTRAINT
+  The harm term is left symbolic because no cost of harm is invented in
+  this case. Any numeric comparison of cadences therefore compares cost
+  alone and understates the aligned options.
+
+NUMERICAL EXAMPLE
+  k = 12: cost $10,588 + engineering, staleness 0.0%
+  k = 6:  cost 6 * 882.32 = $5,294, staleness 50.0% (126-day cycle)
+  k = 6 at 91 days: cost $5,294, staleness 61.5%
+  delta in compute and review between k=12 and k=6: $5,294 saved
+  engineering is unchanged because the coordination is per programme,
+  not per round, only after the first four rounds.
+
+INTERPRETATION
+  Halving the cadence saves 5,294 dollars of review and compute and puts
+  the adapter on a superseded base for half the year. The saving is 6.4%
+  of the fixed cost. No decision-maker should trade a 50% staleness rate
+  for 6.4% of cost, and that conclusion follows without pricing harm.
+```
+
+This is the clearest example in the case of a saving that looks large in isolation and is negligible in context. It is also the reason the fixed-cost estimate should not be optimised: the achievable reductions are smaller than the uncertainty in the acceptance-rate estimate that governs the whole decision.
+
+### 6.16 Why the grounding change has a different cost structure
+
+The grounding change has no cadence problem, because it changes no weights. Its fixed cost of $8,400 is a one-time engineering effort: retrieval tuning, a stricter prompt, the citation schema, and one evaluation round. Its ongoing cost is the incremental attention required to keep the retrieval index in step with the policy service, which is work the existing pipeline already performs.
+
+That structural difference, not the magnitude of the number, is why the grounding change wins. A weight-based intervention inherits every coupling that weights have — to the base build, the tokenizer, the template and the framework version — while a prompt-and-retrieval intervention inherits almost none. The adapter's $82,588 is largely the price of those couplings.
+
+A decision-maker who internalises this will reach for the cheapest intervention that moves the binding constraint, and will treat weight adaptation as the last resort rather than the first. That is the same conclusion the unit's other cases reach from different directions, and it is what the parameter-share figure in Section 6.8 predicts before any economics are computed.
+
 ## 7. The Finding
 
 The adapter is the most accurate option in the comparison set and it does not repay its fixed cost at the current queue volume. Three computed facts support that conclusion and none of them is a judgement.
@@ -613,6 +739,22 @@ The second fact is the break-even. At the plausible three-point delta the adapte
 The third fact is the comparator. Presented against manual work, the adapter saves 29.3% of handling time. Presented against the grounding change, it saves 4.0%. Both statements are true and only the second answers the question the lead is actually deciding.
 
 The recommendation follows from the three facts rather than from a preference. Ship the grounding change, because its fixed cost of $8,400 is below the value of even a one-point improvement at this volume ($9,027), so it pays for itself under every plausible version of the model. Authorize a bounded adapter pilot, because the pilot's $11,292 cost buys an interval of ±1.1 points on the quantity that decides a $82,588 commitment. Do not authorize rollout, because the current best estimate of that quantity is three points and the threshold is 9.15.
+
+### 7.1 How robust the finding is to its weakest input
+
+The weakest input is the adapter's acceptance rate, because it is the only one with no history behind it. Every other parameter is either measured somewhere in the organisation or fixed by policy; this one is a hypothesis about a model that has not been trained.
+
+The finding survives a wide range of that hypothesis. At two points over grounding the net is −$64,534; at three it is −$55,508; at five it is −$37,453; at eight it is −$10,342. Only above 9.15 does the sign flip. So the conclusion is not "the adapter is probably not better", it is "the adapter is better and still does not pay", which is a stronger and more useful statement because it does not depend on believing a pessimistic estimate.
+
+The finding does not survive a change in the comparator, which is why the comparator is in the decision contract rather than in a footnote. If the grounding change were unavailable — because it had been tried and failed, or because the retrieval index could not be improved — the delta would be eight points and the net would be −$10,342, which is within the noise of the fixed-cost estimate and would justify a cautious rollout with a stop rule. The finding is therefore conditional on the availability of the cheap alternative, and that condition is stated rather than assumed.
+
+### 7.2 What the finding is not
+
+It is not a claim that the adapter is badly built. A 36.8-million-parameter delta on 48,000 pairs is a reasonable artifact and a three-point gain over a tuned prompt is a respectable result for that budget.
+
+It is not a claim that adaptation is a poor technique. The same technique, applied where a prompt cannot express the behaviour, or on a base the organisation owns, or at three times the volume, would clear the same threshold.
+
+And it is not a claim about safety, tone, customer satisfaction or agent morale, all of which this analysis deliberately does not measure. A reader who cites the case as evidence that adapters are unsafe has misread it; the case says the adapter is unaffordable at this volume relative to a cheaper intervention.
 
 ## 8. System/Solution Design
 
@@ -674,6 +816,22 @@ The pilot runs in shadow: the adapter generates on real tickets, the agent sees 
 
 Rollback for the eventual rollout is a registry swap, which is a configuration change measured in seconds. The rollback for a *policy* failure is not a registry swap: it requires re-drafting the affected tickets, and that is why the citation check is a hard gate rather than a monitoring signal.
 
+### 8.8 Serving the adapter without a per-request weight load
+
+The adapter is 73.66 MB in bf16. Loading it from object storage on every request is not viable: at an assumed 800 MB/s read path that is 92 ms per request before any generation, which is roughly four times the entire decode time for a short reply. The server therefore holds weights and applies the delta per request.
+
+Three properties make that safe. The server binds the delta to a named composite tuple and refuses requests whose tuple does not resolve in the registry. The binding is per request rather than per process, so a process can serve a base-only request and an adapter request without a restart. And the adapter is applied additively to the frozen projections, so no base weight is mutated and a failed binding cannot leave the process in a partially adapted state.
+
+The measured cost of that design is a 0.55% increase in multiply-accumulate work per token, which is 36.83 million MACs against a 6.72-billion-parameter base. In a compute-bound decode that is a fraction of a millisecond; in a memory-bound batched decode the dominant cost is fetching the base weights once and the adapter weights once, and both are amortised across the batch. The design is therefore viable at the scale in this case, and it would not be viable for a per-account adapter fleet at the same traffic.
+
+### 8.9 Retention and the draft record
+
+The draft record is the unit of accountability and it is also a privacy liability. Each record holds the ticket reference, the prompt, the candidate reply, the cited clause identifiers, the composite tuple and the disposition. The reply text can contain personal data supplied by the customer.
+
+The retention rule is that the reply text is retained for the audit window and then replaced by a hash, while the metadata is retained for the measurement window. That split is deliberate: the measurement needs dispositions and times, and the audit needs text only while a complaint is live. A single retention period for the whole record forces the choice between keeping text longer than necessary and losing the measurement, and both are common failures.
+
+The adapter's training corpus is a separate store with a separate rule. Because the corpus is a legal artefact as much as a technical one, it is hashed at freeze and the hash is recorded in the evaluation ledger. A retrained adapter whose corpus hash differs from the recorded hash is a different experiment, not an update, and the ledger must say so.
+
 ## 9. Evaluation & Validation
 
 ### 9.1 What has to be measured, and why the list is short
@@ -720,6 +878,30 @@ The confidence interval covers sampling error in the accuracy estimate. It does 
 
 The honest statement is that the $9,027 per point figure is a conditional quantity: it is exact given the four inputs and it inherits all of their error. A reader who treats it as a constant will over-trust the break-even volume, which is why Section 4.2 lists the three assumptions that can reverse the conclusion.
 
+### 9.7 The control group problem in a shadow pilot
+
+A shadow pilot has no randomisation, so it has no control group in the experimental sense. Every ticket is scored in both arms, which removes ticket-difficulty variation but does not remove the possibility that the two arms differ systematically in something the design did not anticipate.
+
+Two such differences are worth naming. The first is ordering: reviewers who see the baseline draft first may anchor on it when scoring the adapter draft, which compresses the measured difference toward zero. Randomising presentation order per pair removes the anchoring and costs nothing except a field in the harness. The second is exhaustion: the reviewers' tolerance for a poor draft declines over a session, so the later-scored arm carries a penalty. Randomising order also fixes this, which is why two independent randomisations are worth specifying rather than one.
+
+A shadow pilot also cannot measure the effect of *using* the adapter, because agents never see the shadow draft. If the adapter's advantage comes partly from the agent trusting it more, the shadow design will understate the effect. If it comes partly from the agent trusting it too much, the shadow design will overstate the effect. Neither direction is knowable from inside the pilot, and a reviewer who claims otherwise is assuming what the design cannot show.
+
+### 9.8 The disagreement metric and what a high value means
+
+Reviewer disagreement is computed as the fraction of double-scored pairs on which the two reviewers reach opposing verdicts about whether a draft required a material edit. It is reported separately from the disagreement about *which* edit was needed, because the first is a label-quality signal and the second is a drafting signal.
+
+A disagreement rate of 0.12 means roughly one in eight pairs is a coin flip at the label level. That noise enters the delta estimate as attenuation: if a fraction `d` of pairs are effectively randomised, the measured delta is approximately `(1 - 2d)` times the true delta. At `d = 0.12` the attenuation factor is 0.76, so a true eight-point delta would measure as six. That is a large enough bias to flip a promotion decision, and it is the reason the ceiling is a stop condition rather than a warning.
+
+The correction is not statistical. It is to tighten the rubric until the reviewers agree, then to re-score a fresh sample. Rescaling for attenuation after the fact requires knowing the true rate of effective randomisation, which is exactly what the disagreement metric cannot supply when the rubric itself is ambiguous.
+
+### 9.9 What the evaluation cannot tell you
+
+Three questions are outside its reach and each is a question a stakeholder will ask.
+
+It cannot tell you whether the adapter is *safe*, because safety requires adverse-event labels that the pilot does not collect. It cannot tell you whether customers *prefer* the adapter's replies, because preference requires a customer-side measurement that the queue does not run. And it cannot tell you whether the adapter will still be worth $27,081 next year, because the value depends on the queue volume and the loaded rate, both of which change independently of the model.
+
+Stating these limits is not a concession. A decision record that says what it measured and what it did not is more useful than one that implies completeness, because the next decision-maker can see which parts of the conclusion are load-bearing.
+
 ## 10. Action Taken
 
 ### 10.1 What the operations lead does with the finding
@@ -727,6 +909,28 @@ The honest statement is that the $9,027 per point figure is a conditional quanti
 The lead authorizes three things in one decision record. Ship the grounding change to the whole eligible channel on the next release train. Run the adapter pilot in shadow for 42 business days at 240 drafts per day with the pre-registered promotion rule attached. Instrument handling time by disposition on 100% of drafts, because every number in this case depends on a quantity that is currently unmeasured.
 
 The lead explicitly does **not** authorize a rollout, a serving-stack change, or any autonomy in sending.
+
+### 10.1a The three refusals and what would have to change
+
+Each refusal has a stated reversal condition, and recording them is what makes the decision revisitable rather than arbitrary.
+
+The rollout refusal reverses if the interval lower bound clears 0.0915, or if the eligible volume rises past 2,683 drafts per day, or if rewrite time is measured above 6.0 minutes. The per-account adapter refusal reverses only if a tenant-specific behaviour requirement appears that a single shared delta cannot satisfy, because the cost multiplier is proportional to the account count and no plausible quality gain offsets it. The autonomy refusal is not reversible by evidence at all: it is a policy boundary owned by the risk function, and this case does not argue for changing it.
+
+Separating "reversible by evidence" from "reversible only by policy change" prevents the most common failure of decision records, which is to attach an evidence condition to a boundary that no evidence can move.
+
+### 10.1b The sequencing choice that was rejected
+
+A plausible alternative was to run the adapter pilot first and the grounding change afterwards, on the theory that the adapter is the more informative experiment. It was rejected on cost and on information value.
+
+On cost, the grounding change must be shipped eventually under any branch of the decision, because it clears its threshold under every plausible parameter, so deferring it delays a known-good change by 42 days. On information, the adapter pilot's delta is measured against the grounding baseline; running the pilot before that baseline exists means the pilot measures against the current prompt and reports eight points, which is a number that cannot decide the rollout question without a second subtraction.
+
+Running both concurrently, which is what the lead chose, avoids both problems: the pilot measures the delta that matters, and the grounding change starts returning value on day one.
+
+### 10.1c Who is accountable if the pilot fails
+
+A pilot that produces an ambiguous result is not a failure, but a pilot that produces an uninterpretable one is. Accountability for interpretability sits with the ML engineer who owns the evaluation harness: if the ICC, the disagreement rate or the per-day counts are missing, the result cannot be used and the $11,292 is wasted.
+
+That assignment is deliberate. It gives one named person the authority to halt the pilot if the instrument degrades, without requiring them to argue about the model's quality. Instrumentation authority and model authority are different, and conflating them is how a degraded harness gets interpreted as a weak model.
 
 ### 10.2 The decision record an auditor would want
 
@@ -774,6 +978,22 @@ It would also have to contain the negative results: how many drafts the citation
 A lower bound above 0.0915 changes the recommendation to promote. That is the only result that does so directly. Two indirect results also change it by moving the threshold: a rewrite time above 6.0 minutes lowers the threshold to 5.7 points, and a volume consolidation past 4,270 drafts per day makes even a three-point delta sufficient.
 
 The design is unusual in that the threshold is computable in advance and the decision rule is therefore falsifiable. That property, not the adapter's accuracy, is what the case is teaching.
+
+### 11.5 What would have to be true for the pilot to be worth running twice
+
+A pilot repeated on the same queue is worth its cost only if the first run changed one of the inputs to the second. Three inputs could change: the base model could move to a build the adapter was trained against with more data, the queue could consolidate and raise volume past 2,683 drafts per day, or the rewrite time could be measured and turn out to be nearer six minutes than four and a half.
+
+Without one of those, a rerun is a replication and it buys precision the decision does not need. The distinction matters because replication is the most common way an organisation spends the second pilot's budget: nobody has an incentive to cancel a study, and the second study's interval is narrower than the first, so it looks like progress.
+
+The honest position is that the first pilot's result, whatever it is, should settle the question at the current volume. If the interval overlaps the threshold, the correct action is to reduce the fixed cost or change the volume, not to buy more precision on the same configuration.
+
+### 11.6 The measurement that was missing before the case
+
+The most valuable output of this analysis is not a decision about the adapter. It is the realisation that handling time by disposition was never measured, and that every quantity in Section 6 depends on it.
+
+Before the case, the queue could report how many drafts were accepted but not how much an acceptance saved or a rejection cost. After the case, there is an explicit list of what to instrument: disposition at send time, time from draft presentation to send, and an occasional stopwatch study to validate that the timestamp difference is handling time rather than including waiting.
+
+That list is cheap, it is independent of any model decision, and it is a prerequisite for evaluating any future proposal — including the ones this case rejects. A reader who takes only that away has captured most of the value.
 
 ## 12. Failure Modes & What Went Wrong
 
@@ -827,6 +1047,28 @@ A recovery path is a sequence with a checkable state at each step, not an intent
 
 For M6 the sequence is shorter and the check is a single experiment: the fixed-ticket cross-base comparison. If the adapter-on-new-base arm matches the adapter-on-old-base arm, the binding was fine and the diagnosis moves to M1 or M2.
 
+### 12.9 Three mechanisms that were considered and rejected
+
+Not every plausible failure earned a register entry, and the exclusions are as informative as the inclusions.
+
+A **quantisation-induced accuracy loss** was considered and rejected as a distinct mechanism because it is not separable from ordinary model quality at this design. The 4-bit base reduces precision uniformly, and the only honest test is a comparison run in bf16; if that run shows no difference, quantisation is not a mechanism, and if it shows a difference, the run has already told you the size. Making it a register entry would create a category that never has an independent diagnostic.
+
+A **catastrophic forgetting of general capability** was rejected because the base weights are frozen. LoRA cannot degrade a capability the delta does not touch, and the delta is 0.548% of the parameters. A behaviour change that looks like forgetting is better explained by prompt or template effects, which are already covered.
+
+An **evaluation-set contamination by public text** was rejected because the corpus is internal and the freeze is hashed. The mechanism would matter for a model trained on web data, which this one is not.
+
+### 12.10 The failure that the design cannot prevent
+
+One mechanism has no control: the base-model provider may change behaviour without changing the version string. A silent update inside a build would invalidate the composite tuple without breaking any check, and every adapter trained against the old behaviour would degrade with no signal except the metric.
+
+The only defence is a canary: a fixed set of tickets with known-good reference replies, evaluated on every build promotion, whose score is compared against the recorded history for that build. If the canary moves and the version string did not, the tuple is lying. That defence is a monitoring control rather than a preventive one, and it belongs in the register as a residual risk rather than as a mechanism with a fix.
+
+### 12.11 Recovery is a sequence, not an action
+
+The two recovery sequences above share a structure that generalises. Each begins with a classification step that separates competing causes using an observation that costs nothing to collect if the instrumentation exists. Each then applies a single corrective change and re-evaluates on the frozen set. Each abandons the sequence if the corrective change does not move the metric.
+
+The property that makes this work is that the classification precedes the fix. A team that skips classification applies fixes in order of familiarity — usually retraining first — and cannot tell whether the retrain fixed the problem or whether the problem was never there. That is how a queue ends up on its fifth adapter with no record of why the first four failed.
+
 ## 13. Transferable Lesson
 
 ### 13.1 The reusable rule
@@ -857,16 +1099,36 @@ Two places. The independence assumption between blocking and acceptance is unmea
 
 A reader should therefore treat the break-even volume as a range near 1,600 to 4,300 depending on the delta, and treat the direction of the conclusion as the durable part.
 
+### 13.5 The three-sentence version for a steering committee
+
+An organisation that wants this argument in three sentences can have it. The adapter adds about three accuracy points over a prompt change that costs one tenth as much, and at this queue volume a point is worth about nine thousand dollars a year, so the adapter returns about a third of its fixed cost. The break-even volume for a three-point delta is three times the current queue, and for an eight-point delta it is fourteen percent above it. The decision is therefore to buy the measurement rather than the artifact, because the measurement is cheap relative to the commitment it governs.
+
+That compression loses the nuance about correlation between blocking and acceptance, and it keeps the structure. Compression is legitimate when the discarded detail does not change the action, and illegitimate when it does.
+
+### 13.6 The counter-lesson: when the adapter would be the right first move
+
+The case argues against an adapter in one setting, and a reader who generalises to all settings has learned the wrong lesson. Three conditions would make the adapter the correct first intervention.
+
+If the domain behaviour cannot be expressed in a prompt — because the required output format is long, structured, or stylistically specific in ways a template cannot enumerate — then weights are the only mechanism that carries it. If the corpus is large and stable relative to the base model's pre-training distribution, the adapter's fixed cost amortises over a capability that prompting cannot reach. And if the base model is owned rather than rented, the coupling cost that dominates Section 6.13 disappears, because the base does not move without the organisation's own decision.
+
+None of those hold here. All three are plausible elsewhere, and stating them prevents the case from being cited as a general prohibition.
+
+### 13.7 What a reader should be able to do after this case
+
+Three skills are the intended output. Build a service-time mixture from four observable quantities and differentiate it to price an accuracy claim. Compute a break-even volume or delta from a fixed cost and a per-unit value, and state which of the two is the binding comparison. Design an evaluation whose interval is narrower than the threshold it must resolve, including the design effect that clustering imposes.
+
+Each is checkable by asking the reader to do it on different numbers. A reader who can only reproduce these numbers has memorised a case.
+
 ## 14. Connections & Cross-References
 
 ### 14.1 Within this unit
 
-- [Why PEFT and the Fine-Tuning Spectrum](../../8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md) — the full-versus-parameter-efficient choice and the parameter accounting reused in Section 6.8.
+- [Why PEFT and the Fine-Tuning Spectrum](../8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md) — the full-versus-parameter-efficient choice and the parameter accounting reused in Section 6.8.
 - [LoRA Parameter-Efficient Fine-Tuning](../Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) — the rank and target-module arithmetic that produces 36.8M parameters.
 - [QLoRA Quantized Base Adapter Fine-Tuning](../Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md) — the 4-bit base loading that makes the one-device memory plan feasible.
-- [Data Formatting for Training](../../2.4_Data_Formatting_for_Training.md) — the target masking and per-example versus per-token normalisation behind M7.
-- [Model Merging and Weight Averaging](../../8.5_Model_Merging_and_Weight_Averaging.md) — the compatibility gate that generalises the composite version tuple.
-- [Customize tenant assistants without crossing isolation boundaries](./02_Customize_Tenant_Assistants_Without_Crossing_Isolation_Boundarie.md) — the multi-tenant variant where the same adapter artifact must not carry tenant identity.
+- [Data Formatting for Training](../2.4_Data_Formatting_for_Training.md) — the target masking and per-example versus per-token normalisation behind M7.
+- [Model Merging and Weight Averaging](../8.5_Model_Merging_and_Weight_Averaging.md) — the compatibility gate that generalises the composite version tuple.
+- Customize tenant assistants without crossing isolation boundaries (planned in `INDEX.md`; not yet authored) — the multi-tenant variant where the same adapter artifact must not carry tenant identity.
 
 ### 14.2 Source boundaries
 
@@ -1043,6 +1305,30 @@ No public benchmark, vendor report, or internal measurement is cited anywhere. W
 **Red flag.** Listing "data leakage" as one item and proposing one control, which leaves two channels open.
 
 **Scoring.** 0 = one generic control; 1 = names two; 2 = names three with separate controls; 3 = also gives each an observable signature and ranks detection difficulty.
+
+#### Q15. Compute how much a 0.12 reviewer disagreement rate attenuates the measured delta and say why rescaling cannot fix it.
+
+**Answer.** If 12% of pairs are effectively randomised at the label level, the measured difference is approximately `(1 − 2 × 0.12) = 0.76` times the true difference. A true eight-point delta measures as 6.08 points, which is below the 9.15-point threshold even when the adapter genuinely clears it.
+
+**Reasoning.** Attenuation is symmetric noise, so it compresses differences toward zero regardless of direction. Rescaling by dividing by 0.76 would restore the point estimate but would also inflate the interval by the same factor, so the interval would no longer resolve the threshold.
+
+**Follow-up.** What is the correct response? Tighten the rubric and re-score a fresh sample. Improving the instrument raises the attenuation factor toward one without paying the variance penalty.
+
+**Red flag.** Dividing the estimate by the attenuation factor and reporting a confident result, which converts a precision problem into a false certainty.
+
+**Scoring.** 0 = treats disagreement as a reporting curiosity; 1 = notes it adds noise; 2 = computes the 0.76 factor; 3 = also explains why rescaling fails and specifies the rubric response.
+
+#### Q16. The lead offers to fund either a second adapter pilot or a stopwatch study of rewrite time. Which, and why?
+
+**Answer.** The stopwatch study. Rewrite time spans $4,838 to $14,398 in per-point value across its plausible range and therefore moves the break-even delta from 17.1 points to 5.74, while a second pilot refines a delta estimate the current design can already resolve to ±1.1 points.
+
+**Reasoning.** Fund the measurement that can change the action. The pilot's uncertainty is already narrower than the threshold band; the service-time parameters are not bounded at all.
+
+**Follow-up.** What does fifty observations buy? Not precision, but the ability to rule out the extremes, which is what changes the decision.
+
+**Red flag.** Choosing the second pilot because it is "the same experiment, more rigorous", which improves a quantity that is not limiting.
+
+**Scoring.** 0 = picks the second pilot; 1 = picks the stopwatch study without a reason; 2 = compares the two uncertainties; 3 = also states what fifty observations can and cannot establish.
 
 ## 15. Quick Reference Card
 

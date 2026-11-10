@@ -1,0 +1,6 @@
+# Authoring progress — Module 13 Optimisation, Operations Research and Simulation
+
+| Timestamp (UTC) | Artifact | Status | Lint | Note |
+|---|---|---|---|---|
+| 2026-11-10T13:58Z | Cheat_Sheets/05_integer_programming.md | revised | pass | full rewrite of a padding-rejected draft; 12 required sections in order, 15-node B&B tree re-simulated, all arithmetic re-derived (knapsack LP 12.8333, gap 6.9444%, big-M gaps 0/12.61/58.49%, CG cut x1<=1, 2^41-1 tree bound) |
+| 2026-11-10T16:42Z | Cheat_Sheets/06_metaheuristics.md | revised | pass | full rewrite of a padding-rejected draft; 12 sheet sections in order, duplicate long lines 0.000, 1180 lines / 942 prose. All numbers derived on a printed 12-point ILLUSTRATIVE instance: NN 67.2, 2-opt 62.1 (single move, delta -5.059), Held-Karp optimum 53.4 (247,808 transitions), MST 43.2117, one-tree bound 48.8063 (gap 9.42%), T0 calibration 25.544 from a 5.7 km move at p0=0.80, K=1245 rounds at alpha 0.995, 30-seed hit rates at budgets 500/1000/2000, 4-state Metropolis matrix verified against Boltzmann to 1.4e-17 with and without the Hastings correction, 60-node budget-matched SA-vs-ILS comparison. Corrected after self-review: inverted pi-ratio, one-sided Hastings application, or-opt counterexample replacing a false 3-opt claim, mis-attributed delta percentiles. |

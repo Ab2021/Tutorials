@@ -585,7 +585,7 @@ NUMERICAL EXAMPLE (three fields, ILLUSTRATIVE m and u)
   surname  m=0.92, u=0.021   -> w = log2(0.92/0.021)  =  5.453 bits
   dob      m=0.96, u=0.0009  -> w = log2(0.96/0.0009) = 10.059 bits
   postcode m=0.88, u=0.031   -> w = log2(0.88/0.031)  =  4.827 bits
-  all agree:  W = 20.339 bits, LR = 2^20.339 = 1,326,534
+  all agree:  W = 20.33923 bits, LR = 2^20.33923 = 1,326,322
   with prior 1/500 (odds 0.002): posterior odds = 2,653.07, p = 0.99962
   dob disagrees only:
      W = 20.339 - 10.059 + log2(0.04/0.9991) = 20.339 - 10.059 - 4.643 = 5.638
@@ -880,13 +880,15 @@ REPAIR 1 — uniform sub-blocking: split the 62,000 into 2,800 sub-blocks
   pair memory      = 24,799,025 * 8 B = 198 MB
 
 REPAIR 2 — secondary key inside the block: partition by lower(email)
-  62,000 records into 2,400 groups, mean 25.8
-  pairs = 1,600*C(26,2) + 800*C(25,2) = 1,600*325 + 800*300 = 520,000 + 240,000
-        = 760,000
+  62,000 records into 2,400 groups: 2,000 of 26 and 400 of 25
+    record check 2,000*26 + 400*25 = 52,000 + 10,000 = 62,000
+  pairs = 2,000*C(26,2) + 400*C(25,2) = 2,000*325 + 400*300 = 650,000 + 120,000
+        = 770,000
   match retention = P(email agrees | duplicate) = 0.44  (key_3 completeness, 5.4)
   expected matches retained = 24,000 * 0.44 = 10,560
-  total candidates = 760,000 + 10,409,325 + 1,679,100 + 12,055,000 = 24,903,425
-  comparison cost  = 24,903,425 / 5e5 = 49.8 s
+  total candidates = 770,000 + 10,409,325 + 1,679,100 + 12,055,000 = 24,913,425
+  comparison cost  = 24,913,425 / 5e5 = 49.8 s
+  pair memory      = 24,913,425 * 8 B = 199 MB
 
 REPAIR 3 — quarantine and review: emit the block as a work item, no pair expansion
   matches retained depends on reviewer capacity; at 65% adjudication success,
@@ -898,7 +900,7 @@ REPAIR 3 — quarantine and review: emit the block as a work item, no pair expan
 |---|---|---|---|---|
 | None | 1,946,112,425 | 64.9 min, 15.57 GB | 24,000 | the block is affordable and affordable now |
 | Uniform sub-blocking | 24,799,025 | 49.6 s, 198 MB | 8 | matches are uniformly spread over the block's pairs |
-| Secondary key (email) | 24,903,425 | 49.8 s, 199 MB | 10,560 | email is present and agrees on 44% of duplicates |
+| Secondary key (email) | 24,913,425 | 49.8 s, 199 MB | 10,560 | email is present and agrees on 44% of duplicates |
 | Quarantine to review | 24,143,425 | 48.3 s, 193 MB | 15,600 | reviewers exist and adjudicate at 65% |
 
 The table is the deliverable of the step. Repair 1 and repair 2 cost the same machine time and differ
@@ -940,11 +942,11 @@ run A, B-cubed:
 run B (split): predicted {1,2} {3} {4,5} {6} {7,8}
   P = {(1,2),(4,5),(7,8)} = 3 pairs; tp = 3; fp = 0; fn = 2 (pairs (1,3),(2,3))
   pair precision = 1.000, recall = 0.600, F1 = 0.7500
-  B-cubed: records 1,2 prec 0.5 rec 1.0; record 3 prec 1.0 rec 1/3;
+  B-cubed: records 1,2 prec 1.0 rec 2/3 = 0.6667; record 3 prec 1.0 rec 1/3 = 0.3333;
            4,5 prec 1.0 rec 1.0; 6 prec 1 rec 1; 7,8 prec 1 rec 1
-  B-cubed precision = (2*0.5 + 0.333 + 3*1.0 + 2*1.0)/8 = (1+0.333+5)/8 = 0.7917
-  B-cubed recall    = (2*1.0 + 1.0 + 3*1.0 + 2*1.0)/8 = 8/8 = 1.000
-  B-cubed F1        = 2(0.7917)(1.0)/1.7917 = 0.8837
+  B-cubed precision = 8/8 = 1.000
+  B-cubed recall    = (0.6667 + 0.6667 + 0.3333 + 1 + 1 + 1 + 1 + 1)/8 = 6.6667/8 = 0.8333
+  B-cubed F1        = 2(1.000)(0.8333)/1.8333 = 0.9091
 ```
 
 Run A's pair precision of 0.400 against B-cubed's 0.700 is the divergence worth memorising: the
@@ -952,7 +954,7 @@ over-merge creates six false pairs among five records while damaging the per-rec
 five of eight records, and the two metrics weight those two facts differently. Run B shows the mirror
 case, where a split leaves pair precision perfect and costs recall. A review that sees only pairwise F1
 would rank run B (0.750) above run A (0.533) and would be right in this instance; a review that sees
-only B-cubed would rank run A (0.778) below run B (0.884) and be right as well. The metrics agree here,
+only B-cubed would rank run A (0.778) below run B (0.909) and be right as well. The metrics agree here,
 which is why the table reports both: the disagreement appears at scale, where one large cluster can
 carry a million false pairs and only a small share of the records.
 
@@ -1036,12 +1038,12 @@ predict everything that follows without computing the small terms.
 | Parameter moved | Baseline | Variant | Visit count | Change | Reading |
 |---|---|---|---|---|---|
 | Frontier cap C | 500 | 2,000 | 1 + 2,000 + 2,000 = 4,001 | 4.0x cost | linear in C once saturated |
-| Frontier cap C | 500 | 8,000 | 1 + 8,000 + 8,000 = 16,001 | 16.0x cost | still 0.9% of reachable |
+| Frontier cap C | 500 | 8,000 | 1 + 8,000 + 8,000 = 16,001 | 16.0x cost | still 1.8% of reachable |
 | Depth k | 2 | 3 | 1 + 500 + 500 + 500 = 1,501 | 1.5x cost | linear at saturation, not geometric |
-| Depth k, uncapped | 2 | 3 | 1 + 62,000 + 806,000 + 10.5e6 | 12x cost | geometric while unsaturated |
-| Mean degree d | 14 | 20 | uncapped depth 2: 1+20+380 = 401 per seed | 2.4x | branching factor is d-1 |
-| Clustering c | 0.18 | 0.35 | depth 3 uncorrected 2,563 -> 1,300 | 0.51x | dense communities collapse growth |
-| Hub cap | none | 5,000 | 1 + 5,000 + 5,000 = 10,001 | 11.5x below uncapped | intermediate policy |
+| Depth k, uncapped | 2 | 3 | 1 + 62,000 + 806,000 + 10,484,000 = 11,346,001 | 13.1x cost | geometric while unsaturated |
+| Mean degree d | 14 | 20 | uncapped depth 2: 1 + 20 + 380 = 401 | 2.04x | branching factor is d-1 |
+| Clustering c | 0.18 | 0.35 | depth 3 corrected: 1,133 against 2,563 | 0.44x | dense communities collapse growth |
+| Hub cap | none | 5,000 | 1 + 5,000 + 5,000 = 10,001 | 86.8x below uncapped | intermediate policy |
 
 Two readings are non-obvious. First, when the cap is saturated, depth is nearly free: adding a third
 hop at C = 500 costs 1,000 more visits, not a factor of 13, because the cap binds at every hop. This
@@ -1564,7 +1566,7 @@ they localise defects that would otherwise surface as a metric anomaly weeks lat
 
 The expensive assertion is the adjudicated sample, and its cost is the one that deserves a budget line
 rather than a justification. To estimate completeness to ±0.03 at 95% confidence from a sample of
-positive pairs requires about 1.96²·0.25/0.03² = 1,068 pairs; at 20 seconds of reviewer time per pair
+positive pairs requires about 1.96²·0.25/0.03² = 1,067 pairs; at 20 seconds of reviewer time per pair
 that is 5.9 reviewer-hours, or about 0.75 reviewer-days. Sampling 300 pairs instead gives ±0.057, which
 is usually adequate for a go/no-go and costs 1.7 hours. The choice between them is a decision about the
 consequence of being wrong, not a statistical preference.
@@ -1718,7 +1720,7 @@ argument, 2 for the conversion, 1 for the follow-up.
 
 **Q8. You must choose between uniform sub-blocking and a secondary key for a 62,000-record sentinel block. Give the decision arithmetic.**
 Answer: uniform sub-blocking into 2,800 parts yields 655,600 pairs, a pair retention of 0.000341, and
-therefore 8 of 24,000 matches retained; a secondary key with 44% completeness yields 760,000 pairs and
+therefore 8 of 24,000 matches retained; a secondary key with 44% completeness yields 770,000 pairs and
 10,560 matches retained, at essentially the same cost (49.6 s versus 49.8 s). So the secondary key wins
 by 1,320x in matches per unit cost. Reasoning: the two repairs have nearly identical candidate counts
 and completely different retention, because sub-blocking cuts uniformly while a key cuts along

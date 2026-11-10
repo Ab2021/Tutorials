@@ -320,9 +320,11 @@ NUMERICAL EXAMPLE: k1 = 1.2. Ceiling = 2.2. f(1) = 1.0, f(2) = 1.375, f(3) = 1.5
         Marginal gain 1->2 is 37.5%; 2->3 is 14.29%; 3->4 is 7.69%; 4->5 is 4.84%.
         Total possible gain from tf = 1 to tf -> infinity is 2.2/1.0 = 2.2x, of which the first
         extra occurrence already captures 1.375 - 1 = 0.375, i.e. 31.2% of the whole headroom.
-INTERPRETATION: with k1 = 1.2 a fourth occurrence is worth under 3% of the total theoretical
-        range, so any feature that counts repetitions deeply is wasted work. This is also the
-        quantitative reason BM25 loses to tf-idf on keyword stuffing: it refuses to be gamed.
+INTERPRETATION: with k1 = 1.2 a fourth occurrence adds 0.1209, which is 10.1% of the 1.2 nats of
+        headroom between the first occurrence and the ceiling. Repetition past the fourth is
+        worth less than a tenth of the first, so a feature that counts deep repetition buys
+        almost nothing. This is also the quantitative reason BM25 resists keyword stuffing
+        where linear tf-idf does not.
 ```
 
 The pruning bound must be derived from the same algebra, or the pruning becomes unsound.
@@ -332,10 +334,11 @@ FORMULA [B-06] per-clause upper bound used by block-max and WAND
 WHERE:  UB(t) = idf(t) * (k1 + 1)      [dimensionless, a bound on the clause's contribution]
         A document can be skipped for clause t once the sum of the other clauses' remaining
         upper bounds plus UB(t) cannot reach the current threshold theta.
-CONSTRAINT: requires f <= k1 + 1 for every possible (tf, dl). With dl = 0 the denominator is
-        tf + k1*(1-b) which is smaller than tf + k1, so f can exceed... no: f = tf(k1+1)/(tf+K)
-        with K >= k1(1-b) > 0, so f < k1+1 always; the bound is safe but loose for short docs.
-        It also requires idf >= 0, which fails for the classic negative-idf variant.
+CONSTRAINT: requires f <= k1 + 1 for every possible (tf, dl). Write f = tf(k1+1)/(tf+K) with
+        K = k1(1-b+b*dl/avgdl). Since b <= 1 and dl >= 0, K >= k1(1-b) >= 0, so tf+K >= tf and
+        f <= k1+1 with equality only in the limit. The bound is therefore safe at every length,
+        but loose for short documents, where K is small and f approaches the ceiling. It also
+        requires idf >= 0, which fails for the classic variant (B-07) and makes UB negative there.
 NUMERICAL EXAMPLE: UB(refurbished) = 4.828306 * 2.2 = 10.622274; UB(laptop) = 1.514128 * 2.2 =
         3.331082; UB(battery) = 2.141317 * 2.2 = 4.710897. Sum = 18.664253 against an actual
         score of 11.159581, so the bound is loose by a factor 1.6725 on this document.
@@ -394,8 +397,8 @@ CONSTRAINT: dl <= max_dl exactly representable only at multiples of step; docume
         Monotonicity is preserved: dl1 < dl2 implies dl_q1 <= dl_q2, so ordering never inverts.
 NUMERICAL EXAMPLE: max_dl = 400 -> step = 1.568627. dl = 95 quantises to bucket 61 -> 95.686275.
         f(2, 95.686) = 4.4/(2 + 1.2*(0.25 + 0.75*95.686/95)) = 4.4/(2 + 1.2*1.005523) = 1.372214
-        against 1.375 at exact dl, i.e. -0.203%. Worst case over the range by enumeration of
-        buckets: 0.233% (dl = 1 -> bucket 1 -> 1.569, f = 1.900760 vs 1.905204).
+        against 1.375 at exact dl, i.e. -0.203%. Enumerating all buckets, the worst case is
+        0.320% at dl = 2.35 (bucket 1 -> 1.569, f = 1.900760 vs 1.894700).
 INTERPRETATION: sub-percent, so quantisation is not a relevance problem — but it is a
         reproducibility problem if one replica uses 8-bit norms and another uses float norms.
         Two clusters with different norm widths will disagree on ties and near-ties.
@@ -412,10 +415,12 @@ CONSTRAINT: idf_F requires df_F measured on field F; reusing body df for a title
         idf for terms that are common in bodies and rare in titles, which is most of them.
 NUMERICAL EXAMPLE: title field with avgdl_title = 9 tokens, a 6-token title, tf = 1:
         K = 1.2*(0.25 + 0.75*6/9) = 1.2*0.75 = 0.9, f = 2.2/(1 + 0.9) = 1.157895.
-        The same posting scored with avgdl = 95 would give f = 2.2/(1 + 1.2*0.29737) = 1.611
-        — 39.1% larger, and every title would be pushed toward the long-document penalty instead.
+        The same posting scored against body avgdl = 95 gives K = 1.2*(0.25 + 0.75*6/95) = 0.356842,
+        f = 2.2/1.356842 = 1.621412 — 40.0% larger, because a 6-token field looks pathologically
+        short next to a 95-token average. Every title term then sits near the ceiling.
 INTERPRETATION: per-field statistics are not a refinement, they are a precondition for titles to
-        behave sanely. Mixing them is the single most common source of "titles stopped mattering".
+        behave sanely. Mixing them inflates title contributions by roughly 40% and makes a title
+        match dominate a body match for reasons unrelated to relevance.
 ```
 
 ### 4.4 Limits and counterexamples
@@ -446,9 +451,13 @@ not on absolute scores.
 
 **Counterexample to the independence assumption behind `df` extrapolation.** `df` cannot be estimated
 from a sample of documents unless occurrences are independent across documents, which fails exactly
-for the terms teams care about. A sample that says `df` = 3,200 in 400,000 documents implies
-`df` = 64,000 at 8,000,000, and the *estimate* carries a standard error of roughly `sqrt(df)` on the
-sample, so the implied idf has a confidence interval wide enough to move the ranking.
+for the terms teams care about. Take a sample of 400,000 documents from which a term appears in 3,200:
+the implied rate is 0.008 and the implied `df` at 8,000,000 is 64,000. The standard error of that
+count is `8,000,000 * sqrt(0.008 * 0.992 / 400,000) = 8,000,000 * 1.4085e-04 = 1,126.8` documents, and
+the idf derivative at this point is `-1.5625e-05` nats per document, so the estimate carries
+`+/- 0.0176` nats of sampling error before any independence failure is counted. Clustering makes it
+worse, not better: documents arrive in near-duplicate groups, so the effective sample is smaller than
+the row count and the true interval is wider than the arithmetic suggests.
 
 **Counterexample to "reindexing is safe".** A reindex changes `N`, `df`, and `avgdl` simultaneously.
 If only postings are rebuilt while a cached dictionary `df` survives, the result is a mixture: fresh
@@ -528,7 +537,7 @@ corpus-wide
   postings  = 612,903,226 * 1.35 B = 827,419,355 B = 827.4 MB
   positions = 760,000,000 * 0.95 B = 722,000,000 B = 722.0 MB
   dictionary = 2,400,000 * 18 B    =  43,200,000 B =  43.2 MB
-  total      = 1,592,619,355 B     = 1,483.2 MiB
+  total      = 1,592,619,355 B     = 1,518.8 MiB
   positions/postings = 722.0/827.4 = 0.8726  -> positions add 87.3% on top of doc-level postings
 per document (independent route)
   95 tokens * 0.95 B           = 90.25 B of positions
@@ -538,9 +547,10 @@ per document (independent route)
 ```
 
 The per-document route reproduces the ratio to four decimals from entirely different inputs, which is
-the check that catches a units error (MB versus MiB costs about 4.9% and would show as
-`1,483` versus `1,556`). Note also that the dictionary is 2.8% of the index — negligible for size,
-decisive for correctness, because it is the durable home of `df`.
+the check that catches a units error (the same byte count reads as 1,592.6 MB or 1,518.8 MiB, a 4.9%
+discrepancy that would show up as two different capacity numbers). Note also that the dictionary is
+2.7% of the index — negligible for size, decisive for correctness, because it is the durable home of
+`df`.
 
 **Audit 5 — probe cost per query.**
 
@@ -575,14 +585,14 @@ Knob (c) is the one that moves scores without anyone editing a document, a query
 signature is a uniform shift concentrated in one length stratum, and it is the strongest argument for
 treating `avgdl` as a versioned statistic with an owner rather than as a derived field.
 
-**Independent re-check of audit 2 by a third route.** Compute the score as the idf-weighted mean of
-three tf factors, scaled by the ceiling: `f` values 1.375, 1.571429, 1.0; weights equal to idf shares
-6.638921/11.159581 = 0.5948, 0.2132, 0.1919. Weighted mean `f` = 0.5948*1.375 + 0.2132*1.571429 +
-0.1919*1.0 = 0.8179 + 0.3349 + 0.1919 = 1.3447, and `11.159581/2.2 = 5.0725`; the ratio
-`5.0725/(4.828306*... )` does not apply because the three idf values differ, so this route is only a
-dimensional sanity check, not an identity. It confirms the score sits between `idf_min*1.0 + ...` and
-the ceiling `2.2 * sum(idf) = 18.664`; 11.159581 is 59.8% of that ceiling, consistent with a document
-whose tf factors average 1.34 out of a possible 2.2 (60.9%).
+**Independent re-check of audit 2 as a boundedness test.** The sum cannot exceed the per-query
+ceiling `2.2 * sum(idf) = 2.2 * 8.483751 = 18.664253`, and cannot fall below `1.0 * sum(idf) =
+8.483751` because every matched term contributes at least its idf (the tf factor equals 1 at
+`tf` = 1 and `dl` = `avgdl`, and exceeds 1 for higher `tf`). The computed 11.159581 lies between
+those bounds, and its position in the interval is (11.159581 - 8.483751)/(18.664253 - 8.483751) =
+2.675830/10.180502 = 26.3% of the available headroom. That is the same statement as "the three tf
+factors average 1.31 against a ceiling of 2.2", obtained without re-summing any term, so it is a
+genuine second route rather than a restatement.
 
 ## 6. Visual / Geometric Intuition
 
@@ -591,8 +601,9 @@ straight line of slope −1 in the middle of the range, because `idf ≈ ln(N/df
 times 2.303. The two ends bend: the `+1` pushes the right end asymptotically to zero instead of
 diving to `-inf`, and the `+0.5` flattens the left end at `ln(2(N+1))`. Reading the curve this way
 gives an instant answer to "how much is this term worth": at `df/N` = 0.008 the value is 4.83; at 0.01
-it is 4.60; at 0.1 it is 2.19; at 0.5 it is 0.68. The whole useful dynamic range of idf is compressed
-into the decade from 0.1% to 10% of the corpus.
+it is 4.61; at 0.1 it is 2.30; at 0.5 it is 0.69; at 0.9 it is 0.11. The whole useful dynamic range of
+idf is compressed into the decade from 0.1% to 10% of the corpus, and the last two decades of that
+range — from 10% to 90% of the corpus — buy less than 2.2 nats in total.
 
 **The saturation curve as a hyperbola.** `f(tf) = tf(k1+1)/(tf+k1)` at `dl = avgdl` is a rectangular
 hyperbola with asymptote `k1+1 = 2.2` and value 1.0 at `tf = 1`. Its slope at the origin is
@@ -623,20 +634,20 @@ statistic and ask which crossing carried it.
 
 ```text
 idf
-16.6 |*                                    (df -> 0)
-     | *
+16.6 |*                                       (df/N -> 0, value ln(2(N+1)))
+     |
 12.0 |  *
-     |    *
- 8.0 |       *
-     |          *
- 4.83|              *   <- refurbished, df/N = 0.008
-     |                  *
- 2.19|                       *   <- df/N = 0.1
-     |                            *
- 0.69|                                  *   <- df/N = 0.5
- 0.0 |                                        *  (df -> N, never negative)
-     +------------------------------------------------
-       0.001 0.01  0.1   0.3  0.5  0.9  1.0   df/N
+     |     *
+ 8.0 |        *
+     |            *
+ 4.83|                 *   <- df/N = 0.008 (refurbished)
+     |                     *
+ 2.30|                            *   <- df/N = 0.1
+     |                                 *
+ 0.69|                                       *   <- df/N = 0.5
+ 0.0 |                                             *  (df/N -> 1, never negative)
+     +----------------------------------------------------
+      0.001  0.01   0.1    0.3   0.5   0.9   1.0    df/N
 ```
 
 The plot is drawn on a log x-axis; the visible curvature at both ends is the `+0.5` and the `+1`. A
@@ -671,8 +682,8 @@ requires a full rebuild.
 | Encoding | Bytes/doc | Worst relative error in `f` | Notes |
 |---|---|---|---|
 | float32 exact | 4 | 0 | reproducible across replicas, 4x space |
-| uint8 over `max_dl` 400 | 1 | 0.233% | clamping above 400 tokens loses all length signal there |
-| uint8 over `max_dl` 1023 | 1 | 0.412% | wider range, coarser near the average |
+| uint8 over `max_dl` 400 | 1 | 0.320% | clamping above 400 tokens loses all length signal there |
+| uint8 over `max_dl` 1023 | 1 | 0.824% | wider range, coarser near the average; dl = 1 buckets to 0 |
 | uint16 tokens | 2 | 0 | no clamping, still exact; the cheap correct choice |
 | char count / 4 | 0 (derived) | up to ~20% on tables and code | a tokenisation assumption, not a length |
 
@@ -900,16 +911,18 @@ does not.
 **Write-side cost.** Posting and position writes are linear in tokens: 760,000,000 tokens, one encode
 per token. The dominant cost is merging, because a merge rewrites positions and renumbers docIDs rather
 than copying bytes. A merge policy with fan-out `f` rewrites each byte `log_f(segments)` times, so a
-fan-out of 10 over 1,000 segments rewrites each byte 3 times; halving the fan-out to 5 adds one more
-rewrite for a 20% I/O increase. That is the number that belongs in a rebuild budget, and it is absent
+fan-out of 10 over 1,000 segments rewrites each byte 3 times; halving the fan-out to 5 adds
+`log_5(1000) - log_10(1000) = 4.29 - 3.00 = 1.29` more rewrites, a 43% increase in merge I/O rather
+than the 20% one might guess. That is the number that belongs in a rebuild budget, and it is absent
 from every plan that counts only final index size.
 
 **Statistics cost.** Recomputing `df` exactly requires a pass over the affected terms' lists: for the
-three query terms that is 2,764,000 entries, or 27 ms of decode. Recomputing it for the whole
-vocabulary requires a full pass over `E` = 612.9 million entries, roughly 2.5 s of decode per pass at
-250 MB/s — cheap enough to do on every significant commit, which removes the entire class of staleness
-failures in section 8.1. The reason teams do not do it is a write-path architecture that cannot afford
-a stop-the-world scan, and the fix is incremental `df` maintenance rather than sampling.
+three query terms that is 2,764,000 entries, or `2,764,000 * 1.35 B / 250 MB/s` = 14.9 ms of decode.
+Recomputing it for the whole vocabulary requires a full pass over `E` = 612.9 million entries, i.e. the
+827.4 MB of postings at 250 MB/s, or 3.3 s per pass — cheap enough to do on every significant commit,
+which removes the entire class of staleness failures in section 8.1. The reason teams do not do it is a
+write-path architecture that cannot afford a stop-the-world scan, and the fix is incremental `df`
+maintenance rather than sampling.
 
 **Caching.** Doc-level postings cache well; positional postings do not, because the bytes touched per
 query are larger by the position multiplier for the same `df`. On a node with a fixed page cache, an
@@ -969,8 +982,8 @@ correct estimator is `sum(tokens)/sum(documents)`; in the constructed four-segme
 by 3.1% (99.0 versus 96.0), which propagates into every score.
 
 **R9 — Per-field `avgdl` is required for per-field scoring to be unbiased.** With a 9-token average
-title, a 6-token title at `tf` = 1 earns `f` = 1.158 under title statistics and 1.611 under body
-statistics — a 39% inflation for every short field. Field statistics are a precondition, not a tuning
+title, a 6-token title at `tf` = 1 earns `f` = 1.158 under title statistics and 1.621 under body
+statistics — a 40% inflation for every short field. Field statistics are a precondition, not a tuning
 choice.
 
 **R10 — `df` is the durable, `tf` is the ephemeral quantity.** `df` lives in the dictionary and survives
@@ -1066,12 +1079,14 @@ galloping as universally better than merging are quoting a textbook case, not a 
 
 **Q8 (diagnosis).** idf for a term is 14.2 on a 9,000,000-document corpus. Is anything wrong?
 
-Answer: 14.2 is possible but suspicious. `idf = ln(1 + (N-df+0.5)/(df+0.5))`; solving for `df` with
-`N` = 9,000,000 gives `df` near 0.5, i.e. a term in one or zero documents. That is legal for a
-hash-like token, an ID, or a rare misspelling. The check is `df` from the dictionary against a direct
-count: if `df` = 1 and the term appears in two documents, either the second document was indexed after
-the statistics snapshot or the term is analysed differently in the two documents. If `df` reads 0, the
-term has a dictionary entry with no postings, which is a merge artefact.
+Answer: 14.2 is possible but unusual. Inverting `idf = ln(1 + (N-df+0.5)/(df+0.5))` with `N` =
+9,000,000: `exp(14.2) - 1 = 1,468,863.19`, so `df = (N + 0.5 - 0.5*1,468,863.19)/(1,468,864.19) =
+5.63`, i.e. a term in five or six documents. That is legal for a hash-like token, a part number, or a
+rare misspelling, and it is also the sign of a broken analyser that emits whole queries as single
+tokens. The check is `df` from the dictionary against a direct count: if the dictionary says 1 and the
+postings hold 6, the dictionary was published before those documents were indexed. If `df` reads 0 the
+term has a dictionary entry with no postings, which is a merge artefact; note that `idf(0)` is
+`16.706`, the largest value the formula can produce at this `N`.
 
 **Q9 (calculation).** Positions add what fraction to index size here, and what does that fraction
 depend on?
@@ -1090,8 +1105,8 @@ Answer: phrase and proximity matching break, because adjacency is undecidable wi
 approximate, undecidable, and most engines degrade to a conjunction silently rather than erroring.
 Before deciding, measure the share of queries carrying a quoted phrase or a proximity operator, and the
 share of those that are satisfied by adjacency in the top 10. If phrases are 4% of traffic and 70% of
-those return an adjacent match, dropping positions removes a visible capability for a 47% size saving
-(the 87.3% overhead halves the total only when the base is counted correctly: 1,483 MiB -> 761 MiB).
+those return an adjacent match, dropping positions removes a visible capability for a 45.3% size saving
+(722.0 MB of 1,592.6 MB; in binary units 1,518.8 MiB falls to 830.3 MiB).
 Also measure the rebuild time saved, which usually dominates the disk saving in real terms.
 
 **Q11 (diagnosis).** Scores are exactly reproducible, ranking looks reasonable, but a labelled
@@ -1110,10 +1125,10 @@ what happens if only `N` doubles?
 Answer: if both double, `(N-df)` terms grow proportionally and `idf` is unchanged for every term, so
 scores are identical and the reindex is invisible. If only `N` doubles, every `df` is now a smaller
 fraction of the collection, so every idf rises: the rare term goes from 4.828 to 4.905 (a 1.6% rise at
-`df` = 64,000 and `N` = 8,640,000) and common terms rise more in relative terms because idf is
-sub-linear. The observable is uniform score inflation with unchanged ordering among documents — a
-snapshot artefact, not a relevance change, and the correct response is to republish `df`, not to
-retune.
+`df` = 64,000 and `N` = 8,640,000) while a term at `df` = 128,000 rises from 4.135 to 4.212, a 1.86%
+rise, because the logarithm compresses the rare end and leaves the common end proportionally more room.
+The observable is uniform score inflation with unchanged ordering among documents — a snapshot artefact,
+not a relevance change, and the correct response is to republish `df`, not to retune.
 
 **Q13 (recall).** Why is `b` in `[0,1]` and what does `b = 1` mean operationally?
 
@@ -1127,12 +1142,13 @@ would make the denominator non-monotone and break the pruning bound.
 **Q14 (diagnosis).** Per-clause contribution for the top document is 4.83 + 0 + 0, and the second
 document is 2.1 + 2.1 + 1.9. Which ranks first, and what does that reveal about the query?
 
-Answer: the first ranks first at 4.83 versus 6.1 for the second — no, 2.1 + 2.1 + 1.9 = 6.1, so the
-second document ranks first, and the reveal is that the first document matched only the rarest term
-while the second matched three moderately rare ones. That is the correct behaviour of a sum of positive
-contributions, and it is what a team usually wants to change — but the change belongs in the query
-(require two of three terms) or in a rank-fusion weight, not in BM25. If the team expected otherwise,
-they were implicitly assuming a "must match the rarest term" filter that the scorer never promised.
+Answer: the second document ranks first, 6.1 against 4.83, and the reveal is that the first matched only
+the rarest term while the second matched three moderately rare ones. Adding positives is what a sum of
+contributions does, and the outcome is usually what the business wants; when it is not, the change
+belongs in the query (require two of three terms) or in a rank-fusion weight, never in BM25. If the
+team expected the first document to win, they were implicitly assuming a "must match the rarest term"
+filter that the scorer never promised — worth asking, because it usually means the query template is
+missing an operator rather than the scorer being wrong.
 
 **Q15 (judgment).** You must choose between exact global statistics with a 60-second publish lag and
 shard-local statistics with zero lag. Which do you ship, and what do you write down?

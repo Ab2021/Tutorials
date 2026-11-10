@@ -1,932 +1,973 @@
 ---
-collection: "30_agentic_systems_workflows_and_orchestration"
-file_id: "01"
+title: "Agent Boundaries and Request Ownership"
 topic: "Agent boundaries and request ownership"
-level: 1
-status: "draft"
-version: "1.0"
-created: "2026-11-09"
-reviewed: null
-review_trigger: "Change in identity, tool, state-store, or execution contracts"
-notation_style: "plain-text"
-prerequisites: ["Basic HTTP authentication and transactions"]
-pattern_tags: [agent, boundary, request-path, ownership]
-source_status: "OPEN"
-owner_role: "Agent platform engineering"
-source_index: "INDEX.md"
+collection: "30_agentic_systems_workflows_and_orchestration"
+level: "foundation"
+evidence: "DERIVED"
+created: "2026-11-10"
+last_reviewed: null
+content_status: "draft"
 ---
+
 # Agent Boundaries and Request Ownership
 
-> **Source inventory:** [directory entry](../../../../Templates/directory.txt#L14) names `Agents_Stack_Infra/Module_01_Agent_Stack_Overview` and visible titles “why agent is overloaded,” “ten layer stack model,” “the request path,” “critical boundary distinctions,” “what breaks when layers collapse,” and “builder checklist.” Their bodies were unavailable. This sheet teaches the visible boundary topics without attributing unseen claims; see the [focused coverage brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-stack-model).
-
 ## 1. File Header
-> **Purpose:** Separate model generation, control-plane authority, runtime state, and external execution so that a request can be audited and safely retried.
-> **Prerequisites:** HTTP identity propagation, authorization, transactions, and queue/retry basics.
-> **Key outcome:** Given a request path and a retry, assign every decision and state transition to one owner and identify which effects may occur twice.
-> **This file does NOT cover:** A vendor-specific agent API, model training, or legal access-policy interpretation.
-> **Level:** 1 — Foundations.
-> **Version / reviewed:** 1.0 / not reviewed; draft.
-> **Evidence:** DERIVED invariants and VERIFIED arithmetic on ILLUSTRATIVE traces. Source filenames are an incomplete syllabus, not source-body evidence.
-> **Retrieval cue:** For a suspected cross-tenant or duplicate-action bug, start at Section 8.
 
-An agent is an overloaded word. It can mean a model loop, a product workflow, a runtime, or a person with delegated authority. Treating those as one component makes it impossible to say who authorizes an action or who owns a retry. This sheet uses *agent* only for the bounded workflow that proposes and advances work; it does not confer identity or permission.
+> **Purpose:** decide which component owns each decision, each durable record and each external effect on an agent request path, so that a retry cannot silently duplicate authority or work.
+> **Prerequisites:** HTTP identity propagation, authorization basics, transaction isolation, at-least-once delivery.
+> **Key outcome:** given any agent request, name the owner of every state fragment, count the maximum effect attempts, and find the layer that will duplicate work first.
+> **Not covered here:** one vendor's agent SDK, model training, or legal interpretation of access policy.
+> **Level:** foundation; the arithmetic is deliberately small so it can be re-done on paper.
+> **Evidence:** invariants DERIVED from stated preconditions; every numeric example is ILLUSTRATIVE and computed in place; nothing here is a measured deployment result.
+> **Retrieval cues:** duplicate side effects → §8.1 and §8.6; runaway retries → AB-01 in §4.1 and §9.2; unclear ownership → §7.4 and §8.7.
 
-**Takeaway:** Give each request, decision, durable record, and effect a named owner before discussing autonomy.
+The word "agent" carries at least four meanings in practice: a model loop that proposes actions, a product workflow that users invoke, a runtime that executes steps, and a delegated authority acting for a person. Merging them into one box is the root defect this sheet exists to remove. Once merged, no one can say who authorized a refund, who owns the retry, or which record wins when two workers disagree.
+
+The sheet therefore works with a narrow definition. An agent is the bounded workflow that proposes and advances work. It has a budget, a state machine and a name in the audit log. It has no identity of its own and no standing permission; those come from the principal on whose behalf it runs and from the policy evaluated at the moment of action.
+
+Ownership, in this sheet, is a write permission enforced by a credential rather than a convention. If two components can write a fragment, the fragment has two owners and no authoritative value. Declaring an owner in a design document is not ownership; revoking the other component's write permission is.
+
+**Takeaway:** name the owner of every decision, record and effect before discussing autonomy, and enforce ownership with credentials rather than documentation.
+
+Reading paths. For an incident, jump to §8 and use its discriminating checks. For a design review, use §7.1 for the layer table and §7.4 for the owner matrix. For a cost argument about retries, use §4.3 and §9.2, which quantify amplification rather than asserting it.
 
 ## 2. Concept Map / Mental Model
+
 ```text
-caller --authenticated request--> control plane --admission--> run record
-                                      |                         |
-                                policy + quota                  | checkpoint
-                                      v                         v
-model context <- assembler <- permitted state              runtime worker
-     | proposal                                           | scoped command
-     v                                                    v
-tool request --validate/authorize--> adapter --effect key--> system of record
-                                      |                         |
-                                      +------receipt/audit-------+
+[1] caller (browser, CLI, another service)
+      authenticated identity: tenant, subject, roles, policy version
+        |
+[2] edge gateway        strips untrusted headers, resolves tenant from token
+        |
+[3] control plane       admit / reject / quota / schedule  <-- policy bundle (versioned)
+        |
+[4] run state store     versioned state machine: the ONLY durable owner of progress
+        |
+[5] context assembler   builds a per-call prompt from transcript + retrieval
+        |
+[6] model               proposes an action; holds no authority and no durable state
+        |
+[7] tool adapter        validates schema, re-checks policy, attaches effect key
+        |
+[8] external system     owns the business effect and the receipt
+        |
+[9] audit trail         append-only, attribution-complete, separate credentials
 ```
-The model sees derived context, including potentially untrusted text. The control plane is the decision owner for admission and policy. The runtime owns progression through a run state machine; a worker is replaceable execution capacity, not the source of truth. The adapter owns translation to a specific external contract. The system of record owns the business effect.
 
-A boundary is useful only when it has an input contract, an output contract, an identity, a state owner, and a failure/recovery rule. A network hop is not automatically a boundary, and a single service can implement several logical boundaries if their contracts remain separately enforceable.
+Nine boxes, seven contracts. Each arrow is a contract with an input schema, an output schema, a credential, a failure mode and a recovery rule. A hop that lacks any of those five is not a boundary; it is an undefined interface that will be crossed by accident.
 
-**Takeaway:** The request path is a chain of contracts, not a chain of prompts.
+Two arrows deserve attention because they are the ones teams collapse under delivery pressure. The arrow from model to adapter is where proposals gain authority; if the adapter trusts the proposal because a model produced it, authorization has moved into generated text. The arrow from control plane to state store is where versions are enforced; if the runtime writes state directly, the state machine has no single writer.
+
+Authority flows rightward and downward. Evidence flows leftward and upward. Nothing skips a version check in either direction, and no evidence path is allowed to depend on the model's own narration of what happened.
+
+**Takeaway:** the request path is a chain of contracts, and the two contracts most often collapsed are model-to-adapter and control-plane-to-store.
 
 ## 3. Foundational Definitions
-| Term | Meaning | Type / unit | Boundary test | Nonexample |
-|---|---|---|---|---|
-| Principal | Authenticated actor on whose behalf access is evaluated | identity claim | Can policy evaluate it at the action? | A session ID alone |
-| Session | Tenant-scoped interaction container | durable record | Can it outlive one run? | Authorization proof |
-| Run | One finite attempt to advance a request | state machine instance | Has a version and terminal state | An external effect |
-| Control plane | Admission, policy, scheduling, and audit authority | logical service | Can it reject before work starts? | Model output |
-| Runtime | Component that executes transitions and restores checkpoints | process/service | Can another worker resume it? | External system of record |
-| Tool adapter | Validates, authorizes, and translates a requested capability | protocol boundary | Can it deny schema-valid input? | A free-form shell prompt |
-| Effect key | Stable identifier for one intended business effect | opaque string | Is it recorded before/with submission? | A request timeout |
-| Receipt | Authoritative external outcome or queryable status | record | Can reconciliation use it? | An LLM assertion |
 
-A session may contain many runs. A run may attempt one effect several times at the transport layer, but it must name one intended business operation. Context is neither durable authority nor necessarily complete history. A tool capability describes what could be called; authorization decides whether this principal may call it now with these arguments.
+| Term | Meaning in this sheet | Unit / type | Boundary test that distinguishes it |
+|---|---|---|---|
+| Principal | authenticated actor whose permissions are evaluated | identity tuple | can policy evaluate it at the exact moment of action |
+| Tenant | administrative isolation domain | opaque identifier | does every storage read carry it as a predicate |
+| Session | tenant-scoped interaction container | durable record | can it outlive the run that created it |
+| Run | one bounded attempt to advance a request | state machine instance | does it have a version and one terminal state |
+| Attempt | one dispatch of a run to a worker | integer counter | is a timed-out dispatch still counted |
+| Control plane | admission, quota, policy and scheduling authority | logical service | can it reject work before any model call |
+| Runtime worker | replaceable execution capacity | process | can a different worker resume the same run |
+| Context assembler | builds the per-call prompt | pure function of state | can you reconstruct the exact context of a call |
+| Model | proposes next action as text or a tool call | external dependency | would its output change without authorization |
+| Tool adapter | validates, authorizes, translates, deduplicates | protocol boundary | can it refuse schema-valid input |
+| Effect | irreversible change in an external system | business fact | does it have a receipt or a queryable status |
+| Effect key | stable identifier for one intended effect | opaque string | does it survive retries and process restarts |
+| Receipt | external system's own record of the effect | record | can reconciliation read it without the worker |
+| Lease | time-bounded claim to act on a version | duration | does expiry stop a paused holder from writing |
+| Fence token | monotonic generation attached to protected writes | integer | does the receiver compare it or only log it |
+| Capability | granted scope for one action family | set of scopes | is it narrower than the principal's full rights |
+| Budget | cap on branches, calls, tokens or wall clock | counter | does exhaustion produce a terminal state |
+| Owner | component permitted to write a fragment | credential binding | can another component write it without an error |
+| Request id | identifies one transport attempt | opaque string | does it change when the same work is retried |
+| Replay | re-deriving state from recorded events | mode of a reader | does the reader hold adapter write credentials |
+| Reconciliation | resolving an unknown external outcome | durable queue | is there an owner and an age metric per item |
+| Quota | admission-time limit on work per tenant | counter per window | is it checked before any model call is billed |
+| Delegation depth | number of links between principal and executor | integer | is it capped, and does the cap decrement on spawn |
+| Terminal state | state with no outgoing transition | enum member | can any writer leave it without a new run |
 
-**Takeaway:** IDs locate records; authorization and receipts justify access and outcome.
+Definitions alone do not settle arguments, so each row carries a test that produces an observable difference. Two components that both pass every test in the table are the same owner under two names, which is the ambiguity to remove.
+
+Three pairs are commonly confused and worth separating explicitly:
+
+- **Session versus run.** A session is the container; runs are attempts to advance it. A retry creates a new attempt, sometimes a new run, never a new session.
+- **Capability versus permission.** A capability is what a component could do with the credential it holds; permission is what policy allows now. A tool with a broad capability and narrow permission is safe only while the permission check sits at the effect boundary.
+- **Effect key versus request id.** A request id identifies one transport attempt; an effect key identifies one intended business outcome across all attempts.
+
+**Takeaway:** every definition in this sheet earns its place by producing a test whose two outcomes look different in logs.
 
 ## 4. Core Formulas with Full Derivation
-### 4.1 Effect-attempt bound
-Validity before use: this is an upper bound for a policy that caps branches and calls; it does not predict model behavior, latency, or successful effects.
 
-Derivation: if a run permits `b` branches and at most `c` calls per branch, multiplication counts the largest call attempts. Let `e` be calls that cross an effecting adapter; `e <= b*c`.
+Every block uses the anatomy FORMULA → WHERE → CONSTRAINT → NUMERICAL EXAMPLE → INTERPRETATION. All numbers are ILLUSTRATIVE, chosen so the arithmetic is checkable by hand.
 
-```text
-FORMULA [AB-01]: A_max = b * c
-WHERE: A_max [call attempts/run]; b [branches/run]; c [calls/branch].
-CONSTRAINT: fixed independent caps; no recursive spawning outside the budget.
-NUMERICAL EXAMPLE: b=4, c=3; A_max=4*3=12 attempts/run.
-INTERPRETATION: twelve attempts is a budget alarm threshold, not twelve permitted business effects.
-```
-Dimension check: branches/run × calls/branch = calls/run. If `b=2`, `A_max=6`; halving a branch cap halves this bound. Counterexample: an uncapped retry loop violates the premise, so no finite bound follows.
-
-### 4.2 Duplicate-risk accounting
-Validity before use: count effect *attempts* when a response can be lost after submission. It does not claim a duplicate business outcome when the sink enforces idempotency.
-
-Derivation: an effect can be attempted once before a lost response and once after an unsafe retry. For `r` ambiguous operations with one retry each, the maximum attempts are `2r`.
+### 4.1 Base case
 
 ```text
-FORMULA [AB-02]: A_effect,max = r * (1 + q)
-WHERE: r [ambiguous intended operations]; q [retries/operation]; A_effect,max [attempts].
-CONSTRAINT: one initial submission and bounded retries; each retry reaches the adapter.
-NUMERICAL EXAMPLE: r=3, q=1; A_effect,max=3*(1+1)=6 attempts.
-INTERPRETATION: three operation IDs, not six, must be reconciled before declaring outcome.
-```
-Independent check: enumerate `op-1a, op-1b, op-2a, op-2b, op-3a, op-3b`: six attempts. With an adapter that rejects a repeated effect key, accepted effects are at most three; with an opaque non-idempotent sink, acceptance is unknown until queried. 
+FORMULA [AB-01] effect attempts under independent layer retries
+  A = (1 + r1) * (1 + r2) * ... * (1 + rL)
+  A = R^L when every layer uses the same retry count r
+  R = 1 + r
 
-### 4.3 Ownership invariant
-Validity before use: an atomic compare-and-swap or serialized owner is available for run transitions.
+WHERE
+  r_i = retries configured at layer i        (integer, >= 0)
+  L   = number of layers that retry the same call independently (>= 1)
+  A   = maximum attempts reaching the external system (attempts/call)
+  R   = per-layer amplification factor (dimensionless)
 
-```text
-INVARIANT [AB-03]: transition(run_id, v -> v+1) is accepted only when
-                   tenant_id, principal scope, expected version, and policy version match.
-PRECONDITIONS: immutable run_id; versioned durable record; authorization at transition time.
-STATE TRANSITION: READY(v) -> RUNNING(v+1) -> WAITING|SUCCEEDED|FAILED.
-JUSTIFICATION: two writers proposing v+1 cannot both satisfy one expected-version update.
-```
-Worked trace: W1 and W2 read version 7. W1 writes `RUNNING, version=8`; W2's compare-and-swap expects 7 and fails. W2 reloads 8, re-authorizes, and chooses a legal next transition. The check is one accepted write plus one rejected write; accepting both is a broken invariant. Counterexample: last-write-wins can hide the conflict and overwrite a cancellation.
+CONSTRAINT
+  valid only if retries at each layer are independent and each retry actually
+  re-invokes the downstream call. A layer that retries only on connection-refused
+  before send contributes less than R; a layer that retries on timeout after send
+  contributes the full factor and is the dangerous one.
 
-### 4.4 Lease and fencing separation
-Validity before use: leases are used to decide whether a worker may *try* to own work, and the state store or sink can reject a stale owner with a monotonically increasing fencing token. A lease alone does not stop a paused worker from resuming after expiry.
+NUMERICAL EXAMPLE 1 (single layer)
+  client only, r = 2: R = 3, L = 1, A = 3^1 = 3 attempts
+NUMERICAL EXAMPLE 2 (three layers)
+  edge r=2, runtime r=2, adapter r=2: R = 3, L = 3, A = 3^3 = 27 attempts
+NUMERICAL EXAMPLE 3 (four layers, client added)
+  L = 4: A = 3^4 = 81 attempts for one intended business action
 
-Derivation: a lease end is `t_exp = t_grant + d`. The control plane issues token `f+1` for a successor. Every protected write carries its token; the sink accepts only a token greater than the last accepted token for that protected resource.
-
-```text
-FORMULA [AB-04]: t_exp = t_grant + d
-WHERE: t_exp [time]; t_grant [time]; d [seconds, positive lease duration].
-CONSTRAINT: all comparisons use one trusted time source or a stated skew bound.
-NUMERICAL EXAMPLE: t_grant=100 s, d=30 s; t_exp=130 s.
-INTERPRETATION: after 130 s a new owner may be elected, but a delayed old owner remains dangerous without fencing.
+INTERPRETATION
+  The growth is multiplicative in the exponent, not in L: going from 3 layers to 4
+  multiplies attempts by 3, and each of those attempts carries a full model or API
+  charge. A 2 s downstream call with 3 attempts per layer also multiplies worst-case
+  latency: 2 * 3^4 = 162 s, which exceeds any client deadline that started at 30 s.
 ```
 
 ```text
-INVARIANT [AB-05]: accept_write(resource, f_request) only if f_request > f_last_accepted.
-PRECONDITIONS: tokens are monotonically issued per resource and the receiver durably remembers f_last_accepted.
-TRACE: W1 has f=41 and pauses; lease expires; W2 gets f=42 and writes; W1 resumes with f=41 and is rejected.
-FAILURE BOUNDARY: a receiver that ignores f makes lease expiry advisory only.
+FORMULA [AB-02] boundary completeness
+  C = D / (5 * B)
+  missing_classes = 5 * B - D
+
+WHERE
+  B = number of logical boundaries on the request path
+  D = number of declared contract elements present
+      (input schema, output schema, credential, failure mode, recovery rule)
+  5 * B = required declarations
+
+CONSTRAINT
+  "declared" means recorded in the interface definition and checkable by a test,
+  not described in a design document. Each boundary needs all five; a boundary
+  missing its recovery rule will be crossed during an incident with no plan.
+
+NUMERICAL EXAMPLE
+  B = 6 boundaries, required = 30 declarations
+  observed: 24 present -> C = 24/30 = 0.80, missing classes = 6
+  if the 6 missing are spread over 6 different boundaries, every boundary is
+  individually incomplete; if they sit on one boundary, one arrow is undefined
+  both numbers give C = 0.8 and describe very different risk
+
+INTERPRETATION
+  The scalar hides the arrangement, so report both the ratio and the shape.
+  Recovery rules are the element most often absent and the one an incident needs
+  first; a boundary that lists only schemas has documented the easy half.
 ```
-
-The clock calculation describes eligibility, not correctness. With a possible 4-second clock skew and a 30-second lease, renew before the useful remaining interval is consumed; do not allow a worker to decide safety from its local clock alone. A long lease reduces renewal traffic but lengthens failover; a short lease improves failure detection but increases false takeovers during pauses. These are workload and scheduler measurements to obtain, not universal defaults.
-
-### 4.5 Cancellation as a state transition
-Cancellation is a request to stop future work, not a retroactive deletion of completed effects. It needs a versioned state transition and propagation boundary.
 
 ```text
-INVARIANT [AB-06]: once CANCEL_REQUESTED(v) is committed, no later transition may initiate
-                   a new effect unless an explicit authorized resume creates a new version.
-PRECONDITIONS: workers check cancellation before each effect boundary; adapters reject stale run versions.
-TRACE: planner completes; cancel commits at v=12; worker sees v=12 before tool call and records CANCELLED(v=13).
-RECOVERY: if an effect was already SUBMITTING, reconcile it; do not label it cancelled without a receipt.
+MECHANISM BLOCK [AB-03] single-writer ownership of a state fragment
+  preconditions:
+    the fragment has exactly one credential able to issue writes
+    writes are conditional on an expected version
+  state transition:
+    attempt(fragment, expected_v, new_state) -> accepted(v+1) | rejected(v_changed)
+  invariant:
+    for any fragment and any point in time, at most one writer credential is valid,
+    and at most one accepted write exists per version
+  justification:
+    with two valid writers, "last write wins" is the de facto rule, so a cancelled
+    run can be revived by a slower writer and the audit log shows two legal writers
+  worked trace:
+    W1 holds credential for run RUN-31 v=11; operator revokes it at 10:00:00Z
+    W2 obtains credential at 10:00:04Z and writes v=11 -> accepted, now v=12
+    W1 writes at 10:00:09Z with expected v=11 -> rejected (v_changed)
+    one accepted write, one rejection: ownership was enforced, not assumed
+  failure boundary:
+    if the revocation takes 10 s to propagate and W1 writes at 10:00:08Z, both
+    writes can be accepted; the fence token, not the revocation, is what closes
+    that window
 ```
 
-The common wrong implementation merely cancels an in-memory task. That loses cancellation on restart and cannot stop a different worker. The common overcorrection assumes cancellation reverses a ticket or payment; reversal requires a separately authorized compensating action with its own effect key.
+### 4.2 General case
 
-### 4.6 Canonical-action binding
-An approval or authorization decision must bind to canonical action data, not to a conversational paraphrase. Define `H` as a collision-resistant digest of a canonical representation containing operation type, resource, normalized arguments, tenant, principal, policy version, expiry, and effect key.
+The general case replaces "one request, one call" with a budget-limited plan whose branches can fail, retry and spawn sub-work.
 
 ```text
-FORMULA [AB-07]: approval_valid = (H(action_now)=H(action_reviewed)) AND (now < expiry)
-WHERE: H [digest]; action_now/action_reviewed [canonical byte sequences]; expiry [time].
-CONSTRAINT: canonicalization is deterministic and includes all effect-relevant fields.
-NUMERICAL EXAMPLE: changing quantity from 10 to 11 changes the canonical bytes; equality check fails.
-INTERPRETATION: the system must request a new approval rather than treating the old intent as permission.
+FORMULA [AB-04] total call budget under nested branching
+  N_total = c * (1 + s1 * (1 + s2 * (1 + ... )))
+  flat case: N_total = c * (1 + s) when each branch spawns s children of equal depth
+
+WHERE
+  c = calls made directly by one agent instance (calls/instance)
+  s = sub-agents spawned per instance (instances/instance)
+  depth d assumed 1 in the flat case; total instances = 1 + s
+
+CONSTRAINT
+  each spawned instance inherits a cap equal to the parent's, and the parent's cap
+  is not decremented by children. If the budget is enforced per instance rather
+  than per tree, the tree total is what the numbers below show, not the headline.
+
+NUMERICAL EXAMPLE
+  c = 6 calls, s = 5 sub-agents, per-instance token cap 120,000
+  total instances = 1 + 5 = 6
+  total calls = 6 * 6 = 36
+  total token ceiling = 6 * 120,000 = 720,000
+  headline cap 120,000 understates the ceiling by 720,000 / 120,000 = 6x
+  if each of the 5 children spawns 5 more: instances = 1 + 5 + 25 = 31
+  calls = 6 * 31 = 186; token ceiling = 31 * 120,000 = 3,720,000 = 31x headline
+
+INTERPRETATION
+  A per-instance cap is a per-node cap, and the tree is not a node. The 31x figure
+  is not a model of misbehaviour; it is what the configuration permits. Either
+  decrement a shared tree budget or cap depth explicitly, and record which one.
 ```
 
-The formula is a mechanism statement, not a cryptographic proof of semantic equivalence. Omitting currency, resource scope, or policy version creates a hole: the hash can match while the effective action changed. A hash also does not authorize anything unless an independent approver identity and server-side policy check are present.
+```text
+FORMULA [AB-05] effective capability along a delegation chain
+  effective_scope = intersection of scope_1 .. scope_k
+  |effective_scope| <= min over i of |scope_i|
 
-### 4.7 Request-path trace matrix
-| Step | Owner | Input | Durable evidence before next step | Permitted recovery |
-|---|---|---|---|---|
-| Authenticate | gateway/control plane | credentials and request | principal, tenant, auth method | reject or re-authenticate |
-| Admit | control plane | principal, quota, policy | run ID, policy version, budget | deny without run |
-| Assemble context | context service | permitted records | source IDs and access decisions | rebuild from sources |
-| Propose | model/runtime | bounded context | prompt/model revision and output reference | regenerate only as a new proposal |
-| Validate | adapter | structured arguments | schema result and canonical action | return validation error |
-| Authorize | policy service | principal/action/current policy | decision and expiry | deny or re-evaluate |
-| Reserve effect | runtime/store | effect key/action digest | submitting state/version | reconcile same key |
-| Execute | adapter/sink | canonical request/key | receipt or ambiguity record | query/compensate/manual review |
-| Finalize | runtime | receipt/status | terminal run transition | resume reconciliation |
+WHERE
+  scope_i = capability set granted at link i of the chain (user -> run -> tool)
+  k = chain length (links)
+  |.| = cardinality of the scope set
 
-**Takeaway:** Leases elect an owner, fencing rejects stale owners, cancellation blocks future effects, and canonical binding prevents approval drift.
+CONSTRAINT
+  intersection is only sound when each link's grant is a subset of its parent's.
+  A link that can grant anything it likes (a "deputy" that mints tokens) breaks the
+  bound and makes the chain a privilege escalator.
 
-**Takeaway:** Bound calls separately from effects, and serialize ownership before retrying state transitions.
+NUMERICAL EXAMPLE
+  user scopes: {orders.read, tickets.read}                    |2|
+  run scopes : {orders.read, tickets.read, tickets.write}     |3|
+  tool needs : {tickets.write}
+  intersection = {orders.read, tickets.read}  -> tickets.write absent -> DENY
+  with a minting deputy, the run could add tickets.write legitimately; the
+  intersection then equals the deputy's own scope, not the user's 2-scope set
+  numeric gap: 3 granted scopes against 2 delegable scopes = 1 escalatable scope
+
+INTERPRETATION
+  The narrowest link binds, which is the property that makes delegation auditable.
+  Escalation appears exactly where a link is allowed to widen instead of narrow.
+```
+
+```text
+FORMULA [AB-06] attribution completeness of an effect record
+  fields_required = tenant, principal, run, attempt, boundary, policy_version  (6)
+  attribution = present / 6
+  evidence_gap = 1 - attribution
+
+WHERE
+  present = count of the six fields actually written with the effect record
+  a record missing any field cannot be joined back to an authorization decision
+
+CONSTRAINT
+  the six are a minimum, not a design. Adding the effect key and the receipt id
+  makes reconciliation possible; the six only make attribution possible.
+
+NUMERICAL EXAMPLE
+  5 of 6 fields present: attribution = 5/6 = 0.8333, gap = 0.1667
+  at 8,000 effects/day, effects with an attribution gap = 8,000 * 0.1667 = 1,334/day
+  each such effect cannot be traced to a policy version, so a policy review of
+  those effects is impossible rather than merely slow
+
+INTERPRETATION
+  A missing field is not a formatting defect; it removes a join. The join that
+  matters most in practice is run-to-policy_version, which is the one teams drop
+  because it is not needed until an audit.
+```
+
+### 4.3 Variants
+
+```text
+VARIANT A [AB-07] timeout budget across hops
+  T_max = t_model + H * t_hop
+  deadline_ok iff T_max * tries <= client_deadline
+
+WHERE
+  t_model = one model call wall clock (s), H = number of synchronous hops
+  t_hop = per-hop overhead including serialisation (s)
+  tries = attempts the client makes
+
+NUMERICAL EXAMPLE
+  t_model = 900 ms, H = 6 hops, t_hop = 40 ms -> T_max = 900 + 240 = 1,140 ms
+  6 model calls per attempt -> 6 * 1,140 = 6,840 ms = 6.84 s per attempt
+  client deadline 30 s -> floor(30,000 / 6,840) = 4 attempts fit
+  with 3 attempts configured: 3 * 6,840 = 20,520 ms, leaving 9,480 ms headroom
+  if model p99 triples to 2,700 ms: 6 * (2,700 + 240) = 17,640 ms per attempt
+  2 attempts = 35,280 ms > 30,000 ms -> the deadline fails midway through attempt 2
+
+INTERPRETATION
+  Hop overhead is 240/1,140 = 21.1% of a call's latency at these values, so it is
+  not noise; every added synchronous boundary costs roughly a fifth of a model call.
+  The p99 case is the design case, because a retry policy sized on p50 is a policy
+  that abandons work at p99.
+```
+
+```text
+VARIANT B [AB-08] duplicate exposure without an effect key
+  P(at least one duplicate) = 1 - (1 - p_lost)^A
+  expected duplicates = n_ops * (1 - (1 - p_lost)^A)
+
+WHERE
+  p_lost = probability a submitted call's response is lost but the effect commits
+  A = attempts per intended operation (from AB-01)
+  n_ops = intended operations per day
+
+NUMERICAL EXAMPLE
+  p_lost = 0.002 per attempt, A = 3
+  P(duplicate per op) = 1 - 0.998^3 = 1 - 0.994012 = 0.005988
+  n_ops = 4,000/day -> expected duplicates = 4,000 * 0.005988008 = 23.95 per day
+  with A = 27: P = 1 - 0.998^27 = 1 - 0.947381 = 0.052619 -> 210.48/day
+  adding an adapter that rejects repeats: duplicates = 0 by construction, while
+  suppressed attempts remain 27 - 1 = 26 per intended operation
+
+INTERPRETATION
+  The exponent is the amplifier: the same 0.2% loss probability yields 23.95 or
+  210.48 duplicates per day depending only on how many layers retry. The effect key
+  does not reduce attempts; it removes the duplicates those attempts would create.
+```
+
+```text
+VARIANT C [AB-09] collapse penalty
+  exposed_decisions = D_defect * n_runs_per_day * days_undetected
+  blast_ratio = exposed_decisions / total_decisions
+
+WHERE
+  D_defect = defects introduced per day in the collapsed component
+  n_runs_per_day = runs whose decisions flow through the collapsed component
+
+NUMERICAL EXAMPLE
+  control plane and worker share one process; a policy-version read omission is
+  introduced at 1 defect per week and detected after 3 days
+  n_runs_per_day = 2,400
+  exposed = (1/7) * 2,400 * 3 = 1,028.6 decisions -> about 1,029
+  with the layers separated, the same defect affects only runs scheduled by the
+  affected replica: 5 of 20 replicas -> 2,400 * 5/20 * (3/7) = 257 decisions
+  ratio = 1,029 / 257 = 4.0 exactly (20 replicas / 5 affected)
+
+INTERPRETATION
+  Separation does not reduce the defect rate; it reduces the population exposed.
+  The ratio here is the replica count divided by the affected replica count, which
+  is why collapse penalties scale with deployment width rather than with code size.
+```
+
+```text
+VARIANT D [AB-10] ownership ambiguity cost
+  ambiguous_fragments = fragments with more than one write-capable credential
+  ambiguity_rate = ambiguous_fragments / total_fragments
+  review_cost_min = ambiguous_fragments * minutes_per_disagreement
+
+WHERE
+  fragments = independently written state items (session status, budget counter,
+  retry counter, approval record, cancellation flag, effect table, audit cursor)
+
+NUMERICAL EXAMPLE
+  total fragments = 7
+  two have two writers (budget counter shared by worker and scheduler; retry
+  counter shared by adapter and runtime)
+  ambiguity_rate = 2/7 = 0.2857
+  disagreements per ambiguous fragment per week = 1.5 -> 3/week
+  review cost = 3 * 35 min = 105 min/week = 1.75 h/week
+  annualised = 1.75 * 52 = 91 h/year, against roughly 4 h to revoke a credential
+
+INTERPRETATION
+  Ambiguity has a maintenance price that is paid in a currency engineers recognise.
+  The comparison is deliberately unfair in the right direction: the fix is a
+  credential change, the cost is recurring review.
+```
+
+```text
+MECHANISM BLOCK [AB-11] retry safety as a classification of failure points
+  preconditions:
+    every outbound call is made through an adapter that can report whether bytes
+    were sent, and the receiver can be queried by a stable identifier
+  state transition:
+    classify(error) -> before_send | after_send_known_failed | after_send_unknown
+    retry allowed:  before_send (any attempt budget)
+                    after_send_known_failed (only with new stable key refused by
+                    design, i.e. the intent is genuinely new)
+                    after_send_unknown: NEVER without a lookup
+  invariant:
+    a retry of an after_send_unknown call is a new business effect attempt, so it
+    must be treated as a duplicate risk rather than as a recovery
+  justification:
+    TCP and TLS failures before the request line are indistinguishable from an
+    accepted request whose response was lost, unless the receiver can be queried;
+    therefore any layer that maps all transport errors to "retryable" converts a
+    recovery mechanism into a duplication mechanism
+  worked trace:
+    30 s read timeout on a 4,200-unit refund:
+      t=0 submit, t=1.2 receiver commits, t=30 client times out
+      classification: after_send_unknown
+      permitted: query by key, then retry only if the query says absent
+      forbidden: retry with a new key, which creates a second refund of 4,200
+  failure boundary:
+    a receiver with no lookup endpoint makes unknown permanently unknown; the only
+    safe policy is to park and page a human, and the cost of that policy must be
+    sized (see 4.3 variant A for the attempt arithmetic it avoids)
+```
+
+```text
+VARIANT E [AB-12] human-in-the-loop cost of the unknown queue
+  reviewer_minutes_per_day = n_unknown * t_each / 60
+  fte_equivalent = reviewer_minutes_per_day / (60 * 7.5)
+
+WHERE
+  n_unknown = unresolved effects per day requiring a decision
+  t_each = mean minutes to resolve one item from the effect key and receipt
+  7.5 = productive hours in a reviewer day (dimensionless, an assumption)
+
+NUMERICAL EXAMPLE
+  1 in 200 effects become unknown at 4,000 effects/day -> n_unknown = 20
+  t_each = 4 min -> reviewer_minutes_per_day = 80, i.e. 1 h 20 min
+  fte_equivalent = 80 / 450 = 0.178 -> about 18% of one reviewer
+  halving the unknown rate via a lookup-by-key API saves 40 min/day
+  a lookup API that costs 2 engineering days to integrate pays back at 20 items/day
+  within about 24 working days (2 * 8 h = 16 h; 16 h / (40/60 h per day) = 24 days)
+
+INTERPRETATION
+  The unknown queue is a recurring operating cost, not an incident. The break-even
+  above is deliberately crude - it ignores on-call load and error cost - but it
+  shows the shape: integration effort is compared against minutes per day, so a
+  small daily rate still justifies the work within a month.
+```
+
+### 4.4 Limits and counterexamples
+
+Each formula above fails somewhere specific, and the failure is more instructive than the formula.
+
+AB-01 fails when retries are not independent: an adapter that retries internally and a client that retries on the same timeout can produce the product without either team knowing the other retries. The observable test is a single request with a forced 30 s downstream hang and a count of arrivals at the external system; if the count exceeds the configured r + 1 at one layer, another layer is retrying.
+AB-01 also fails to bound cost when each attempt is not equal: attempt 3 of a run re-sends a longer context than attempt 1, so multiplying attempts by a single per-attempt price understates spend. The correction is to price attempts at their own context size, which is the whole point of §9.3 in the companion lifecycle sheet.
+AB-02 fails to capture severity. Six missing declarations on six boundaries and six on one boundary are equally incomplete by the ratio and not equally dangerous, because one undefined arrow is a single incident surface while six undefined arrows include the effect boundary. Report the ratio and name the arrows.
+AB-04's flat form fails as soon as depth exceeds one, and depth is exactly what agents do by default when a sub-task looks separable. The correction is to compute the tree total (1 + s + s² ...), which at s = 5 and depth 3 gives 1 + 5 + 25 + 125 = 156 instances, not 31.
+AB-05 fails under a minting deputy, and the failure is silent because the intersection still produces a plausible set. The test is to request a scope the user does not hold and observe whether any link grants it.
+AB-06 fails when fields are present but wrong: a run id written from a stale in-memory value passes the count and breaks the join. Presence is necessary and not sufficient; the check is a join against the run table, not a schema check.
+AB-08 assumes loss events are independent across attempts. They are not when a partition causes all attempts in a window to lose responses, so the expected value understates clustering even though it correctly bounds the long-run rate.
+AB-09 assumes the defect lands uniformly across days; a defect introduced just before a low-traffic weekend produces a smaller exposed count and a larger per-day severity when traffic returns.
+AB-10 assumes disagreements are detected. Undetected ambiguity is invisible in review counts, which means the measured 1.75 h/week is a floor rather than an estimate.
+AB-11 fails whenever the adapter cannot tell whether bytes were sent, which is the normal case for pooled connections where the failure surfaces on the next use. The correction is not a better classifier but a receiver-side lookup keyed by intent, and the classification then becomes a hint rather than a decision.
+AB-12 fails when the unknown rate is bursty: 20/day averaged over a month can be 0/day for three weeks and 400 on the day a provider degrades. Averaging hides the staffing requirement, which is set by the burst, not the mean.
 
 ## 5. Worked Numerical Example
-**Evidence:** ILLUSTRATIVE workload; arithmetic checked, not a production measurement.
 
-A support assistant receives one request in tenant `T9`. Its planner may create `b=3` branches; each has `c=2` tool calls. Only one branch may submit a ticket. A network response is lost after the adapter submits the ticket with effect key `T9:R81:ticket:1`.
+**ILLUSTRATIVE trace.** One support request, one tenant, six boundaries, one external ticket creation that gets retried at three layers. All values are constructed; the arithmetic is recomputed in the checks.
 
-1. Call budget: `A_max=3*2=6` calls. This prevents an accidental exponential planner from silently consuming an unbounded budget.
-2. The runtime commits `EFFECT_SUBMITTING(key)` before calling the adapter.
-3. The adapter sends the key. The client times out; this is ambiguous, not failure proof.
-4. Recovery queries by key. If it receives a receipt, it writes `EFFECT_CONFIRMED(receipt)` and does not submit again.
-5. If querying is temporarily unavailable, recovery writes `RECONCILIATION_PENDING`; it does not invent a new key.
+Setup:
 
-Sensitivity: with `b=6`, the call cap becomes 12, doubling available tool attempts and audit volume. That can be acceptable only if quotas, approvals, and observation capacity also cover it. Replacing the adapter with one that cannot query or deduplicate removes the evidence needed for a safe automatic retry; the design must require an approval/reconciliation path.
+- Tenant T7, principal `noor`, roles {support, billing.read}, policy version 22.
+- Request RQ-8802 arrives at 10:00:00Z; run RUN-31 admitted at 10:00:00.180Z.
+- Plan: 4 branches, up to 3 calls each, per-run token cap 120,000, wall-clock cap 90 s.
+- One effecting step: create a ticket in an external tracker, base latency 2.0 s.
+- Retries configured at three layers: edge 2, runtime 2, adapter 2. Client adds 2 more attempts.
+- Six synchronous hops at 40 ms; one model call at 900 ms; 6 model calls per attempt.
 
-### Extended trace: cancellation, failover, and an already-submitted effect
-This is a hand-derived trace, not an executed fault-injection result. Times are illustrative seconds on the control-plane clock; worker observations are never substituted for durable evidence.
+Step 1, admission. The control plane evaluates four predicates in one statement: tenant binding, role sufficiency, quota remaining, run-state legality. It admits at 10:00:00.180Z, 180 ms after arrival, of which about 40 ms is the hop and the rest is policy evaluation.
 
-| Time | Actor | Durable state / event | Required conclusion |
-|---:|---|---|---|
-| 0 | gateway | authenticated `T9:P7` request | identity is established for this request |
-| 1 | control plane | `RUN_CREATED(R81,v=1,policy=44,budget=6)` | no external action exists |
-| 2 | W1 | lease token `f=41`, expiry 32 | W1 may attempt transitions |
-| 4 | runtime | `ACTION_PROPOSED(v=2,digest=D1)` | proposal is not approval |
-| 5 | policy | `ALLOW(D1, expiry=25, policy=44)` | only digest D1 is permitted |
-| 6 | runtime | `EFFECT_SUBMITTING(v=3,key=K1,digest=D1)` | K1 is the sole intended ticket effect |
-| 7 | adapter | sends K1; response path fails | sink outcome is unknown |
-| 8 | caller | cancellation request arrives | durable cancellation is required |
-| 9 | control plane | `CANCEL_REQUESTED(v=4)` | no new effect may start |
-| 33 | scheduler | W2 receives `f=42` after W1 expiry | W1 is stale |
-| 34 | W1 | delayed write with `f=41` | receiver must reject it |
-| 35 | W2 | query K1 returns `ticket=812` | one effect occurred |
-| 36 | runtime | `CANCELLED_AFTER_EFFECT(v=5,receipt=812)` | cancellation stopped follow-on work, not history |
+Step 2, attempt bound. The declared caps give A_max = b × c = 4 × 3 = 12 call attempts inside the plan. That is a budget alarm threshold, not twelve business effects, because only calls that cross an effecting adapter can change the world; here exactly one step does.
 
-`CANCELLED` without the receipt would be misleading, while `SUCCEEDED` conceals that follow-on work did not run. If the receipt query is temporarily unavailable, the only honest terminal decision is a non-final `RECONCILIATION_PENDING` state. It must preserve K1; a replacement key creates a second business operation.
+Step 3, effect amplification. The intended operation is one ticket. With R = 3 at four layers, A = 3^4 = 81 attempts. The adapter holds an effect key computed from tenant, run, step and canonical payload: `T7/RUN-31/create_ticket/v1`. Under the key, 81 attempts collapse to at most one accepted effect and 80 suppressed attempts.
 
-#### Design-oracle inputs
-The following inputs specify a later executable test. They are not execution evidence.
+Step 4, latency. One attempt costs 6 × (900 + 240) = 6,840 ms. The 90 s wall-clock cap admits floor(90,000 / 6,840) = 13 attempts of model work. The client deadline of 30 s admits floor(30,000 / 6,840) = 4. The tighter of the two is the client's, so the run's effective attempt ceiling is 4, not the configured 12.
+
+Step 5, failure. At 10:00:14Z the tracker hangs. The adapter times out at 10:00:16Z after its 2.0 s budget, retries twice (10:00:16Z, 10:00:18Z), then returns a transport error. The runtime retries the step twice, each carrying the same effect key, and the edge retries the whole request twice because it sees a 5xx.
+
+Step 6, arrivals. Attempts reaching the tracker: 3 (adapter) × 3 (runtime) × 3 (edge) × 3 (client) = 81, consistent with A = 3^4. Wall-clock cost of those attempts at 2.0 s each is 162 s of downstream time, spread over a client deadline that ended at 10:00:30Z. Most attempts therefore occur after the client already gave up, which is the signature of amplification: work continues to be produced for a request nobody is waiting for.
+
+Step 7, token spend. Six model calls per attempt at 9,500 mean context tokens gives 57,000 tokens per attempt. Four attempts fit inside the deadline, so 4 × 57,000 = 228,000 tokens, against a per-run cap of 120,000 — the cap is exceeded before the attempt ceiling is reached, so the budget is the binding constraint and the run ends in `budget_exhausted`, not `failed`. That distinction matters: `failed` invites a retry, `budget_exhausted` should not.
+
+Step 8, attribution. The accepted effect record carries tenant T7, principal noor, run RUN-31, attempt 4, boundary `adapter.createticket`, policy version 22, effect key and receipt id: 8 fields, attribution 6/6 = 1.0 on the required set.
+
+**Independent arithmetic re-check.**
 
 ```text
-initial_version=1; policy_version=44; approved_digest=D1; effect_key=K1
-W1_token=41; W2_token=42; cancellation_after_effect_reservation=true
-receipt_lookup(K1)=ticket-812
-EXPECT accepted_effect_keys=[K1]
-EXPECT rejected_stale_tokens=[41]
-EXPECT terminal_state=CANCELLED_AFTER_EFFECT
-EXPECT terminal_receipt=ticket-812
-EXPECT new_effects_after_cancel=0
+check 1 (attempt bound inside the plan)
+  b = 4, c = 3 -> 4 * 3 = 12
+  cross-check: branches enumerated 4 times, 3 calls each, 4 + 4 + 4 = 12  -> agrees
+
+check 2 (layer amplification)
+  3^2 = 9; 3^3 = 27; 3^4 = 81
+  cross-check by division: 81 / 27 = 3 (one layer adds exactly one factor)
+  cross-check by multiplication: 3 * 3 = 9, 9 * 3 = 27, 27 * 3 = 81
+
+check 3 (attempt latency)
+  900 + 240 = 1,140 ms per model call
+  6 * 1,140 = 6,840 ms
+  cross-check: 6 * 900 = 5,400 and 6 * 240 = 1,440; 5,400 + 1,440 = 6,840  -> agrees
+  hop share: 1,440 / 6,840 = 0.2105 -> 21.05%
+
+check 4 (deadline fit)
+  floor(30,000 / 6,840): 6,840 * 4 = 27,360 <= 30,000; 6,840 * 5 = 34,200 > 30,000
+  -> 4 attempts, headroom 30,000 - 27,360 = 2,640 ms
+  wall-clock cap fit: 6,840 * 13 = 88,920 <= 90,000; * 14 = 95,760 > 90,000 -> 13
+
+check 5 (token spend)
+  6 * 9,500 = 57,000
+  4 * 57,000 = 228,000
+  228,000 / 120,000 = 1.9 -> cap exceeded by 90%
+  the cap is crossed during attempt 3: 3 * 57,000 = 171,000 > 120,000
+  so the run should terminate inside attempt 3, not attempt 4; recompute the
+  attempts actually completed = 2 full attempts (114,000 tokens) plus a partial
+  third, and the token arithmetic above is the ceiling, not the spend
+
+check 6 (downstream time)
+  81 attempts * 2.0 s = 162 s
+  client deadline 30 s -> 132 s of downstream work after the client stopped waiting
+  132 / 162 = 0.8148 -> 81.5% of the produced work was unobserved
 ```
 
-Changed constraint: set `approved_digest=D2` while the proposed action hashes to D1. The adapter must deny or ask for new approval. It must not borrow the authority for D2. Unavailable receipt lookup must yield `RECONCILIATION_PENDING`, not a claimed failure or success.
+Check 5 records a correction rather than hiding it: the first pass assumed four completed attempts, and the recomputation shows the budget is crossed during the third. The corrected reading is that both limits bind at different times, and only measurement of the actual attempt log can say which one fired.
 
-### Identity propagation decision record
-| Option | What the adapter proves | Use when | Disqualifier |
-|---|---|---|---|
-| Forward caller credential | caller identity and scoped access | audience and lifetime are tightly constrained | token is broad or cannot safely reach worker |
-| Token exchange | delegated caller authority for adapter audience | downstream service needs caller context | exchange policy is not auditable |
-| Service identity plus signed delegation | service execution and original-principal evidence | sink cannot accept user token | delegation is not independently checked |
-| Service identity only | which service acted | shared read-only work | per-user entitlement affects outcome |
+**Sensitivity.** Four parameters decide the outcome, and three of them are configuration rather than code.
 
-Record original principal, effective service identity, tenant, delegation method, policy decision ID, and action digest. Never log raw credentials. Service identity alone is insufficient for an effect that depends on user entitlement.
-
-### Durable state versus durable effects
-| Artifact | Authoritative owner | Recovery question | Invalid inference |
-|---|---|---|---|
-| Run phase/version | state store | what transition is legal next? | worker memory is current |
-| Approval | policy/audit store | does it bind current digest and time? | old approval always applies |
-| External ticket | external system | did K1 commit? | local transaction proves remote effect |
-| Receipt reference | run audit | which outcome was observed? | receipt means permanent validity |
-
-**Source scope ledger:** NIST's least-privilege glossary supports the narrow minimum-privileges definition only. OWASP LLM01:2025 (modified 2025-04-17) supports treating indirect injection in external content as a threat, and recommends enforced least privilege, high-risk approval, untrusted-content segregation, and adversarial testing. Neither source validates this architecture, its safety, or an immunity claim.
-
-**Takeaway:** A timeout changes knowledge, not the external world; reconcile the same operation identity.
+- Retry depth: dropping the edge layer from 2 retries to 0 takes A from 81 to 27, a 3× reduction, and cuts unobserved downstream time from 132 s to about 38 s.
+- Hop count: removing one synchronous boundary takes per-call latency from 1,140 ms to 1,100 ms (3.5%) but reduces the deadline-relevant total by 240 ms per call, which is 6 × 240 = 1,440 ms across an attempt — the same 1,440 ms that is 21% of one attempt.
+- Model latency: at p99 = 2,700 ms, per-attempt cost becomes 17,640 ms and only one attempt fits in 30 s, so the configured retry policy becomes dead code that fires after the client has left.
+- Token cap: at 120,000 the cap fires mid-attempt-3; doubling it lets all four attempts run and raises spend to 228,000, which is why the cap should be expressed per accepted outcome rather than per attempt.
 
 ## 6. Visual / Geometric Intuition
-Think of authority as nested regions. A tenant boundary encloses its sessions; a session encloses its runs; a run contains proposed actions. A model-generated string lies inside none of these authority regions until an adapter validates it. Moving text from context to a tool argument crosses into a smaller, more controlled region and must therefore add validation rather than trust.
+
+Picture the request path as a corridor whose width is authority and whose length is latency. Ownership is a door on the corridor that only one key opens; duplication is what happens when the corridor forks and the doors are not locked.
 
 ```text
-[tenant T9]
-  [session S4]
-    [run R81]
-      proposal: "create ticket"  -- untrusted intent
-      approved canonical action   -- bound arguments + policy
-      effect key                  -- one business operation
+amplification as a branching diagram (R = 3 per layer)
+
+client attempt ----+---- edge attempt 1 ---+---- runtime 1 ---+-- adapter 1 -> effect
+                   |                       |                  +-- adapter 2 -> suppressed
+                   |                       |                  +-- adapter 3 -> suppressed
+                   |                       +---- runtime 2 ---+-- adapter 1 -> suppressed
+                   |                       |                  +-- adapter 2 -> suppressed
+                   |                       |                  +-- adapter 3 -> suppressed
+                   |                       +---- runtime 3 ---+-- adapter 1 -> suppressed
+                   |                                          +-- adapter 2 -> suppressed
+                   |                                          +-- adapter 3 -> suppressed
+                   +---- edge attempt 2 --- ... 9 leaves
+                   +---- edge attempt 3 --- ... 9 leaves
+
+leaves = 27 at three layers; adding the client layer gives 81
+with a stable effect key: accepted effects = 1, suppressed attempts = 80
+without it and with p_lost = 0.002 per attempt: expected spurious effects per
+  operation = 1 - 0.998^81 = 0.1497, which at 4,000 operations/day is 599/day
+note the linear shortcut 81 * 0.002 = 0.162 overstates it, because two attempts
+  cannot both be the duplicate of the same accepted effect independently
 ```
 
-**Takeaway:** Narrower execution regions require stronger binding of identity, arguments, and policy.
+The diagram makes one thing obvious that prose hides: the leaves are not evenly spaced in time. The adapter retries happen within 4 s, the runtime retries within about 20 s, and the edge retries at 30 s or later, by which point the client has already returned an error. So the late attempts are pure cost and pure risk: no user is waiting, and the only thing they can produce is a duplicate.
+
+A second geometric reading concerns boundary count. Each synchronous boundary is a place where latency accumulates additively and where a failure must be classified as before-send or after-send. With H = 6 there are 6 classification points, and one misclassified as "safe to retry" is enough to convert a 1× operation into a 27× one.
+
+A third reading concerns capability width. Draw the principal's scopes as a wide band and each delegated scope as a narrower band inside it. If any link can widen its band, delegation has become a privilege escalator, and the drawing shows it immediately: the child band is not inside the parent band.
 
 ## 7. Comparison / Selection Table
-| Design | Use when | Benefit | Disqualifier | Fallback |
-|---|---|---|---|---|
-| Deterministic workflow | Steps and routing are known | Small audit surface | Open-ended decomposition is necessary | Add bounded planner at one node |
-| Bounded planner + tools | Alternatives need evaluation | Flexible proposal generation | Tools have irreversible broad effects | Approval gate and narrow tools |
-| Supervisor + specialists | Work partitions with clear contracts | Domain isolation | Shared mutable state is unclear | One workflow with explicit phases |
-| Free-form multi-agent chat | Exploration only | Rapid ideation | Any production effect or audit requirement | Convert outputs to reviewed artifacts |
-| Direct external call from model | Read-only disposable sandbox | Low setup | Identity, money, records, or safety involved | Adapter with schema/policy/receipt |
 
-**Takeaway:** Add an agentic layer only where it changes a bounded decision more safely or effectively than a workflow.
+### 7.1 The ten-layer stack, with owner and collapse symptom
 
-### 7.1 Ten-layer stack review
-The visible source title “ten layer stack model” is a syllabus commitment, not evidence for a vendor diagram. This deliberately logical stack separates responsibilities that may be co-located in deployment but must remain distinguishable in review.
-
-#### Layer 1 — Caller and interaction contract
-**Owns:** the user-visible request, input limits, response channel, and correlation handle.
-**Does not own:** a durable run, authorization decision, or business effect.
-**Input contract:** request bytes, client authentication material, requested operation, and client-generated correlation ID.
-**Output contract:** acceptance/rejection or a run reference; never an invented claim that an asynchronous effect completed.
-**Boundary check:** disconnecting the client must not erase an admitted run, and reconnecting must not grant access by correlation ID alone.
-**Review question:** can a different authenticated principal observe or resume this interaction?
-
-#### Layer 2 — Identity and tenancy
-**Owns:** authenticated principal, tenant binding, delegation chain, and credential audience validation.
-**Does not own:** the model's proposal or the sink's business receipt.
-**Input contract:** verified credential plus transport context; unverified identity claims are data, not identity.
-**Output contract:** a narrow principal/tenant/delegation assertion with expiry and provenance.
-**Boundary check:** a session identifier is rejected where a principal assertion is required.
-**Review question:** is the effective service identity recorded separately from the original user identity?
-
-#### Layer 3 — Admission and policy control plane
-**Owns:** quota, policy version, run creation, budget reservation, and audit decision.
-**Does not own:** worker process liveness or external-system truth.
-**Input contract:** principal, tenant, requested workflow, current policy, and declared limits.
-**Output contract:** accepted run ID with policy/budget version, or a denial with a bounded reason.
-**Boundary check:** no runtime work begins merely because a model or caller requested it.
-**Review question:** can the control plane reject a request before any tool-capable context is assembled?
-
-#### Layer 4 — Session and durable state
-**Owns:** session scope, run version, checkpoint, lifecycle state, and parent/child lineage.
-**Does not own:** authorization validity after its recorded decision expires.
-**Input contract:** versioned transition request from an authorized runtime owner.
-**Output contract:** one accepted next version or a conflict; never silent last-write-wins.
-**Boundary check:** a restarted worker can reconstruct legal next work from this record without trusting RAM.
-**Review question:** is every mutable fact assigned one durable writer or a declared conflict rule?
-
-#### Layer 5 — Context assembly
-**Owns:** allowed source selection, ordering, budget allocation, provenance, and truncation declaration.
-**Does not own:** durable memory truth, user authority, or tool permission.
-**Input contract:** scoped source handles, access decisions, token budget, and requested task.
-**Output contract:** bounded context with source IDs, revisions, trust labels, and omitted-material record.
-**Boundary check:** retrieval content cannot create a new principal scope or tool capability.
-**Review question:** can a reviewer tell what was omitted when the context budget is exhausted?
-
-#### Layer 6 — Model and inference service
-**Owns:** transforming provided context into a proposal under a pinned model/configuration identity.
-**Does not own:** policy interpretation, durable run transition, or external effect.
-**Input contract:** bounded prompt/context and constrained output grammar where applicable.
-**Output contract:** proposed text or structured action candidate plus model/template revision.
-**Boundary check:** model output remains untrusted even when syntactically valid.
-**Review question:** does a model change alter a separately tested parser or action contract?
-
-#### Layer 7 — Planner and workflow runtime
-**Owns:** legal node progression, branch budget, checkpoint timing, cancellation observation, and retry classification.
-**Does not own:** final authorization or receipt from an external sink.
-**Input contract:** current run version, proposal, permitted capabilities, and remaining budget.
-**Output contract:** next state transition, bounded child work, or an action candidate for validation.
-**Boundary check:** child work inherits root budget, tenant, and cancellation scope rather than minting them.
-**Review question:** after a crash, which node can rerun and which must reconcile before rerun?
-
-#### Layer 8 — Tool schema and validation adapter
-**Owns:** typed parsing, defaults policy, canonicalization, range checks, and structured error mapping.
-**Does not own:** a broad implicit right to perform every schema-valid action.
-**Input contract:** candidate action and declared tool version.
-**Output contract:** canonical action or a machine-readable validation failure.
-**Boundary check:** unknown fields, duplicate keys, unsafe coercions, and incomplete results are explicit outcomes.
-**Review question:** are review and execution using the same canonical representation?
-
-#### Layer 9 — Authorization and effect gateway
-**Owns:** action-level policy evaluation, approval binding, effect-key reservation, delegated identity enforcement, and audit append.
-**Does not own:** the third party's eventual persistence after the network breaks.
-**Input contract:** canonical action, current principal/delegation, policy revision, and effect key.
-**Output contract:** deny, authorized submission record, or a reconciliation-required ambiguity record.
-**Boundary check:** a schema-valid model proposal cannot bypass current policy or a required approval.
-**Review question:** which evidence identifies the exact action that the approver authorized?
-
-#### Layer 10 — External system of record
-**Owns:** the authoritative business effect and its queryable receipt or status semantics.
-**Does not own:** the agent run's narrative of what happened.
-**Input contract:** adapter-specific canonical request, identity, and idempotency/correlation key.
-**Output contract:** receipt, rejection, or an ambiguous transport outcome whose state must be queried.
-**Boundary check:** a local transaction cannot prove remote commit.
-**Review question:** what is the recovery path when this system cannot deduplicate or query by key?
-
-### 7.2 Request-path proof obligations
-For one effecting request, collect evidence in this order: authenticate the caller; bind tenant; admit a run; record policy and budget; assemble permission-filtered context; pin proposal provenance; validate a typed action; authorize its canonical form; reserve one effect key; submit; reconcile a receipt; then finalize the run. Each clause answers a different question. Combining them into “the agent did it” destroys both recovery and auditability.
-
-| Transition | Required durable evidence | Unsafe substitute | Recovery decision |
+| Layer | What it decides | Credentialed owner | If collapsed into a neighbour |
 |---|---|---|---|
-| caller to identity | principal, tenant, credential expiry | session ID | reauthenticate |
-| identity to admission | policy decision and budget reservation | model output | deny or create a new run |
-| admission to context | source handles and access checks | transcript copy | rebuild from permitted sources |
-| context to proposal | model/template revision and prompt reference | chat message | regenerate as a new proposal |
-| proposal to action | canonical typed arguments | free-form prose | return validation error |
-| action to authority | current decision, approval digest, expiry | old approval | deny or reapprove |
-| authority to submission | effect key and submitting state | HTTP request log | reconcile same key |
-| submission to finality | sink receipt/status | timeout outcome | pending/manual resolution |
+| 1 identity | who the caller is | identity provider | tenant comes from a header and becomes forgeable |
+| 2 edge | which headers survive | gateway | untrusted headers reach the control plane |
+| 3 admission | whether work may start | control plane | model calls bill before quota is checked |
+| 4 policy | what this action may do now | policy service | authorization is cached for the run's lifetime |
+| 5 run state | what has happened | state store | worker memory becomes truth and dies with it |
+| 6 context | what the model sees | assembler | retrieval text silently becomes instructions |
+| 7 model | proposal quality | model provider | output is treated as a decision |
+| 8 adapter | schema, policy recheck, dedup | adapter | retries duplicate effects with no key |
+| 9 external | the business fact | system of record | local state disagrees with the real world |
+| 10 audit | what evidence exists | audit sink | attribution is reconstructed from logs after the fact |
 
-### 7.3 Builder checklist with executable oracles
-1. **Name the tenant boundary.** Oracle: equal session labels in two tenants never return each other’s source handles.
-2. **Name the principal at every effect.** Oracle: an adapter audit row contains original principal and effective service identity.
-3. **Version every run transition.** Oracle: two writers expecting version 7 produce one accepted write and one conflict.
-4. **Fence stale workers.** Oracle: token 41 is rejected after token 42 has been accepted for the same protected resource.
-5. **Make cancellation durable.** Oracle: restart after `CANCEL_REQUESTED` permits no new effect reservation.
-6. **Classify timeouts as ambiguity.** Oracle: lost response produces receipt lookup or `RECONCILIATION_PENDING`, never an invented failure.
-7. **Bind approval to canonical arguments.** Oracle: modifying quantity, resource, or policy version invalidates prior approval.
-8. **Reserve the effect key before sending.** Oracle: crash after reservation leaves one recoverable operation identity.
-9. **Constrain child work.** Oracle: descendants cannot exceed the parent’s aggregate call and spend cap.
-10. **Label context trust.** Oracle: retrieved instructions cannot grant a capability absent from policy.
-11. **Pin execution-critical manifests.** Oracle: a changed tool schema cannot resume an incompatible checkpoint unchecked.
-12. **Separate trace from audit.** Oracle: a sampled-out trace still has a minimal durable effect-journal record.
+The useful reading is column three: each collapse has a specific, nameable consequence, and none of them is "reduced modularity". If a review cannot name the consequence of a proposed merge, the review is not finished.
 
-**Takeaway:** The ten layers are not ten microservices; they are ten independently reviewable ownership contracts along one request path.
+### 7.2 Critical boundary distinctions
+
+| Distinction | Left side owns | Right side owns | Confusing them causes |
+|---|---|---|---|
+| proposal versus decision | model | policy service | model text becomes an approval |
+| capability versus permission | credential issuer | policy evaluator | a broad token acts as blanket authority |
+| attempt versus operation | runtime | adapter, via effect key | retries create duplicate business facts |
+| lease versus lock | scheduler | receiver, via fence token | a paused worker writes after takeover |
+| transcript versus context | session store | assembler | summarised-away facts look like they never existed |
+| cancellation versus rollback | control plane | a compensating run | cancelled runs reverse nothing |
+| budget per node versus per tree | scheduler | tree accounting | nested spawning multiplies the headline cap |
+| effect versus receipt | adapter submission | external system | a timeout is recorded as a failure |
+
+### 7.3 Retry placement selection
+
+| Placement | Protects against | Amplifies when | Acceptable condition | Forbidden |
+|---|---|---|---|---|
+| Client only | transient client network faults | server already retries | one layer retries, others fail fast | client retries after a 4xx |
+| Edge only | connection resets before send | body already consumed | idempotent method or effect key | retry after partial upload |
+| Runtime step retry | model and tool flakiness | tool also retries | step carries a stable effect key | retry inside a non-transactional sequence |
+| Adapter retry | single downstream blip | caller retries too | bounded count and jitter | retry on validation errors |
+| Queue redelivery | crashed consumer | handler is not idempotent | handler collapses duplicate ids | redelivery of effects without a key |
+
+### 7.4 Ownership matrix for one run
+
+| Fragment | Single owner | Second writer (must not exist) | Enforcement |
+|---|---|---|---|
+| run state and version | state store, via transition service | worker process | credential scope plus version predicate |
+| attempt counter | runtime worker | adapter | reserved field, adapter writes effects only |
+| token budget | scheduler | model caller | shared counter with conditional decrement |
+| approval record | approval service | worker | separate signing key |
+| cancellation flag | control plane | operator console | one API, audited actor |
+| effect table | adapter | reconciliation job | both write via the same idempotent upsert |
+| audit cursor | audit sink | none | append-only credential, no updates |
+| transcript | session store | assembler | assembler is read-only on this fragment |
+
+Two rows deserve commentary. The effect table is the one place where two writers are legitimate, provided they write through one idempotent upsert keyed by effect key; anything else duplicates effects on reconcile. The audit cursor has no legitimate second writer, and any process needing to "fix" it is a sign that the sink rejected a record rather than that the cursor was wrong.
+
+### 7.5 Identity propagation options
+
+| Option | What the callee learns | Forgery resistance | Audit quality | Cost |
+|---|---|---|---|---|
+| Shared service account | nothing about the user | none | attribution is inferred | lowest |
+| Forwarded signed token | user and tenant | high if verified | direct | low |
+| Token exchange per hop | narrowed audience | high | direct, plus chain | medium |
+| Impersonation with actor header | user plus actor | depends on a second check | best available | highest |
 
 ## 8. Failure Modes & Edge Cases
-### F-01 Collapsed trust boundary
-**Symptom:** A retrieved document causes a tool request outside the user’s intended scope. **Competing causes:** prompt injection, overbroad tool schema, or missing downstream authorization. **Diagnostic:** log canonical arguments, principal, policy decision, and document provenance; an allowed action despite absent scope identifies enforcement failure. **Bounded fix:** require adapter-side authorization over structured arguments. **Risk:** a blanket deny may block legitimate automation. **Prevention/verification:** adversarial document test must produce a denied adapter decision without an effect.
 
-### F-02 Double-owned state
-**Symptom:** Two workers report conflicting terminal states. **Competing causes:** missing compare-and-swap, lease expiry without fencing, or replaying stale events. **Diagnostic:** inspect expected/current versions and owner fencing tokens. **Fix:** single writer or versioned transition. **Verification:** concurrent version-7 trace accepts exactly one transition.
-
-### F-03 Ambiguous retry creates duplicate ticket
-**Symptom:** Two tickets share business content after a timeout. **Competing causes:** regenerated effect key, sink ignores key, or reconciliation query races visibility. **Diagnostic:** query receipt by the original key and compare adapter audit IDs. **Fix:** persist key before submit and reconcile. **Verification:** injected lost-response test produces one key and either one receipt or a pending state, never a new key.
-
-### F-04 Cross-session leakage
-**Symptom:** Context from `S4` appears during `S5`. **Competing causes:** cache key omits tenant/session, worker memory reused, or authorization only happened at creation. **Diagnostic:** trace cache key and read authorization at every retrieval. **Fix:** tenant-scoped keys and per-read policy checks. **Verification:** same session identifier in two tenants must return deny or isolated records.
-
-### F-05 Budget escape through nested spawning
-**Symptom:** Tool costs exceed the stated branch cap. **Competing causes:** child calls excluded from accounting, retries uncapped, or alternate path uses a different executor. **Diagnostic:** aggregate parent and descendant run IDs. **Fix:** propagate one budget ledger. **Verification:** nested request is denied once aggregate six-call budget is exhausted.
-
-**Takeaway:** Each symptom needs a signal that distinguishes plausible causes before an irreversible mitigation.
-
-### Boundary investigation playbook
-The five short entries above identify the first symptoms to triage. The following investigations are deliberately different failure mechanisms rather than a numbered catalogue of variations on one generic procedure. All are HYPOTHETICAL design exercises. They specify what an executable fault-injection harness should assert; they do not report incidents or test runs.
-
-#### F-06 — Policy-cache revocation race
-**Trigger:** A user loses entitlement after a worker cached an allow decision.
-**Competing causes:** an expiry bug, a revocation-feed delay, or the action being authorized against service rather than delegated identity.
-**Discriminating signal:** compare the authorization decision's policy epoch and expiry with the revocation epoch at adapter admission. A valid old cache entry is not a valid action decision.
-**Containment:** hold only actions requiring the revoked scope; reads already permitted by a separately scoped policy are not evidence of action permission.
-**Correction:** make the adapter evaluate a current policy decision for effecting calls, and bind its decision ID and epoch to the action record.
-**Prevention:** exercise “allow at epoch 20, revoke at epoch 21, submit at epoch 21”; the expected outcome is deny, not a cache hit.
-**Risk:** forcing every harmless read through a remote decision point can create an availability dependency; classify effecting and non-effecting capabilities separately.
-
-#### F-07 — Canonicalization ambiguity
-**Trigger:** The review UI displays `1,000` while the adapter parses a locale-specific quantity or silently applies a default currency.
-**Competing causes:** parser coercion, omitted fields in the digest, or UI/server serialization mismatch.
-**Discriminating signal:** retain raw arguments, parsed typed arguments, canonical bytes, and the digest presented to the reviewer. The same visible form must yield one typed action.
-**Containment:** reject ambiguous numbers, missing currency, duplicate JSON fields, and unknown effecting fields rather than guessing.
-**Correction:** use one versioned canonicalizer at review and execution; include all effect-relevant fields in its schema and digest.
-**Prevention:** oracle inputs `amount="01"` and `amount=1` may be equivalent only if the declared schema says so; `"1,000"` without locale must fail.
-**Risk:** strict rejection can increase human rework, so return a bounded validation error identifying the field instead of silently normalizing it.
-
-#### F-08 — Confused-deputy adapter
-**Trigger:** A highly privileged integration uses its service account to perform an action requested by a caller lacking that scope.
-**Competing causes:** absent delegated-principal check, an overbroad service role, or an incorrectly mapped resource scope.
-**Discriminating signal:** inspect the sink request alongside the authorization record. It must identify both the service that executed and the principal whose scope was evaluated.
-**Containment:** disable the affected effecting method, not all tool reads, while the delegation path is repaired.
-**Correction:** authorize `(principal, tenant, action, resource)` at the adapter; service identity supplies execution identity, never caller entitlement by itself.
-**Prevention:** a caller authorized for project A must be denied when it asks the same adapter to modify project B even though the service can access both.
-**Risk:** token exchange may reduce availability during identity-provider failures; define its failure mode before relying on it.
-
-#### F-09 — Approval-digest drift
-**Trigger:** An action is approved, then its resource, quantity, priority, policy version, or expiry changes before execution.
-**Competing causes:** a UI update failed to create a new proposal, a digest omitted a field, or a worker resumed an old checkpoint.
-**Discriminating signal:** recompute the adapter's canonical digest and compare it with the stored approval digest and policy version.
-**Containment:** place the run in `AWAITING_REAPPROVAL`; do not execute the edited request under a superficially similar approval.
-**Correction:** bind approval to canonical action, principal, tenant, policy version, effect key, and server-evaluated expiry.
-**Prevention:** changing `priority=normal` to `priority=urgent` must generate a different digest and a new reviewer decision.
-**Risk:** overly broad binding can force reviews for presentation-only changes; keep display metadata out of the canonical effect contract.
-
-#### F-10 — Parent-budget aliasing
-**Trigger:** Each delegated worker receives a fresh token, tool-call, or spend counter.
-**Competing causes:** omitted lineage propagation, retries counted outside the budget, or a fallback executor not reporting usage.
-**Discriminating signal:** aggregate attempts and reserved cost by immutable root-run ID, including descendants and reconciliation calls.
-**Containment:** stop new delegates when the root ledger is exhausted; allow receipt lookup required to resolve already reserved effects.
-**Correction:** create one durable root budget with atomic reservations; child limits are partitions, not independent allowances.
-**Prevention:** a root cap of six and two children each requesting four calls must admit at most six aggregate reservations.
-**Risk:** a single shared cap can starve a high-value recovery step; reserve a separately bounded recovery allowance in the admission policy.
-
-#### F-11 — Replay against mutable context
-**Trigger:** A crash replay reassembles context from a newer document, model, or feature flag and selects a different action.
-**Competing causes:** missing input snapshot, intentionally live retrieval, or non-deterministic model output mistaken for state recovery.
-**Discriminating signal:** compare recorded source revisions, prompt/template revision, model identifier, and retrieved handles with the replay inputs.
-**Containment:** prevent effect execution from a semantically changed replay until it produces a new proposal and authorization.
-**Correction:** checkpoint decision inputs or explicitly classify the step as recomputable and require revalidation after recomputation.
-**Prevention:** update a retrieved policy document between attempt one and replay; expected result is re-review or a visible changed-input state.
-**Risk:** immutable snapshots can retain data longer than desired; store references and access checks where policy permits rather than raw content by default.
-
-#### F-12 — Receipt correlation mismatch
-**Trigger:** A delayed receipt is attached to the wrong tenant, effect key, or canonical action.
-**Competing causes:** correlation-key collision, adapter routing defect, or a sink receipt API that returns insufficient identity fields.
-**Discriminating signal:** validate tenant, effect key, action digest or sink request ID, and expected operation type before finalizing the run.
-**Containment:** move the run to `RECONCILIATION_PENDING` and preserve both candidate receipts for operator resolution.
-**Correction:** require the adapter to persist a unique correlation contract before submission and to reject receipts that do not bind back to it.
-**Prevention:** provide receipt `K2` to a run reserved with `K1`; expected result is no terminal success and an auditable mismatch.
-**Risk:** a strict match may expose a deficient third-party API; then automatic terminal success is unavailable, not a reason to weaken matching.
-
-#### F-13 — Cross-tenant cache collision
-**Trigger:** Retrieval, tool-result, or session cache keys omit tenant or effective permission scope.
-**Competing causes:** incomplete key construction, background worker reuse, or authorization performed only when a session was created.
-**Discriminating signal:** log a privacy-safe cache-key decomposition and the access decision used for the cached object; test identical user-visible labels in two tenants.
-**Containment:** invalidate affected shared entries and switch to uncached authorized reads until the key and invalidation rule are corrected.
-**Correction:** scope cache identity by tenant, resource revision, principal or permission class where necessary, and policy epoch.
-**Prevention:** tenant T1 writes `guide`; T2 requests `guide`; the oracle is T2's own permitted result or deny, never T1's bytes.
-**Risk:** finer keys reduce cache hit rate; measure that cost instead of relaxing isolation by assertion.
-
-#### F-14 — Cancellation/effect race
-**Trigger:** Cancellation commits after the runtime reserves an external effect but before a receipt returns.
-**Competing causes:** worker ignores new run version, adapter accepts stale run version, or cancellation is implemented only in process memory.
-**Discriminating signal:** reconstruct ordered durable transitions and inspect whether the adapter checked the current cancellation/version fence before submission.
-**Containment:** block follow-on effects and reconcile the reserved effect key; do not claim that cancellation undid an already submitted operation.
-**Correction:** make cancellation a versioned durable transition and make adapters reject stale run versions for new effects.
-**Prevention:** use the Section 5 oracle: cancellation after `EFFECT_SUBMITTING(K1)` plus receipt `ticket-812` ends `CANCELLED_AFTER_EFFECT`.
-**Risk:** aggressively aborting adapters can obscure an in-flight commit; ambiguity must remain represented until a receipt or bounded escalation resolves it.
-
-#### F-15 — Queue fairness collapse
-**Trigger:** A noisy tenant fills a shared queue, delaying another tenant's approval or reconciliation work.
-**Competing causes:** no per-tenant admission cap, priority inversion, or workers pinned on slow tools rather than queue policy itself.
-**Discriminating signal:** compare queue age, queued count, admitted concurrency, and effecting versus reconciliation lane by tenant.
-**Containment:** enforce tenant concurrency and reserve capacity for reconciliation; never drop an effect reservation merely to make a dashboard look healthy.
-**Correction:** use explicit fair-queue or weighted scheduling semantics, with a documented bounded-priority rule for safety or recovery work.
-**Prevention:** inject one tenant with ten long runs and a second with one receipt lookup; the lookup's maximum wait must be evaluated against its declared lane policy.
-**Risk:** priority lanes can be abused; admission must classify by server-side contract rather than model-provided labels.
-
-#### F-16 — Checkpoint schema incompatibility
-**Trigger:** A waiting run is resumed after its state or tool schema changes.
-**Competing causes:** unversioned checkpoint, lossy migration, or a changed tool contract accepted as if compatible.
-**Discriminating signal:** compare checkpoint schema/version, transition name, action digest, and tool schema revision against the deployed runtime manifest.
-**Containment:** quarantine incompatible runs with an explicit recovery owner; do not deserialize unknown fields into defaults for an effecting transition.
-**Correction:** version checkpoint schemas, test forward/backward migrations, and define a manual migration or expiration policy.
-**Prevention:** resume a version-1 checkpoint under a version-2 runtime that requires a new field; expected result is migration or review, never a default external call.
-**Risk:** retaining old runtime readers costs operational effort; deleting them without a recovery policy strands legitimate work.
-
-#### F-17 — Secret-bearing trace retention
-**Trigger:** A tool response or prompt trace includes an access token, password, or sensitive value and is copied to broad telemetry.
-**Competing causes:** missing redaction, a new response field, or a debugging bypass that wrote pre-redaction data.
-**Discriminating signal:** insert a controlled secret sentinel into a proposed harness and scan every persistence path, export, and support view for it.
-**Containment:** restrict access, rotate exposed credentials according to the credential owner’s process, and preserve only the minimum forensic metadata.
-**Correction:** keep secret references outside model context when possible; redact before persistence and enforce field-level logging contracts.
-**Prevention:** the sentinel must be absent from traces while a correlation ID and redacted field marker remain available for diagnosis.
-**Risk:** indiscriminate redaction can remove evidence needed to distinguish users; retain non-secret stable identifiers with access controls.
-
-#### F-18 — Untrusted-content instruction crossover
-**Trigger:** Retrieved text tells the model to override policy or call a tool, and that text is treated as executable authority.
-**Competing causes:** prompt-injection susceptibility, tool schema overbreadth, or absent adapter authorization.
-**Discriminating signal:** label provenance and trust class in assembled context, then trace whether the proposed action survives independent schema and policy checks.
-**Containment:** prevent effecting transition; preserve the source handle for review without repeating its instructions into operator tooling.
-**Correction:** segregate untrusted content, narrow tools, and enforce authorization outside the model's text channel.
-**Prevention:** an injected document requesting a cross-project export must yield an adapter deny even if the model repeats the request.
-**Risk:** treating all retrieved content as unusable defeats retrieval; the boundary is that content may inform a proposal but cannot grant authority.
-
-#### F-19 — Non-idempotent compensation
-**Trigger:** An operator or runtime attempts to “undo” an effect whose original outcome is unknown or whose reversal has different business semantics.
-**Competing causes:** timeout misclassified as failure, assumed reversibility, or a compensation endpoint using the original effect key.
-**Discriminating signal:** classify receipt state, reversibility, and compensating action contract before any reversal request.
-**Containment:** leave the original operation pending reconciliation; route any compensating action through a separate authorized effect key.
-**Correction:** model compensation as a new business operation with its own approval, audit record, and receipt.
-**Prevention:** an unknown ticket creation may not automatically create a closing ticket; first query K1, then decide whether a new authorized action is warranted.
-**Risk:** delayed compensation can inconvenience users; unsafe automatic compensation can create a second harmful effect.
-
-#### F-20 — Tool-output truncation
-**Trigger:** A tool result is truncated before the model or validator sees its decisive status field.
-**Competing causes:** output-size limit, serialization error, or a tool returning a partial page without continuation metadata.
-**Discriminating signal:** record declared result length, retained bytes, truncation flag, schema validation result, and continuation token presence.
-**Containment:** prohibit effecting decisions that depend on an incomplete result; fetch a bounded continuation or ask for review.
-**Correction:** design structured result contracts with completeness/status fields separate from large payloads and validate them at the adapter.
-**Prevention:** a 10,000-byte result truncated before `status=DENY` must be classified incomplete, not interpreted as successful absence of an error.
-**Risk:** increasing limits can inflate context cost and leakage exposure; select a status-first contract rather than indiscriminate expansion.
-
-#### F-21 — Manual override without provenance
-**Trigger:** An operator bypasses a failed workflow but the override lacks actor, scope, reason, expiry, and link to the blocked run.
-**Competing causes:** emergency process gap, unavailable audit store, or UI-only override path.
-**Discriminating signal:** audit query must join override ID to authenticated actor, canonical action, policy exception, and resulting receipt.
-**Containment:** time-bound the override and require a second review for irreversible scope; do not silently retry the original run.
-**Correction:** treat override as a first-class authorized transition with its own effect key and expiration.
-**Prevention:** an override record missing a reason or target action cannot release a blocked external effect.
-**Risk:** extra controls can slow genuine emergencies; define a narrow break-glass path with post-action review rather than an unaudited bypass.
-
-#### F-22 — Path-normalization escape
-**Trigger:** A file or repository tool authorizes a displayed path but resolves a different path through traversal, symlink, encoding, or case rules.
-**Competing causes:** inconsistent canonicalization, filesystem-specific semantics, or authorization before resolution.
-**Discriminating signal:** compare requested path, normalized path, resolved target identity, and authorized root under the actual execution environment.
-**Containment:** disable write methods for the affected adapter and restrict reads to handles issued after resolution.
-**Correction:** resolve against an allowlisted root before authorization and reject ambiguous encodings, traversal, and escaping symlinks.
-**Prevention:** `docs/../secrets.txt` and a symlink leaving the workspace must be denied even when the initial string appears under `docs`.
-**Risk:** strict normalization can reject legitimate platform-specific names; make supported filesystem semantics explicit in the contract.
-
-#### F-23 — Stale feature-flag authority
-**Trigger:** A runtime receives a flag snapshot enabling a capability after the server has disabled it.
-**Competing causes:** cache propagation lag, client-side flag enforcement, or an old deployment still accepting the route.
-**Discriminating signal:** attach evaluated flag revision and server decision to adapter admission; compare against the control-plane revision.
-**Containment:** deny new effecting calls for the disabled capability while allowing status and reconciliation operations.
-**Correction:** evaluate execution-critical flags at the enforcing boundary and bind rollout revision to the run record.
-**Prevention:** disable `write_ticket` between proposal and adapter call; expected result is deny despite an earlier model-visible tool list.
-**Risk:** strongly consistent flag reads can increase latency; only execution-critical flags require that path.
-
-#### F-24 — Dead-letter replay loses authority
-**Trigger:** A failed message is replayed days later using its old payload and a service identity, after user scope or policy changed.
-**Competing causes:** replay treats transport durability as permission, original principal is missing, or expiry was ignored.
-**Discriminating signal:** inspect message metadata for principal, tenant, authorization expiry, canonical action, and replay reason; then re-evaluate current policy.
-**Containment:** quarantine expired or incompletely attributed messages rather than mass-replaying them.
-**Correction:** define replay as a new admission decision that references, but does not inherit, prior authorization; preserve the original effect key for reconciliation only.
-**Prevention:** replay a message after its approval expiry; expected result is reauthorization or review, not execution.
-**Risk:** reauthorization can block time-sensitive recovery; use a narrowly authorized recovery role with explicit scope where policy permits.
-
-#### F-25 — Trace sampling hides an effect
-**Trigger:** Telemetry sampling drops the single span containing adapter admission or sink receipt.
-**Competing causes:** head sampling, propagation break, or the adapter not emitting an auditable event at all.
-**Discriminating signal:** compare durable effect journal counts to trace counts by effect key; audit completeness cannot depend on sampled observability.
-**Containment:** use the effect journal and sink query for reconciliation; do not infer absence of an effect from a missing span.
-**Correction:** keep minimal durable, access-controlled audit records for effect admission and receipts; sample bulky diagnostic payloads separately.
-**Prevention:** a sampled-out trace with an accepted journal record must still allow reconstruction of principal, canonical action reference, decision ID, and receipt state.
-**Risk:** full payload logging is expensive and unsafe; complete metadata is not a mandate to retain raw prompts or secrets.
-
-#### F-26 — Split-brain configuration
-**Trigger:** Two runtime pools use incompatible tool schemas or policy manifests during a partial rollout.
-**Competing causes:** staged deployment overlap, missing manifest compatibility gate, or worker resumption on an old image.
-**Discriminating signal:** compare run-pinned manifest ID with worker manifest, adapter schema version, and policy revision at every effect boundary.
-**Containment:** stop cross-version effecting transitions and route compatible runs to their pinned worker pool or review queue.
-**Correction:** publish immutable compatible manifests and define explicit migration/rollback rules for checkpoints and tool contracts.
-**Prevention:** a run created under manifest M1 cannot execute an M2-only tool merely because a scheduler moved it to an M2 worker.
-**Risk:** pinning reduces scheduling flexibility; a compatibility matrix and migration path are preferable to silent best-effort execution.
-
-#### F-27 — Model-generated identifier collision
-**Trigger:** The model invents an effect identifier instead of the runtime allocating one.
-**Causes / signal:** weak ID generation or retry regeneration; two distinct canonical actions share one key in the effect journal.
-**Correction:** allocate opaque, tenant-scoped keys at the runtime and bind each to one action digest.
-**Oracle:** submit two actions with the same model text; their reserved keys differ, while retries of one action reuse its key.
-**Risk:** a key without an action binding merely moves the collision problem.
-
-#### F-28 — Partial batch authorization
-**Trigger:** A batch tool checks entitlement only for its first resource.
-**Causes / signal:** shortcut authorization or wildcard scope confusion; per-item decision evidence is absent.
-**Correction:** authorize each member or use a formally defined all-or-nothing set policy.
-**Oracle:** a batch containing one forbidden resource is denied or returns a declared partial result; it never silently effects that member.
-**Risk:** per-item checks add latency and require a clear atomicity contract.
-
-#### F-29 — Result pagination omission
-**Trigger:** A planner decides from page one while a later page contains a conflict or deny status.
-**Causes / signal:** missing continuation handling or a deceptive count; response metadata says `has_more=true`.
-**Correction:** expose completeness and continuation in the tool schema; forbid a complete-set claim without traversing required pages.
-**Oracle:** a relevant record on page two makes the tool result incomplete until page two is fetched.
-**Risk:** exhaustive paging can exceed budget; choose and state a bounded sampling decision instead.
-
-#### F-30 — Invalid capability discovery
-**Trigger:** A stale capability list advertises a method removed from the gateway.
-**Causes / signal:** cached discovery or rollout skew; schema revision differs at discovery and invocation.
-**Correction:** version discovery and invocation contracts, and treat a mismatch as a retryable compatibility decision, not an alternate broad call.
-**Oracle:** removed method discovery followed by invocation yields a structured unsupported-version response without effect.
-**Risk:** refreshing discovery every call is costly; define a safe cache lifetime.
-
-#### F-31 — Webhook signature scope gap
-**Trigger:** A webhook is accepted because its body signature verifies but tenant, event type, or replay window is unchecked.
-**Causes / signal:** incomplete signed fields or missing nonce; identical event ID is processed twice.
-**Correction:** validate sender, timestamp, event identity, tenant binding, and replay protection before transition.
-**Oracle:** a valid old signed payload outside the replay window is recorded as rejected.
-**Risk:** narrow clock windows can reject delayed legitimate delivery; reconcile from source rather than widening indefinitely.
-
-#### F-32 — Search-index revision drift
-**Trigger:** Context retrieval cites a document handle whose indexed text no longer matches its source revision.
-**Causes / signal:** asynchronous indexing or deleted source; source checksum and index revision disagree.
-**Correction:** retain source revision in retrieval evidence and reauthorize/rebuild context when it changes.
-**Oracle:** modifying a policy after indexing prevents old excerpts from supporting a new effecting action.
-**Risk:** frequent refresh raises cost; critical sources need a tighter freshness rule than background knowledge.
-
-#### F-33 — Summary overwrites transcript fact
-**Trigger:** A lossy session summary replaces a qualified user statement with a stronger assertion.
-**Causes / signal:** compression hallucination or unversioned overwrite; summary lacks pointers to supporting turns.
-**Correction:** store summaries as derived, revisable records with provenance rather than as authoritative history.
-**Oracle:** removing the source turn invalidates the summary claim and blocks its use as a permission fact.
-**Risk:** retaining every turn increases privacy exposure; apply retention separately from truth labeling.
-
-#### F-34 — Tool-result type confusion
-**Trigger:** A string resembling a success receipt is treated as a typed receipt.
-**Causes / signal:** permissive parser or model-mediated interpretation; required receipt fields are missing.
-**Correction:** validate result schema at the adapter and distinguish receipt, pending, and error union variants.
-**Oracle:** text `done` cannot finalize an effect without matching key and sink request identifier.
-**Risk:** strict schemas need compatible evolution rules for real providers.
-
-#### F-35 — Retry after permanent denial
-**Trigger:** Runtime retries an authorization denial as if it were a transport timeout.
-**Causes / signal:** flattened error taxonomy; repeated attempts share identical deny code and policy revision.
-**Correction:** classify denial, validation, ambiguity, and transient transport states before scheduling retry.
-**Oracle:** a deny at policy epoch 44 consumes no retry budget and requires changed input or policy.
-**Risk:** some denials are temporary quota limits; their structured code must say so.
-
-#### F-36 — Human review queue impersonation
-**Trigger:** A reviewer sees an action card detached from its requester identity or tenant.
-**Causes / signal:** UI join defect or shared queue; approval record lacks reviewer-visible binding fields.
-**Correction:** display and persist canonical action, tenant, requester, scope, expiry, and policy basis together.
-**Oracle:** changing tenant after review invalidates approval even when all natural-language text is identical.
-**Risk:** excessive detail can expose sensitive data; use authorized redaction without omitting binding facts.
-
-#### F-37 — Silent tool default
-**Trigger:** An omitted argument becomes an effecting default such as “all resources.”
-**Causes / signal:** server default evolution or schema mismatch; canonical action contains a value absent from proposal.
-**Correction:** require explicit values for effecting scope and show server-applied defaults before approval.
-**Oracle:** missing resource selector fails validation rather than expanding to a global scope.
-**Risk:** required fields can burden harmless calls; classify read-only defaults separately.
-
-#### F-38 — Async callback crosses run
-**Trigger:** A delayed callback updates a newer run that reused a human-readable correlation label.
-**Causes / signal:** non-unique correlation or missing version fence; callback run version differs from active record.
-**Correction:** bind callbacks to immutable run and effect IDs and reject callbacks for terminal or mismatched versions.
-**Oracle:** an old callback after a new run begins is quarantined and cannot alter the new run.
-**Risk:** strict rejection requires a reconciliation channel for legitimately delayed callbacks.
-
-#### F-39 — Orphaned child delegation
-**Trigger:** Parent cancellation or failure leaves a child worker able to reserve new effects.
-**Causes / signal:** missing lineage check or independent child lifecycle; child parent-version is stale.
-**Correction:** make child admission check live parent state and propagate cancellation through a durable lineage record.
-**Oracle:** canceling parent R1 denies a child R1.3 new effect reservation while allowing receipt lookup.
-**Risk:** cascading cancellation can stop useful diagnostic work; exempt only explicitly non-effecting tasks.
-
-#### F-40 — Context-window accounting error
-**Trigger:** Token estimates omit tool schemas or reserved output, causing truncation of a safety instruction.
-**Causes / signal:** tokenizer mismatch or hidden overhead; assembled token count exceeds declared capacity.
-**Correction:** count serialized components with the serving tokenizer and reserve output before retrieval selection.
-**Oracle:** adding one 800-token chunk beyond budget produces a deterministic omit/shorten decision with provenance.
-**Risk:** conservative reserves reduce answer capacity; calibrate with measured serving behavior before changing them.
-
-#### F-41 — Read capability becomes write path
-**Trigger:** A supposedly read-only tool follows a URL, expands an archive, or triggers an external mutation.
-**Causes / signal:** hidden side effect or misclassified tool; adapter cannot state effect classification.
-**Correction:** classify execution surfaces by actual side effects and isolate ambiguous tools behind approval.
-**Oracle:** tool contract review identifies whether a request can modify remote state before it enters a model tool list.
-**Risk:** overclassification impairs useful automation; documented no-side-effect guarantees are the criterion.
-
-#### F-42 — Undeclared cross-region replica
-**Trigger:** Authorization read uses a stale replica while effect gateway writes to a primary.
-**Causes / signal:** replica lag or inconsistent routing; decision timestamp predates revocation commit.
-**Correction:** route execution-critical checks to an authority with declared consistency, or fence using policy epoch.
-**Oracle:** revoke then submit through a lagging read path; gateway must deny or detect stale epoch.
-**Risk:** stronger consistency increases latency and availability coupling.
-
-#### F-43 — Review decision expiry race
-**Trigger:** Approval is valid when displayed but expires while the adapter is submitting.
-**Causes /signal:** client-side expiry check or clock skew; adapter time is after recorded expiry.
-**Correction:** evaluate expiry server-side at the enforcement point and make the submit/authorization ordering explicit.
-**Oracle:** an action at expiry plus one millisecond is denied or re-reviewed, never accepted by a worker clock.
-**Risk:** tight expiries create avoidable review churn; choose duration from workflow evidence.
-
-#### F-44 — Change-set scope expansion
-**Trigger:** A coding agent’s reviewed diff differs from the files actually written.
-**Causes / signal:** workspace mutation or unpinned base revision; execution manifest lists extra paths.
-**Correction:** bind approval to repository revision, normalized patch, target paths, and test command contract.
-**Oracle:** adding an unreviewed file after approval forces a new review before write or merge.
-**Risk:** strict manifests complicate legitimate generated files; include a declared generation rule if needed.
-
-#### F-45 — Sandbox escape assumption
-**Trigger:** Runtime treats a container or process boundary as proof that secrets and network effects are impossible.
-**Causes / signal:** permissive mounts, credentials, or egress; sandbox manifest permits an undeclared capability.
-**Correction:** define the sandbox threat model, mount policy, network egress, identity, and resource limits explicitly.
-**Oracle:** a test process cannot read a secret path or reach a forbidden host under the proposed profile.
-**Risk:** a restrictive sandbox may prevent required integrations; grant narrow capabilities with separate audit.
-
-#### F-46 — Prompt-template provenance loss
-**Trigger:** A run records model ID but not the system/template revision that shaped its proposal.
-**Causes / signal:** unversioned prompts or dynamic server injection; replay cannot reconstruct input contract.
-**Correction:** version prompt assets and record their digest/reference with the proposal.
-**Oracle:** two templates with equal model ID yield distinguishable proposal provenance records.
-**Risk:** logging template text may leak policy content; retain an access-controlled digest and immutable reference.
-
-#### F-47 — Error message instruction injection
-**Trigger:** A tool error includes untrusted text that the model treats as a command to broaden its next call.
-**Causes / signal:** error channel is merged with trusted orchestration instructions; provenance label is absent.
-**Correction:** represent errors as typed data and preserve trust class through retries and reflection.
-**Oracle:** an error saying “retry with admin mode” cannot alter adapter authorization or tool scope.
-**Risk:** hiding errors impairs repair; expose bounded fields, not executable instructions.
-
-#### F-48 — Cost reservation release bug
-**Trigger:** A failed reservation is never released, or a completed charge is released twice.
-**Causes / signal:** non-idempotent accounting transition; ledger balance fails reconciliation with attempt states.
-**Correction:** use versioned reservation, capture, and release states keyed to the run/effect operation.
-**Oracle:** repeating release for one failed attempt leaves available budget unchanged after the first release.
-**Risk:** delayed settlement means “available” is a policy estimate; state that uncertainty.
-
-#### F-49 — Evaluation leakage into live context
-**Trigger:** Grading labels, hidden answers, or test fixtures appear in a production context retrieval path.
-**Causes / signal:** shared index namespace or source-tag omission; retrieved handle is marked evaluation-only.
-**Correction:** isolate evaluation corpora and enforce source-class filters at context assembly.
-**Oracle:** a live run query cannot retrieve a hidden benchmark answer even with matching lexical text.
-**Risk:** isolation can reduce realistic test fidelity; use controlled copies with explicit access gates.
-
-#### F-50 — Regional data residency bypass
-**Trigger:** A tool adapter sends content to a region outside the run’s declared boundary.
-**Causes / signal:** failover route or provider default; execution region differs from policy-approved region.
-**Correction:** attach residency constraint to action admission and enforce it at egress selection.
-**Oracle:** simulated preferred-region outage yields deny or approved alternative policy, never silent reroute.
-**Risk:** strict residency reduces availability; the trade-off belongs in admission policy, not worker improvisation.
-
-#### F-51 — Retrieval permission TOCTOU
-**Trigger:** A source is authorized during search but revoked before its chunks are assembled.
-**Causes / signal:** separate authorization phases or stale handles; access epoch changed between search and read.
-**Correction:** authorize at content read/assembly and record the decision epoch with each included source.
-**Oracle:** revocation between retrieval and assembly excludes the chunk from final context.
-**Risk:** repeated checks cost latency; batch only within an explicit, short consistency boundary.
-
-#### F-52 — Duplicate incident escalation
-**Trigger:** Several agents open parallel escalations for one failing effect.
-**Causes / signal:** no incident key or child agents cannot see existing escalation; multiple tickets share effect key.
-**Correction:** reserve a deterministic escalation key derived from the affected operation and failure class.
-**Oracle:** three concurrent ambiguity detectors produce one escalation record with three observations.
-**Risk:** overdeduplication can merge distinct failures; include tenant, operation, and bounded time window.
-
-#### F-53 — Unbounded reflection loop
-**Trigger:** Critique/replan cycles continue after evidence stops improving.
-**Causes / signal:** missing termination predicate or quality metric; iteration count exceeds configured cap.
-**Correction:** set loop budget, stopping evidence, and a fail-closed handoff state before enabling reflection.
-**Oracle:** unchanged critique output at the cap ends in review or failure, never another tool reservation.
-**Risk:** low caps may truncate useful repair; tune from measured tasks, not a universal number.
-
-#### F-54 — Source deletion after memory write
-**Trigger:** A durable memory remains retrievable after its underlying source is deleted or access is revoked.
-**Causes / signal:** detached embedding or missing deletion propagation; memory provenance points to unavailable source.
-**Correction:** retain source linkage, apply deletion/revocation propagation, and recheck permission at retrieval.
-**Oracle:** deleting a source makes related memory unavailable or visibly stale according to retention policy.
-**Risk:** eager deletion may remove independently valid facts; define derivation and ownership rules.
-
-#### F-55 — Incomplete terminal-state taxonomy
-**Trigger:** Runtime collapses denied, failed, cancelled, ambiguous, and succeeded outcomes into one “done” state.
-**Causes / signal:** UI simplification or event mapping loss; terminal record lacks a receipt/decision classification.
-**Correction:** model distinct terminal and nonterminal reconciliation states with permitted next actions.
-**Oracle:** lost response ends `RECONCILIATION_PENDING`; it cannot be rendered as success or failure without a receipt.
-**Risk:** more states complicate operations; a simpler label may be presented only if it links to the authoritative state.
-
-**Takeaway:** Diagnosis starts from the specific authority, state, or evidence contract that failed; it does not start by applying the same “stop everything and retry” script to every symptom.
-
-
-### Boundary trace exercises
-Each exercise is ILLUSTRATIVE and hand-derived. It is an executable-oracle specification, not evidence that a provider or production system was tested.
-
-#### Trace A — Admission before context
-**Precondition:** principal `P1` requests tenant `T1`; policy denies the requested workflow.
-**Input:** `request_id=R1`, `tenant=T1`, `principal=P1`, `workflow=export`.
-**Transition:** identity verification succeeds; admission evaluates current policy before any retrieval.
-**Invariant:** a denied request has no run checkpoint, context-source list, tool reservation, or effect key.
-**Expected output:** `DENIED(policy_reason)` with correlation R1.
-**Negative control:** assembling context before this decision makes unauthorized source access possible.
-**Recovery:** user changes scope or an administrator changes policy; the next attempt is a new admission.
-**Decision:** do not treat model availability as a reason to bypass an admission denial.
-
-#### Trace B — Compare-and-swap collision
-**Precondition:** run R2 is `READY` at version 7.
-**Input:** W1 and W2 each submit `READY(7) -> RUNNING(8)`.
-**Transition:** W1 commits first; W2 receives a version conflict.
-**Invariant:** exactly one successor version exists for every `(run_id, version)` pair.
-**Expected output:** W1 accepted at version 8; W2 reloads instead of overwriting.
-**Negative control:** last-write-wins can erase W1’s cancellation or checkpoint.
-**Recovery:** W2 reads version 8 and only proposes a legal transition from that state.
-**Decision:** conflict is useful evidence, not an exceptional success path to hide.
-
-#### Trace C — Receipt-less timeout
-**Precondition:** R3 reserved effect key K3 and the sink accepts no status query.
-**Input:** adapter sends K3; client transport times out.
-**Transition:** runtime cannot observe a receipt and cannot prove non-commit.
-**Invariant:** timeout changes knowledge only; it does not establish sink outcome.
-**Expected output:** `RECONCILIATION_REQUIRED(K3)` and no replacement key.
-**Negative control:** creating K3b produces a second intended business operation.
-**Recovery:** manual sink investigation or a separately approved compensating process.
-**Decision:** an integration without deduplication/query semantics limits safe automation.
-
-#### Trace D — Approval expiry
-**Precondition:** canonical action D4 has approval expiring at server time 25.
-**Input:** worker reaches adapter at server time 26 with an otherwise matching digest.
-**Transition:** adapter evaluates expiry using its authority clock.
-**Invariant:** an approval is valid only for matching action and unexpired authority interval.
-**Expected output:** `DENY_EXPIRED_APPROVAL`, no sink submission.
-**Negative control:** accepting a worker-local time of 24 allows a stale actor to decide validity.
-**Recovery:** regenerate or re-present the same canonical action for current approval.
-**Decision:** clocks are part of the authorization contract, not merely telemetry.
-
-#### Trace E — Parent cancellation
-**Precondition:** root R5 owns child R5.2, which has not reserved an effect.
-**Input:** cancellation commits on R5 before child admission.
-**Transition:** child checks parent lifecycle and cancellation version at its effect boundary.
-**Invariant:** a cancelled ancestor prevents descendants from initiating new effects.
-**Expected output:** child records `CANCELLED_BY_ANCESTOR`; no effect key is reserved.
-**Negative control:** cancelling only an in-memory worker leaves queued child messages live.
-**Recovery:** non-effecting cleanup may run under an explicit recovery contract.
-**Decision:** lineage is a state contract, not a label for observability alone.
-
-#### Trace F — Retrieval revocation
-**Precondition:** a search result points to source S6 at access epoch 10.
-**Input:** access to S6 is revoked at epoch 11 before context assembly.
-**Transition:** assembler rechecks permission when resolving the source handle.
-**Invariant:** search discovery is not a durable grant to read source content.
-**Expected output:** S6 excluded with a provenance record showing revocation.
-**Negative control:** trusting the epoch-10 search cache leaks newly restricted text.
-**Recovery:** rebuild context from sources still permitted at epoch 11.
-**Decision:** permission filtering belongs at the content boundary as well as search.
-
-#### Trace G — Manifest mismatch
-**Precondition:** checkpoint R7 pins tool schema M1; assigned worker advertises M2.
-**Input:** M2 changes an effecting field from optional to required.
-**Transition:** runtime compares pinned and available compatibility records before resume.
-**Invariant:** an incompatible contract cannot be repaired by defaulting missing effect fields.
-**Expected output:** migration, compatible worker routing, or review hold.
-**Negative control:** resume under M2 with a default field silently changes the action.
-**Recovery:** use tested migration or explicitly re-propose/re-authorize under M2.
-**Decision:** deployment rollback and workflow recovery need one shared manifest vocabulary.
-
-#### Trace H — Fair reconciliation lane
-**Precondition:** T8 has ten slow planning runs; T9 has one ambiguous submitted effect.
-**Input:** both tenants enter a bounded worker pool.
-**Transition:** scheduler applies its documented tenant and reconciliation lane policy.
-**Invariant:** planned work cannot starve receipt reconciliation indefinitely.
-**Expected output:** R9 receives service according to the stated maximum-wait policy.
-**Negative control:** FIFO without tenant accounting can make safety recovery wait behind speculative work.
-**Recovery:** increase measured capacity or alter documented weights; do not silently bypass policy.
-**Decision:** queue policy is a correctness and customer-impact choice, not only utilization tuning.
-
-**Takeaway:** A trace oracle states preconditions, a transition, an invariant, a negative control, and a recovery decision; a prose claim alone cannot test a boundary.
-
+Each entry gives what an operator sees, the mechanism, one competing cause, the check that separates them, and the numbers that make the risk concrete. All are HYPOTHETICAL teaching cases; none is a reported incident.
+
+### 8.1 Duplicate ticket from three retrying layers
+- **Symptom:** two tracker tickets with identical text, created 6 s apart, one abandoned.
+- **Mechanism:** adapter retries on timeout after send, and the runtime retries the step, with no effect key at either layer.
+- **Competing cause:** the tracker's own webhook retried a delivery, which also yields two objects but with distinct creation paths in its log.
+- **Check:** compare the `Idempotency-Key` header absence and the tracker's request log timestamps; duplicate paths with the same key are a receiver bug, without a key it is ours.
+- **Numbers:** A = 3² = 9 attempts at two layers; with p_lost = 0.002, expected duplicates per operation = 1 − 0.998⁹ = 0.017857, so 4,000 operations/day produce 71.43 duplicates/day.
+- **Containment:** pause the ticket action family, merge duplicates, notify requesters per policy.
+- **Prevention:** one adapter-owned key from canonical payload; runtime treats a missing key as a hard failure.
+- **Verification:** fault injection that drops the response after commit, asserting exactly one tracker object and two recorded attempts.
+- **Provenance:** HYPOTHETICAL; constructed for teaching.
+
+### 8.2 Control plane collapsed into the worker
+- **Symptom:** a policy change requires a full redeploy of the execution tier, and during the rollout some runs use the old version.
+- **Mechanism:** admission and execution share a process, so policy version travels with the deploy rather than with the request.
+- **Competing cause:** a stale policy cache in a separate service, which produces mixed versions without a rollout.
+- **Check:** read the policy version recorded on each effect; a version that correlates with pod start time is a collapse, a version that correlates with cache age is staleness.
+- **Numbers:** 2,400 runs/day is 100 runs/hour or 1.667 runs/min, so a 10 min rolling replacement puts 1.667 × 10 = 16.7 runs on mixed versions; at 20 replicas replaced one at a time the affected share is 1/20 of that per replica step.
+- **Containment:** pin the policy version at admission and re-check at the effect boundary for the mixed window.
+- **Prevention:** policy as a versioned input to the request, not a property of the binary.
+- **Verification:** deploy with a policy diff and assert every effect record carries one of two explicitly allowed versions, never a third.
+- **Provenance:** HYPOTHETICAL; illustrative scenario.
+
+### 8.3 Tenant derived from a forwarded header
+- **Symptom:** an internal caller sets a tenant header and reads another organisation's run.
+- **Mechanism:** the gateway forwards all headers and the service prefers the header over the token claim for convenience.
+- **Competing cause:** a legitimate multi-tenant support tool whose operator really is a member of both tenants.
+- **Check:** compare the token claim with the header value and with membership records; claim mismatch is a defect, membership match is legitimate.
+- **Numbers:** with 40 tenants, one trusted header exposes up to 39 foreign tenants per compromised client; stripping it at the edge removes all 39.
+- **Containment:** strip and log the header, audit reads in the last retention window.
+- **Prevention:** ignore the header entirely; resolve tenant from verified claims and load membership server-side.
+- **Verification:** send a valid token with a foreign header and require a 403 at the service, not merely at the gateway.
+- **Provenance:** HYPOTHETICAL; no incident attributed.
+
+### 8.4 Budget escape through nested spawning
+- **Symptom:** one request consumes 31× the advertised per-run token cap.
+- **Mechanism:** each spawned sub-agent receives a fresh cap rather than decrementing a tree budget.
+- **Competing cause:** a retry storm that also multiplies spend, but with a different shape: repeated identical contexts rather than distinct subtasks.
+- **Check:** group spend by run id and inspect distinct prompt hashes; identical hashes mean retries, distinct hashes mean spawning.
+- **Numbers:** 1 + 5 + 25 = 31 instances at depth 2 with s = 5; 31 × 120,000 = 3,720,000 tokens against a 120,000 headline.
+- **Containment:** freeze spawning, terminate depth-2 instances, reconcile partial effects.
+- **Prevention:** a tree-scoped counter decremented at admission of every child, plus an explicit depth cap.
+- **Verification:** a load test asserting total tokens for a run never exceed the tree cap, with 5 children per node.
+- **Provenance:** HYPOTHETICAL; arithmetic illustrative.
+
+### 8.5 Capability widening by a deputy service
+- **Symptom:** a tool executes with a scope the initiating user does not hold.
+- **Mechanism:** a token-minting deputy grants from its own scope instead of intersecting with the caller's.
+- **Competing cause:** a stale membership cache that still shows a revoked role, which yields the same outcome through a different path.
+- **Check:** compare the scope set on the effect's credential with the principal's current scope set; the deputy shows a superset, the cache shows an outdated but smaller set.
+- **Numbers:** user holds 2 scopes, deputy holds 6, tool requests 3 → intersection with user grants 2, deputy minting grants 3; the extra scope is 1 of 3 = 33.3% of the request.
+- **Containment:** revoke minted tokens, audit effects under the extra scope for the token lifetime.
+- **Prevention:** deputies intersect and never widen; encode that as a test over the scope lattice.
+- **Verification:** request a scope the user lacks and assert denial at the deputy, not only at the adapter.
+- **Provenance:** HYPOTHETICAL; constructed example.
+
+### 8.6 Timeout after send classified as failure
+- **Symptom:** the run records `failed`, the external system records success, and support sees a mismatch.
+- **Mechanism:** the adapter maps every transport error to failure, losing the distinction between before-send and after-send.
+- **Competing cause:** a genuinely failed request whose retry succeeded, which produces a similar mismatch in the opposite direction.
+- **Check:** compare the effect key's presence at the receiver with the local attempt record; present at receiver means after-send.
+- **Numbers:** 6 boundaries, one of them misclassifying, converts a 1× operation into a 27× attempt path as shown in §6; the mismatch rate then follows AB-08.
+- **Containment:** reclassify affected records to unknown, run reconciliation by key.
+- **Prevention:** three dispositions only — committed, not committed, unknown — and no mapping from timeout to not-committed.
+- **Verification:** a fault proxy that drops responses after forwarding, asserting the record is `unknown` and never `failed`.
+- **Provenance:** HYPOTHETICAL; teaching case, unmeasured.
+
+### 8.7 Two writers for the approval record
+- **Symptom:** an approval is shown as granted in one screen and pending in another.
+- **Mechanism:** the worker and the approval service both write the record, and each caches its own view.
+- **Competing cause:** replica lag on a read path, which converges within seconds rather than persisting.
+- **Check:** read the record from the primary and compare `updated_at` and writer identity; persistent divergence with two writer identities is the defect.
+- **Numbers:** 7 fragments, 2 ambiguous → ambiguity rate 0.286; at 1.5 disagreements/week the review load is 3/week ≈ 1.75 h/week.
+- **Containment:** freeze approval writes, reconcile open approvals against the decision log.
+- **Prevention:** one signing key, one writer; the worker reads and never writes.
+- **Verification:** attempt a worker write and assert a permission error rather than a successful update.
+- **Provenance:** HYPOTHETICAL; illustrative only.
+
+### 8.8 Model output used as authorization
+- **Symptom:** a tool call proceeds because the model asserted the user is an administrator.
+- **Mechanism:** the adapter trusts a `confirmed: true` field produced from model text.
+- **Competing cause:** a legitimate delegation recorded earlier and forgotten by the reviewer.
+- **Check:** replay the adapter authorization with the model's text removed; denial means the text mattered, success means real delegation exists.
+- **Numbers:** one prompt-injection success in a 4,000-request day is 0.025% of traffic and 100% of the affected account's exposure; percentage framing hides this asymmetry.
+- **Containment:** revoke the capability used, audit all effects in the window, notify per policy.
+- **Prevention:** adapters accept structured intents only, never prose; authority comes from policy evaluation.
+- **Verification:** an injection corpus in CI asserting zero authority changes, with the corpus version recorded.
+- **Provenance:** HYPOTHETICAL; no measured exploitation.
+
+### 8.9 Hop count growth during an incident
+- **Symptom:** p99 latency rises from 6.84 s to 13.08 s with no code deploy.
+- **Mechanism:** a debugging proxy added two synchronous hops, each with a 120 ms overhead and one extra retry layer.
+- **Competing cause:** model provider latency degradation, which raises `t_model` and leaves hop count unchanged.
+- **Check:** decompose measured latency into model time and hop time; hop share rising from 21.05% to 58.7% with flat model time indicates added hops rather than a slower provider.
+- **Numbers:** 6 hops × 40 ms = 240 ms per call; 8 hops × 160 ms = 1,280 ms per call; per attempt 6 × (900 + 240) = 6,840 ms becomes 6 × (900 + 1,280) = 13,080 ms, and hop share moves from 1,440/6,840 = 21.05% to 7,680/13,080 = 58.72%.
+- **Containment:** remove the proxy from the request path; use sampled out-of-band tracing.
+- **Prevention:** a latency budget per boundary, enforced in review; any new synchronous hop must state its milliseconds.
+- **Verification:** a synthetic request that asserts total hop overhead below a threshold, failing the build on regression.
+- **Provenance:** HYPOTHETICAL; numbers illustrative.
+
+### 8.10 Audit record missing the policy version
+- **Symptom:** an auditor asks which policy allowed an action and the record cannot answer.
+- **Mechanism:** the adapter writes tenant, principal and run but not the policy version evaluated at dispatch.
+- **Competing cause:** the field exists but was populated from a default, which looks present and answers incorrectly.
+- **Check:** join each effect to a policy bundle version and count rows with no match; unmatched rows are genuine gaps, matched-but-wrong rows surface as a constant version across releases.
+- **Numbers:** 5 of 6 fields present gives attribution 0.833; at 8,000 effects/day that is 1,334 unattributable effects/day, or 40,020 over a 30-day retention window.
+- **Containment:** backfill from the control plane's decision log where timestamps allow, and mark the rest unrecoverable.
+- **Prevention:** make the six attribution fields non-nullable at the schema level, so omission fails the write.
+- **Verification:** a schema test that rejects an effect record with any of the six fields absent or empty.
+- **Provenance:** HYPOTHETICAL; constructed for the exercise.
+
+### 8.11 Quota checked after the first model call
+- **Symptom:** a tenant over its daily quota still generates spend, and the overage scales with how expensive the first call was.
+- **Mechanism:** the quota counter is decremented in the runtime after the model returns, so admission never sees the exhausted state.
+- **Competing cause:** a quota counter that is checked at admission but shared across tenants, which produces the opposite symptom: one tenant is blocked while others are under limit.
+- **Check:** compare the timestamp of the first billed call with the timestamp of the admission record for over-quota runs; a billed call before any admission record means the check is absent, not merely late.
+- **Numbers:** a 500-request/day quota exceeded by 4% is 20 requests/day; at 57,000 tokens each that is 1,140,000 tokens/day of unbilled work, and at a 30-day window 34,200,000 tokens.
+- **Containment:** hard-stop the tenant, credit or bill per the contract, and record the overage explicitly rather than silently absorbing it.
+- **Prevention:** reserve quota at admission with a conditional decrement, then reconcile the reservation against actual usage.
+- **Verification:** drive one synthetic tenant to exactly the quota and assert the (quota+1)-th request is rejected before any model call is dispatched.
+- **Provenance:** HYPOTHETICAL; illustrative arithmetic only.
+
+### 8.12 Replay service holds adapter credentials
+- **Symptom:** rebuilding a day of history creates external objects.
+- **Mechanism:** the replay tool runs the same code path with the same credential as live execution, so replayed intents are indistinguishable from new ones.
+- **Competing cause:** a duplicate broker delivery to a live consumer, which also produces external objects but keeps the original event ids.
+- **Check:** compare event ids and creation times; distinct ids in one burst indicate replay, repeated ids indicate redelivery.
+- **Numbers:** 40,000 recorded events replayed with a working adapter produce 40,000 dispatches; with the adapter credential removed, the same replay produces 40,000 state transitions and 0 effects.
+- **Containment:** revoke the replay credential, enumerate and reverse objects created inside the replay window.
+- **Prevention:** separate replay into a state-only mode with no effecting credentials, and make that separation a deployment property rather than a code flag.
+- **Verification:** run replay against a sandbox receiver and assert zero objects created while the state digest still matches the recorded state.
+- **Provenance:** HYPOTHETICAL; teaching scenario.
+
+### 8.13 Cancellation treated as rollback
+- **Symptom:** a user cancels, the UI confirms cancellation, and the effect still appears in the external system an hour later.
+- **Mechanism:** cancellation transitions the run to a terminal state immediately, while the adapter's in-flight call completes afterwards.
+- **Competing cause:** the external system's own delayed posting, which produces the same visible outcome with no in-flight call at all.
+- **Check:** compare the external object's creation time with the adapter's submit time; a creation after submit indicates the call was in flight, a creation long after submit indicates the receiver's queue.
+- **Numbers:** 4 in-flight effects per cancelled run at a 30 s timeout and a 10 s poll interval means up to 40 s of undetermined work, which is 4 poll cycles per run.
+- **Containment:** re-open the affected runs as compensating runs, notify the requester with the actual state.
+- **Prevention:** model `cancelling` as a distinct non-terminal state whose exit requires a disposition for every in-flight effect.
+- **Verification:** cancel during a deliberately slow call and assert the state sequence contains `cancelling` before any terminal state, with exactly one terminal write.
+- **Provenance:** HYPOTHETICAL; constructed example.
 
 ## 9. Complexity & Cost Analysis
-A request trace stores at least one record per transition and tool attempt. If `n` is the number of attempts, append-only audit storage is `O(n)` records and reconstruction is `O(n)` without snapshots; a snapshot every `k` transitions bounds replay of recent state to `O(k)` while adding snapshot writes. This is an algorithmic statement, not a throughput benchmark.
 
-For the illustrative six-call budget, six attempt events plus one admission, one checkpoint, and one terminal record give nine minimum audit events before receipts or model payloads. Retention cost depends on bytes/event, encryption, replication, and policy; no price is asserted. Do not retain raw prompts by default merely because a run is auditable.
+### 9.1 Asymptotic behaviour of the request path
 
-**Takeaway:** Size audit and recovery from transition volume and retention policy, not from model-token intuition.
+- Admission: one indexed read plus policy evaluation, effectively O(1) per request in the tenant and quota dimensions, O(p) in the number of applicable policy rules p.
+- Versioned transition: O(1) with a primary-key lookup; the cost is dominated by write durability, not by search.
+- Context assembly: O(c) in context tokens c, because every token is serialised and transmitted; this dominates the per-call cost by roughly an order of magnitude over all other per-call work.
+- Adapter validation: O(f) in payload fields f, trivially small relative to a model call.
+- Amplification: O(R^L) attempts, which is the only term in this list that grows exponentially in a design parameter.
+- Attribution join: O(1) per record with an index on run id, O(n log n) for a batch reconciliation of n records.
+
+The practical consequence: every complexity term except amplification is benign at realistic scale, and amplification is exponential in the number of retrying layers. Design review should therefore spend its time on retry placement, not on micro-optimising admission.
+
+### 9.2 Back-of-envelope sizing
+
+**ILLUSTRATIVE.** Same parameters as §5, varied one at a time.
+
+```text
+latency budget (6 hops at 40 ms, 6 model calls at 900 ms)
+  per model call     = 900 + 240 = 1,140 ms; each call crosses every hop, so the
+                       hop cost is paid per call and not amortised across calls
+  per attempt        = 6 * 1,140 = 6,840 ms
+  hop share          = 1,440 / 6,840 = 0.2105 -> 21.05%
+  attempts in 30 s   = 4 (27,360 ms) with 2,640 ms headroom
+
+amplification (R = 3)
+  L = 2 ->   9 attempts -> 18.0 s of downstream time
+  L = 3 ->  27 attempts -> 54.0 s
+  L = 4 ->  81 attempts -> 162.0 s
+  ratio 81/9 = 9 = 3^2, not 2 -> amplification is not linear in layers
+
+duplicate exposure (p_lost = 0.002, 4,000 operations/day)
+  0.998^3  = 0.994011992 -> 1 - that = 0.005988008 ->  23.95/day
+  0.998^27 = 0.947381    -> 1 - that = 0.052619    -> 210.48/day
+  0.998^81 = 0.850303    -> 1 - that = 0.149697    -> 598.79/day
+  ratio 598.79 / 23.95 = 25.0, versus 81/3 = 27 attempts ratio: the duplicate
+  rate grows more slowly than attempts because the exponent saturates
+
+budget tree (c = 6 calls, s = 5, cap 120,000 per instance)
+  depth 1: instances 6,     calls  36, ceiling   720,000
+  depth 2: instances 31,    calls 186, ceiling 3,720,000
+  depth 3: instances 156,   calls 936, ceiling 18,720,000
+```
+
+The budget block is the one that ends discussions. At depth 3 the ceiling is 18.72 million tokens, which is not a runaway model; it is arithmetic on a configuration that permits five children per node. Nothing in the model's behaviour has to be unusual for it to happen.
+
+The duplicate block carries a subtler lesson. Going from 3 to 81 attempts multiplies attempts by 27 but duplicates by only 25, because (1 − 0.998ⁿ) saturates as n grows. That means an argument of the form "three more retries barely changed the duplicate rate" can be true and still be the wrong conclusion: the cost is in the attempts and the latency, and the duplicates are merely the part that becomes visible.
+
+### 9.3 Cost per accepted outcome
+
+The only defensible cost unit is currency per accepted business outcome, because attempts and calls are intermediate quantities that a retry policy can inflate without bound.
+
+```text
+ILLUSTRATIVE unit economics for the §5 shape
+  model tokens per attempt        = 6 * 9,500 = 57,000
+  attempts per accepted outcome   = 1.6 (client retries plus internal retries)
+  tokens per accepted outcome     = 57,000 * 1.6 = 91,200
+  downstream calls per outcome    = 1.6 * 3 = 4.8 (adapter retries included)
+  suppressed duplicates per outcome = 4.8 - 1 = 3.8
+  attribution records per outcome = 1 effect row + 4.8 attempt rows = 5.8
+```
+
+Read the third line against the fifth: for every accepted ticket, the system records 5.8 rows and performs 4.8 downstream calls. The rows are cheap; the calls are not, and 79.2% of them (3.8/4.8) exist only to be suppressed. That ratio, not the retry count, is the honest measure of whether deduplication is masking an amplification problem.
+
+Environment for any real measurement is OPEN here: database engine and version, broker, model provider, region and hardware class are all unspecified. Any latency or cost figure in this sheet is therefore a design estimate, not a benchmark.
+
+A benchmark that would settle the retry question: replay 4,000 operations with the tracker's p99 held at 2 s, inject a 30 s hang on 1 in 200 calls and a post-commit response drop on 1 in 500, then report arrivals per intended operation, duplicates accepted, unobserved downstream seconds after the client deadline, and tokens per accepted outcome. Report sample size, dates, versions and price date alongside.
 
 ## 10. Key Theorems / Results Reference
-- **Safety invariant (DERIVED):** If every accepted transition checks tenant, expected version, and current authorization, stale writers cannot overwrite the same versioned record.
-- **At-least-once delivery consequence (DERIVED):** A lost response cannot distinguish “not received” from “received but response lost”; safe automatic retry requires an idempotency/reconciliation contract.
-- **Least privilege (SOURCED):** NIST defines least privilege as granting only the minimum access needed. See [NIST glossary](https://csrc.nist.gov/glossary/term/least_privilege), accessed 2026-11-09; it does not validate this illustrative architecture.
-- **Prompt injection boundary (SOURCED):** Untrusted content can manipulate model instructions; use it as a threat-model input, not authority. See [OWASP LLM01:2025](https://genai.owasp.org/llmrisk/llm01-prompt-injection/), accessed 2026-11-09.
 
-**Takeaway:** These results constrain a design; none establishes a vendor’s exact behavior.
+| Result | Statement and hypotheses | Practical use | What it does not imply | Origin |
+|---|---|---|---|---|
+| Multiplicative retry amplification | independent retries at L layers multiply attempts by R^L | place retries at exactly one layer | anything about latency distributions | DERIVED §4.1 |
+| End-to-end idempotence needs a key | a receiver can collapse repeats only if repeats are distinguishable | design the effect key before the retry policy | that every receiver implements dedup | DERIVED §4.3 variant B |
+| Single-writer invariant | one valid writer credential per fragment gives one accepted write per version | enforce ownership by credential | that the writer is correct | DERIVED §4.1 |
+| Fencing beats leases alone | a monotonic token lets a receiver reject a stale holder | safe takeover on shared storage | that a third-party API honours tokens | DERIVED §4.3 companion sheet |
+| Little's law | L = λW for stable long-run averages | cross-check concurrency against latency | tail behaviour under growing backlog | Little (1961) |
+| Intersection of delegated scopes | effective scope is the intersection when each link narrows | audit delegation chains | the same under a minting deputy | DERIVED §4.2 |
+| Idempotent method semantics | HTTP defines idempotence in terms of intended effect | reason about transport retries | that any POST is safe to repeat | RFC 9110 §9.2.2 |
+| Least privilege at the resource | authorization is evaluated per request and resource | place enforcement below business logic | that a given product implements it | NIST SP 800-207 |
+
+### Source and evidence registry
+
+- **S1 — RFC 9110 §9.2.2, idempotent methods:** <https://www.rfc-editor.org/rfc/rfc9110#section-9.2.2>; supports the semantics of idempotent methods as a property of intended effect, and nothing about a vendor's deduplication.
+- **S2 — Little, J. D. C. (1961), Operations Research 9(3):** the queueing identity L = λW for stable averages; used only as a cross-check, never as a latency model.
+- **S3 — NIST SP 800-207 (2020), Zero Trust Architecture:** per-request, per-resource authorization as a design stance; not a certification of any implementation.
+- **S4 — OWASP LLM Top 10 (prompt injection):** <https://genai.owasp.org/llmrisk/llm01-prompt-injection/>; supports treating model input as untrusted, and does not claim any single mitigation is sufficient.
+- **S5 — PostgreSQL row security documentation:** <https://www.postgresql.org/docs/current/ddl-rowsecurity.html>; supports the qualified claim that policies apply subject to role and bypass rules.
+- **S6 — Unit topic index:** the `INDEX.md` topic list for this collection; inventory evidence only, and it does not describe any implementation.
+
+Every number in §§4, 5 and 9 was derived here from the stated parameters and is ILLUSTRATIVE. No production latency, duplicate rate, cost or incident outcome is claimed.
+Provider behaviour — deduplication window, key retention, lookup-by-key support — is OPEN and requires the provider's own contract.
+Organisational rules — data classification, approval authority, retention and residency — are OPEN and require owner confirmation before any of this is implemented.
 
 ## 11. Interview / Exam Questions
-1. **Why is a session ID not authorization?** It locates state but can be guessed, replayed, or stale; authorize the authenticated principal on every protected read/action. *Follow-up:* cache policy only with a bounded invalidation contract.
-2. **What does a timeout prove?** Only that the caller lacks a response; it does not prove the sink did not commit. Reconcile by operation key.
-3. **Calculate the call cap for five branches and four calls each.** `5*4=20` attempts/run, under fixed independent caps. This is not an effect count.
-4. **When does a deterministic workflow beat a planner?** When routes and actions are known and auditability/minimal surface matter more than adaptive decomposition.
-5. **Why use a compare-and-swap version?** It turns concurrent stale writes into an explicit conflict. A lock lease without fencing can still allow an expired owner to write.
-6. **A tool schema validates. Why can execution still be denied?** Schema validity says arguments have shape; authorization decides whether this principal, resource, and time are permitted.
-7. **What state must precede an effect?** A durable intent/effect key and enough canonical arguments to reconcile; otherwise recovery cannot know which operation was intended.
-8. **How would you test cross-tenant isolation?** Create identical session labels in two tenants, attempt cross reads and tool calls, and expect deny/isolation in traces.
-9. **What changes if the sink has no receipt query?** Automatic retry is unsafe after ambiguity; choose manual reconciliation, a compensating process, or a different integration.
-10. **What is a plausible wrong fix for duplicate effects?** Retrying with a new request ID; it removes correlation and can create a second business operation.
-11. **Why is a lease not sufficient for exclusive execution?** A paused owner can resume after expiry. A receiver-enforced fencing token rejects the stale owner. *Follow-up:* if the external sink cannot accept fencing, isolate the effect behind one serialized adapter or do not claim exclusivity.
-12. **The clock may skew by four seconds. What is the safe decision?** Do not use local expiry as a write permission. Obtain/renew ownership through the authority and require the receiver to reject older fencing tokens. *Red flag:* “make the lease five seconds longer” without considering delayed workers.
-13. **What does cancellation mean after `EFFECT_SUBMITTING` is persisted?** It blocks future effects but does not establish that the current one failed. Reconcile K1 and record a terminal state that preserves both cancellation and receipt outcome.
-14. **How should an approval change when a ticket’s priority changes?** Canonicalize all effect-relevant fields, compute a new digest, and require a new authorization if it differs. Reusing approval for a paraphrased action is a binding failure.
-15. **A trace shows only service-account identity. What can you conclude?** Which service called the sink, not which user or delegated policy justified the action. Inspect the delegation record, tenant, principal, and policy decision before accepting the audit trail.
 
-**Takeaway:** Strong answers name the invariant, the uncertainty, and the observable test.
+Scoring: 0 unsafe or wrong; 1 partially right with a critical gap; 2 correct with stated assumptions; 3 correct, defends a trade-off and names a verification. The questions mix recall, calculation and diagnosis; answers differ deliberately.
+
+### Q01. Why is "agent" a bad name for a component boundary?
+**Answer:** it names four different things at once — proposal loop, product workflow, runtime and delegated authority — so ownership cannot be assigned while the word is undivided.
+**Reasoning:** a boundary is defined by a contract and a credential, and the merged word provides neither; any team can claim to own "the agent".
+**Worked check:** nine layers in §7.1 with ten distinct owners; merging three into one drops the count to seven and leaves three collapse symptoms unowned.
+**Boundary:** the naming problem is not cosmetic — it is the reason retry ownership is usually unassigned, which is what §4.1 then punishes.
+
+### Q02. Compute the attempt count for retries at the edge, the runtime and the adapter, two retries each.
+**Answer:** R = 3, L = 3, so 27 attempts; adding a client that also retries twice gives 81.
+**Reasoning:** the factors multiply because each layer re-invokes the one below it; the exponent is the number of independent retrying layers.
+**Worked check:** 3³ = 27 and 27 × 3 = 81; the ratio 81/27 = 3 confirms one layer adds exactly one factor.
+**Boundary:** the product is a ceiling for configured retries, and it understates reality when a layer retries internally without declaring it.
+
+### Q03. A tracker hangs for 30 s. What does the client observe, and what does the tracker observe?
+**Answer:** the client sees a timeout at its own deadline; the tracker may see up to R^L attempts arriving, most of them after the client abandoned the request.
+**Reasoning:** each layer's timeout is shorter than the one above it, so retries cascade downward while the caller has already returned.
+**Worked check:** at 2.0 s per attempt and 81 attempts, 162 s of downstream time against a 30 s client deadline leaves 132 s unobserved, which is 81.5% of the work performed.
+**Boundary:** if the adapter retries a non-idempotent call, those unobserved attempts create real duplicates; if a key exists, they are suppressed but still billed.
+
+### Q04. Where must an effect key be created, and why not at the transport layer?
+**Answer:** in the adapter, from canonical business content plus the run and step identity, and persisted before the first send.
+**Reasoning:** the transport layer sees one attempt, so any key it generates changes per attempt and cannot collapse them; business content is what makes two attempts the same intent.
+**Worked check:** with p_lost = 0.002 and A = 27, expected duplicates per operation are 1 − 0.998²⁷ = 0.052619, which at 4,000 operations/day is 210.48/day; a stable key drives that to zero by construction.
+**Boundary:** the key does nothing if the receiver ignores it; verify by sending the same key twice and counting objects.
+
+### Q05. What is the difference between a lease and a lock, numerically?
+**Answer:** a lease grants action until an expiry; a lock denies action to others. Neither stops a paused holder, so fencing is what actually prevents the stale write.
+**Reasoning:** expiry is a permission change at the scheduler, and a partitioned process cannot be told that its permission changed.
+**Worked check:** 30 s lease, 45 s pause → 15 s overlap; at 3 writes/s that is 45 writes at risk, all rejected when the receiver compares a monotonic token.
+**Boundary:** a receiver that logs tokens without comparing them leaves 45 writes undetected, converting prevention into slow detection.
+
+### Q06. A sub-agent gets its own token cap. What is the tree ceiling at depth 2 with five children?
+**Answer:** 31 instances (1 + 5 + 25), so 31 × 120,000 = 3,720,000 tokens against a headline of 120,000, a 31× overstatement.
+**Reasoning:** caps are per node and the tree is not a node, so the ceiling is the sum over instances.
+**Worked check:** 1 + 5 = 6 at depth 1 giving 720,000; adding 25 gives 31 and 3,720,000; the increment 25 × 120,000 = 3,000,000 matches the difference.
+**Boundary:** depth 3 with the same fan-out gives 156 instances and 18,720,000 tokens, which is why a depth cap is a budget control.
+
+### Q07. Delegation chain: user holds 2 scopes, run holds 3, tool needs 1. What happens?
+**Answer:** the effective scope is the intersection, so the tool's need is granted only if it lies inside the user's 2; otherwise the call is denied.
+**Reasoning:** each link must narrow; intersection is the operation that makes the narrowest link binding and keeps the audit chain meaningful.
+**Worked check:** user {orders.read, tickets.read}, run adds tickets.write, tool needs tickets.write → intersection lacks it → deny; adding one minting link that widens permits 3 of 3, a 33.3% expansion of the requested set.
+**Boundary:** intersection is only sound when no link can mint; test by requesting a scope the user never held.
+
+### Q08. Which of six attribution fields would you add first if you could add only one?
+**Answer:** the policy version, because it is the only field that connects an effect to the decision that allowed it.
+**Reasoning:** tenant and principal are usually present because they are needed for filtering; policy version is the field nobody needs until an audit, so it is the one that goes missing.
+**Worked check:** 5 of 6 fields gives attribution 0.833 and 1,334 unattributable effects/day at 8,000/day; over 30 days that is 40,020 records with no join to a decision.
+**Boundary:** a present-but-defaulted policy version is worse than an absent one, because it survives a schema check and misleads the auditor.
+
+### Q09. Six hops at 40 ms and six model calls at 900 ms: what fraction of attempt latency is boundary overhead?
+**Answer:** 1,440 ms of 6,840 ms, which is 21.05%.
+**Reasoning:** the per-call cost is model plus hop overhead, and hops are additive per call while the model time is per call as well.
+**Worked check:** per call 900 + 240 = 1,140 ms; 6 calls give 6,840 ms; hop time is 6 × 240 = 1,440 ms; 1,440/6,840 = 0.21053.
+**Boundary:** with 8 hops at 160 ms the hop time becomes 6 × 1,280 = 7,680 ms of a 13,080 ms attempt, or 58.72%, so hop overhead can dominate after an incident-time proxy is added.
+
+### Q10. Diagnose: p99 latency tripled, no deploy, model provider metrics flat.
+**Answer:** a synchronous hop was added somewhere in the path, most likely by an observability or debug proxy, since model time is unchanged.
+**Reasoning:** hop overhead is additive and multiplicative across calls, so a per-hop increase shows up as a step change unrelated to deploy events.
+**Worked check:** at flat model time of 900 ms, 17,640 ms per attempt over 6 calls is 2,940 ms per call, so the implied hop overhead is 2,940 − 900 = 2,040 ms against 240 ms before, an 8.5× growth that network variance cannot produce at six hops.
+**Boundary:** a retry layer added at the same time confounds the reading; count downstream arrivals to separate them.
+
+### Q11. Why is "last write wins" acceptable for a counter and unacceptable for a cancellation flag?
+**Answer:** a counter's value is a quantity where a lost increment costs accuracy, while a flag encodes an authority decision where a lost write reverses intent.
+**Reasoning:** the two fragments have different invariants: monotone counting versus monotone intent, and only the second requires that a later writer cannot revive an earlier state.
+**Worked check:** 7 fragments, 2 with two writers → 0.286 ambiguity; at 1.5 disagreements/week each the review load is about 1.75 h/week, or 91 h/year, against hours to revoke a credential.
+**Boundary:** even a counter needs a conditional decrement when a budget is enforced, otherwise concurrent decrements can overspend.
+
+### Q12. What does a boundary need beyond an input and an output schema?
+**Answer:** a credential, a declared failure mode and a recovery rule — the three elements that determine what happens when the hop is crossed under stress.
+**Reasoning:** schemas describe the happy path; recovery rules are what an incident uses, and their absence is why two teams each assume the other retries.
+**Worked check:** 6 boundaries × 5 elements = 30 declarations; at 24 present, completeness is 0.80 with 6 missing classes, and their arrangement matters more than the ratio.
+**Boundary:** a recovery rule that says "retry" without stating whether the failure was before or after send is not a recovery rule.
+
+### Q13. How would you prove that exactly one layer retries?
+**Answer:** force a downstream hang longer than every configured timeout, then count arrivals at a controlled receiver: the count equals the retrying layers' product, and 1 means one layer.
+**Reasoning:** configuration files lie about inheritance; a controlled receiver counts what actually happened.
+**Worked check:** expected 27 arrivals with three retrying layers at two retries; observing 9 means one layer's retries were disabled by a timeout shorter than the hang.
+**Boundary:** an async queue in the path decouples the count from the client deadline, so the receiver must record arrival timestamps too.
+
+### Q14. What would you measure before claiming the request path is production-ready?
+**Answer:** arrivals per intended operation, duplicates accepted, unobserved downstream seconds, tokens per accepted outcome, and attribution completeness across all effect records.
+**Reasoning:** each maps to one invariant in §4, and an invariant without a metric is an intention that nobody can falsify.
+**Worked check:** at 4,000 operations/day and 1.6 attempts per outcome, 6,400 attempt records/day give enough volume for a weekly duplicate rate but not for a daily p99.
+**Boundary:** any figure quoted without workload, versions and dates is a design estimate, which is all this sheet contains.
 
 ## 12. Quick Reference Card
-| Situation | Rule | Critical assumption | Avoid | Evidence |
-|---|---|---|---|---|
-| Model proposes action | Treat as untrusted intent | Adapter validates independently | Model-as-authority | DERIVED |
-| Retry after timeout | Query/reconcile same effect key | Sink exposes receipt or deduplication | New key retry | DERIVED |
-| Concurrent run update | CAS expected version | Atomic versioned store | Last-write-wins | DERIVED |
-| Tenant state read | Authorize at read/action | Identity propagation is intact | Session-ID-only checks | DERIVED |
-| Planner expansion | Enforce aggregate call/token budget | Descendants report usage | Per-agent uncapped counters | ILLUSTRATIVE |
-| Tool action | Bind canonical arguments to policy | Adapter controls execution | Free-form broad capability | SOURCED/DERIVED |
-| Source boundary | Visible filenames are syllabus only | Source bodies unavailable | Attributing unseen claims | OPEN |
+
+| Item | Value |
+|---|---|
+| Core rule | name one credentialed owner per decision, record and effect before discussing autonomy |
+| Amplification | A = R^L; 3 retries at 3 layers is 27 attempts, at 4 layers 81 |
+| Effect safety | stable key from canonical content + run + step, persisted before first send |
+| Budget | cap the tree, not the node; depth 2 with five children is 31× the headline |
+| Delegation | effective scope is the intersection; any minting link breaks the argument |
+| Latency | hops are additive per call; 6 hops at 40 ms was 21% of a 1,140 ms call |
+| Attribution | six required fields; missing one removes a join, not a column |
+| Ownership test | try the write from the wrong component; a success means two owners |
+| Failure classification | committed, not committed, unknown — never timeout to failed |
+| Evidence | all figures ILLUSTRATIVE; provider and organisational rules OPEN |

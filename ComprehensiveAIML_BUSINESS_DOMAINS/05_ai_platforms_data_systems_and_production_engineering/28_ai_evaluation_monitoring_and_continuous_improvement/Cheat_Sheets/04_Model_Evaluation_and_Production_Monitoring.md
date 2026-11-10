@@ -1,1283 +1,1521 @@
 ---
+title: "Model Evaluation and Production Monitoring"
+topic: "Paired offline and online evaluation of predictive and agentic services"
 collection: "ai-evaluation-monitoring"
-file_id: "04"
-topic: "Model evaluation and production monitoring"
-level: 3
-status: "draft; unreviewed"
-version: "1.0"
-created: "2026-11-07"
-reviewed: null
-review_trigger: "Changed label definition, deployment, population, or source evidence"
-notation_style: "plain-text"
-prerequisites: ["Binary classification and probability", "Basic statistical inference", "Production service operations"]
-source_status: "OPEN: inventoried source files unavailable"
-owner_role: "ML platform and evaluation maintainers"
-source_index: "INDEX.md"
+level: "core"
+evidence: "DERIVED"
+created: "2026-11-10"
+last_reviewed: null
+content_status: "draft"
 ---
+
 # Model Evaluation and Production Monitoring
+
+> **Evidence declaration.** Every formula below is derived from first principles and was recomputed
+> at the precision printed. Every dataset in the worked example is a constructed teaching scenario:
+> twenty thousand decisions, one thousand adjudicated positives, and a review team of stated capacity.
+> No organisation, deployment, or measured production result is described. Figures labelled
+> ILLUSTRATIVE exist so that a reader can check a diagnostic against an expected magnitude; none may be
+> cited as an observed benchmark, a vendor claim, or an industry norm.
+
 ## 1. File Header
-**Purpose:** Design an evidence-based monitoring and evaluation loop for predictive models and agentic services.
-**Audience:** ML engineers, evaluators, service owners, and incident responders.
-**Outcome:** Given predictions, event timestamps, delayed outcomes, and an operational constraint, define valid metrics and choose a proportionate response.
-**Prerequisites:** Binary confusion matrices, conditional probability, sampling uncertainty, event time, and service operations.
-**Exclusions:** Full causal identification, formal fairness policy, model training algorithms, and vendor-specific APIs.
-**Evidence:** All numerical scenarios are constructed; no deployment result is claimed.
-**Status:** Draft; not substantively reviewed; validation protocols are proposed rather than executed.
-**Retrieval cue:** Start at section 8 for symptoms, section 5 for delayed labels, and section 11 for interview practice.
-**Source boundary:** The inventory identifies `Agents_Stack_Infra/Module_09_Observability_and_Evaluation/05_production_monitoring.md` and `DS_Domain/Practical_ML_Design/ML_Design_Cheat_Sheets/04_Model_Monitoring_and_Drift.md`.
-Those files were unavailable in the working tree; neither their text nor their specific claims was inspected or copied.
-The two paths are topic provenance, not verified source citations.
-**Primary references:** [Google SRE Workbook, Implementing SLOs](https://sre.google/workbook/implementing-slos/) describes user-centered SLIs and error budgets; consulted 2026-11-07.
-[scikit-learn 1.9.1 common pitfalls](https://scikit-learn.org/stable/common_pitfalls.html) describes preprocessing consistency and leakage; consulted 2026-11-07.
-These references do not validate the illustrative figures or a particular product's quality.
-**Takeaway:** Treat operational health, predictive quality, and causal product value as different claims.
+
+### 1.1 Purpose
+
+This sheet teaches how to decide whether a scoring or agentic service is still doing what it was
+built to do, using evidence that is available at the moment the decision has to be made. The subject
+is not model fitting. It is the measurement contract that sits between a fitted artefact and an
+operational decision: which population was scored, which outcome definition applies, how long the
+outcome took to become known, what the score was compared against, and what uncertainty remains when
+the comparison is finished.
+
+The sheet is written for the reviewer who has to answer one of four questions on a given morning:
+should this version be promoted, should this version be rolled back, is this alert a real change or
+routine variation, and is the number on the dashboard answering the question the business asked.
+
+### 1.2 Audience and assumed background
+
+The reader is assumed to know binary classification, conditional probability, the difference between
+a rate and a count, and what an on-call rota does at three in the morning. Familiarity with logistic
+regression or gradient-boosted trees helps but is not required: nothing below depends on how a score
+is produced, only on what the score means once it exists.
+
+A reader who has never operated a service will still be able to follow the arithmetic, but the
+selection judgements in section 7 will read as arbitrary. Those judgements derive from constraints —
+review capacity, label latency, harm asymmetry — that only appear once a service has users.
+
+### 1.3 Learning outcomes
+
+After working this sheet a reader should be able to do six things without reference to anything else.
+
+1. State an evaluation protocol as a tuple of population, cut-off, outcome definition, maturity rule,
+   comparator, and decision rule, and detect a protocol that omits one of the six.
+2. Derive precision, recall, and their interval estimates from a confusion matrix, and explain why a
+   point estimate without a denominator definition is not a measurement.
+3. Derive the cost-optimal decision threshold from the two error costs and the prevalence, and explain
+   why the threshold that maximises F1 is usually not that threshold.
+4. Distinguish a monitoring signal, an evaluation estimate, and a causal claim, and refuse to let an
+   observation from one category be promoted into another without new evidence.
+5. Compute the review workload implied by an alert rate and show when that workload exceeds capacity
+   in a way that silently converts missed reviews into apparent precision.
+6. Design a verification step that replays both a triggering record and a boundary record.
+
+### 1.4 Scope and exclusions
+
+In scope: binary and multiclass classifier monitoring, ranking quality monitoring where an action
+follows a score, agent and LLM run success measurement where a rubric substitutes for a label,
+calibration, drift statistics used as investigation cues, threshold policy, label maturity, review
+capacity, regression gating, and the arithmetic of the associated uncertainty.
+
+Out of scope: the training algorithm, hyperparameter search, feature engineering method, formal
+fairness auditing under a legal standard, causal identification of a product effect, vendor API
+particulars, and cost accounting beyond the stylised currency units used in the examples. Fairness is
+touched only where it changes a measurement — for example when a slice is too small for its interval
+to support a claim. A reader who needs a policy decision on disparate impact must take it elsewhere;
+this sheet can only say what the data can and cannot support.
+
+### 1.5 Notation conventions
+
+One display convention is used throughout: formulas appear in fenced `text` blocks, and each symbol is
+defined at first use with meaning, units, and valid range. Proportions are dimensionless fractions in
+`[0, 1]` and are printed to five decimals when they come from the worked example. Counts are integers.
+Currency is a stylised unit written `cu` and never converted to a real currency. Durations are in days
+unless a suffix says otherwise. Percentages appear only in prose commentary, never inside a formula,
+because mixing the two is one of the most common sources of a factor-of-one-hundred error in a review
+document.
+
+Event time and processing time are kept distinct in every statement. Event time is when the thing
+happened to the user. Processing time is when the record of it arrived in the warehouse. A window over
+event time and a window over processing time select different rows, and the difference is not a
+rounding detail: it is the difference between "we scored these cases" and "we have learned about these
+cases", and conflating them is how an evaluation silently becomes a measurement of pipeline lag.
+
+### 1.6 Evidence status vocabulary
+
+Five statuses appear in this sheet and they are not interchangeable.
+
+- **measured** — observed on a stated population under a stated protocol, with the observation stored.
+- **derived** — computed by arithmetic from stated inputs; reproducible by any reader with the inputs.
+- **illustrative** — a constructed input chosen to make an arithmetic check possible.
+- **heuristic** — a rule of thumb with no derivation; useful for triage, inadmissible as a threshold.
+- **not-measured** — the quantity is named but no observation exists.
+
+Every number in this sheet is `derived` from `illustrative` inputs. That combination is legitimate and
+common in design work: it answers "what magnitude should I expect" without pretending to answer "what
+did this service achieve". The pair must travel together. A derived number quoted without its
+illustrative input label becomes a fabricated measurement in the hands of the next reader.
+
+### 1.7 Source boundary
+
+Topic provenance for this sheet is the unit topic map entry "production monitoring" and the sibling
+submodules 9.1 through 9.6 in the same unit, which cover training metrics, perplexity, benchmark
+design, judge and human evaluation, training-failure debugging, and infrastructure profiling. Those
+files exist in this tree and their headings were read to avoid duplication; their specific numeric
+claims are not reproduced here.
+
+No external document was available for inspection while writing. Statements about statistical
+procedures — Wilson intervals, the Dvoretzky–Kiefer–Wolfowitz inequality, CUSUM average run length,
+Little's law — are stated in their standard form and their assumptions are given explicitly so that a
+reader can check them against any textbook. Where a threshold such as "PSI above 0.2 means trouble"
+appears in industry writing, this sheet deliberately does not adopt it, because the statistic depends
+on binning and sample size and a universal cutoff is not derivable.
+
+### 1.8 How to use this sheet
+
+Read section 3 once for vocabulary, then section 4 for the derivations that matter, then work section
+5 with a calculator. Section 5 is the only place where the numbers interlock, and a reader who has
+reproduced the threshold ladder and the coverage correction will find the rest of the sheet a
+restatement of those two calculations in different clothes.
+
+For live debugging, jump to section 8. Each entry there is written as a discriminator: a check whose
+result differs under the competing explanations, runnable before any fix is attempted. For an
+interview or an exam, section 11 contains twelve questions of which seven require computation.
+
+**Takeaway:** an evaluation is a protocol with six parts; a monitoring signal is not an evaluation;
+and a derived number must travel with the label that says its inputs were constructed.
+
 ## 2. Concept Map / Mental Model
+
+### 2.1 Two loops, one decision point
+
+Production measurement has two loops that run at different speeds and answer different questions.
+
+The fast loop runs on data that exists at request time: request volume, error codes, latency
+percentiles, score distribution, feature freshness, action rates. It can be computed within seconds
+and it never needs the future. It can tell you that something changed. It cannot tell you whether the
+change harmed anyone, because harm is defined by an outcome that has not happened yet.
+
+The slow loop runs on data that requires the future to arrive: adjudicated outcomes, human rubric
+scores, downstream conversions, chargebacks, confirmed incidents. It can tell you whether the service
+was right. It arrives late, incompletely, and selectively.
+
 ```text
-Request + context -> feature contract -> model/version -> score or agent action
-       |                 |                   |                 |
-       v                 v                   v                 v
- volume, latency      freshness/schema    score mix       action/trace telemetry
-       |                 |                   |                 |
-       +-----------------+------- detect unusual change -------+
-                                       |
-                               triage and contain
-                                       |
-Prediction ID + event time -> eligibility and maturity -> outcome join -> quality estimate
-                                       |                    |
-                                selection audit       comparison and uncertainty
-                                       |                    |
-                         offline regression / human review / experiment
-                                       |
-                   decide: repair data, rollback, threshold, retrain, or observe
-                                       |
-                         independent validation and controlled rollout
+request --> features --> score --> action --> user experience --> outcome
+   |            |          |         |              |              |
+   |            |          |         |              |              +--> slow loop
+   |            |          |         |              +-----------------> (days to weeks)
+   |            |          |         +--------------------------------> action log
+   |            |          +------------------------------------------> score log
+   |            +-----------------------------------------------------> feature snapshot
+   +------------------------------------------------------------------> request log
+
+Fast loop reads the four left-most columns. Slow loop needs the right-most column.
+Neither loop alone can answer "is this version safe to keep".
 ```
-Monitoring is continuous collection and interpretation of production signals, often before ground truth exists.
-Evaluation applies an explicit task, population, outcome definition, and scoring protocol to estimate quality.
-Both can operate online or offline; neither is synonymous with the other.
-An agent can finish a run successfully while producing an incorrect or unsafe answer.
-A model can have stable infrastructure latency while its ranking quality degrades.
-A feature distribution change is a signal to investigate, not an automatic diagnosis of model failure.
-A downstream action can change the outcome being measured and thereby change the meaning of a label.
-**Takeaway:** Monitoring detects and localizes; evaluation determines what a model achieved under an explicit protocol.
-## 3. Foundational Definitions
-| Term | Definition and scope | Type / units | Common confusion |
+
+The decision point sits where the two loops meet. A promotion decision needs the slow loop, because
+promotion is a claim about correctness. A rollback decision can be triggered by the fast loop alone,
+because rollback is a claim about risk, and risk can be inferred from a mechanism that is visibly
+broken even when the harm has not yet been counted.
+
+### 2.2 Five layers that fail independently
+
+Measurement failures cluster into five layers. The layers are useful because a defect in one does not
+disturb the others, so cheap checks can eliminate whole layers before any statistics are needed.
+
+```text
+[1] RECORD     was the prediction logged, with version and timestamp?
+[2] JOIN       was the outcome attached as of the decision, not as of today?
+[3] SCORE      is the arithmetic right, including denominators and boundaries?
+[4] INTERPRET  does the number answer the question that was asked?
+[5] ACT        is the person or policy allowed to act on it, and is the action recorded?
+```
+
+A layer-1 defect shows up as rows that are missing or impossible. A layer-2 defect shows up as rows
+that are individually correct and jointly wrong — each value is right, the pair is from different
+moments. A layer-3 defect is right at the centre of the data and wrong at an edge. A layer-4 defect is
+arithmetically flawless and answers a neighbouring question. A layer-5 defect produces a defensible
+recommendation with no accountable effect.
+
+The ordering matters for triage cost. Counting rows is a single query. Reconstructing one record by
+hand is ten minutes of attention. Recomputing a stratified estimate is a query per stratum. Only the
+last two layers require judgement, so a triage that starts with judgement is a triage that will spend
+its budget on the wrong layer.
+
+### 2.3 The maturity axis
+
+Every evaluation of a deployed model is an evaluation of a cohort at a particular age. Two runs of the
+same query a week apart can produce different precision with no change to the model, because the set
+of decisions whose outcomes have arrived has grown.
+
+```text
+day 0        day 15              day 45                     day 75
+ |            |                   |                          |
+ decisions    half the labels    reporting cutoff           mature
+ scored       have arrived        for this quarter           for most horizons
+
+An estimate computed at day 15 and an estimate computed at day 75 answer:
+  day 15 -> "what is quality among cases that resolved quickly?"
+  day 75 -> "what is quality among cases that have resolved at all?"
+Neither answers "what is quality on the full cohort" unless coverage is handled.
+```
+
+The practical consequence is that coverage is not a data-quality footnote. It is a parameter of the
+estimator. Section 4.3 derives the inverse-probability correction; section 5.6 shows what it does to a
+precision figure that looked respectable.
+
+### 2.4 Why score drift is not quality drift
+
+A score distribution can move for at least five distinct reasons, and only one of them is a model
+problem.
+
+1. The input population changed and the model is behaving correctly on the new population.
+2. A feature's units or encoding changed, so the model is behaving correctly on corrupted inputs.
+3. The prevalence of the outcome changed, so the same discrimination produces a different score mix.
+4. The threshold or the downstream consumer changed, so the same scores are used differently.
+5. The relationship between inputs and outcome changed, so the model is now wrong.
+
+Reasons one through four are operational or population facts. Reason five is concept drift in the
+strict sense. A monitoring system that reports "score drift detected" for all five and stops there has
+produced a symptom, not a diagnosis, and the operator's next action — retrain — is correct for exactly
+one of the five. Retraining on corrupted inputs, which is reason two, makes the situation worse in a
+way that is invisible until the corruption is repaired.
+
+### 2.5 The claim ladder
+
+Four kinds of statement get confused in review documents, and they sit on a ladder where each rung
+requires strictly more evidence than the one below.
+
+| Rung | Claim | Minimum evidence | What it cannot support |
 |---|---|---|---|
-| Prediction | Model output for one decision at a recorded time | Event, score or label | Not the eventual outcome |
-| Feature | Input available to the model at decision time | Scalar/vector, feature-specific units | Not a future outcome |
-| Outcome | Event defined over a specified future horizon | Binary, numeric or categorical | Not necessarily observed immediately |
-| Cohort | Predictions selected by decision time and eligibility | Set of decision IDs | Not a label-arrival-time window |
-| Maturity | Time when outcome ascertainment should be substantially complete | Timestamp/duration | Not proof all labels arrived |
-| Coverage | Joined eligible labels divided by eligible predictions | Dimensionless fraction | Not model accuracy |
-| Feature shift | Change in input distribution | Comparison of distributions | Not necessarily quality loss |
-| Covariate shift | Input distribution changes while outcome conditional on inputs remains stable | Assumption about joint distributions | Not every feature shift |
-| Concept drift | Conditional outcome distribution given inputs changes | Distributional change | Not established by inputs alone |
-| Label shift | Outcome prevalence changes while input conditional on outcome stays stable | Specific distributional assumption | Not any observed class-mix change |
-| Statistical significance | Incompatibility of data with a specified null under a test | Test result | Not practical significance or causal proof |
-| Evaluation | Scored assessment under a declared protocol | Estimate and uncertainty | Not equivalent to uptime |
-| SLI | Defined indicator of service experience | Often good events / eligible events | Not the target itself |
-| SLO | Agreed target for an SLI over a period | Target fraction and window | Not an SLA contract |
-| Selection bias | Observed labels differ systematically from target population | Sampling mechanism | Not fixed by a bigger biased sample |
-| Calibration | Predicted probabilities agree with observed rates in defined groups | Conditional relationship | Not the same as ranking |
-| Precision | Positive outcomes among predicted positives | Fraction | Not recall |
-| Recall | Predicted positives among actual positives | Fraction | Not precision |
-| Trace | Linked events representing a request or run | Structured event graph | Not proof the final answer is correct |
-| Window | Explicit interval for input or event selection | Duration and clock | Not interchangeable with cohort maturity |
-Each probability refers to a specified population and time; individual outcomes remain uncertain.
-Define decision entity, version, treatment, horizon, label source, time zone, and excluded traffic before comparing rates.
-A metric without a denominator and eligibility rule is not an operational contract.
-**Takeaway:** Define the population, clock, and outcome before comparing numbers.
+| 1 | The service is up and responding | request-level success indicator | anything about correctness |
+| 2 | The service produced the outputs we intended | versioned log plus contract checks | anything about outcomes |
+| 3 | The service's outputs are associated with the intended outcome | mature cohort plus defined metric | that the service caused the outcome |
+| 4 | Changing the service changed the outcome | randomised or credible quasi-experiment | generalisation beyond the studied population |
+
+Most production disagreements are two people arguing at different rungs. The operator who says "error
+rate is fine" is at rung 1. The analyst who says "precision fell" is at rung 3. Both are right, and
+the sentence "the service is fine" is the sentence that is wrong, because it does not say which rung
+it is on.
+
+**Takeaway:** separate fast from slow signals, triage the cheap layers first, treat cohort maturity as
+part of the estimator, and never let a rung-2 observation be quoted as a rung-3 claim.
+
+## 3. Foundational Definitions
+
+### 3.1 The core vocabulary
+
+Each definition names the quantity, its unit or type, and the confusion it most often attracts. The
+confusions are the load-bearing part: a definition nobody misuses does not need to be written down.
+
+| Term | Definition and scope | Type, unit | Characteristic confusion |
+|---|---|---|---|
+| Decision | One scored case at one recorded moment, identified by a stable key | event | treated as a user or an account |
+| Eligible decision | A decision inside the declared population, window, and exclusion set | event subset | silently redefined between comparisons |
+| Score | The model's numeric output before any policy is applied | real in `[0,1]` or unbounded | treated as a probability when only a rank |
+| Threshold | The cut that converts a score into an action | policy parameter | treated as a property of the model |
+| Action | What the system did after the score: alert, block, review, none | event | treated as equivalent to the label |
+| Outcome | The adjudicated truth for a decision over a stated horizon | binary or graded | confused with the action or the score |
+| Horizon | Length of the future window over which the outcome is defined | duration | shortened mid-comparison without notice |
+| Maturity | Whether enough time has passed for the outcome to be substantially knowable | boolean per cohort | treated as "all labels arrived" |
+| Cut-off | The event-time boundary that freezes the cohort for evaluation | timestamp | confused with query run time |
+| Coverage | Eligible decisions with a usable outcome divided by eligible decisions | fraction | reported as accuracy |
+| Eligibility rule | The predicate that decides whether a decision belongs to the population | predicate | left implicit, then varied |
+| Prevalence | Outcome-positive share of the labelled population | fraction | assumed stable across windows |
+| Calibration | Agreement between predicted probability and observed frequency in groups | conditional property | conflated with discrimination |
+| Discrimination | Ability to rank positives above negatives | ordinal property | conflated with calibration |
+| Concept drift | Change in the outcome distribution conditional on the inputs | distributional change | inferred from input change alone |
+| Covariate shift | Change in the input distribution with the conditional outcome unchanged | distributional change | assumed to imply harm |
+| Label shift | Change in outcome prevalence with the conditional input distribution unchanged | distributional change | mistaken for concept drift |
+| Selection bias | The labelled subset differs systematically from the eligible population | sampling property | assumed away by larger samples |
+| Error budget | Permitted bad events over a window at a stated target | count | read as a percentage rather than a count |
+| Burn rate | Bad events consumed divided by budget for the same window | ratio | computed against the wrong target |
+| Regression gate | A pre-declared rule that blocks promotion when a suite fails | policy | rewritten after seeing the candidate |
+| Judge | A model or human applying a rubric to an output | instrument | treated as ground truth rather than measurement |
+| Trace | Linked record of the steps in one run | event graph | treated as proof of correctness |
+
+### 3.2 Population comes before metric
+
+Almost every evaluation disagreement that is not about arithmetic is about population. The same model
+can show precision 0.48 and precision 0.37 on the same day without either number being wrong, if one
+is computed over alerted cases that were reviewed and the other over all eligible decisions weighted
+back to the full population. Section 5.6 works this exact contrast.
+
+The discipline that prevents the argument is to write the population as a predicate before computing
+anything. "Decisions scored by model version 7 in the card-not-present channel, with a complete feature
+vector, excluding internal test accounts, in the calendar month of March, with outcomes adjudicated by
+45 days after the decision." That sentence is the population. Anything shorter is a sketch, and a
+sketch will be filled in differently by the next person.
+
+### 3.3 Action is not outcome
+
+The most expensive confusion in applied monitoring is treating the system's action as the label. It is
+attractive because the action is recorded at decision time and requires no waiting.
+
+An alert is not a fraud. A block is not a bad user. A flagged ticket is not a defect. Each is a decision
+the system made, informed by a model that may or may not be right. When an organisation measures "false
+positive rate" as the share of alerts that an analyst later closed as uninteresting, it has measured
+the analyst's triage policy against the alerting policy, not the model's correctness against the world.
+Both are worth measuring. The second one requires an adjudication that is independent of the decision
+being evaluated.
+
+The operational test is simple: if the label cannot disagree with the action for reasons unrelated to
+model quality, it is not a label. An analyst who is told to close anything without a documented reason
+will close things, and that closure rate will look like model performance.
+
+### 3.4 Latency is a property of the label, not of the model
+
+Labels arrive with a distribution of delays. Some outcomes resolve in minutes, some in weeks, and the
+fast ones are rarely a random sample of all outcomes. Two structurally different patterns dominate:
+
+- **Fast positives.** Fraud confirms quickly when the cardholder complains immediately, and slowly
+  when nobody notices. Early precision overweights the fast positives and reads too high.
+- **Fast negatives.** Support tickets resolved within the hour are mostly easy negatives; hard ones
+  linger. Early precision overweights easy negatives and also reads too high.
+
+Both patterns push the early estimate up, which is why "precision improved right after launch" is
+weak evidence. A rising precision series in the first days of a deployment is the default behaviour of
+a partially-labelled cohort, not an achievement.
+
+### 3.5 Capacity is part of the metric
+
+A metric that implies more human work than exists is not a metric, it is a queue. When an alert rate
+implies 95 reviews per day against a team that can handle 90, the backlog grows monotonically, and the
+backlog itself suppresses the measured false-positive rate, because unreviewed alerts do not get a
+label.
+
+This is the mechanism behind the most misleading pattern in monitoring: a service that looks
+increasingly precise precisely because it is drowning. Section 9.3 gives the queueing arithmetic.
+
+**Takeaway:** define the population as a predicate, never let an action stand in for an outcome, treat
+label latency as a sampling mechanism, and check capacity before believing a precision figure.
+
 ## 4. Core Formulas with Full Derivation
-### 4.1 Base: service indicator
-Validity: good and eligible events are counted once under the same definition and window; eligible count is positive.
-Derivation: a fraction is the count in the good subset divided by the count in its eligible parent set.
+
+### 4.1 Base case
+
+The base case is a service indicator: what fraction of eligible requests satisfied a good-event
+definition. Its derivation is the definition of a proportion, and its only interesting content is the
+error budget, which converts a target into a count.
+
 ```text
-FORMULA: SLI = G / N.
-WHERE: G is good eligible events; N is all eligible events; both are nonnegative integer counts.
-CONSTRAINT: 0 <= G <= N and N > 0; define what good means before observing the result.
-NUMERICAL EXAMPLE: G=9900 and N=10000 gives SLI=0.99 = 99%.
-INTERPRETATION: 100 events did not satisfy this specified good-event definition.
+FORMULA (indicator):  SLI = G / N
+WHERE: G = good eligible events [count]; N = all eligible events [count]; both integers, N > 0.
+CONSTRAINT: 0 <= G <= N. The good-event predicate must be fixed before the window opens, otherwise
+            the indicator can be redefined after seeing the data.
+NUMERICAL EXAMPLE: G = 4,313,000 and N = 4,320,000 give SLI = 4,313,000 / 4,320,000 = 0.9983796.
+INTERPRETATION: 7,000 requests failed the stated predicate; the rest satisfied it.
 ```
-Boundary: zero eligible events means undefined, not 100% success.
-For a 99.9% target over 10,000 eligible requests the allowed bad-event count is 10, not 100.
-The target, measurement point, window and exclusions must all be agreed, as emphasized by the SRE reference.
-### 4.2 General: confusion matrix and delayed labels
-Validity: predictions and adjudicated outcomes refer to the same eligible mature decision cohort and threshold.
-Derivation: partition predicted positives into true and false positives; partition actual positives into true positives and false negatives.
+
 ```text
-FORMULA: precision = TP/(TP+FP); recall = TP/(TP+FN); coverage = L/N.
-WHERE: TP, FP and FN are integer decision counts; L is cohort decisions with usable labels; N is eligible decisions.
-CONSTRAINT: Each denominator must be positive; coverage is not a quality metric and missing labels may be selective.
-NUMERICAL EXAMPLE: TP=60, FP=140, FN=40, L=1000, N=1000 gives precision=.30, recall=.60, coverage=1.
-INTERPRETATION: 30% of flagged cases are positive and 60% of all positives are flagged.
+FORMULA (error budget):  B = N * (1 - S)
+WHERE: B = permitted bad events in the window [count]; S = target [fraction of eligible events];
+       N = eligible events in the window [count].
+CONSTRAINT: N and the window must be identical to those used for the SLI, and the target must be
+            expressed over the same window length. A daily target applied to a monthly count is a
+            different commitment.
+NUMERICAL EXAMPLE: at S = 0.995 and N = 4,320,000, B = 4,320,000 * 0.005 = 21,600.
+                  at S = 0.999 and the same N, B = 4,320,000 * 0.001 = 4,320.
+INTERPRETATION: the same 7,000 failures consume 32.4% of the first budget and 162% of the second.
 ```
-Boundary: if outcomes are available only for flagged cases, recall for all decisions is not identified from these data alone.
-### 4.3 Variant: feature distribution comparison
-Validity: reference and current observations use identical feature semantics and fixed bins, with positive bin proportions.
-Derivation: summing signed differences weighted by log current/reference gives the symmetric divergence often called population stability index (PSI).
+
+The burn rate is the ratio that makes the budget useful, because it is dimensionless and therefore
+comparable across services of different volume.
+
 ```text
-FORMULA: PSI = sum_i (q_i - p_i) * ln(q_i/p_i).
-WHERE: p_i and q_i are reference and current fractions in bin i; ln is the natural logarithm.
-CONSTRAINT: Each distribution sums to one; every compared proportion is positive; compare like populations and feature definitions.
-NUMERICAL EXAMPLE: p=(0.5,0.5), q=(0.6,0.4); PSI=0.1*ln(1.2) - 0.1*ln(0.8) approximately 0.04055.
-INTERPRETATION: Binned marginal input composition changed; the value alone does not establish harm.
+FORMULA (burn):  R = F / B
+WHERE: F = failures observed in the window [count]; B = budget for that window at the agreed target.
+CONSTRAINT: F and B must cover the same eligible-event set and the same window length.
+NUMERICAL EXAMPLE: F = 7,000, B = 21,600 gives R = 0.324; with B = 4,320, R = 1.621.
+INTERPRETATION: identical traffic is comfortably inside one commitment and 62% outside another; the
+                only difference is the target that was agreed.
 ```
-A separately specified smoothing rule may avoid log zero but alters the estimator and must be reported.
-PSI depends on bins, sample sizes, cohort choice, and reference period; universal operational cutoffs are not justified here.
-### 4.4 Limits and counterexamples: statistical change versus impact
-Validity: the following standard error describes an independent Bernoulli sample with a fixed sample size; approximation is less reliable near boundaries or with small counts.
-Derivation: a Bernoulli observation has variance p(1-p); averaging n independent observations divides variance by n.
+
+Validity condition for section 4.1: the good-event predicate, the eligible-event predicate, the
+measurement point, and the window are all fixed in advance and identical between numerator and
+denominator. Break any one of the four and the ratio is still computable, still printable, and no
+longer a service indicator.
+
+### 4.2 General case
+
+The general case is a decision table with delayed, incomplete outcomes. The derivation has three
+steps: partition the mature cohort by prediction and outcome, define the ratios on the partition, and
+quantify each ratio with an interval whose assumptions are stated.
+
 ```text
-FORMULA: SE(p_hat) approximately sqrt(p_hat*(1-p_hat)/n).
-WHERE: p_hat is the sample proportion, n is its independent observation count, and SE is dimensionless.
-CONSTRAINT: Fixed sampling design, approximate independence, adequate counts; clustering requires an appropriate alternative.
-NUMERICAL EXAMPLE: p_hat=.5 and n=10000 gives SE=sqrt(.25/10000)=.005.
-INTERPRETATION: One standard error is 0.5 percentage points, not a causal effect or a 95% interval.
+FORMULA (partition):  N_mature = TP + FP + FN + TN
+WHERE: TP, FP, FN, TN are integer counts of mature eligible decisions;
+       TP = predicted positive and outcome positive; FP = predicted positive, outcome negative;
+       FN = predicted negative, outcome positive; TN = predicted negative, outcome negative.
+CONSTRAINT: every decision appears in exactly one cell; decisions without a usable outcome are not
+            in any cell and must be counted separately as pending.
+NUMERICAL EXAMPLE: 750 + 1,283 + 250 + 16,197 = 18,480 mature decisions.
+INTERPRETATION: 1,520 of 20,000 eligible decisions are outside the table entirely.
 ```
-A large sample can make a tiny harmless shift statistically detectable; a small sample can miss a consequential change.
-Repeated tests across many features and hours increase false-alert opportunities; predeclare a multiple-testing and sequential-monitoring strategy.
-A sudden feature shift can be a unit-conversion bug, an intentional product launch, or real population change.
-Stable feature marginals can coexist with changed feature interactions or changed outcomes conditional on the same features.
-**Takeaway:** A quantified shift is evidence about a chosen comparison, not proof of root cause or degraded utility.
+
+```text
+FORMULA (ratios):  precision = TP/(TP+FP);  recall = TP/(TP+FN);  FPR = FP/(FP+TN)
+WHERE: each denominator is a row or column total of the partition, all counts, all non-negative.
+CONSTRAINT: a denominator of zero makes the ratio undefined, not zero and not one.
+NUMERICAL EXAMPLE: precision = 750/2,033 = 0.36891; recall = 750/1,000 = 0.75000;
+                   FPR = 1,283/17,480 = 0.07340; specificity = 16,197/17,480 = 0.92660.
+INTERPRETATION: 63.1% of alerts are wrong by the adjudicated label, and three quarters of positives
+                are captured at this threshold.
+```
+
+The interval is not optional. A proportion from a finite sample has a sampling distribution, and the
+simple normal approximation fails exactly where monitoring lives — near zero and near one, and at
+small counts.
+
+```text
+FORMULA (Wilson interval):  centre = (p + z^2/(2n)) / (1 + z^2/n)
+                            half   = z * sqrt( p(1-p)/n + z^2/(4n^2) ) / (1 + z^2/n)
+WHERE: p = k/n is the observed proportion [dimensionless]; n = denominator [count];
+       z = standard normal quantile, 1.959964 for a two-sided 95% interval.
+CONSTRAINT: observations approximately independent and identically distributed within the cohort.
+NUMERICAL EXAMPLE: k = 750, n = 2,033 gives p = 0.36891, centre 0.36916, half 0.02096,
+                   interval [0.34820, 0.39012].
+INTERPRETATION: the plausible range for precision spans 4.2 percentage points, which is wider than
+                most threshold changes worth arguing about.
+```
+
+Derivation of the Wilson form, since it is the interval most often used without justification: the
+score statistic `(p_hat - p)/sqrt(p(1-p)/n)` is approximately standard normal; solving
+`|p_hat - p| <= z*sqrt(p(1-p)/n)` for `p` yields a quadratic whose two roots are the printed bounds.
+The inversion is what makes the interval behave at boundaries, where the uncorrected Wald form
+collapses to zero width. Section 4.4 shows that collapse.
+
+### 4.3 Variants
+
+Three variants do most of the practical work: the cost-optimal threshold, the coverage correction, and
+the probability-score decomposition.
+
+#### 4.3.1 Cost-weighted threshold
+
+An operating threshold is an economic decision, not a statistical one. Deriving it takes one line of
+expected-cost algebra once the costs are named.
+
+```text
+FORMULA (expected cost per decision):
+    C(t) = C_FP * P(score >= t | negative) * (1 - pi) + C_FN * P(score < t | positive) * pi
+WHERE: t = threshold [score units]; C_FP = cost of a false positive [cu];
+       C_FN = cost of a false negative [cu]; pi = prevalence [fraction].
+CONSTRAINT: costs are per decision and constant across the population; if either cost depends on the
+             score or the segment, the derivation must be reworked per segment.
+NUMERICAL EXAMPLE: pi = 0.05, C_FP = 8, C_FN = 42, at t = 0.25 with FPR 0.07340 and recall 0.75:
+    C = 8 * 0.07340 * 0.95 + 42 * 0.25 * 0.05 = 0.55784 + 0.52500 = 1.08284.
+INTERPRETATION: about 1.08 cu of avoidable loss per decision at this operating point.
+```
+
+```text
+FORMULA (optimal threshold for a calibrated score):  p* = C_FP / (C_FP + C_FN)
+WHERE: p* is the probability at which the expected cost of alerting equals the expected cost of not
+       alerting; the score must be calibrated for p* to be a score threshold.
+CONSTRAINT: calibration on the deployment population; an uncalibrated rank cannot use this rule.
+NUMERICAL EXAMPLE: C_FP = 8 and C_FN = 42 give p* = 8/50 = 0.16.
+INTERPRETATION: alert when the predicted probability exceeds 0.16, not when it exceeds 0.5.
+```
+
+The derivation is a comparison of two conditional expectations at a single case. Alerting costs
+`C_FP * (1 - p)` in expectation because a false positive is the only way an alert is wrong; not
+alerting costs `C_FN * p`. Setting them equal gives `C_FP(1-p) = C_FN p`, hence
+`p = C_FP/(C_FP + C_FN)`. The result is independent of prevalence, which surprises people: prevalence
+determines how many cases sit above the threshold, not where the threshold belongs. That independence
+is the reason the cost rule is more stable than a rule based on observed precision.
+
+#### 4.3.2 Coverage correction
+
+When labels arrive selectively, a rate over labelled cases estimates a rate over a different population
+than the one being managed. Inverse-probability weighting repairs this if the labelling probability is
+known or estimable per stratum.
+
+```text
+FORMULA (weighted precision):  P_w = sum_s ( n_s * c_s * yhat_s ) / sum_s ( n_s * c_s )
+WHERE: s indexes strata; n_s = eligible decisions in stratum s [count];
+       c_s = labelling probability in stratum s [fraction, 0 < c_s <= 1];
+       yhat_s = share of labelled stratum-s alerts that were correct [fraction].
+CONSTRAINT: c_s estimated from an audited sample, not from the labelling system's own claim; the
+             strata must capture the mechanism that drives selection.
+NUMERICAL EXAMPLE: see 5.6, where the labelled-only rate is 0.48067 and the weighted rate is 0.36891.
+INTERPRETATION: the labelled-only figure is optimistic by 11.2 percentage points because correct
+                alerts are more likely to be labelled than incorrect ones.
+```
+
+#### 4.3.3 Probability-score decomposition
+
+For a service that emits probabilities rather than ranks, the Brier score decomposes into three terms
+that diagnose different diseases.
+
+```text
+FORMULA:  BS = (1/n) * sum_i (p_i - y_i)^2 = REL - RES + UNC
+WHERE: REL = sum_b (n_b/n) (o_b - pbar_b)^2  [reliability, lower is better]
+       RES = sum_b (n_b/n) (o_b - obar)^2    [resolution, higher is better]
+       UNC = obar (1 - obar)                 [irreducible, property of the population]
+       pbar_b = mean predicted probability in bin b; o_b = observed frequency in bin b;
+       obar = overall observed frequency [all dimensionless proportions].
+CONSTRAINT: the identity holds for any binning; the individual terms do not.
+NUMERICAL EXAMPLE: with six bins, REL = 0.00256, RES = 0.07705, UNC = 0.20855, so
+                   BS = 0.00256 - 0.07705 + 0.20855 = 0.13406.
+INTERPRETATION: the model is nearly perfectly reliable and moderately informative; almost all of the
+                score is the population's own irreducible uncertainty.
+```
+
+The reason to prefer the decomposition over a single number: reliability can be fixed by recalibration
+without changing the ranking, and resolution cannot be fixed without new signal. A model with REL near
+zero and RES near zero is a well-calibrated model that knows nothing, which is exactly what a
+constant predictor achieves.
+
+### 4.4 Limits and counterexamples
+
+Each limit below is a place where the formula is still computable and no longer means what the reader
+assumes.
+
+**Limit 1: Wald intervals at a boundary.** The Wald interval `p ± z*sqrt(p(1-p)/n)` collapses to zero
+width when `p = 0` and is badly asymmetric when `p` is small, because the estimated variance is zero at
+the boundary. With 0 successes in 300 trials the Wald interval is `[0, 0]`, which asserts certainty
+from an observation that is entirely compatible with a 1% rate. The Wilson interval on the same data
+gives an upper bound near 0.0128, and the exact one-sided bound is `1 - 0.05^(1/300) = 0.00994`. A
+zero-count result is strong evidence of a low rate; it is never evidence of a zero rate.
+
+**Limit 2: binned statistics depend on the bins.** The population stability index and expected
+calibration error both average over bins, so both change when the bins change with identical data.
+
+```text
+FORMULA (PSI):  PSI = sum_i (q_i - p_i) * ln(q_i / p_i)
+WHERE: p_i = reference share in bin i [fraction]; q_i = current share in bin i [fraction];
+       every share positive; shares each sum to one.
+CONSTRAINT: identical bin edges and identical feature semantics between the two periods; a zero share
+            makes the term infinite, and any smoothing changes the estimator.
+NUMERICAL EXAMPLE: p = (0.40, 0.35, 0.15, 0.09, 0.01), q = (0.30, 0.33, 0.18, 0.13, 0.06) gives
+    contributions (0.02877, 0.00118, 0.00547, 0.01471, 0.08959), total PSI = 0.13971.
+INTERPRETATION: the movement is concentrated in the sparsest bin, which is also the least stable one.
+```
+
+Adding `0.001` to every share and renormalising changes the same comparison to 0.13484, a 3.5% change
+from a smoothing choice rather than from data. Worse, the sparsest bin carries 64% of the total, so a
+handful of records in the tail can move the statistic more than a broad, real shift elsewhere. The
+diagnostic is to print contributions per bin, not just the total.
+
+**Limit 3: discrimination metrics are invariant where decision metrics are not.** The area under the
+ROC curve does not change when prevalence changes, because it is computed from the true- and
+false-positive rates. Average precision does change, because it is computed from precision, which
+depends on prevalence. With the same five score bands, scaling the negatives by five leaves AUC at
+0.90758 and moves average precision from 0.43095 to 0.15453. A reader who compares an AP figure across
+two populations with different prevalence is comparing two different questions.
+
+**Limit 4: the cost-optimal threshold assumes calibrated probabilities.** `p* = C_FP/(C_FP+C_FN)`
+is a statement about probability, not about score. If the score is a rank squeezed through a sigmoid by
+a different process, the numeric value 0.16 may correspond to a very different operating point than
+the probability 0.16. The check is to compute the observed positive rate among cases scoring near 0.16;
+if it is not near 0.16, the score is not the probability the rule requires.
+
+**Limit 5: maturity models extrapolate.** Fitting `1 - exp(-d/tau)` to observed coverage and reading
+off a future date assumes a stationary arrival process. An adjudication backlog, a holiday, or a
+processor change breaks stationarity and the extrapolation with it. Section 5.5 fits such a model to
+this sheet's illustrative data and shows what a single-parameter fit cannot see.
+
+**Takeaway:** every formula here has a region where it is computable and meaningless; name that region
+before the number reaches a decision document.
+
 ## 5. Worked Numerical Example
-### 5.1 Mature cohort and operational counts
-**ILLUSTRATIVE:** A fraud model scores 1,000 eligible transactions on day 1.
-Each decision is identified by a stable decision ID and recorded model and feature versions.
-A positive outcome means adjudicated fraud within a 30-day horizon, as known at the 45-day reporting cutoff.
-The extra 15 days is an assumed reporting lag allowance, not a guarantee of complete adjudication.
-At cutoff, 900 decisions have usable outcomes; 100 remain pending or unlinked.
-Coverage is 900/1000 = 90%, using the formula in section 4.2.
-The unlabeled 100 must remain unknown rather than being coded as nonfraud.
-Among the 900 labeled decisions, 80 are positives and 820 are negatives.
-Of the 80 positives, 48 were flagged and 32 were not.
-Of the 820 negatives, 72 were flagged and 748 were not.
-The labeled confusion matrix totals 48+32+72+748 = 900.
-Flagged labeled cases total 48+72 = 120.
-Precision on labeled cases is 48/120 = 40%.
-Recall on labeled positives is 48/80 = 60%.
-The remaining 100 could change both estimates; these are not automatically population-wide metrics.
-If every missing decision was an unflagged fraud, cohort recall would be 48/180 = 26.67%.
-That extreme is illustrative, not a prediction of the missing labels.
-If every missing decision was a flagged nonfraud, precision would be 48/220 = 21.82%.
-That second extreme uses a different missing-data allocation and is not simultaneously assumed with the first.
-First inspect label join failures, adjudication queue, and coverage by score and segment.
-Then obtain a representative audited sample or use a justified missingness model, with uncertainty.
-### 5.2 Decision and independent checks
-Review capacity is assumed to be 150 alerts per day, counting all eligible alerts, not just labeled ones.
-The 120 labeled alerts do not establish whether the total alerts fit capacity because the 100 unlabeled cases may include alerts.
-Measure the full prediction log before changing the threshold.
-A threshold reduction may increase recall but also reviews and false positives; validate using representative outcomes.
-A threshold increase may reduce reviews while increasing missed fraud and may affect subgroups differently.
-Neither choice follows from precision alone.
-Arithmetic cross-check: fraud prevalence in labeled cases is 80/900 = 8.89%; nonfraud count is 900-80 = 820.
-Arithmetic cross-check: 48 detected plus 32 missed equals the 80 labeled positives.
-Arithmetic cross-check: 120 alerts comprise 48 correct plus 72 incorrect.
-### 5.3 Feature shift and significance
-Assume a stable two-bin feature definition with reference proportions 50% low and 50% high.
-Current proportions are 60% low and 40% high; the PSI calculation in section 4.3 is approximately 0.04055.
-That shift does not tell whether false negatives rose, whether a new population arrived, or whether a schema broke.
-Compare feature provenance, unit and missingness before considering model retraining.
-Then compare mature-label quality by segment and against a suitable baseline.
-If the 10-point change follows an intentional expansion into a new region, compare within region as well as overall.
-If a unit change caused the shift, repair and replay the pipeline rather than learning from corrupted inputs.
-If outcome relationships changed on representative labels, evaluate a new model against the fixed baseline and guardrails.
-### 5.4 Agent run example
-**ILLUSTRATIVE:** Of 200 agent runs, 160 complete and 140 satisfy a predefined independent quality rubric.
-Completion is 160/200 = 80% of attempted runs.
-If all 140 rubric successes are among completed runs, success per attempt is 140/200 = 70%.
-Conditional success among completed runs is 140/160 = 87.5%.
-If total included model and tool cost is 28 currency units, cost per successful run is 28/140 = 0.2 currency units.
-These figures do not cover omitted human-review costs, harm, or a representative population.
-Treat incomplete runs as non-successes only if the evaluation protocol explicitly specifies that rule.
-A rise in completion without a rise in rubric success can be a proxy improvement, not a quality improvement.
-**Takeaway:** Mature cohorts, label coverage, and correct denominators determine what each metric actually says.
+
+All inputs in this section are ILLUSTRATIVE. The arithmetic is exact at the precision printed and can
+be reproduced from the inputs alone.
+
+### 5.1 The cohort
+
+A scoring service evaluates card-not-present payment attempts. In the reference month it produced
+20,000 eligible decisions: unique attempts, complete feature vectors, excluding internal test accounts,
+identified by attempt key, scored by model version 7 and feature-set version 12.
+
+The outcome definition is adjudicated fraud within a 30-day horizon from the decision. The reporting
+cut-off is 45 days after the last decision in the window. The 15-day buffer beyond the horizon exists
+because adjudication itself takes time; it is an allowance, not a guarantee.
+
+At the cut-off, 18,480 decisions have a usable adjudication. 1,520 do not: some are still pending with
+the issuer, some failed the join on a case identifier, and a small number were adjudicated as
+indeterminate. Those 1,520 remain `unknown`. They are not negatives, and coding them as negatives is
+the single most common way to make an evaluation look better than it is.
+
+Among the 18,480 with labels there are 1,000 positives and 17,480 negatives. Coverage is
+18,480/20,000 = 0.924, checked in section 5.7.
+
+### 5.2 The operating point
+
+The service alerts when the score exceeds 0.25. The resulting partition is the one used in section 4.2.
+
+```text
+                          outcome positive   outcome negative   total
+predicted positive                750              1,283         2,033
+predicted negative                250             16,197        16,447
+total                            1,000             17,480        18,480
+```
+
+Derived quantities, each recomputed by hand:
+
+- precision `750/2,033 = 0.36891`, Wilson `[0.34820, 0.39012]`
+- recall `750/1,000 = 0.75000`, Wilson `[0.72224, 0.77585]`
+- false-positive rate `1,283/17,480 = 0.07340`, Wilson `[0.06963, 0.07736]`
+- specificity `16,197/17,480 = 0.92660`
+- negative predictive value `16,197/(16,197 + 250) = 16,197/16,447 = 0.98480`
+- accuracy `(750 + 16,197)/18,480 = 16,947/18,480 = 0.91705`
+- balanced accuracy `(0.75 + 0.92660)/2 = 0.83830`
+- lift over prevalence `0.36891/0.05411 = 6.8175`
+- F1 `2 * 0.36891 * 0.75/(0.36891 + 0.75) = 0.49456`
+
+Two of these deserve comment because they are routinely misread. Accuracy 0.91705 sounds strong until
+it is compared with the accuracy of never alerting, which is `17,480/18,480 = 0.94589` — the do-nothing
+policy is more accurate than the deployed model. And F1 0.49456 is a compromise between precision and
+recall that encodes no information about the relative cost of the two errors; it is a summary of the
+operating point, not a justification for it.
+
+### 5.3 The threshold ladder
+
+Five thresholds were evaluated on the same mature cohort. Each row is a complete partition; the bands
+are nested, so TP and FP both increase as the threshold falls.
+
+| Threshold | TP | FP | Precision | Recall | FPR | Alerts | Cost per decision |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.70 | 210 | 90 | 0.70000 | 0.21000 | 0.00515 | 300 | 1.83442 |
+| 0.45 | 450 | 383 | 0.54022 | 0.45000 | 0.02191 | 833 | 1.41580 |
+| 0.25 | 750 | 1,283 | 0.36891 | 0.75000 | 0.07340 | 2,033 | 1.12359 |
+| 0.10 | 900 | 2,633 | 0.25474 | 0.90000 | 0.15063 | 3,533 | 1.36710 |
+| 0.00 | 1,000 | 17,480 | 0.05411 | 1.00000 | 1.00000 | 18,480 | 7.56710 |
+
+Cost per decision uses `C_FP = 8` and `C_FN = 42` over the 18,480-decision denominator:
+
+```text
+t = 0.25: (8 * 1,283 + 42 * 250) / 18,480 = (10,264 + 10,500) / 18,480 = 20,764 / 18,480 = 1.12359
+t = 0.10: (8 * 2,633 + 42 * 100) / 18,480 = (21,064 + 4,200) / 18,480 = 25,264 / 18,480 = 1.36710
+t = 0.45: (8 * 383 + 42 * 550) / 18,480 = (3,064 + 23,100) / 18,480 = 26,164 / 18,480 = 1.41580
+t = 0.70: (8 * 90 + 42 * 790) / 18,480 = (720 + 33,180) / 18,480 = 33,900 / 18,480 = 1.83442
+never alert: (0 + 42 * 1,000) / 18,480 = 42,000 / 18,480 = 2.27273
+```
+
+The minimum over the ladder is at 0.25. Note that the ladder is coarse: the theoretical optimum is
+`p* = 8/50 = 0.16`, which lies between 0.10 and 0.25, and the true cost curve between those two
+thresholds is not sampled here. The correct statement is "0.25 is the best of the five evaluated
+points", not "0.25 is optimal". Section 5.8 quantifies the sensitivity of this choice.
+
+### 5.4 What the ladder does not show
+
+Three quantities are missing from the table and each has changed a promotion decision somewhere.
+
+**Review workload.** 2,033 alerts in the month is 67.8 per day at 30 days of traffic. The team's stated
+capacity is 90 reviews per day. Utilisation is `67.8/90 = 0.753`; the queue is stable but not idle, and
+the daily peak matters more than the mean (section 9.3). At threshold 0.10 the mean rises to 117.8 per
+day, which exceeds capacity, so that row is not implementable regardless of its cost figure.
+
+**Segment composition.** The aggregate hides the slices. A slice of 900 decisions produced 120 alerts
+against an expected `900 * 0.10165 = 91.5` at the overall alert rate; the standardised deviation is
+`(0.13333 - 0.10165)/sqrt(0.10165 * 0.89835/900) = 3.145`, which is outside a 3-sigma band. With 40
+slices examined routinely the Bonferroni threshold at family-wise 5% is `z = 2.807`, so this one
+survives; most single-slice excursions of similar size do not (section 5.9).
+
+**Downstream consequences.** Cost per decision prices a false positive at 8 cu, which assumes the alert
+consumes review time and nothing else. If an alert also blocks the transaction, the false-positive cost
+includes the customer's abandonment, which is usually larger than the review cost and is not measured
+here. A cost table built only from measurable costs systematically prefers aggressive alerting.
+
+### 5.5 Maturity, fitted and stress-tested
+
+Coverage of 0.924 at 45 days implies an arrival curve. Fitting the single-parameter exponential
+`coverage(d) = 1 - exp(-d/tau)` to the observed value gives
+
+```text
+solve 1 - exp(-45/tau) = 0.924  =>  exp(-45/tau) = 0.076  =>  tau = -45 / ln(0.076) = 17.462 days
+implied half-life = tau * ln(2) = 12.10 days
+```
+
+Three consequences follow, and the third is the one that changes behaviour.
+
+First, the model implies 0.8206 coverage at 30 days and 0.9678 at 60. If the cut-off were moved to 60
+days, roughly 876 additional labels would appear for the same cohort — an 4.7% increase in denominator
+without any change in the model.
+
+Second, the model implies that 8% of outcomes arrive after the reporting cut-off for this horizon. A
+quarterly report that never revisits the number is therefore not a snapshot of the truth; it is a
+snapshot of what was knowable 45 days after the fact.
+
+Third, the single-parameter fit cannot distinguish a slow but steady adjudication process from a
+process with a backlog. Both produce the same coverage at one date. The discriminating observation is
+the coverage curve at two dates: a stationary process moves forward with the cohort, whereas a backlog
+freezes coverage in place while pending counts accumulate at the intake rate of 1,520/45 = 33.8 per
+day. Only the second is an incident.
+
+### 5.6 Coverage bias, quantified
+
+Suppose the labelling process is not random: 95% of confirmed-fraud alerts receive adjudication
+because the issuer pursues them, while only 60% of cleared alerts do, because nobody chases a cleared
+alert. The labelled alert set is then 1,482.3 records of the 2,033 alerts, and the number of those that
+are genuinely fraudulent is `750 * 0.95 = 712.5`.
+
+```text
+labelled-only precision = 712.5 / 1,482.3 = 0.48067
+true precision          = 750 / 2,033    = 0.36891
+optimism                = 11.18 percentage points
+unlabelled alerts       = 2,033 - 1,482.3 = 550.7
+```
+
+The direction is predictable from the selection mechanism: precision is computed as correct alerts over
+labelled alerts, and the numerator is over-represented among the labelled. Without knowing which
+unlabelled alerts are correct, the honest bounds are `[0.36891, 0.63979]`, where the upper bound
+allocates every unlabelled alert to the correct class. A report that prints 0.48 without the bounds is
+not wrong about its own subset; it is answering a different question from the one the roadmap asked.
+
+The correction in section 4.3.2 recovers 0.36891 exactly when the labelling probabilities are per-class
+constants, because the weights cancel. It fails when the probability depends on the score within class
+— for example when high-scoring cleared alerts receive extra scrutiny because an analyst was
+suspicious. That mechanism reorders cases within class, and no per-class weight corrects it; only an
+audited random sample does.
+
+### 5.7 Independent arithmetic re-check
+
+Three checks that do not reuse the formulas above, run because a mistake in one path is invisible from
+inside that path.
+
+```text
+CHECK 1 (row and column sums):
+  rows:    750 + 1,283 = 2,033 ;  250 + 16,197 = 16,447 ;  2,033 + 16,447 = 18,480
+  columns: 750 + 250 = 1,000   ;  1,283 + 16,197 = 17,480 ;  1,000 + 17,480 = 18,480
+  both margins agree with the stated totals, so the partition is internally consistent.
+
+CHECK 2 (coverage from components):
+  18,480 labelled / 20,000 eligible = 0.924 ; 1,520 pending / 20,000 = 0.076 ; sum = 1.000
+  1,520 / 45 days = 33.78 pending decisions per day of cohort age.
+
+CHECK 3 (cost identity):
+  cost per decision at 0.25 = 20,764 / 18,480 = 1.12359
+  cost of the do-nothing policy  = 42,000 / 18,480 = 2.27273
+  saving of the deployed policy  = (42,000 - 20,764)/18,480 = 21,236/18,480 = 1.14914
+  and 2.27273 - 1.12359 = 1.14914, so the two routes agree.
+```
+
+The third check is the useful one operationally: it states the value of the model as 1.15 cu per
+decision relative to doing nothing, which is a sentence a finance reviewer can act on and does not
+require them to trust a ratio.
+
+### 5.8 Sensitivity of the threshold choice
+
+The threshold recommendation rests on two inputs that are estimates, not facts. Both should be moved
+before the recommendation is published.
+
+```text
+SENSITIVITY A (cost of a miss):
+  C_FN = 21  => p* = 8/(8+21) = 0.2759   (alert less; the current 0.25 is slightly aggressive)
+  C_FN = 42  => p* = 8/(8+42) = 0.1600   (the base case)
+  C_FN = 84  => p* = 8/(8+84) = 0.0870   (alert more; the current 0.25 is far too conservative)
+  At C_FN = 84 the cost at 0.25 becomes (8*1,283 + 84*250)/18,480 = 1.56323, while the cost at 0.10
+  becomes (8*2,633 + 84*100)/18,480 = 1.47316, so the ranking reverses.
+
+SENSITIVITY B (prevalence):
+  precision at fixed recall 0.75 and FPR 0.07340, for prevalence pi:
+    pi = 0.005 -> ppv 0.0488 ;  pi = 0.02 -> 0.1726 ;  pi = 0.05 -> 0.3497 ;  pi = 0.10 -> 0.5317
+  A population shift from 5% to 2% prevalence reduces precision from 0.35 to 0.17 with no model change.
+```
+
+Sensitivity A is the reason a threshold decision must record the cost inputs and their provenance. A
+review that says "we moved the threshold to 0.25 because it maximised expected value" and does not say
+which cost of a miss was assumed has recorded an output and lost the input, which makes the decision
+unauditable when the cost assumption is later revised.
+
+Sensitivity B is the reason a stability monitor on precision alone generates false alarms during
+seasonal prevalence changes. The threshold on precision should be conditioned on prevalence, or the
+monitor should track recall and false-positive rate separately and reconstruct precision from them.
+
+### 5.9 Alert-rate monitoring with the right denominator
+
+The fast-loop signal for this service is the alert rate: alerts divided by eligible decisions. Its
+reference value is `2,033/20,000 = 0.10165` for the month, or about 67.8 alerts per day at 667
+decisions per day.
+
+```text
+FORMULA (control band):  band = p0 ± 3 * sqrt(p0(1-p0)/n)
+WHERE: p0 = reference rate [fraction]; n = decisions in the monitored window [count].
+CONSTRAINT: independent decisions within the window; one decision per key.
+NUMERICAL EXAMPLE (daily, n = 667): sqrt(0.10165*0.89835/667) = 0.011701,
+    band = [0.06655, 0.13675], i.e. roughly 44 to 91 alerts per day.
+INTERPRETATION: a day with 100 alerts is outside the band; a day with 70 is not evidence of anything.
+```
+
+Because the band is wide at daily volume, a genuine increase in alert rate takes time to separate from
+noise. Using the standard two-proportion power formula at 3-sigma with 80% power:
+
+```text
+FORMULA:  n = (z_a * sqrt(2*pbar*(1-pbar)) + z_b * sqrt(p0(1-p0) + p1(1-p1)))^2 / (p1-p0)^2
+WHERE: p0 = reference rate [fraction]; p1 = shifted rate [fraction]; pbar = (p0+p1)/2;
+       z_a = 3.0 for a two-sided 0.27% level; z_b = 0.8416 for 80% power;
+       n = decisions required in the monitored window [count].
+CONSTRAINT: independent decisions, one decision per key, and a single decision rule per window;
+            a cumulative-sum chart does not use this formula.
+NUMERICAL EXAMPLE: p0 = 0.10165, p1 = 0.13215 (a 30% relative rise), pbar = 0.11690
+    sqrt(2*0.11690*0.88310) = sqrt(0.206469) = 0.45439
+    sqrt(0.10165*0.89835 + 0.13215*0.86785) = sqrt(0.091317 + 0.114686) = sqrt(0.206004) = 0.45388
+    numerator = (3.0*0.45439 + 0.8416*0.45388)^2 = (1.36317 + 0.38198)^2 = 1.74515^2 = 3.04554
+    n = 3.04554 / (0.03050)^2 = 3.04554 / 0.00093025 = 3,274 decisions, about 4.9 days at 667/day.
+INTERPRETATION: a 30% rise needs about five days of data at this volume, not one day.
+```
+
+A 10% relative rise, from 0.10165 to 0.11182, needs about 27,233 decisions, or 40.8 days. An 8% rise,
+to 0.10978, needs about 42,195 decisions, or 63.3 days. That is the latency no threshold can shorten;
+only a cumulative-sum design can, because it accumulates evidence rather than requiring each window to
+stand alone.
+
+A CUSUM on the alert rate with reference value `k = 0.5` standard deviations and decision interval
+`h = 5` has an approximate in-control average run length near 295 windows and an out-of-control average
+run length of about 10.3 windows for a one-sigma shift, 5.7 for 1.5 sigma, and 3.9 for two sigma.
+Those numbers are what justifies preferring CUSUM for slow drifts: the fixed-band test above would take
+weeks to react to a one-sigma shift that CUSUM flags in about ten windows.
+
+### 5.10 The agentic variant, measured the same way
+
+The same protocol applies to a run-based service, with the run replacing the decision and a rubric
+replacing the adjudication.
+
+ILLUSTRATIVE: 600 agent runs in a day. 540 complete without an infrastructure error. Of those, 402
+satisfy an independently applied rubric. First-attempt success, ignoring retries, is 300 runs.
+
+```text
+completion rate        = 540/600 = 0.90000  (Wilson [0.87339, 0.92152])
+rubric success per run = 402/600 = 0.67000  (Wilson [0.63140, 0.70644])
+success among completed= 402/540 = 0.74444
+first-attempt success  = 300/600 = 0.50000
+retry contribution     = (402-300)/300 = 0.34000 of first-attempt successes, i.e. +34%
+```
+
+The headline 0.67 is 34% higher than the 0.50 a user experiences on their first attempt, and both are
+true statements about different quantities. The retry-inflated figure answers "does the system
+eventually produce an acceptable answer"; the first-attempt figure answers "how often is the first
+answer acceptable". Product decisions usually need the second, engineering throughput usually needs
+the first, and a document that prints one while implying the other is a defect.
+
+Cost per successful run, with total run cost 336 cu, is `336/402 = 0.83582`; cost per attempt is
+`336/600 = 0.56000`. The ratio is exactly the success rate's reciprocal effect, which is why cost per
+success improves superlinearly as success rises: at 0.50 success the same 0.56 per attempt yields
+1.12 per success.
+
+**Takeaway:** the worked example interlocks at the partition, the cost ladder, and the coverage
+correction; a reader who has reproduced those three can rederive every other figure in the sheet.
+
 ## 6. Visual / Geometric Intuition
+
+### 6.1 The partition as an area
+
 ```text
-Decision cohort: |---------------------------------- 1000 ----------------------------------|
-Observed labels: |--------------------------- 900 ---------------------------|---- 100 ----|
-                                                                    pending or unlinked
-Observed positive outcomes: |---- flagged 48 ----|--- unflagged 32 ---|
-Observed negative outcomes: |------- flagged 72 -------|--------------- unflagged 748 ---------------|
+|<----------------------------- 20,000 eligible decisions ----------------------------->|
+|<------------------------ 18,480 labelled (0.924) --------------------->|<- 1,520 ->|
+|                                                                        |  pending  |
+|   TP 750        |   FP 1,283          |   FN 250    |     TN 16,197    |  unknown  |
+|<--- alerts 2,033 --->|<--------------- not alerted 16,447 ------------->|
+|<--------- positives 1,000 --------->|<--------- negatives 17,480 -------->|
 ```
-The diagram shows a partition, not a time series or a representative sample guarantee.
+
+Read across: the first brace is coverage, the second is the alert set, the third is the outcome. Each
+brace slices the same rectangle a different way, and any metric that uses two different braces without
+saying so is comparing areas that do not align.
+
+### 6.2 The ROC curve as a staircase
+
+With five score bands the ROC curve is a staircase, not a smooth arc. Each step is a threshold where
+the model's decision changes for an entire band.
+
 ```text
-Time of decision ---- 30-day outcome horizon ---- 15-day reporting buffer ---- evaluation cutoff
-                     outcomes can occur            labels can still arrive       freeze an as-of view
+TPR
+1.00 |                                              *  (threshold 0.00)
+     |                                        *
+0.75 |                              *
+0.45 |              *
+0.21 |     *
+0.00 +-----|--------|--------|--------|--------|------> FPR
+        0.005    0.022    0.073    0.151    1.000
+
+Area under this staircase, summed as trapezoids: 0.90758
+Area under the precision-recall staircase:       0.43095
 ```
-Some labels can still be absent or revised after the cutoff.
+
+Two geometric facts follow. First, the area is an average over all thresholds including ones nobody
+would use, so a model can have high AUC and a poor operating point. Second, the staircase's leftmost
+steps are short in FPR but long in TPR only when the model is well separated at the top; a curve that
+reaches 0.21 TPR at 0.005 FPR is separating the extreme positives well and the middle poorly, which is
+the normal shape for fraud.
+
+### 6.3 The cost curve and its flat bottom
+
 ```text
-Reference marginal: low 50% | high 50%
-Current marginal:   low 60% | high 40%
-Question remaining: within each bin, did outcomes or decisions change?
+cost/decision
+2.27 |*  never alert
+     |
+1.83 |     *
+1.42 |           *
+1.37 |                    *
+1.12 |              *   <- 0.25, best of five sampled points
+1.00 +---|------|----|----|----|------> threshold
+       0.00  0.10 0.16 0.25 0.45 0.70
+                  ^
+                  theoretical optimum p* = C_FP/(C_FP+C_FN) = 0.16
 ```
-A marginal chart conceals interactions and subgroup composition.
-Plot label coverage next to quality, and mark version or traffic changes on the same time axis.
-Plot numerator and denominator rather than a rate alone when volume can change.
-Show uncertainty and actual sample count on each slice; do not draw an unsupported smooth trend.
-**Takeaway:** Time, selection, and distribution geometry reveal why a single line chart can mislead.
+
+The curve is asymmetric: moving from 0.25 to 0.10 costs 0.24 cu per decision because false positives
+grow faster than false negatives shrink, while moving from 0.25 to 0.45 costs 0.29 cu because missed
+positives become expensive. The flat bottom is roughly half an order of magnitude wide, which is why
+the threshold can be chosen for operational reasons — review capacity, customer friction — without much
+economic penalty, provided the choice stays inside that bottom.
+
+### 6.4 The time axis: event time versus processing time
+
+```text
+event time   |------ 30-day outcome horizon ------|
+                                                  \
+processing   |---------------- 45-day cut-off -----------------|
+time                                                          \
+                                        labels still arriving  |
+                                                               v
+                                                        as-of snapshot
+```
+
+A query that filters on processing time gets a different set of rows each day for the same event-time
+window. A query that filters on event time and then joins whatever labels exist at query time gets a
+stable cohort with a moving label set. Only the second is a reproducible evaluation; the first is a
+report whose denominator changes while nobody edits it.
+
+### 6.5 Geometry of the coverage correction
+
+```text
+labelled-only view:   [================ 1,482.3 labelled alerts ================]
+                      correct 712.5  ->  0.48067
+
+full eligible view:   [==== 1,482.3 labelled ====][=== 550.7 unlabelled ===]
+                      correct 750.0            ->  0.36891
+
+the extra 37.5 correct alerts are the ones the labelled view cannot see,
+because the labelling mechanism favoured the class where they sit
+```
+
+The diagram is the argument: the labelled view is not a small version of the full view, it is a
+different shape, and the missing piece is not missing at random.
+
+**Takeaway:** draw the braces before computing the ratio; a metric is only as well-defined as the
+boundaries of the set it is computed over.
+
 ## 7. Comparison / Selection Table
-| Choice | Use when | Advantage | Disqualifier / caution | Next evidence |
+
+### 7.1 Choosing the measurement instrument
+
+| Instrument | Use when | Strength | Disqualifier | Follow-on evidence |
 |---|---|---|---|---|
-| Request success SLI | Prompt operational detection matters | Available before outcome labels | Healthy requests can be wrong | Trace and quality sample |
-| Offline holdout | Candidate comparisons require controlled inputs | Reproducible paired comparisons | Stale or contaminated set | Fresh held-out production sample |
-| Mature online cohort | Outcomes arrive after a known horizon | Measures operational population | Selective or delayed labels | Coverage and adjudication audit |
-| Feature drift | Labels are delayed | Early investigation cue | Feature shift need not cause harm | Pipeline and outcome diagnostics |
-| Score drift | Output mix matters operationally | Can reveal threshold load changes | Stable scores can hide concept drift | Mature quality and slices |
-| Human review | Outcomes are nuanced or safety-sensitive | Rubric captures qualitative defects | Rater disagreement and sampling bias | Double rating and adjudication |
-| Randomized experiment | Intervention impact is the decision | Can support causal effect under design assumptions | Unsafe or infeasible allocation | Guardrails, adherence, and power |
-| Shadow deployment | Candidate needs live inputs without action | Exercises serving path | No direct effect on outcomes | Paired outcomes where valid |
-| Canary | Rollout risk must be bounded | Limits exposed population | Small canary may miss rare harms | Prespecified gates and rollback |
-| Retraining | Representative evidence shows model inadequacy | Can adapt to changed relationships | Corrupt inputs or selective labels | Held-out and prospective validation |
-| Pipeline repair | Broken units, schema or stale features confirmed | Corrects root cause | Cannot by itself fix concept drift | Replay and contract checks |
-| Threshold adjustment | Review capacity or decision cost changed | Fast policy change | May redistribute missed harms | Mature cost and subgroup analysis |
-For each choice, the owner records the decision, evidence, uncertainty, and reversal condition.
-Severity of user harm overrides a routine statistical significance threshold.
-When evidence is inadequate, use a conservative fallback appropriate to the product and affected users.
-**Takeaway:** Choose interventions by diagnosed mechanism, not by the name of an alert.
+| Request SLI | Operational detection must be immediate | Exists before any label | Correct responses can be wrong | Trace sample plus quality spot check |
+| Offline holdout | Candidate versions must be compared cheaply | Reproducible, paired, fast | Stale or contaminated fixture | Fresh production cohort |
+| Prospective labelled cohort | A quality claim will be published | Measures the real population | Waits for maturity | Coverage and selection audit |
+| Feature-shift statistic | Labels are far in the future | Early investigation cue | Shift need not cause harm | Pipeline and outcome diagnostics |
+| Score-shift statistic | Action volume matters operationally | Detects policy effects | Stable scores hide concept drift | Slice-level quality |
+| Calibration audit | Probabilities drive a decision | Separates reliability from resolution | Needs enough positives per bin | Recalibration plus regression suite |
+| Human rubric | Outcomes are nuanced or safety-relevant | Captures qualitative failure | Rater variance and cost | Double scoring plus adjudication |
+| Model judge | Volume exceeds human capacity | Cheap, fast, versionable | Correlated with the model it grades | Calibration against humans plus drift checks |
+| Randomised experiment | The decision is whether the change caused the effect | Causal under design assumptions | May be unsafe or infeasible | Guardrails, adherence, power analysis |
+| Shadow run | Candidate needs live inputs without effects | Exercises the serving path | No outcome effect to measure | Paired comparison where valid |
+| Canary | Rollout risk must be bounded | Limits exposure | Small population misses rare harm | Prespecified gates and rollback |
+
+### 7.2 Choosing the summary number
+
+| Question asked | Correct number | Wrong but common substitute | Why the substitute fails |
+|---|---|---|---|
+| How many alerts are correct? | precision with its denominator | accuracy | accuracy is dominated by the negative class |
+| How many positives are caught? | recall on the eligible population | recall among labelled | labelled positives are selectively easy |
+| Is the ranking good? | AUC or AP on a stated population | accuracy at one threshold | a threshold discards the ranking |
+| Is the probability honest? | calibration curve plus Brier | AUC | ranking says nothing about level |
+| Did the change help? | cost per decision or an experiment | F1 | F1 encodes no cost ratio |
+| Is the service healthy? | SLI plus burn rate | mean latency | means hide tail failure |
+| Did quality drift? | mature-cohort trend with intervals | score distribution shift | score shift is not quality |
+| Is the agent reliable? | first-attempt success plus completion | success after retries | retries inflate the perceived rate |
+
+### 7.3 Choosing the response to a signal
+
+| Diagnosed mechanism | Response | Reversible | Must not do |
+|---|---|---|---|
+| Broken feature pipeline | Repair and replay | yes, replay from source | retrain on corrupted rows |
+| Intentional population change | Re-evaluate per segment | yes | raise the global threshold to hide it |
+| Prevalence change only | Recompute expected metrics | yes | retrain for a label-shift effect |
+| Genuine concept drift with evidence | Candidate retrain plus prospective test | yes, staged | promote on offline gain alone |
+| Review capacity exceeded | Reduce alert volume or add capacity | yes | let the backlog label the model |
+| Judge or rubric drift | Recalibrate the judge, re-score a fixed set | yes | compare new scores to old scores |
+| Threshold policy change | Re-run the cost ladder | yes | keep the old metric targets |
+
+**Takeaway:** select the instrument from the claim being made, the number from the question being
+asked, and the response from the diagnosed mechanism.
+
 ## 8. Failure Modes & Edge Cases
-All scenarios below are hypothetical diagnostic patterns, not observed incidents.
-Each provides competing explanations and a way to discriminate them.
-### 8.1 No labels after horizon
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** No labels after horizon.
-- **Candidate mechanism:** Outcome feed has stalled.
-- **Competing mechanism:** Genuinely slow adjudication.
-- **Discriminator:** Compare feed watermark with upstream adjudication timestamps.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore or replay the outcome feed.
-- **Prevention:** Track completeness and feed freshness separately.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Do not classify pending decisions as negatives.
-### 8.2 Precision appears to rise immediately
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Precision appears to rise immediately.
-- **Candidate mechanism:** Only fast positive outcomes arrived.
-- **Competing mechanism:** True improved discrimination.
-- **Discriminator:** Stratify arrival lag by outcome and score.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Wait for comparable maturity and audit remaining labels.
-- **Prevention:** Publish coverage alongside precision.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Early precision is conditional on observed labels.
-### 8.3 Recall looks perfect
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Recall looks perfect.
-- **Candidate mechanism:** Unflagged cases lack outcomes.
-- **Competing mechanism:** A genuinely perfect classifier.
-- **Discriminator:** Measure label coverage separately for flagged and unflagged cases.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Sample and adjudicate unflagged cases.
-- **Prevention:** Require a representative label acquisition design.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Recall cannot be recovered from positives-only review.
-### 8.4 Quality graph changes on backfill
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Quality graph changes on backfill.
-- **Candidate mechanism:** Labels were revised after initial reporting.
-- **Competing mechanism:** Cohort definition changed.
-- **Discriminator:** Recompute the same cohort under two as-of snapshots.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Version label snapshots and explain the revision.
-- **Prevention:** Track revisions and historical restatement policy.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Do not silently overwrite previously published estimates.
-### 8.5 Prediction joins multiply
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Prediction joins multiply.
-- **Candidate mechanism:** Outcome table contains duplicate updates.
-- **Competing mechanism:** Repeated legitimate decisions per entity.
-- **Discriminator:** Count decision IDs before and after join and inspect effective dates.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Join to the correct adjudication version per decision.
-- **Prevention:** Enforce explicit uniqueness and audit unmatched IDs.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** One entity can legitimately have multiple decision IDs.
-### 8.6 Most labels fail to join
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Most labels fail to join.
-- **Candidate mechanism:** Decision identifiers differ across systems.
-- **Competing mechanism:** Outcome events truly do not exist.
-- **Discriminator:** Trace a sampled ID through both pipelines.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Repair identifier mapping and replay safely.
-- **Prevention:** Add end-to-end reconciliation and unmatched-ID alerts.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Never use a many-to-many fuzzy join without audit.
-### 8.7 Fraud rate falls after blocking
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Fraud rate falls after blocking.
-- **Candidate mechanism:** Blocking prevents some outcomes from occurring.
-- **Competing mechanism:** The risk population has become safer.
-- **Discriminator:** Compare outcome availability and action policy by risk band.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Record action and use a designed audit or experiment.
-- **Prevention:** Separate observed outcomes from counterfactual untreated outcomes.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Observed labels do not identify prevented fraud automatically.
-### 8.8 Feature values suddenly multiply
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Feature values suddenly multiply.
-- **Candidate mechanism:** A source changed currency units.
-- **Competing mechanism:** Customers actually spend more.
-- **Discriminator:** Compare raw source units and transformation versions.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore the feature contract and replay affected decisions where feasible.
-- **Prevention:** Add unit metadata and train-serving parity checks.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Retraining on corrupted units can institutionalize the bug.
-### 8.9 Missing feature rate rises
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Missing feature rate rises.
-- **Candidate mechanism:** An upstream join key changed.
-- **Competing mechanism:** The product launched a population with missing data.
-- **Discriminator:** Compare missingness by producer version and cohort.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Repair the join or apply an approved fallback.
-- **Prevention:** Monitor upstream schema and missingness per slice.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** An imputed value is not proof the source value exists.
-### 8.10 Feature age increases
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Feature age increases.
-- **Candidate mechanism:** Scheduled update is late.
-- **Competing mechanism:** Traffic is using legitimately old records.
-- **Discriminator:** Compare event timestamps, processing timestamps and access-weighted freshness.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore the update pipeline and assess impacted decisions.
-- **Prevention:** Alert on a user-relevant freshness SLI.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Processing time alone can hide old event data.
-### 8.11 Input drift alert after launch
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Input drift alert after launch.
-- **Candidate mechanism:** The customer mix changed intentionally.
-- **Competing mechanism:** An extraction or unit defect.
-- **Discriminator:** Compare within-segment distributions and deployment timeline.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Verify launch, quality and segment-specific impact.
-- **Prevention:** Maintain segmented reference cohorts.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A changed marginal alone cannot establish concept drift.
-### 8.12 No drift alert but quality declines
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** No drift alert but quality declines.
-- **Candidate mechanism:** Feature interactions or outcome relationship changed.
-- **Competing mechanism:** Ground-truth or joining error.
-- **Discriminator:** Inspect multivariate slices and independently adjudicated mature outcomes.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Investigate concept and label shifts before model changes.
-- **Prevention:** Monitor joint patterns and mature quality.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Univariate stability is not a quality guarantee.
-### 8.13 Feature shift is statistically significant
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Feature shift is statistically significant.
-- **Candidate mechanism:** Large sample detects a tiny change.
-- **Competing mechanism:** A material population change.
-- **Discriminator:** Compare effect size, uncertainty and downstream sensitivity.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Set investigation priority from impact and reproducibility.
-- **Prevention:** Define practical thresholds and sample-size rules.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A p-value does not measure business loss.
-### 8.14 Feature shift is not significant
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Feature shift is not significant.
-- **Candidate mechanism:** Sample size is too small.
-- **Competing mechanism:** There truly is little change.
-- **Discriminator:** Inspect confidence intervals and minimum detectable effect.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Collect additional representative evidence if safe.
-- **Prevention:** Design alert sensitivity around risk and volume.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Failure to reject is not evidence of equivalence.
-### 8.15 Many simultaneous drift alerts
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Many simultaneous drift alerts.
-- **Candidate mechanism:** Multiple comparisons generate noise.
-- **Competing mechanism:** A shared upstream change affects many features.
-- **Discriminator:** Group alerts by producer and inspect feature lineage.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Investigate the earliest common dependency.
-- **Prevention:** Use a prespecified multiplicity and grouping policy.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Shared causation is not proven merely by co-occurrence.
-### 8.16 PSI becomes infinite
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** PSI becomes infinite.
-- **Candidate mechanism:** A compared bin has zero observations.
-- **Competing mechanism:** The feature genuinely has new support.
-- **Discriminator:** Inspect raw counts, bin construction and sample size.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Report support change and apply documented smoothing only if justified.
-- **Prevention:** Preserve fixed bins and raw counts.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Smoothing changes the numerical result.
-### 8.17 PSI drops after changing bins
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** PSI drops after changing bins.
-- **Candidate mechanism:** The comparison discretization changed.
-- **Competing mechanism:** The population returned to baseline.
-- **Discriminator:** Recompute both periods with identical fixed bins.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore comparable binning and annotate the dashboard.
-- **Prevention:** Version the reference and bin edges.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** PSI values across different binning schemes are not directly comparable.
-### 8.18 Reference drift is constant
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Reference drift is constant.
-- **Candidate mechanism:** The baseline captures a seasonal peak.
-- **Competing mechanism:** The process truly shifted permanently.
-- **Discriminator:** Compare with aligned historical periods and segment mix.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Select a justified seasonally matched comparator.
-- **Prevention:** Review reference cohort periodically with approval.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Replacing a reference must not erase incident evidence.
-### 8.19 Score distribution changes
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Score distribution changes.
-- **Candidate mechanism:** A threshold or model version changed.
-- **Competing mechanism:** Upstream inputs changed.
-- **Discriminator:** Split scores by model version, policy and input source.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Roll back a defective deployment or investigate its inputs.
-- **Prevention:** Tag score telemetry with immutable versions.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Score shift is not itself outcome quality.
-### 8.20 Score distribution is stable but precision falls
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Score distribution is stable but precision falls.
-- **Candidate mechanism:** Outcome prevalence changed.
-- **Competing mechanism:** Conditional model discrimination worsened.
-- **Discriminator:** Compare prevalence, score-conditional outcomes and ranking on mature labels.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Investigate case mix and recalibration needs.
-- **Prevention:** Track both calibration and ranking.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Stable score mix cannot guarantee stable precision.
-### 8.21 Calibration fails in a new region
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Calibration fails in a new region.
-- **Candidate mechanism:** Outcome prevalence or conditional risk differs.
-- **Competing mechanism:** The label process differs by region.
-- **Discriminator:** Check coverage, outcome definitions and calibration bins by region.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Assess region-specific recalibration with holdout data.
-- **Prevention:** Monitor calibration and data quality per region.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Small subgroup bins carry substantial uncertainty.
-### 8.22 AUC rises while operational value falls
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** AUC rises while operational value falls.
-- **Candidate mechanism:** Threshold costs and capacity changed.
-- **Competing mechanism:** Evaluation populations differ.
-- **Discriminator:** Examine recall, precision and cost at feasible thresholds.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Choose policy using declared costs and capacity.
-- **Prevention:** Monitor utility and workload alongside ranking.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** AUC does not choose an operating threshold.
-### 8.23 Overall quality improves while a slice worsens
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Overall quality improves while a slice worsens.
-- **Candidate mechanism:** Population weights changed.
-- **Competing mechanism:** One slice suffered a genuine regression.
-- **Discriminator:** Compare within-slice metrics and cohort proportions.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Investigate the harmed slice and apply guardrails.
-- **Prevention:** Maintain stable slice definitions and minimum counts.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Aggregated metrics can hide subgroup harm.
-### 8.24 Latency improves while task success falls
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Latency improves while task success falls.
-- **Candidate mechanism:** A faster fallback bypasses needed work.
-- **Competing mechanism:** The quality evaluator changed.
-- **Discriminator:** Compare path, fallback rate and rubric outcomes by version.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore critical work or route safely.
-- **Prevention:** Gate latency gains on quality and safety.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Lower latency alone is not better service.
-### 8.25 Completion rises but answers worsen
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Completion rises but answers worsen.
-- **Candidate mechanism:** The agent exits early with incomplete work.
-- **Competing mechanism:** The rubric became stricter.
-- **Discriminator:** Audit traces and blinded rubric samples under both versions.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Rollback or fix stopping conditions.
-- **Prevention:** Measure success per attempted run and critical failures.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A completed run is not necessarily a successful task.
-### 8.26 Tool error rate stays flat while users fail
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Tool error rate stays flat while users fail.
-- **Candidate mechanism:** Tool responses are syntactically valid but semantically wrong.
-- **Competing mechanism:** Requests are failing before reaching the tool.
-- **Discriminator:** Review end-to-end traces and user-visible outcomes.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Fix tool contracts or validation at the boundary.
-- **Prevention:** Monitor semantic failures and coverage separately.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** HTTP success is not task correctness.
-### 8.27 Run cost suddenly increases
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Run cost suddenly increases.
-- **Candidate mechanism:** An agent loops on repeated tool calls.
-- **Competing mechanism:** Input complexity genuinely increased.
-- **Discriminator:** Compare call counts, token usage and task mix by version.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Apply bounded stopping and repair the loop.
-- **Prevention:** Monitor cost per attempt and per successful task.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A cost cap alone may truncate valid tasks.
-### 8.28 Agent answers cite irrelevant passages
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Agent answers cite irrelevant passages.
-- **Candidate mechanism:** Retrieval returns weak or unauthorized context.
-- **Competing mechanism:** Generation ignores good context.
-- **Discriminator:** Inspect retrieved documents, permissions and citation support separately.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Fix retrieval or grounding according to the failing stage.
-- **Prevention:** Evaluate retrieval relevance and answer support independently.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A citation string does not prove entailment.
-### 8.29 Agent succeeds offline but fails online
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Agent succeeds offline but fails online.
-- **Candidate mechanism:** Offline tasks omit live tool failure modes.
-- **Competing mechanism:** Online evaluator or traffic definition changed.
-- **Discriminator:** Replay representative traces with versioned tool contracts.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Expand evaluation to relevant online conditions.
-- **Prevention:** Keep held-out scenarios and production sampling distinct.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Replay cannot reconstruct unrecorded external state.
-### 8.30 Judge scores rise unexpectedly
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Judge scores rise unexpectedly.
-- **Candidate mechanism:** Candidate learned to exploit the judge rubric.
-- **Competing mechanism:** Real quality improved.
-- **Discriminator:** Blind and randomize human review of a representative sample.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Revise judge and rubric using independently held-out examples.
-- **Prevention:** Monitor judge-human agreement and disagreement slices.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A model judge is a measurement tool, not ground truth.
-### 8.31 Raters disagree on safety
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Raters disagree on safety.
-- **Candidate mechanism:** Rubric permits multiple interpretations.
-- **Competing mechanism:** Examples genuinely lie near a policy boundary.
-- **Discriminator:** Measure agreement and inspect adjudicated disagreements.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Clarify rubric and document escalation criteria.
-- **Prevention:** Recalibrate raters using separate development examples.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Agreement does not prove the rubric is correct.
-### 8.32 One subgroup has no reported errors
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** One subgroup has no reported errors.
-- **Candidate mechanism:** The slice is too small.
-- **Competing mechanism:** The subgroup really has no failures in this sample.
-- **Discriminator:** Report denominators and an uncertainty interval.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Collect more evidence or aggregate only with justification.
-- **Prevention:** Require minimum sample and suppression rules.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Zero observed errors does not prove zero risk.
-### 8.33 Alert does not fire during outage
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Alert does not fire during outage.
-- **Candidate mechanism:** Monitoring uses only successful server-side logs.
-- **Competing mechanism:** No users actually reached the service.
-- **Discriminator:** Compare client, load balancer and server request counts.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore telemetry and use an independent external probe.
-- **Prevention:** Monitor the monitoring pipeline itself.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A missing denominator must not be treated as healthy.
-### 8.34 Alert floods on low traffic
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Alert floods on low traffic.
-- **Candidate mechanism:** Rates are unstable with tiny denominators.
-- **Competing mechanism:** A severe true incident affects few users.
-- **Discriminator:** Inspect event counts, error types and user severity.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Use a count-aware alert with an explicit urgent safety path.
-- **Prevention:** Tune windows and route alerts by actionability.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Low volume does not make a critical harm unimportant.
-### 8.35 Canary is healthy but rollout fails
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Canary is healthy but rollout fails.
-- **Candidate mechanism:** The canary omitted a critical traffic segment.
-- **Competing mechanism:** Rollout introduced another independent change.
-- **Discriminator:** Compare routing, segment coverage and versions across stages.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Halt or rollback and recover affected traffic.
-- **Prevention:** Stratify canaries and stage changes independently.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A small canary cannot exclude rare failures.
-### 8.36 Rollback does not restore quality
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Rollback does not restore quality.
-- **Candidate mechanism:** Feature schema or policy remained on the new version.
-- **Competing mechanism:** The issue predates the release.
-- **Discriminator:** Compare the complete model, data and policy bundle.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore a compatible bundle and replay validation.
-- **Prevention:** Version and rehearse bundle rollback.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Rolling back weights alone can leave incompatibility.
-### 8.37 Shadow candidate shows perfect recall
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Shadow candidate shows perfect recall.
-- **Candidate mechanism:** Offline replay contains future-derived features.
-- **Competing mechanism:** The new model genuinely improved.
-- **Discriminator:** Audit feature availability timestamps for each decision.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Remove leaked information and rebuild evaluation.
-- **Prevention:** Use point-in-time feature joins and held-out data.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Shadowing does not automatically eliminate leakage.
-### 8.38 Test quality exceeds production
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Test quality exceeds production.
-- **Candidate mechanism:** The test set was used for repeated tuning.
-- **Competing mechanism:** Production traffic or labels differ.
-- **Discriminator:** Inspect evaluation access history and cohort definitions.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Reserve a fresh untouched test cohort.
-- **Prevention:** Separate development and final evaluation access.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Repeated adaptation invalidates naive holdout interpretation.
-### 8.39 Agent safety incidents rise
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Agent safety incidents rise.
-- **Candidate mechanism:** A permission or approval boundary changed.
-- **Competing mechanism:** The detector became more sensitive.
-- **Discriminator:** Compare policy versions, actual actions and adjudicated reports.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Disable the unsafe capability or restore the guardrail.
-- **Prevention:** Test authorization and approval on every relevant action.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Safety monitoring cannot replace enforcement.
-### 8.40 Retrained model worsens immediately
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Retrained model worsens immediately.
-- **Candidate mechanism:** Recent labels are selectively observed.
-- **Competing mechanism:** A serving or preprocessing mismatch.
-- **Discriminator:** Compare training sample selection and train-serving features.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Rollback and rebuild using an appropriate sampling design.
-- **Prevention:** Audit selection, lineage and temporal splits before promotion.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** More recent data is not automatically more representative.
-### 8.41 Model appears overconfident
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Model appears overconfident.
-- **Candidate mechanism:** Probability calibration deteriorated.
-- **Competing mechanism:** The scoring scale or label definition changed.
-- **Discriminator:** Compare reliability bins against mature outcomes.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Recalibrate on an independent representative sample.
-- **Prevention:** Track calibration with adequate counts and uncertainty.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Calibration does not imply good ranking.
-### 8.42 Outcomes arrive before decisions
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Outcomes arrive before decisions.
-- **Candidate mechanism:** Clock skew or incorrect event-time semantics.
-- **Competing mechanism:** The outcome legitimately predates this decision.
-- **Discriminator:** Inspect raw timestamps, zones and entity identity.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Repair timestamp mapping or correct eligibility rules.
-- **Prevention:** Document event and processing time contracts.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A future label must not leak into the feature vector.
-### 8.43 A single entity dominates quality
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** A single entity dominates quality.
-- **Candidate mechanism:** Many correlated decisions belong to one entity.
-- **Competing mechanism:** The workload really is concentrated.
-- **Discriminator:** Compare decision-weighted and entity-weighted summaries.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Choose the estimand matching the business decision.
-- **Prevention:** Use entity-aware uncertainty or resampling.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Treating correlated decisions as independent understates uncertainty.
-### 8.44 Error rate drops after excluding timeouts
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Error rate drops after excluding timeouts.
-- **Candidate mechanism:** The denominator silently excludes failed requests.
-- **Competing mechanism:** The service truly improved.
-- **Discriminator:** Reconcile eligible client requests with outcome categories.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore the agreed eligibility and bad-event definitions.
-- **Prevention:** Version SLI queries and review exclusions.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Filtering failures out of the denominator creates false health.
-### 8.45 Model drift coincides with a promotion
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Model drift coincides with a promotion.
-- **Candidate mechanism:** Traffic allocation changed with the release.
-- **Competing mechanism:** The candidate itself caused the shift.
-- **Discriminator:** Compare randomized or matched concurrent cohorts.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Use the planned rollback or controlled comparison.
-- **Prevention:** Record assignment and version at decision time.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A before-after difference alone is not causal.
-### 8.46 Review queue overflows
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Review queue overflows.
-- **Candidate mechanism:** Threshold yields more alerts than staff can inspect.
-- **Competing mechanism:** Case handling time increased.
-- **Discriminator:** Compare alert arrival rate, staffing and service time.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Apply an approved prioritization or fallback policy.
-- **Prevention:** Track backlog age, throughput and missed cases.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A lower alert rate may also lower fraud capture.
-### 8.47 Segment metric fluctuates by day
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Segment metric fluctuates by day.
-- **Candidate mechanism:** Small samples and correlated outcomes create noise.
-- **Competing mechanism:** A recurring real incident affects the segment.
-- **Discriminator:** Inspect counts, interval estimates and event clusters.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Aggregate over a justified window and investigate severe events.
-- **Prevention:** Use minimum evidence rules without suppressing urgent harm.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Overlapping rolling windows are not independent experiments.
-### 8.48 Feature drift disappears after backfill
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Feature drift disappears after backfill.
-- **Candidate mechanism:** The initial ingestion was incomplete.
-- **Competing mechanism:** The historical comparator was rewritten.
-- **Discriminator:** Compare immutable snapshots and ingestion watermarks.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Correct ingestion and annotate revised analysis.
-- **Prevention:** Keep data lineage and as-of snapshots.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** A recomputed history is not the original operational view.
-### 8.49 Anomaly detector fires at midnight
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Anomaly detector fires at midnight.
-- **Candidate mechanism:** Timezone or daylight-saving boundaries shifted.
-- **Competing mechanism:** A true scheduled traffic change occurred.
-- **Discriminator:** Compare timestamps in UTC and local business time.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Correct the window alignment.
-- **Prevention:** Store timezone-aware timestamps and explicit calendar rules.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Daily windows can have unequal durations.
-### 8.50 A newly launched category is all unknown
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** A newly launched category is all unknown.
-- **Candidate mechanism:** The encoder vocabulary is stale.
-- **Competing mechanism:** The producer is sending invalid values.
-- **Discriminator:** Compare category catalog and producer version.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Update a compatible encoder or use a safe unknown path.
-- **Prevention:** Monitor unknown-category rate by source.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Silently mapping all new categories to one value loses information.
-### 8.51 Review precision improves after stricter triage
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Review precision improves after stricter triage.
-- **Candidate mechanism:** Reviewers now inspect only easier cases.
-- **Competing mechanism:** The model genuinely improved.
-- **Discriminator:** Compare review selection probabilities and score strata.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Audit a representative sample across the full eligible population.
-- **Prevention:** Log selection policy and label acquisition route.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Reviewed-case precision need not generalize to all alerts.
-### 8.52 Metric changes after model migration
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Metric changes after model migration.
-- **Candidate mechanism:** Model version labels were missing or incorrect.
-- **Competing mechanism:** The candidate genuinely changes behavior.
-- **Discriminator:** Reconcile deployment manifest against per-decision logs.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Repair provenance and recompute comparable cohorts.
-- **Prevention:** Make model and feature versions mandatory.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Unattributed metrics cannot identify a responsible version.
-### 8.53 Output schema failures rise
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Output schema failures rise.
-- **Candidate mechanism:** A model or tool emits incompatible fields.
-- **Competing mechanism:** The validator is rejecting legitimate new schema.
-- **Discriminator:** Compare schema versions and actual payloads.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Restore compatibility or roll back the producer.
-- **Prevention:** Use contract tests and staged schema changes.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Never silently coerce invalid high-risk actions.
-### 8.54 Outcomes improve while product value falls
-- **Provenance:** Hypothetical; no incident is claimed.
-- **Observed symptom:** Outcomes improve while product value falls.
-- **Candidate mechanism:** The model optimized a proxy instead of user value.
-- **Competing mechanism:** External economics changed.
-- **Discriminator:** Compare outcome metric with cost, user harm and long-term metrics.
-- **First response:** Preserve the affected cohort, version, timestamps and raw counts.
-- **Containment:** Use the product's approved safe fallback if user risk is material.
-- **Correction:** Revisit objective and require relevant guardrails.
-- **Prevention:** Maintain a metric tree from service to user impact.
-- **Validation plan:** Compare the same eligible population and metric definitions before and after the correction.
-- **Escalation:** Involve the data owner and service owner if the discriminator is inconclusive.
-- **Boundary:** Proxy gains do not establish causal product value.
-**Takeaway:** A symptom has multiple plausible causes; discriminate before choosing a fix.
-### Operational metric contracts
-The following distinct contracts are monitoring design prompts; none is a measured deployment result.
-**Contract 1: Eligibility count**
-- **Definition:** Count decisions satisfying the policy-defined target population before filtering on outcomes.
-- **Population and timing:** Exclude test traffic only by a declared rule, not because it failed.
-- **Diagnostic use:** Reconcile this count against the request ingress and decision log.
-- **Interpretation boundary:** A missing eligibility feed makes downstream rates uninterpretable.
-**Contract 2: Prediction coverage**
-- **Definition:** Count eligible requests with a recorded decision and divide by eligible requests.
-- **Population and timing:** Include timeouts and rejected scoring attempts in the denominator where policy requires.
-- **Diagnostic use:** Split missing predictions by endpoint and deployment version.
-- **Interpretation boundary:** A fallback decision should be tagged separately from a model prediction.
-**Contract 3: Outcome maturity**
-- **Definition:** Group decisions by decision timestamp and require the full predefined outcome horizon.
-- **Population and timing:** Apply a reporting buffer based on the actual label acquisition process.
-- **Diagnostic use:** Compare remaining label arrivals across prior cohorts at the same age.
-- **Interpretation boundary:** Some cases can remain unresolved even after the buffer.
-**Contract 4: Label completeness**
-- **Definition:** Count usable linked labels among eligible mature decisions.
-- **Population and timing:** Display pending, disputed, censored, and unlinked cases as separate categories.
-- **Diagnostic use:** Compare completeness by score band and intervention.
-- **Interpretation boundary:** High overall completeness can conceal systematic omission in one subgroup.
-**Contract 5: Label revision**
-- **Definition:** Count cases whose adjudicated value changes between two frozen snapshots.
-- **Population and timing:** Record the reason and timestamp of each correction.
-- **Diagnostic use:** Recalculate affected cohort metrics under a documented restatement policy.
-- **Interpretation boundary:** A correction is not necessarily evidence that the original model changed.
-**Contract 6: Score distribution**
-- **Definition:** Track score quantiles and fixed-bin counts per model version.
-- **Population and timing:** Include exact threshold and fallback-path rates to interpret operational impact.
-- **Diagnostic use:** Compare equivalent cohorts and time-of-day patterns.
-- **Interpretation boundary:** A changed distribution does not show whether predicted probabilities are calibrated.
-**Contract 7: Threshold workload**
-- **Definition:** Count decisions routed to review at the active threshold.
-- **Population and timing:** Use the complete decision log, including decisions without labels.
-- **Diagnostic use:** Compare arrivals with review capacity and backlog age.
-- **Interpretation boundary:** A threshold can meet volume limits while missing an unacceptable number of positives.
-**Contract 8: False-positive workload**
-- **Definition:** Count nonpositive mature outcomes among decisions sent to review.
-- **Population and timing:** Disclose that unreviewed or pending outcomes are not observed negatives.
-- **Diagnostic use:** Express both absolute workload and fraction of reviewed cases.
-- **Interpretation boundary:** Label changes or reviewer selection can alter the apparent count.
-**Contract 9: False-negative burden**
-- **Definition:** Count adjudicated positive outcomes among decisions not flagged.
-- **Population and timing:** The outcome acquisition process must cover unflagged decisions.
-- **Diagnostic use:** Compare counts and exposure across cohorts and relevant segments.
-- **Interpretation boundary:** Blocked or prevented outcomes need a separate causal design.
-**Contract 10: Recall at capacity**
-- **Definition:** Rank eligible decisions and examine positives captured within the permitted review budget.
-- **Population and timing:** Use a fixed and auditable tie-breaking rule at the cutoff.
-- **Diagnostic use:** Compare candidates on the same representative mature cohort.
-- **Interpretation boundary:** An offline ranking does not guarantee reviewers can process cases at the assumed rate.
-**Contract 11: Probability calibration**
-- **Definition:** Compare mean predicted probability with observed outcome rate in defined score bins.
-- **Population and timing:** Use representative mature outcomes and show counts and uncertainty per bin.
-- **Diagnostic use:** Inspect whether calibration differs by segment and calendar time.
-- **Interpretation boundary:** Binning hides within-bin structure and rare-outcome uncertainty.
-**Contract 12: Ranking discrimination**
-- **Definition:** Compare whether positives tend to receive higher scores than negatives.
-- **Population and timing:** Use a metric consistent with the decision and prevalence regime.
-- **Diagnostic use:** Compare models on the same cohort with dependence-aware uncertainty.
-- **Interpretation boundary:** Good ranking alone does not imply accurate probabilities or sufficient capacity.
-**Contract 13: Feature freshness**
-- **Definition:** Measure age from source event time to the moment the feature is consumed.
-- **Population and timing:** Distinguish an old valid value from a failed refresh under the feature contract.
-- **Diagnostic use:** Report access-weighted freshness if users experience different records.
-- **Interpretation boundary:** A fresh ingestion timestamp can conceal stale source events.
-**Contract 14: Feature missingness**
-- **Definition:** Measure the fraction of eligible decisions lacking each required feature.
-- **Population and timing:** Separate null, absent field, invalid value, and default-imputed value.
-- **Diagnostic use:** Break down by producer, deployment, and input segment.
-- **Interpretation boundary:** A missingness increase is not necessarily caused by model weights.
-**Contract 15: Feature range**
-- **Definition:** Measure out-of-contract values before and after preprocessing.
-- **Population and timing:** Specify physical or business units and valid bounds.
-- **Diagnostic use:** Inspect raw source values before clipping or normalization.
-- **Interpretation boundary:** Clipping may hide an upstream unit conversion defect.
-**Contract 16: Unknown categories**
-- **Definition:** Count categories not present in the deployed encoder vocabulary.
-- **Population and timing:** Include the vocabulary version and the unknown-value handling rule.
-- **Diagnostic use:** Compare the source catalog and deployment timelines.
-- **Interpretation boundary:** An allowed new category can be legitimate even when it is unfamiliar to the model.
-**Contract 17: Training-serving skew**
-- **Definition:** Compare the point-in-time feature value used in serving with a reconstructed training feature.
-- **Population and timing:** Align entity key, event time, transformation version, and null handling.
-- **Diagnostic use:** Sample discrepancies and trace each to a source or transformation.
-- **Interpretation boundary:** A reconstruction using future data is not a valid parity check.
-**Contract 18: Input drift**
-- **Definition:** Compare current and reference feature distributions using fixed definitions.
-- **Population and timing:** Choose a comparator appropriate to season, population, and product version.
-- **Diagnostic use:** Report sample sizes, effect size and localized bins or quantiles.
-- **Interpretation boundary:** Marginal tests cannot establish unchanged interactions or outcomes.
-**Contract 19: Output drift**
-- **Definition:** Compare decision or score distributions across comparable cohorts.
-- **Population and timing:** Annotate threshold, model, policy, and traffic routing changes.
-- **Diagnostic use:** Investigate input changes and pipeline version changes separately.
-- **Interpretation boundary:** Identical outputs can still have different actual outcomes.
-**Contract 20: Latency**
-- **Definition:** Measure a user-relevant elapsed time from a declared start to completion or failure.
-- **Population and timing:** Include timeouts according to the SLI contract rather than dropping them.
-- **Diagnostic use:** Report tail thresholds and request counts by path.
-- **Interpretation boundary:** An application-server timer may miss failures before the server receives a request.
-**Contract 21: Availability**
-- **Definition:** Divide good eligible requests by all eligible requests over the agreed window.
-- **Population and timing:** Define which status codes, fallbacks, and timeouts satisfy the good-event rule.
-- **Diagnostic use:** Reconcile client-side and server-side counts for coverage gaps.
-- **Interpretation boundary:** A successful transport response may contain a wrong answer.
-**Contract 22: Agent completion**
-- **Definition:** Count attempts that reach the declared terminal completion state.
-- **Population and timing:** Keep cancellations, timeouts, rejected requests, and aborted runs visible.
-- **Diagnostic use:** Inspect completion separately by task type and tool dependency.
-- **Interpretation boundary:** A terminal state is not a factual or safety evaluation.
-**Contract 23: Agent task success**
-- **Definition:** Apply a versioned rubric to eligible attempted tasks.
-- **Population and timing:** Use an independent representative review sample and disclose judge limitations.
-- **Diagnostic use:** Report success per attempt and, separately, success among completed runs.
-- **Interpretation boundary:** Do not alter the rubric after observing results without recording the change.
-**Contract 24: Tool reliability**
-- **Definition:** Track attempted calls, transport failures, semantic errors, and response times.
-- **Population and timing:** Distinguish tool execution failure from invalid arguments generated by an agent.
-- **Diagnostic use:** Inspect failures by tool version and dependency.
-- **Interpretation boundary:** A valid JSON response can still return incorrect data.
-**Contract 25: Retrieval relevance**
-- **Definition:** Measure whether retrieved passages are relevant to the task under a declared annotation rule.
-- **Population and timing:** Ensure assessors can see the query and the retrieved item without outcome leakage.
-- **Diagnostic use:** Break down failures by corpus freshness and access permissions.
-- **Interpretation boundary:** Relevant retrieval alone does not guarantee a supported final answer.
-**Contract 26: Citation support**
-- **Definition:** Assess whether each cited source actually supports the associated claim.
-- **Population and timing:** Separate citation presence from entailment and authorized access.
-- **Diagnostic use:** Audit unsupported claims and missing citations in a representative sample.
-- **Interpretation boundary:** A reference to an accessible document is not itself evidence for every statement.
-**Contract 27: Review agreement**
-- **Definition:** Compare independently assigned ratings on the same items under the same rubric.
-- **Population and timing:** Record rater qualifications, item sample, and adjudication protocol.
-- **Diagnostic use:** Inspect disagreement by failure category rather than relying only on one aggregate.
-- **Interpretation boundary:** Agreement can be high even when both raters apply a defective rubric.
-**Contract 28: Cost per success**
-- **Definition:** Divide included total costs by successfully completed tasks.
-- **Population and timing:** Include model, tool, infrastructure, and review categories if they are within scope.
-- **Diagnostic use:** Report cost per attempt and success rate separately.
-- **Interpretation boundary:** The ratio is undefined when the success count is zero.
-**Contract 29: Safety incident rate**
-- **Definition:** Count policy-defined harmful events among eligible exposures.
-- **Population and timing:** Record severity, ascertainment method, and report delay.
-- **Diagnostic use:** Escalate severe individual events even when population rates are uncertain.
-- **Interpretation boundary:** An incident detector is not a preventive authorization boundary.
-**Contract 30: Backlog age**
-- **Definition:** Measure time from review enqueue to completed review for each case.
-- **Population and timing:** Separate waiting time from handling time and stalled cases.
-- **Diagnostic use:** Track oldest outstanding work and service capacity by priority.
-- **Interpretation boundary:** A small queue can still contain a dangerously old high-priority case.
+
+Each entry below is a diagnostic pattern. The competing causes are both live until a check separates
+them, and the check is chosen so the two causes produce different observations.
+
+### 8.1 Precision rises in the first week after launch
+
+**Symptom.** The daily precision chart jumps from 0.31 to 0.48 within five days of a deployment and
+stays there for a week before settling near 0.37.
+
+**Competing causes.** (a) Labelling is selective by outcome latency, so the earliest labels are
+disproportionately the easy, high-confidence cases. (b) The new version genuinely improved at the top of
+the score range and the early traffic was concentrated there. (c) The deployment changed the alert
+volume, shrinking the denominator and shifting the mix.
+
+**Discriminating check.** Compute precision separately by label-arrival lag bucket on the *old* version's
+history. If the old version also shows a 0.31-to-0.48 pattern at lag 0–5 days, cause (a) explains the
+new observation and no model improvement is demonstrated. If the lag pattern is flat for the old
+version, examine (b) and (c).
+
+**Correction.** Hold the promotion decision until the cohort reaches the coverage used in the baseline,
+or compare both versions at identical lag profiles.
+
+**Prevention.** Publish every precision figure with its coverage and its lag window, and refuse to
+compare figures whose lag profiles differ by more than one day.
+
+**Verification.** Replay one deployment day at the 45-day cut-off and confirm the settled value
+reproduces the baseline's coverage; then replay the same day at 5 days and confirm it reproduces the
+inflated value, proving the inflation is a maturity artefact.
+
+### 8.2 Precision falls but nothing in the model changed
+
+**Symptom.** Model and feature versions are unchanged; precision drops from 0.37 to 0.25 over three
+weeks while recall holds steady.
+
+**Competing causes.** (a) Prevalence fell, so the same discrimination yields lower precision. (b) The
+labelling process changed, admitting different alerts. (c) A feature drifted in a way that degraded
+ranking.
+
+**Discriminating check.** Decompose precision into its two inputs. If FPR and recall are unchanged and
+only prevalence moved, precision falls exactly as predicted by the PPV identity — a prevalence change
+from 5.4% to 2% takes precision from 0.35 to 0.17 with no model change. If FPR rose at constant
+prevalence, the ranking degraded and cause (c) is live. If FPR and recall are stable but the labelled
+share of alert types changed, cause (b) is live.
+
+**Correction.** For (a), restate targets in terms of recall and FPR, which are prevalence-invariant, and
+recompute the expected precision. For (b), audit the labelling pipeline. For (c), investigate the
+feature.
+
+**Prevention.** Monitor recall and FPR as the primary quality signals, with precision derived and
+annotated with the prevalence it assumed.
+
+**Verification.** Recompute the historical series from the raw partition and confirm the reconstructed
+precision matches the dashboard for a period with no known change.
+
+### 8.3 The alert queue grows while the alert rate is unchanged
+
+**Symptom.** Alert volume per day is flat at about 68 against a capacity of 90, yet the open queue
+climbs by dozens per week.
+
+**Competing causes.** (a) Arrivals exceed capacity in bursts even though the mean is below it. (b) Mean
+service time per alert increased, lowering effective capacity. (c) Alerts are being closed without
+adjudication, so they re-enter or are counted as resolved without a label.
+
+**Discriminating check.** Plot arrivals and completions per day as two series, not one net figure, and
+check utilisation at the peak hour. At `lambda = 94.9` and `mu = 90` the utilisation is 1.054, above one,
+and the queue is unstable even though the daily mean looks comfortable. If peak utilisation is below
+one but the queue still grows, measure service time per alert; a rise from 8 to 11 minutes cuts
+capacity by 27% with no change in staffing.
+
+**Correction.** For (a), smooth arrivals or add peak capacity. For (b), investigate what slowed review —
+usually a new evidence source or a longer form. For (c), make closure without a reason a schema
+violation.
+
+**Prevention.** Alert on utilisation and on queue age, not only on arrival rate.
+
+**Verification.** Replay one week with arrival and completion timestamps and confirm the reconstructed
+queue depth matches the observed one at the end of each day.
+
+### 8.4 A judge-based regression suite reports a large improvement
+
+**Symptom.** The candidate version scores 0.82 against 0.74 for the incumbent on the judge-based suite,
+with 1,200 items.
+
+**Competing causes.** (a) The generator genuinely improved. (b) The judge changed — a prompt edit, a
+model upgrade, or a temperature change — and is now more lenient. (c) The candidate's outputs shifted
+in style toward what the judge prefers without becoming more correct.
+
+**Discriminating check.** Re-score a frozen set of 300 historical outputs with the current judge and
+compare against the stored scores from the original run. Any change in stored-versus-rescored agreement
+identifies (b) before the candidate is considered. Then have humans score 100 stratified items blind
+to version; if human agreement with the judge on the candidate's items is lower than on the incumbent's,
+cause (c) is live.
+
+**Correction.** For (b), pin the judge version and re-run both arms under one judge. For (c), discard
+the judge for that rubric dimension and use human scores.
+
+**Prevention.** Treat the judge as a versioned instrument: log its model identifier, prompt hash, and
+decoding parameters with every score, and re-score a fixed audit set at each judge change.
+
+**Verification.** Re-run the suite with the incumbent scored twice under identical judge conditions and
+confirm the scores match to within the judge's own test-retest variation, measured on the audit set.
+
+### 8.5 Offline gain does not reproduce in the canary
+
+**Symptom.** The candidate improves offline cost per decision by 0.06 cu; at 10% traffic the production
+cost is worse than the incumbent's.
+
+**Competing causes.** (a) The offline cohort differs from live traffic in prevalence or segment mix.
+(b) The candidate's latency changed the timeout behaviour, so some live decisions never receive a score
+and fall back. (c) The canary's scoring path uses a different feature snapshot than the offline replay.
+
+**Discriminating check.** Compare the score distribution of canary traffic against the offline cohort
+on the same day. A difference in the low-score mass where fallbacks occur identifies (b); a segment-mix
+difference identifies (a). Then compare feature values for the same request key between the online
+snapshot and the offline replay — any disagreement identifies (c).
+
+**Correction.** For (a), re-weight the offline evaluation to the live mix before deciding. For (b),
+separate fallback decisions from scored decisions in the live metrics. For (c), fix the snapshot
+contract.
+
+**Prevention.** Require the offline harness to consume the same feature snapshot bytes as the serving
+path, and to report the fallback rate at the candidate's latency.
+
+**Verification.** Replay the canary week offline using live feature snapshots and confirm the
+reconstructed cost matches the observed canary cost within the sampling interval.
+
+### 8.6 A drift statistic fires on an unchanged model
+
+**Symptom.** PSI on a numeric feature crosses the team's informal 0.2 warning line overnight; the model
+and its inputs are unchanged.
+
+**Competing causes.** (a) A genuine population shift in that feature. (b) A sparse-bin effect where a
+handful of records in the tail dominates the statistic. (c) A reference-period or binning change
+introduced with a dashboard release.
+
+**Discriminating check.** Print per-bin contributions. In the section 4.4 example, the sparsest bin with
+a 0.05 share contributes 0.08959 of a 0.13971 total, so a tail change alone can cross a threshold. Then
+check the reference period's row count and the bin edges' commit history; a change in either identifies
+(c) without looking at the data.
+
+**Correction.** For (b), use quantile bins with a minimum count per bin, and report the share of the
+statistic contributed by bins below that minimum. For (c), pin bin edges and reference data as
+versioned artefacts.
+
+**Prevention.** Store bin edges, reference window, and sample sizes with every PSI value, and never
+compare values computed under different binning.
+
+**Verification.** Recompute the statistic from raw data for both the night of the alert and a quiet night,
+and confirm the quiet night reproduces its stored value.
+
+**Takeaway:** each failure above is separated from its competitors by an observation, not by a stronger
+opinion; write the observation down before changing anything.
+
 ## 9. Complexity & Cost Analysis
-### 9.1 Data and aggregation costs
-Let N denote predictions, F monitored features, B fixed histogram bins, and S explicitly materialized segments.
-A straightforward pass over every feature for every prediction performs order N times F feature visits.
-Histogram state for all feature-segment-bin combinations can grow on the order of F times S times B counters.
-Those bounds assume dense materialization; sparse representations change actual state and overhead.
-An exact quantile generally requires storing observations or an external sort; approximate sketches trade accuracy for bounded state.
-A hash join of prediction and outcome records can be expected linear in input size under suitable hashing and memory assumptions.
-The actual join can spill, shuffle, or become skewed when memory or key distribution is unfavorable.
-Entity-level ordering and as-of label selection can add sort or indexing costs.
-Sampling reduces review cost but introduces sampling error and potentially selection bias.
-Never hide sampling probabilities if they are needed to estimate a population quantity.
-### 9.2 Illustrative capacity estimate
-**ILLUSTRATIVE:** Suppose 100,000 predictions per day each carry 20 monitored scalar features.
-A full daily feature pass therefore visits 100,000 times 20 = 2,000,000 feature values.
-Suppose ten bins and five predefined segments are materialized for each feature.
-The dense histogram requires 20 times 10 times 5 = 1,000 counters.
-At an assumed eight bytes per raw counter, the counter payload is 8,000 bytes.
-This excludes metadata, keys, indexing, replication, runtime overhead and serialization.
-If the segments overlap, one prediction can update multiple segment counters; the pass cost also reflects that fanout.
-If the feature count doubles while the other assumptions stay fixed, dense counters double to 2,000.
-This is a storage arithmetic example, not a throughput benchmark or a cloud cost quotation.
-### 9.3 Human review and operational economics
-If 200 randomly selected cases need an average of five review minutes, planned review time is 1,000 minutes.
-That is 16 hours and 40 minutes before adjudication, calibration, handoffs and breaks.
-If 20% need a second five-minute review, add 40 times five = 200 minutes.
-Total planned review effort is then 1,200 minutes, or 20 person-hours under the stated assumptions.
-The additional second reviews must be budgeted independently of the sample selection design.
-Report total cost per attempted task and cost per successful task with included cost categories.
-When no successful tasks occur, cost per success is undefined; do not substitute zero.
-Protect sensitive traces with access controls, retention limits, and redaction consistent with policy.
-Instrument enough context to diagnose failures without logging unnecessary personal data or secrets.
-**Takeaway:** Budget feature computation, retained state, label latency, human review, and privacy controls together.
+
+### 9.1 Cost of the labels
+
+Labels are the expensive input, and their cost scales with how many are needed for a decision-grade
+interval. Three quantities drive it.
+
+```text
+FORMULA (sample size for a proportion):  n = z^2 * p(1-p) / e^2
+WHERE: p = expected proportion [fraction]; e = half-width of the interval [fraction];
+       z = 1.959964 for a two-sided 95% interval.
+CONSTRAINT: simple random sampling from the eligible population; clustering inflates the required n.
+NUMERICAL EXAMPLE: p = 0.36891, e = 0.03 gives n = 3.8415 * 0.23281 / 0.0009 = 993.7.
+                  the same p with e = 0.02 gives n = 2,235.9; with e = 0.05, n = 357.7.
+INTERPRETATION: halving the interval width costs about 2.25 times the labels and buys a claim that
+                distinguishes a 3-point regression from noise.
+```
+
+At 6 cu per adjudication, a 500-record audit costs 3,000 cu, which is 0.30 cu per decision across
+20,000 decisions — comparable to a tenth of the total error cost of the model. That comparison is the
+right way to price measurement: a label set that costs 0.30 cu per decision to detect a 0.24 cu per
+decision improvement is worth buying; one that costs 3 cu per decision to detect the same improvement
+is not.
+
+### 9.2 Cost of the compute and storage
+
+Monitoring data grows with cardinality, not with traffic alone. A decision record with 40 numeric
+features at 8 bytes each is 320 bytes, so 20,000 decisions per day is 6.4 MB per day of feature
+snapshots, or 2.34 GB per year. Adding 200 high-cardinality labels per record changes the order of
+magnitude: at 60 bytes per label pair the same traffic produces 240 MB per day.
+
+Traces are larger still. Five thousand agent runs per day at 30 KB of trace payload is 0.15 GB per day,
+and the payload grows with retries, tool outputs, and prompt history rather than with user count. The
+operational consequence is that retention is a design parameter: keeping full traces for 30 days and
+aggregates for a year is usually affordable, while keeping full traces for a year is usually not.
+
+Model-judge scoring is the cheapest label substitute in this sheet's arithmetic: 5,000 items at 0.0008
+cu each is 4 cu. The cost is not the constraint. The constraint is validity, which is why section 8.4
+treats the judge as an instrument requiring calibration.
+
+### 9.3 Queueing: when the metric becomes the outage
+
+Review capacity turns an alert rate into a queue. For a single-server model with Poisson arrivals,
+
+```text
+FORMULA:  W = 1 / (mu - lambda)   for lambda < mu
+WHERE: lambda = arrival rate [alerts/day]; mu = service rate [alerts/day]; W = mean time in system
+       [days]; the model assumes exponential service and a single server.
+CONSTRAINT: strictly lambda < mu; at lambda >= mu the queue has no stationary mean.
+NUMERICAL EXAMPLE: lambda = 67.77, mu = 90 gives W = 1/22.23 = 0.0450 days = 1.08 hours.
+                  at a 1.4x peak, lambda = 94.9 and lambda > mu, so W is undefined and growing.
+INTERPRETATION: a service that looks comfortable on the daily mean is unstable in its peak hour.
+```
+
+The failure this predicts is specific: an alert rate chosen for average capacity fails during the peak,
+the backlog persists into the next day, and the reviews that are skipped are the ones the analysts
+judged least interesting — which is precisely the set where false positives live. Precision then rises
+as the queue grows, for reasons that have nothing to do with the model. The measured behaviour is the
+opposite of the intuitive expectation and is one of the most reliable signatures of this failure.
+
+### 9.4 Cost of a delayed detection
+
+A monitoring design trades label cost against detection latency. For the alert-rate example, detecting a
+30% relative increase at 3-sigma with 80% power takes about 3,329 decisions, or 5.0 days at 667 per day.
+Detecting an 8% relative increase takes roughly 42,195 decisions, or 63.3 days — over two months during
+which the degraded model keeps running. A CUSUM with `k = 0.5` and `h = 5` reaches a one-sigma shift in
+about 10.3 windows, so daily windows give detection in ten days for a shift the fixed-band chart would
+need weeks to separate from noise.
+
+The cost of that latency is the integral of harm over the delay. If a degraded model misses 350
+positives per day at 42 cu each, one day of delay costs 14,700 cu, which dwarfs the 3,000 cu cost of the
+audit that would have caught it a week earlier. This asymmetry — cheap measurement, expensive delay —
+is the economic argument for monitoring investment, and it is also why monitoring budgets collapse
+after a quiet quarter.
+
+### 9.5 Complexity of the evaluation pipeline itself
+
+An evaluation that joins four tables, applies two strata, and computes five metrics has a cost that
+grows with the product of the join keys. In practice the pipeline cost is dominated by the label join,
+which is a large shuffle, and by the per-segment recomputation, which is linear in the number of
+segments times the row count. Forty segments over 20,000 rows is nothing; forty segments over forty
+million rows is a scheduled job with its own failure modes.
+
+The design consequence is to materialise the partition once per cohort and compute every ratio from it.
+A pipeline that re-scans the raw log per metric will disagree with itself the first time the log's
+retention or late-arrival behaviour changes.
+
+**Takeaway:** price labels per decision, price storage per cardinality, and price monitoring delay as
+the harm it fails to prevent.
+
 ## 10. Key Theorems / Results Reference
-### 10.1 Conditional decomposition of overall performance
-A population rate can be decomposed as a weighted average of its mutually exclusive, exhaustive segment rates.
-For segment weights w_i and segment rates r_i, the overall rate equals the sum of w_i times r_i.
-The identity follows by partitioning the numerator and denominator into the same segments.
-**ILLUSTRATIVE:** Two segments have weights 0.8 and 0.2 and success rates 0.9 and 0.5.
-The overall success rate is 0.8 times 0.9 plus 0.2 times 0.5, or 0.82.
-If weights change to 0.5 and 0.5 with unchanged segment rates, the overall rate becomes 0.70.
-The 12-percentage-point overall change is attributable to the assumed weight change in this constructed example.
-In real data, both rates and weights may change; decomposition alone does not establish why.
-### 10.2 Selection and identification
-The labeled-case rate equals the target-population rate only under suitable assumptions about label observation.
-For example, independent label observation within a fixed score stratum supports using that stratum's labeled rate for that stratum.
-If labeling depends on the unobserved outcome even within the stratum, the observed rate may be biased.
-Known nonzero sampling probabilities can support weighted estimates, subject to correct design and uncertainty accounting.
-Zero sampling probability in a relevant stratum prevents design-based recovery of that stratum from the observed labels alone.
-Randomized audits and independent adjudication can improve identification but have cost and ethical constraints.
-### 10.3 Classification metrics and prevalence
-Precision depends on the balance of true and false positives, not only on sensitivity.
-**ILLUSTRATIVE:** In 10,000 cases, assume 100 positives, sensitivity 80%, and false-positive rate 2%.
-There are 80 true positives and 0.02 times 9,900 = 198 false positives.
-Precision is 80/(80+198) = 80/278, approximately 28.78%.
-If prevalence doubles to 200 positives with the same sensitivity and false-positive rate, true positives become 160.
-False positives become 0.02 times 9,800 = 196, so precision is 160/356, approximately 44.94%.
-This assumes unchanged conditional error rates; it does not prove the cause of any observed change.
-### 10.4 Statistical inference boundaries
-Confidence intervals describe uncertainty under their sampling assumptions, not the probability that an already fixed parameter is random.
-Repeated peeking and selective reporting can invalidate a nominal fixed-horizon test's error guarantees.
-Time dependence, repeated decisions per customer and cluster assignment affect effective sample information.
-Use a method matched to the actual sampling and assignment design rather than assuming all events are independent.
-A correlation between a feature shift and quality decline does not isolate the cause of either.
-Safety-critical failures can justify immediate containment without waiting for a conventional significance threshold.
-The [illustrative drift incident](../../../11_data_science_domain_specialisations/03_practical_ml_design_and_interviews/01_ml_system_design_production/Case_Studies/01_model_monitoring_drift_incident.md) applies these distinctions to containment and recovery; its outcomes are not measured.
-**Takeaway:** Decomposition, selection assumptions, prevalence, and dependence govern what monitoring evidence can support.
+
+### 10.1 Positive predictive value identity
+
+`PPV = se*pi / (se*pi + (1-sp)(1-pi))` where `se` is sensitivity, `sp` specificity, and `pi`
+prevalence. Its force is that PPV is not a property of the model: two deployments of the same model
+have different precision if their prevalences differ. Corollary: the same model in a 0.5% prevalence
+population has PPV near 0.05 — barely above the base rate — while at 10% it exceeds 0.5.
+
+### 10.2 Rank invariance of AUC and dependence of AP
+
+AUC equals the probability that a randomly chosen positive outranks a randomly chosen negative, so it
+is unchanged by any monotone transformation of scores and by resampling within class. Average precision
+is a sum of precisions, each of which contains the negative count in its denominator, so it changes when
+class balance changes. This is the formal reason a cross-population AP comparison is invalid while a
+cross-population AUC comparison is at least well-defined.
+
+### 10.3 Dvoretzky–Kiefer–Wolfowitz
+
+For `n` independent draws from a distribution, the empirical CDF is within `epsilon` of the true CDF
+with probability at least `1 - 2*exp(-2*n*epsilon^2)`, uniformly over all thresholds. Solving for
+`epsilon` at 95% gives `sqrt(ln(40)/(2n))`. For `n = 900` that is 0.0453, for `n = 2,033` it is 0.0301,
+and for `n = 20,000` it is 0.0096. The practical reading: with fewer than about a thousand labelled
+cases, no calibration curve can be trusted to better than four percentage points at any point, so a
+"perfectly calibrated" claim from a small sample is a claim about sampling noise.
+
+### 10.4 Wilson versus Wald
+
+The Wilson interval inverts the score test and therefore has non-zero width at `p = 0` and asymmetric
+bounds near the edges. The Wald interval uses the estimated variance and degenerates at the boundary. For
+any monitoring use where zero-count or near-zero-count cells are expected — rare harms, new segments,
+safety incidents — Wald is the wrong default and its failure is silent.
+
+### 10.5 Little's law
+
+`L = lambda * W` for a stable system, with `L` the mean number in the system, `lambda` the arrival rate,
+and `W` the mean time in system. It requires only that the averages exist, which is why it can be applied
+to a review queue without assuming anything about the service distribution. Its diagnostic use is
+negative: if observed queue depth, arrival rate, and dwell time violate the identity, records are being
+duplicated, dropped, or counted at the wrong boundary.
+
+### 10.6 CUSUM average run length
+
+For a CUSUM with reference value `k` and decision interval `h`, the in-control average run length grows
+approximately exponentially in `h`, while the out-of-control average run length falls as the shift
+grows. With `k = 0.5` standard deviations and `h = 5`, the in-control run length is near 295 windows and
+the out-of-control run length is about 10.3 windows at a one-sigma shift, 5.7 at 1.5 sigma, and 3.9 at
+two sigma. The design consequence is that CUSUM is worth its complexity only when the shift of interest
+is small relative to noise; for large shifts a fixed band reacts in one window.
+
+### 10.7 Multiplicity under continuous monitoring
+
+If a chart is inspected `m` times with an independent 3-sigma rule, the probability of at least one
+false alarm is `1 - (1-0.0027)^m`. Twenty-four hourly looks give 0.0628; 365 daily looks give 0.6272. The
+implication is not to stop monitoring but to predeclare the number of looks and the alpha allocation, or
+to use a statistic whose false-alarm rate is defined per look by construction.
+
+**Takeaway:** these seven results are the ones that decide whether a printed interval, a drift flag, or a
+ranking comparison is admissible; cite the assumption with the number.
+
 ## 11. Interview / Exam Questions
-### 11.1 What is the difference between monitoring and evaluation?
-**Answer:** Monitoring continuously observes production behavior; evaluation scores performance under an explicit task, population, and protocol.
-**Reasoning:** A production evaluation can be scheduled from monitoring data, so online versus offline is not the distinction.
-**Follow-up:** What if the service is available but wrong?
-**Follow-up answer:** Use a task-quality evaluation and trace the failure; availability alone does not measure correctness.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: declaring uptime to be model accuracy.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.2 How would you evaluate a model with a 30-day outcome?
-**Answer:** Construct a decision-time cohort, wait for the outcome horizon and a declared reporting buffer, then join outcomes as of a fixed cutoff.
-**Reasoning:** Publish coverage and analyze missingness by score, action, and segment; late or revised labels remain possible.
-**Follow-up:** Can pending outcomes be counted as negatives?
-**Follow-up answer:** No; they are unknown unless the outcome definition and ascertainment justify an explicit negative.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: computing recall using only cases that were reviewed.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.3 A feature drift test rejects its null. Must you retrain?
-**Answer:** No; quantify the shift, check feature contracts and traffic mix, and evaluate mature quality before selecting an intervention.
-**Reasoning:** Statistical significance depends on sample size and does not establish harm or a causal mechanism.
-**Follow-up:** What if units changed from dollars to cents?
-**Follow-up answer:** Repair the units and confirm train-serving parity; do not retrain on corrupted data.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: treating a drift score as model accuracy.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.4 Calculate precision and recall for TP 60, FP 140, FN 40.
-**Answer:** Precision is 60/200 = 30%; recall is 60/100 = 60%.
-**Reasoning:** The two denominators are predicted positives and actual positives, respectively.
-**Follow-up:** What if labels exist only for flagged items?
-**Follow-up answer:** Precision on flagged labeled items may be estimable subject to selection; population recall is not identified.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: using the number of all predictions as the recall denominator.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.5 Why can precision drop even if sensitivity and false-positive rate stay fixed?
-**Answer:** The prevalence of positives can fall, changing the ratio of true to false positives.
-**Reasoning:** Section 10 gives a checked example in which the same conditional rates yield different precision.
-**Follow-up:** Is this necessarily concept drift?
-**Follow-up answer:** No; prevalence, traffic composition, labeling, and conditional relationships need separate investigation.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: inferring a changed model from precision alone.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.6 How can accuracy remain stable while a subgroup is harmed?
-**Answer:** Aggregate accuracy is a weighted average; improvements elsewhere or a low subgroup weight can hide deterioration.
-**Reasoning:** Compare consistent slice definitions, denominators, and uncertainty rather than only the aggregate.
-**Follow-up:** What if the subgroup has three cases?
-**Follow-up answer:** Report the count and uncertainty; do not claim reliable evidence of parity or safety.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: reporting a zero error rate without the denominator.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.7 How would you design a safe canary?
-**Answer:** Assign a limited, representative eligible cohort, record versions, and prespecify guardrails, ownership, and rollback.
-**Reasoning:** Monitor operational failures and quality separately, while acknowledging rare harms may be missed.
-**Follow-up:** If only latency improves, promote?
-**Follow-up answer:** Not on that evidence alone; verify task success and critical safety requirements.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: assuming an unrepresentative canary proves safety.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.8 How do you distinguish score drift from feature drift?
-**Answer:** Feature drift changes the distribution of model inputs; score drift changes the distribution of outputs.
-**Reasoning:** Either can occur without observed harm and either can be caused by version or traffic changes.
-**Follow-up:** Can stable scores prove stable recall?
-**Follow-up answer:** No; the relationship between scores and outcomes may have changed.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: equating a score histogram with a confusion matrix.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.9 How should an agent success metric handle unfinished runs?
-**Answer:** Define the evaluation unit and rule in advance; if incomplete runs are failures, success per attempt includes them in the denominator.
-**Reasoning:** Also report completion and conditional quality to distinguish the stages.
-**Follow-up:** For 140 successes among 200 attempts and 160 completions, what are the rates?
-**Follow-up answer:** Success per attempt is 70%; completion is 80%; conditional success is 87.5% if successes are completed runs.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: using only successes divided by completions without disclosing excluded attempts.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.10 What makes a good production alert?
-**Answer:** It corresponds to an actionable user or system risk, has a defined window and denominator, and routes to an owner with a response.
-**Reasoning:** Check low-volume behavior, telemetry failures, relevant baselines, and repeated testing.
-**Follow-up:** Would you suppress all low-count safety alerts?
-**Follow-up answer:** No; a single critical event may require immediate containment even when rate estimates are unstable.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: treating missing telemetry as a healthy zero.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.11 A high-risk action changes the observed outcome. What is the problem?
-**Answer:** The observed outcome is conditional on the action taken and may not reveal the untreated counterfactual.
-**Reasoning:** Selective review and prevented events can bias naive labels and comparisons.
-**Follow-up:** Can an experiment always fix it?
-**Follow-up answer:** No; randomization may be unsafe or infeasible, and identification still depends on design and adherence.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: claiming prevented fraud is directly observed for each blocked case.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-### 11.12 How would you compare a new model with a baseline?
-**Answer:** Use the same point-in-time eligible inputs, protected holdout and task definitions; compare paired metrics and relevant slices.
-**Reasoning:** Report uncertainty, label maturity, review cost, operational guardrails and a staged rollback plan.
-**Follow-up:** What if the candidate improves AUC but overloads reviewers?
-**Follow-up answer:** Evaluate feasible thresholds and workload; an AUC gain alone does not satisfy capacity.
-**Acceptable alternative:** A more conservative response is acceptable when it states its assumptions and evidence needs.
-**Red flag:** Red flag: selecting a model on a repeatedly tuned final test set.
-**Scoring:** Credit requires a correct answer and the relevant population, timing, or validity limitation.
-**Support:** See the worked examples and diagnostic cases in sections 4–8.
-**Takeaway:** Strong answers identify the estimand and evidence boundary before choosing an operational action.
+
+### Q1. A cohort has 750 true positives, 1,283 false positives, and 1,520 unlabelled decisions of 20,000. State precision and its 95% interval, and say what the unlabelled decisions do to the claim.
+
+**Answer.** Precision is `750/2,033 = 0.36891`. The Wilson interval with `n = 2,033` is
+`[0.34820, 0.39012]`. The unlabelled 1,520 are outside the denominator entirely; precision is a
+statement about labelled alerts, and its extension to all alerts requires an assumption about the
+missing 550.7 alerts. Bounds are `[0.36891, 0.63979]`, the top end allocating every unlabelled alert to
+the correct class.
+
+**Reasoning.** The denominator of precision is the alert set, not the cohort, so coverage enters through
+the alert set rather than through the population. A candidate who divides by 20,000 has computed an
+unrelated quantity.
+
+**Follow-up.** What single audit design would narrow those bounds most cheaply?
+
+**Red flag.** Reporting `0.36891 ± 0.044` from a Wald formula, which gives a symmetric interval that
+understates the upper tail here.
+
+**Scoring.** Full credit needs the point estimate, the Wilson bounds, and the explicit statement that the
+missing alerts are a separate assumption.
+
+### Q2. Costs are 8 cu per false positive and 42 cu per false negative. What threshold is optimal, and does prevalence affect it?
+
+**Answer.** `p* = 8/(8+42) = 0.16`. Prevalence does not enter the threshold rule: it determines how many
+cases clear the threshold, not where the threshold sits. Prevalence does enter the resulting cost per
+decision, which is why the same threshold produces different total loss in different populations.
+
+**Reasoning.** The rule equates `C_FP(1-p)` with `C_FN p` at a single case. Both sides scale with the
+case's own probability, and the population's prevalence never appears.
+
+**Follow-up.** If the score is not calibrated, what does 0.16 mean?
+
+**Red flag.** Answering 0.16 by computing the observed precision and calling it the threshold.
+
+**Scoring.** Full credit requires the formula, the number, the prevalence-independence argument, and the
+calibration caveat.
+
+### Q3. Same service: at 0.25 the cost per decision is 1.12359. At 0.10 it is 1.36710. Which threshold should operations run, and what else must be checked before deciding?
+
+**Answer.** 0.25 is cheaper by `0.24351` cu per decision, worth about `0.24351 * 18,480 = 4,500` cu per
+month at this volume. But 0.10 produces 3,533 alerts over 30 days, or 117.8 per day, against a capacity
+of 90, so it is not implementable regardless of cost. Capacity, not cost, is the binding constraint on
+the aggressive option.
+
+**Reasoning.** The cost comparison is valid only inside the feasible set. Utilisation above one makes
+the queue unstable, and an unstable queue corrupts the labels that would measure the outcome.
+
+**Follow-up.** What is the cheapest way to make the 0.10 option feasible, and what would it cost?
+
+**Red flag.** Choosing 0.25 on cost alone and never computing the review load.
+
+**Scoring.** Full credit gives the cost difference, the workload in alerts per day, and the capacity
+comparison.
+
+### Q4. Coverage is 0.924 at a 45-day cut-off. What does a single-parameter exponential fit imply, and what does it fail to detect?
+
+**Answer.** Solving `1 - exp(-45/tau) = 0.924` gives `tau = 17.462` days and a half-life of 12.10 days.
+The fit implies 0.8206 coverage at 30 days and 0.9678 at 60. It cannot distinguish steady slow
+adjudication from a growing backlog: both produce one number at one date. The discriminator is coverage
+measured at two dates plus the pending intake rate, here 33.8 decisions per day.
+
+**Reasoning.** One observation cannot identify a two-parameter process, and a backlog is a
+non-stationarity that changes the shape, not just the level.
+
+**Follow-up.** What would moving the cut-off to 60 days buy, in labels?
+
+**Red flag.** Treating the fitted `tau` as a measured adjudication latency.
+
+**Scoring.** Full credit needs the solved `tau`, the extrapolations, and the explicit identification
+failure.
+
+### Q5. A judge suite shows 0.82 for a candidate and 0.74 for the incumbent over 1,200 items. What do you do first?
+
+**Answer.** Re-score 300 frozen historical outputs with the current judge and compare with their stored
+scores. If the stored-versus-rescored agreement changed, the judge drifted and the comparison is invalid
+until both arms are scored under one judge version. Only after that check do human scores on a stratified
+100-item sample adjudicate the residual difference.
+
+**Reasoning.** The candidate and incumbent were scored at different times, so the instrument is a
+confound. Fixing the instrument is cheaper than adding human labels and must precede them.
+
+**Follow-up.** If the judge is confirmed stable, what sample size separates a true three-point gain?
+
+**Red flag.** Recommending more human labels before checking whether the judge changed.
+
+**Scoring.** Full credit requires the instrument-check-first sequencing and a concrete re-scoring design.
+
+### Q6. Labelled alerts give precision 0.48067; the weighted estimate is 0.36891. Explain the gap and state when the weighting fails.
+
+**Answer.** The labelling probabilities are 0.95 for confirmed fraud and 0.60 for cleared alerts, so
+correct alerts are over-represented among labelled ones: 712.5 of 1,482.3 labelled alerts are correct,
+while the true count is 750 of 2,033. The gap is 11.18 percentage points. The weighting fails when
+labelling probability depends on the score within class, which reorders cases inside a class and cannot
+be corrected by a per-class weight.
+
+**Reasoning.** Inverse-probability weighting corrects class-level selection, not within-class ranking.
+
+**Follow-up.** What audit design estimates the within-class dependence?
+
+**Red flag.** Describing the gap as random noise that a larger sample would remove.
+
+**Scoring.** Full credit requires both numbers, the mechanism, and the specific failure condition.
+
+### Q7. Daily traffic is 667 decisions with a reference alert rate of 0.10165. Compute the 3-sigma band and say whether 100 alerts on a day is a signal.
+
+**Answer.** `sqrt(0.10165*0.89835/667) = 0.011701`, so the band is `[0.06655, 0.13675]`, or roughly 44
+to 91 alerts. A day with 100 alerts is above the upper bound and worth investigating; a day with 70 is
+inside the band and is not evidence of a change.
+
+**Reasoning.** The band is the sampling distribution of a rate at that volume, so it widens as volume
+falls. Reporting a rate without its band invites reaction to noise.
+
+**Follow-up.** How many days of data would a 30% increase need before it is detectable?
+
+**Red flag.** Comparing 100 to the mean without converting either to a rate or a band.
+
+**Scoring.** Full credit gives the standard error, both bounds in rate and count form, and the verdict.
+
+### Q8. Why can a service's precision improve while its reviews are being skipped?
+
+**Answer.** Skipped reviews do not produce labels, and the skipped alerts are the ones analysts judged
+least likely to be real. The measured precision is computed over the reviewed subset, from which the
+least promising alerts have been removed by the backlog. Precision therefore rises as capacity is
+exceeded.
+
+**Reasoning.** The mechanism is selection on the same variable being measured, induced by a queue. It is
+visible as a simultaneous rise in queue age and fall in coverage.
+
+**Follow-up.** Which single chart detects it?
+
+**Red flag.** Explaining the pattern as "the model improved under pressure".
+
+**Scoring.** Full credit names the selection mechanism, the queue as its cause, and the coverage or
+queue-age signal that reveals it.
+
+### Q9. A model's ECE is 0.0448 with six bins and 0.0404 with four. Is the model calibrated?
+
+**Answer.** Not on this evidence. The ECE changes by 10% with the binning, on identical predictions, so
+the number is a property of the binning as much as of the model. The usable statement is
+"ECE = 0.045 under six equal-count bins, with 5,000 cases", plus the reliability curve and the Brier
+decomposition. Here reliability is 0.00256 and resolution 0.07705, which is a nearly perfectly reliable
+and moderately informative model.
+
+**Reasoning.** Binned calibration metrics average over bins; a change of bins changes the weights and
+the within-bin dispersion. The decomposition is binning-dependent too, but it separates the two
+questions so a reader can see which is broken.
+
+**Follow-up.** Which bins would you report, and why?
+
+**Red flag.** Answering "yes, 0.045 is below 0.05" without noting bin sensitivity.
+
+**Scoring.** Full credit requires the two ECE values, the reason, and a statement that survives rebinning.
+
+### Q10. An agent shows 0.67 rubric success and 0.50 first-attempt success. Which number goes in the product review, and what does the other one measure?
+
+**Answer.** The product review needs 0.50, because that is what a user experiences on their first
+request. The 0.67 measures eventual success after retries, which is the right number for throughput and
+cost-per-completed-task analysis. Reporting 0.67 in a product context overstates the user experience by
+34% relative.
+
+**Reasoning.** The two figures differ by the retry mechanism, which is a system property rather than a
+capability. Mixing them makes the retry budget look like a quality improvement.
+
+**Follow-up.** What is the cost per successful run at each definition?
+
+**Red flag.** Averaging the two numbers, or reporting only the higher one.
+
+**Scoring.** Full credit assigns each number to its decision, quantifies the gap, and explains the retry
+mechanism.
+
+### Q11. AUC is 0.90758 in the reference population. Average precision is 0.43095. In a population with one fifth the prevalence, what happens to each?
+
+**Answer.** AUC is unchanged at 0.90758, because it is built from true- and false-positive rates and does
+not involve prevalence. Average precision falls to about 0.15453, because each precision term's
+denominator fills with negatives. Any cross-population AP comparison is therefore invalid without
+restating prevalence.
+
+**Reasoning.** AUC is a rank statistic averaged over class pairs; AP is a precision statistic summed
+along the ranking. Only the second contains the negative base.
+
+**Follow-up.** Which metric would you use to compare two models across two populations, and what would
+you add?
+
+**Red flag.** Quoting AUC and AP as if both were prevalence-free "quality" numbers.
+
+**Scoring.** Full credit gives both behaviours, the mechanism, and a defensible cross-population choice.
+
+### Q12. Design the verification for a fix to a late-arriving label join.
+
+**Answer.** Replay one decision whose label arrived well before the cut-off, and one whose label arrived
+within one day of the cut-off. The first confirms the fix does not break the normal path; the second
+confirms the as-of logic actually respects the boundary. Also replay a decision whose label never
+arrived, which must remain unknown rather than becoming a negative.
+
+**Reasoning.** Boundary records discriminate; interior records pass under both the correct and the
+incorrect implementation, so a fix tested only on an interior record has been narrowed to fit it.
+
+**Follow-up.** What would you assert in the regression suite so this cannot silently regress?
+
+**Red flag.** Verifying with the aggregate metric, which can look correct while individual joins are
+wrong in offsetting ways.
+
+**Scoring.** Full credit requires all three records, the reason each is chosen, and a durable assertion.
+
+**Takeaway:** the questions interlock — coverage, cost, capacity, and instrument drift are the four axes
+on which production evaluation claims fail.
+
 ## 12. Quick Reference Card
-| Item | Value |
-|---|---|
-| Topic | Production model evaluation, observability and response |
-| Core formula | Precision = TP / (TP + FP); recall = TP / (TP + FN), when the corresponding denominators are positive |
-| Key assumption | Labels, eligibility, maturity and selection represent the target population for the reported metric |
-| Complexity | Monitoring cost scales with events, retained dimensions, model evaluation and label joins; Section 9 states the workload assumptions |
-| Use when | Choosing signals and actions for deployed ML or agent systems |
-| Avoid when | Feature shift, task completion or partial label coverage is presented as proof of outcome quality |
-| Go deeper | [Collection index](INDEX.md); evaluate data and response contracts against the relevant deployed system |
-| Diagnostic | Compare label coverage, feature provenance, slice quality, baseline and operational capacity before intervention |
-| Evidence | Worked results are illustrative; real performance and deployment outcomes are not measured |
+
+| Concern | Rule | Number from this sheet |
+|---|---|---|
+| Population | Write it as a predicate before computing any ratio | 20,000 eligible, 18,480 labelled, coverage 0.924 |
+| Denomination | Precision, recall, and FPR have different denominators; state which | 750/2,033, 750/1,000, 1,283/17,480 |
+| Interval | Wilson, not Wald, near zero counts | precision [0.34820, 0.39012] |
+| Threshold | Cost rule, not F1: `p* = C_FP/(C_FP+C_FN)` | 8/50 = 0.16, best sampled point 0.25 |
+| Capacity | Convert the alert rate to reviews per day and compare with the peak | 67.8 mean vs 90 capacity, peak utilisation 1.054 |
+| Coverage | Weight by labelling probability or publish bounds | 0.48067 labelled-only vs 0.36891 weighted |
+| Maturity | Fit and stress-test; one date cannot separate backlog from lag | `tau = 17.46` days, half-life 12.1 |
+| Drift | Print per-bin contributions before believing a total | PSI 0.13971 with 0.08959 in one bin |
+| Calibration | Report binning with the number; use the Brier decomposition | ECE 0.0448 (6 bins) vs 0.0404 (4 bins) |
+| Verification | Replay the trigger and a boundary record | interior, boundary, and never-labelled cases |

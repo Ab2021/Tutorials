@@ -11,649 +11,1028 @@ content_status: "draft"
 
 # 25 Common Issues — 02_python_sql_linux_and_engineering_basics
 
-> **Purpose:** Turn a vague complaint ("the API got slow", "the numbers changed", "the queue is stuck") into one catalogued defect with a named mechanism, a check that separates it from its look-alikes, a bounded containment, a correction that changes a contract, and a replay that proves the correction held.
-> **Evidence:** Every scenario below is a constructed teaching case, labelled ILLUSTRATIVE. Arithmetic in Sections 4, 5, 9 and 11 is DERIVED from the stated inputs and was recomputed with a script. No incident, vendor, model or company result is being reported.
-> **What this file is not:** It is not an incident log, not a runbook for one organisation, and not a substitute for the primary sheet that owns each mechanism. Each issue names the sheet that carries its derivation.
-> **Title note:** The filename's `25` is the collection's minimum issue count, not a cap. This catalog carries 32 issues so that each of the unit's six sheets contributes at least four defects that practitioners actually meet.
+> **Evidence stance.** Every scenario in this file is a constructed teaching case and is labelled ILLUSTRATIVE. What is *not* constructed is the arithmetic: each number printed in Sections 4, 5, 6, 8, 9 and 11 is derived from the stated inputs by the formulas in Section 4 and was recomputed twice, once forward from the inputs and once backward from the claimed result. No organisation, vendor, model deployment or incident is being reported. Where a mechanism is a documented property of CPython, the SQL standard, the HTTP cache/status model, cgroup v2 or the Docker image format, the mechanism is stated as a property of the software, not as a measurement of anyone's system.
+
+> **What this file is.** A triage instrument. It converts one vague complaint into one catalogued defect with a named mechanism, at least two competing mechanisms, a check whose outcome differs between them, a bounded containment that preserves evidence, a correction that changes a contract, and a replay that proves the correction held.
+
+> **What this file is not.** It is not an incident log, not a runbook for one organisation, not a survey of best practice, and not a substitute for the six sheets that own the derivations. Each issue names the sheet that carries its mathematics.
 
 ## 1. File Header
 
-**Decision this file supports.** Given an observed defect in a workflow built from the unit's six topics, choose a first probe that can be run in minutes, read its result into one of four defect categories, and pick a containment that does not destroy the evidence needed for the correction. The file is written for the person who is already on call: it assumes the symptom is known and the cause is not.
+**Decision this file supports.** Given an observed defect in a workflow built from this unit's material, choose a first probe that takes under ten minutes, read the result into one of four defect categories, and pick a containment that does not destroy the evidence needed for the correction. The file is written for the person already on call: the symptom is known and the cause is not.
 
-**Why a catalog rather than a checklist.** Checklists fail at the discrimination step. "Check the logs" is not a probe, because logs from a saturated queue, a retry storm and a slow downstream all show a latency rise. A catalog earns its place by pairing every symptom with at least two competing mechanisms and a check whose outcome differs between them. The check must be decisive: after running it, one row of this file is eliminated.
+**Why a catalog rather than a checklist.** A checklist fails exactly at the discrimination step. "Check the logs" is not a probe, because a saturated queue, a retry storm and a genuinely slow downstream all produce a latency rise in the same log lines. A catalog earns its place by pairing every symptom with a competing mechanism and a check whose outcome separates them. The check is decisive when, after running it, one row of this file is eliminated.
 
-**The four categories, operationally defined.** `VIOLATED_ASSUMPTION` means the code or query is correct against an assumption that no longer holds — the contract drifted, not the algorithm. `NUMERICAL_EDGE` means a boundary value (zero, NULL, a tie, a rounding step, a frame boundary, a clamp) produced a finite answer that is wrong. `SCALE_FAILURE` means the mechanism is right at low volume and its cost curve turns vertical — unbounded memory, linear-in-N work per request, synchronised retries, fanout from duplicate keys. `CONCEPT_CONFUSION` means two quantities that share a name were swapped: per-token loss for per-byte loss, a mitigation for a correction, a planned test for a result, a score for an authority.
+**The four categories, operationally defined.**
+- `VIOLATED_ASSUMPTION` — the code or query is correct against an assumption that no longer holds. The contract drifted; the algorithm did not. Ten issues in this catalog are of this kind.
+- `NUMERICAL_EDGE` — a boundary value produced a finite, plausible, wrong answer: zero, NULL, a tie, a rounding step, a frame boundary, a clamp, a unit change. Thirteen issues here are boundary defects.
+- `SCALE_FAILURE` — the mechanism is right at low volume and its cost curve turns vertical: unbounded memory, linear-in-N work per request, synchronised retries, duplicate-key fanout. Six issues.
+- `CONCEPT_CONFUSION` — two quantities that share a name were swapped: concurrency for parallelism, per-token loss for per-byte loss, mitigation for correction, a score for an authority, image size for cold-start time. Seven issues.
 
-**Severity discipline.** Severity is stated as consequence inside the declared scope (a nightly batch, one tenant's dashboard, one validator path), never as an incident claim. An issue that silently corrupts a published number outranks one that fails loudly, because the loud one is already contained by its own error.
+**Distribution, stated so the counts can be audited.** The catalog carries 36 issues, which is above the collection's minimum of 25 because each of the unit's six sheets contributes at least four defects a practitioner actually meets. By layer: async and Python 9, HTTP/WebSocket 7, LLM inference 7, containers 6, SQL analytics 7. By category: 10 violated assumption, 13 numerical edge, 6 scale failure, 7 concept confusion. The file name retains the collection's `25` by convention; the number is a floor, not a cap.
 
-**How to read an entry.** Each entry has seven fields: symptom (what a monitor or a human reports), mechanism (why the code produces it), competing causes (the look-alikes), discriminating check (the probe that separates them), correction (the contract change), prevention (the check that keeps it fixed), verification (the replay that proves it). The catalog table in Section 8 repeats the same fields in one line per issue, so a responder can scan first and read second.
+**Severity discipline.** Severity is stated as consequence inside a declared scope — one nightly batch, one tenant's dashboard, one validator path, one deploy — never as an incident claim. A defect that silently corrupts a published number outranks one that fails loudly, because the loud one is already contained by its own error and has therefore already produced its evidence.
 
-**Provenance rule.** HYPOTHETICAL marks a constructed scenario. Where an entry quotes a formula from a sibling sheet, the formula is cited and the arithmetic recomputed here; the scenario stays constructed. No entry claims that any organisation experienced it.
+**How to read an entry.** Seven fields per entry: symptom (what a monitor or a human reports), mechanism (why the code produces it), competing causes (the look-alikes, at least two), discriminating check (the probe that separates them), correction (the contract change), prevention (the check that keeps it fixed), verification (the replay that proves it). Section 8 gives the scannable table; the entries that carry numbers get prose as well, because a table cell cannot hold a derivation.
 
-**Assumed environment.** CPython 3.11+ with `asyncio`, an HTTP/1.1 and WebSocket client, an LLM served behind a chat API, containers run under a modern engine with cgroup v2, and a columnar SQL engine whose window functions follow the SQL standard's default frame. Version-specific behaviour is flagged where it changes a fix.
+**Assumed environment.** CPython 3.11 or newer with `asyncio`; an HTTP/1.1 and WebSocket client; a chat-completion LLM served behind an HTTP API; containers under a modern engine with cgroup v2; a columnar SQL engine whose window functions follow the SQL standard's default frame. Where a behaviour is version-specific the version is named, because several of these defects change shape between versions.
 
-Takeaway: the file's value is not the list of defects; it is the pairing of each defect with a probe that a responder can finish before the incident call ends.
+**Scope boundaries.** Out of scope and deliberately so: security exploitation, cluster capacity planning, model training defects, and anything requiring a specific vendor's console. Capacity questions enter only where a queueing number is needed to separate causes, and then only the standard formulas of Section 4.
+
+**Review trigger.** Re-read the entry for any issue whose dependent tool has a major-version change: `asyncio` cancellation semantics, HTTP client defaults, the tokenizer used for cost arithmetic, the container runtime's signal handling, and the SQL engine's default window frame.
+
+Takeaway: the value of this file is not the list of defects; it is the pairing of each defect with a probe that a responder can finish before the incident call ends.
 
 ## 2. Concept Map / Mental Model
 
-Every entry in this catalog is reached by the same five-stage path, and the order is not negotiable. Containment before diagnosis is how incidents become outages; diagnosis before containment is how a two-minute defect becomes a two-hour one. The diagram puts containment third because the first two stages are read-only and fast.
+Every entry is reached by the same five-stage path, and the order is not negotiable. Containment before diagnosis is how incidents become outages; diagnosis before containment is how a two-minute defect becomes a two-hour one. The diagram puts containment third because the first two stages are read-only and cheap.
 
 ```text
-  observed symptom
+  observed symptom ("slow", "wrong number", "stuck", "duplicate")
         |
         v
-  (1) CLASSIFY  --- is the shape of the wrongness arithmetic, contract,
-        |             scale, or naming?  (category decides the probe set)
+  (1) CLASSIFY   shape of the wrongness: arithmetic / contract /
+        |        scale / naming  -> decides which probe set applies
         v
-  (2) PROBE     --- one decisive measurement, recorded with its timestamp
-        |             and the exact input that triggered the complaint
+  (2) PROBE      one decisive measurement, recorded with its timestamp
+        |        and the exact input that produced the complaint
         v
-  (3) CONTAIN   --- bounded, reversible, and evidence-preserving:
-        |             defer, cap, disable one path, return a prior result
+  (3) CONTAIN    bounded, reversible, evidence-preserving:
+        |        defer, cap, disable one path, serve a prior result
         v
-  (4) CORRECT   --- change the contract or the arithmetic, not the symptom
+  (4) CORRECT    change the contract or the arithmetic, not the symptom
         |
         v
-  (5) REPLAY    --- original record + nearest boundary + one neighbour
-                    pass -> close with a reason code
-                    fail -> the mechanism was misidentified; back to (2)
+  (5) REPLAY     triggering record + nearest boundary + one neighbour
+                   pass -> close with a reason code
+                   fail -> the mechanism was misidentified; back to (2)
 ```
 
-Two rules make the path work. First, stage 2 produces a *number or a diff*, never an opinion; "it looks like a retry storm" is a hypothesis, "attempts per request moved from 1.02 to 1.24" is a probe. Second, stage 3 must leave the triggering record intact. A containment that truncates the payload, rotates the log, or overwrites the failed row removes the evidence that stages 4 and 5 depend on.
+Two rules make the path work. Stage 2 must produce a *number or a diff*, never an opinion: "it looks like a retry storm" is a hypothesis, "attempts per logical request moved from 1.02 to 1.24" is a probe. Stage 3 must leave the triggering record intact; a containment that truncates the payload, rotates the log or overwrites the failed row deletes the evidence that stages 4 and 5 depend on.
 
-**A second axis: where the defect lives.** The category says what kind of wrongness it is; the layer says where to look first. Crossing the two is what turns a catalog into a triage instrument, because some cells are nearly empty and can be skipped under time pressure.
+**The second axis: where the defect lives.** Category says what kind of wrongness it is; layer says where to look first. Crossing the two turns a catalog into a triage instrument, because some cells are nearly empty and can be skipped under time pressure.
 
 ```text
 layer            VIOLATED_ASSUMPTION   NUMERICAL_EDGE        SCALE_FAILURE        CONCEPT_CONFUSION
-client/async     cancellation semantics zero permits            unbounded gather     "parallel" vs "concurrent"
-network/HTTP     status-code contract   Retry-After seconds    retry amplification  mitigation vs correction
-stream/WS        frame atomicity        heartbeat interval     slow-consumer queue  ping failure vs slow peer
-model/inference  template identity      clamp at 1e-5          context cost         loss unit vs task claim
-data/SQL         NULL three-valued      boundary inclusion     join fanout          count of rows vs count of keys
-container        PID 1 signal path      grace vs drain time    layer cache churn    image size vs cold start
+async/Python     cancellation contract  timeout budget        unbounded gather     parallel vs concurrent
+HTTP/WebSocket   status-code contract   Retry-After units     retry amplification  liveness definition
+LLM inference    template identity      clamp at 1e-5         context cost         token vs byte loss
+container        PID 1 signal path      grace vs drain time   layer cache churn    image size vs start
+SQL analytics    join-key uniqueness    boundary inclusion    hot-key scan         percentile averaging
 ```
 
-The empty-looking cells are the useful part: a `CONCEPT_CONFUSION` in the async layer is almost always the words "parallel" and "concurrent" being used interchangeably, and a `NUMERICAL_EDGE` in the SQL layer is almost always a boundary timestamp or a NULL, so those two cells resolve with one question rather than a probe.
+The sparse cells are the useful part. A `CONCEPT_CONFUSION` in the async layer is almost always the words "parallel" and "concurrent" used interchangeably, so it resolves with one question rather than a probe. A `NUMERICAL_EDGE` in the SQL layer is almost always a boundary timestamp or a NULL, so it resolves with one count.
 
-**Why misclassification costs time.** A `SCALE_FAILURE` treated as `VIOLATED_ASSUMPTION` sends the responder to read the request handler, which is correct code operating outside its envelope; an hour disappears before anyone plots volume against latency. The reverse error is worse: a contract violation treated as a capacity problem invites the responder to add workers, which multiplies the wrong effect and typically doubles the side effects.
+**Why misclassification costs time.** A `SCALE_FAILURE` treated as a `VIOLATED_ASSUMPTION` sends the responder to read a request handler that is correct code operating outside its envelope; twenty minutes disappear before anyone plots volume against latency. The reverse error is worse: a contract violation treated as a capacity problem invites extra workers, which multiplies the wrong effect — with an idempotency defect, doubling workers roughly doubles the duplicate side effects.
 
-**The look-alike problem, stated once.** Three pairs dominate the catalog. A retry storm and a downstream slowdown both raise p99 and reduce throughput, and only the attempts-per-request series separates them. A truncated response and a wrong answer both present as "the model did not answer", and only a substring assertion on the exact prompt text separates them. A fanout join and a genuinely higher metric both change revenue, and only the row-count ratio before and after the join separates them.
+**The three dominant look-alike pairs, stated once.** A retry storm and a downstream slowdown both raise p99 and lower throughput, and only attempts-per-request separates them. A truncated response and a wrong answer both present as "the model did not answer", and only a substring assertion against the exact prompt separates them. A fanout join and genuine growth both change revenue, and only the row-count ratio before and after the join separates them.
 
-Takeaway: classify first, probe with a number, contain without destroying evidence, correct the contract, replay at the boundary — and remember that the layer tells you which one question to ask before reaching for a probe.
+**Cost of a probe, stated so probes get budgeted.** A probe is worth running when the expected cost of running it is below the expected cost of guessing. With a 25 % prior that a given mechanism is present, a probe with 0.90 sensitivity and 0.95 specificity has a posterior of 0.857 when positive (Section 4.3), and a probe costing 6 minutes against 45 minutes of rework has expected cost 12.43 minutes versus 22.5 minutes for the blind guess. Probes are cheap; rework is not; the arithmetic is in Section 5.
+
+Takeaway: classify first, probe with a number, contain without destroying evidence, correct the contract, replay at the boundary — and use the layer to decide which single question to ask before reaching for a tool.
 
 ## 3. Foundational Definitions
 
-**Symptom.** The externally observable behaviour that generated the complaint, stated without a cause attached: "p99 rose from 180 ms to 940 ms between 02:10 and 02:40 UTC". A symptom that already names a cause is a hypothesis in disguise and must be rewritten before classification.
+**Symptom.** The externally observable behaviour that generated the complaint, stated with no cause attached: "p99 rose from 180 ms to 940 ms between 02:10 and 02:40 UTC". A symptom that already names a cause is a hypothesis in disguise and must be rewritten before classification.
 
-**Mechanism.** The causal chain inside the system that produces the symptom, in the vocabulary of the component: "each retry re-sends a 22,000-token prompt, so three attempts triple prefill work per logical request". A mechanism is falsifiable; a cause phrased as "the service was overloaded" is the symptom again with a different word.
+**Mechanism.** The causal chain inside the system that produces the symptom in the vocabulary of the component: "each retry re-sends a 22,000-token prompt, so three attempts triple prefill work per logical request". A mechanism is falsifiable; "the service was overloaded" is the symptom with different words.
 
-**Competing cause.** A second mechanism that would produce the same symptom. The catalog requires at least two per entry, because a single-cause entry cannot be discriminated: it can only be confirmed by acting and seeing whether the symptom stops, which is the slowest possible test.
+**Competing cause.** A second mechanism that would produce the same symptom. The catalog requires at least two per entry because a single-cause entry cannot be discriminated: it can only be confirmed by acting and seeing the symptom stop, which is the slowest and most destructive test available.
 
-**Discriminating check.** A measurement, diff, or count whose outcome differs between the competing causes. It must be cheap enough to run during the incident, specific enough that its result eliminates a row, and recorded with the input that produced it. "Inspect the logs" is not a check; "count validator rejections per 1,000 requests, split by prompt-template hash" is.
+**Discriminating check.** A measurement, diff or count whose outcome differs between the competing causes. It must be cheap enough to run during the incident, specific enough that its result eliminates a row, and recorded together with the input that produced it. "Inspect the logs" is not a check; "count validator rejections per 1,000 requests, split by prompt-template hash" is.
 
-**Containment.** A bounded, reversible action that limits harm while the cause is still unknown: deferring items, capping intake, disabling one code path, returning a previously computed result. Containment is judged on whether it preserves the evidence and whether it can be undone, not on whether it fixes anything.
+**Containment.** A bounded, reversible action that limits harm while the cause is unknown: deferring items, capping intake, disabling one code path, serving a previously computed result. Containment is judged on whether it preserves evidence and can be undone, never on whether it fixes anything.
 
-**Correction.** The change that removes the mechanism: a contract clause, a precondition check, a corrected formula, an ownership assignment. A correction is falsifiable because the replay in the next definition can fail.
+**Correction.** The change that removes the mechanism: a contract clause, a precondition check, a corrected formula, an ownership assignment. A correction is falsifiable because the replay can fail.
 
-**Verification by replay.** Re-running the triggering record plus its nearest boundary case plus one ordinary neighbour, after the correction, and comparing output, reason code, side-effect count, and owner action against the expected values. Boundary inclusion matters: a fix for `<` versus `<=` that only replays interior cases is not verified.
+**Verification by replay.** Re-running the triggering record plus its nearest boundary case plus one ordinary neighbour after the correction, comparing output, reason code, side-effect count and owner action against expected values. Boundary inclusion matters: a fix for `<` versus `<=` replayed only on interior cases is not verified.
 
-**Idempotency key.** A caller-supplied value that identifies a logical operation across attempts, so a repeated delivery returns the first result instead of performing the effect again. The key must be created before the first attempt and persisted with the effect in one transaction; a key generated inside the retry loop identifies attempts, not operations.
+**Reason code.** A short, stable token attached to each replay outcome (`OK`, `DUPLICATE_SUPPRESSED`, `BOUNDARY_EXCLUDED`, `CAP_REACHED`, `DEFERRED`). Reason codes make replay results comparable across runs; a bare pass/fail cannot distinguish a fix from a skipped case.
 
-**At-least-once delivery.** A transport guarantee that every message is delivered one or more times. Every retry mechanism and every queue in this unit is at-least-once, which is why the effect path, not the transport, carries the deduplication duty.
+**Idempotency key.** A caller-supplied value identifying a logical operation across attempts, so a repeated delivery returns the first result instead of performing the effect twice. The key must exist before the first attempt and be persisted with the effect in one transaction; a key generated inside the retry loop identifies attempts, not operations.
 
-**Backpressure.** A signal from a consumer to a producer that its rate exceeds sustainable service, expressed as a bounded queue that blocks or rejects rather than growing. A system without backpressure converts a rate problem into a memory problem, which is strictly harder to diagnose.
+**At-least-once delivery.** A transport guarantee that every message arrives one or more times. Every retry mechanism and every queue in this unit is at-least-once, which is why the effect path — not the transport — carries the deduplication duty.
 
-**Concurrency versus parallelism.** Concurrency is interleaved progress on one or more execution units; parallelism is simultaneous execution on several. Forty coroutines against eight permits are concurrently issued and serially executed in waves, and calling that "parallel" predicts a speedup that eight permits cannot deliver.
+**Backpressure.** A signal from consumer to producer that its rate exceeds sustainable service, expressed as a bounded queue that blocks or rejects rather than growing. A system without backpressure converts a rate problem into a memory problem, which is strictly harder to diagnose because the memory problem outlives the rate spike.
 
-**Fanout.** The multiplication of rows when a join key is not unique on the right side. One parent row joined to 1.3 children on average yields 1.3 rows per parent, and every downstream `SUM` is inflated by that factor — a numerical defect produced by a data-shape assumption.
+**Concurrency versus parallelism.** Concurrency is interleaved progress on one or more execution units; parallelism is simultaneous execution on several. Forty coroutines against eight permits are concurrently issued and serially executed in five waves, and calling that "parallel" predicts a speedup eight permits cannot deliver.
 
-**Three-valued logic.** SQL's treatment of `NULL` as unknown, so `NULL = NULL` evaluates to unknown and a predicate on a nullable column silently drops rows from an `INNER JOIN` or a `WHERE`. It is the most common source of `NUMERICAL_EDGE` in the unit's SQL sheets.
+**Fanout.** The multiplication of rows when a join key is not unique on the right side. One parent row joined to 1.30 children on average yields 1.30 rows per parent, and every downstream `SUM` is inflated by that factor — a numerical defect produced by a data-shape assumption.
+
+**Three-valued logic.** SQL's treatment of `NULL` as unknown, so `NULL = NULL` evaluates to unknown and a predicate on a nullable column silently drops rows from an inner join or a `WHERE`. It is the most common `NUMERICAL_EDGE` in the unit's SQL sheets.
 
 **Window frame.** The set of rows a window function sees for each row, defined by `ROWS` (physical offsets) or `RANGE` (value offsets, with peers treated together). The default frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`, which includes every peer of the current row and therefore differs from a `ROWS` running total whenever the ordering key ties.
 
-**Censoring.** Reporting only the part of a distribution that was observed, for example a log-probability truncated to the top five candidates and clamped at a floor. Censored values substitute a bound for a measurement, and a mean over them is biased toward the floor, not merely noisier.
+**Censoring.** Reporting only the part of a distribution that was observed, for example a log-probability truncated to the top five candidates and clamped at a floor. Censored values substitute a bound for a measurement, so a mean over them is biased toward the floor, not merely noisier.
 
 **Per-token versus per-byte loss.** Two normalisations of the same total surprisal, divided by tokens or by bytes. They differ by the tokenizer's bytes-per-token ratio, so a per-token comparison across tokenizers measures the tokenizers as much as the models.
 
-**Percentile pooling.** Combining latency samples from several shards before taking a percentile. Because a percentile is a rank, not an average, pooling changes which request occupies the rank: the pooled p99 is dominated by whichever shard contributes the most long requests, and averaging per-shard p99 values produces a number that describes no request at all.
+**Percentile pooling.** Combining latency samples from several shards before taking a percentile. A percentile is a rank, not an average, so pooling changes which request occupies the rank; averaging per-shard p99 values produces a number that describes no request at all.
 
-**Cache invalidation point.** The layer in a container build after which every subsequent layer must be recomputed because an earlier input changed. Placing a source copy before a dependency install moves the invalidation point to the top of the build and turns a cached rebuild into a full one.
+**Cache invalidation point.** The layer in a container build after which every later layer must be recomputed because an earlier input changed. Copying source before installing dependencies moves the invalidation point to the top of the build and turns a cached rebuild into a full one.
 
 **Signal forwarding.** The path by which a stop signal reaches the process that owns the work. A shell started as PID 1 does not forward signals to its children by default, so the container receives the stop and the workload never sees it.
 
-**Reason code.** A short, stable token attached to a deferral or rejection so that later analysis can group decisions without parsing prose. Reason codes are the join key between an operational decision and its evidence.
+**Token budget.** The allocation of a model call's context window across system prompt, retrieved documents, conversation history, tool schemas and reserved output. A budget is a constraint on retrieval depth, not a suggestion, and the sum of the parts is what the bill is computed from.
 
-**Owner.** The named role accountable for a contract's behaviour and for the replay that closes an issue. An entry without an owner is a note, not a correction, because nothing prevents the defect from returning.
+**Denominator.** The count in the bottom of any rate. Monthly and 30-day denominators differ by 24/23 in a 31-day month — a 4.35 % difference that is large enough to be reported as a trend and small enough to be missed in review.
 
-Takeaway: the vocabulary exists to keep four things apart that incident language fuses — what was observed, why it happened, what was done to stop the bleeding, and what changed so it cannot recur.
+**Connection pool.** A bounded set of reusable transport handles shared by coroutines. It is a permit system that most teams forget they configured, and when it is smaller than the semaphore the pool, not the semaphore, is the capacity contract; a semaphore of 40 in front of a pool of 8 gives a throughput of 8 service times.
+
+**Timeout versus deadline.** A timeout bounds one attempt; a deadline bounds the whole logical operation and propagates downward so each layer can abandon work that can no longer be delivered. A retry loop with a per-attempt timeout and no deadline has no upper bound on elapsed time, which is the defect behind CI-05.
+
+**Retry budget.** A cap expressed as a ratio of retries to successes rather than as a count of attempts. At 10 % of 40 successes per second the added load cannot exceed 4 attempts per second however many requests fail, which is why a budget bounds a failure mode that an attempt cap cannot.
+
+**Poison message.** A message that fails deterministically, so each redelivery fails identically and consumes a full attempt. Without a per-message attempt counter it is indistinguishable from a transient failure and will loop until somebody drains the queue by hand.
+
+**Dead-letter queue.** The destination for messages that exhausted their attempts, holding the original payload and the failure reason. Its entire value is that the payload survives; a dead-letter path that stores only an identifier has preserved the count and destroyed the evidence.
+
+**Cursor pagination.** Paging by a stable key instead of an offset. An offset page over a table receiving inserts skips rows when something is added before the cursor and repeats rows when something is deleted, and both errors are silent in the page contents.
+
+**Upsert.** Insert-or-update against a unique constraint, so replaying a record converges on one row. An upsert keyed on a mutable natural key is not idempotent, because correcting the record changes the key and produces a second row.
+
+**Layer digest.** The content hash that identifies a cached filesystem layer. Deploying by digest is what makes "the tested artifact" a well-defined phrase; deploying by tag ships whatever the tag resolved to at pull time, which is the defect in CI-29.
+
+**Readiness versus liveness.** Liveness asks whether a process should be restarted; readiness asks whether it should receive traffic. Using liveness for readiness restarts healthy processes during a slow start, and using readiness for liveness sends traffic to a process whose loop has already died.
+
+**Attempt identifier.** A value naming one transport attempt, distinct from the operation's idempotency key. Logs carrying only one of the two cannot separate retry amplification from duplicate effects, because both manifest as more records than operations.
+
+**Backlog age.** The age of the oldest unprocessed item, which is the only queue metric that reflects user-visible delay. Depth alone is meaningless without the service rate: 10,000 pending items at 5,000 per second is two seconds of work and a non-event.
+
+**Cardinality explosion.** Growth in distinct label values on a metric, which multiplies series and cost. A request identifier used as a label turns one counter into millions and is the most common self-inflicted monitoring outage.
+
+**Index selectivity.** The share of rows a predicate keeps. A join key with 4.2 % NULLs and 1.30 children per parent has an effective selectivity that neither statistic states alone, which is why CI-30 and CI-31 are tested as a pair rather than separately.
+
+Takeaway: define the eight operational terms — symptom, mechanism, competing cause, check, containment, correction, replay, reason code — before using them, because a team that conflates symptom and mechanism will spend the incident arguing about definitions.
 
 ## 4. Core Formulas with Full Derivation
 
-The catalog's arithmetic is small: five results cover almost every quantitative issue in the file. Each is derived here in the order a responder needs it — an imbalance, its persistence under retry, its serialisation under a permit count, its inflation under a duplicate key, and its distortion under censoring — followed by the boundary where each breaks.
+Five results do most of the work in this catalog. Each is derived in the five-part anatomy: the formula, what each symbol means and its units, the conditions under which it holds, a numerical example with intermediates, and the interpretation that a responder acts on. Section 4.4 states where each one breaks.
 
-Every result below shares one precondition that is worth stating once: the inputs are measured over the same window and the same population as the symptom. A rate computed over a quiet hour and applied to a peak hour produces a number that is arithmetically right and operationally meaningless.
+### 4.1 Base case
 
-### 4.1 Base case: conservation of an unbalanced queue
-
-Derivation. Consider one work-conserving server with arrival rate `λ` and sustainable service rate `μ`, both constant, no loss and no retries. In an interval of length `t`, arrivals add `λ·t` items and completions remove `μ·t`, so the backlog changes by `(λ − μ)·t`. Because backlog cannot be negative under this model, the content is the positive part of the integral, plus whatever was already queued at the start.
+The base case is a single logical request that may be attempted more than once. Everything else in this catalog that mentions load is a perturbation of this result.
 
 ```text
-FORMULA [CI-F1]: B(t) = B0 + max(0, (lambda - mu) * t)        while lambda > mu
-                 B(t) = max(0, B0 - (mu - lambda) * t)        while lambda < mu
-WHERE: B  [items] backlog at the end of the interval;
-       B0 [items] backlog at the start, B0 >= 0;
-       lambda [items/s] arrival rate; mu [items/s] sustainable service rate;
-       t [s] interval length; all rates measured over the same window.
-CONSTRAINT: single work-conserving server, constant rates, no loss, no retry,
-       no priority classes, and mu measured at the deployed configuration
-       rather than at the vendor's headline figure.
-NUMERICAL EXAMPLE: lambda = 120 items/s, mu = 100 items/s, t = 360 s.
-       (120 - 100) * 360 = 20 * 360 = 7,200 items of backlog.
-INTERPRETATION: the defect is a rate imbalance, not a slow handler. No amount
-       of per-item optimisation changes the slope while lambda exceeds mu; only
-       demand shaping, added service rate, or shed load does.
+FORMULA [CI-F1]  expected attempts per logical request
+    A(r, n) = 1 + r + r^2 + ... + r^(n-1) = (1 - r^n) / (1 - r)
+
+WHERE
+    r   independent per-attempt failure probability       [dimensionless, 0 <= r < 1]
+    n   maximum attempts per logical request (1 <= n)     [count]
+    A   mean transport attempts per success or final fail [attempts per operation]
+
+CONSTRAINT
+    attempts are independent; the cap n is enforced; no attempt is
+    retried for a non-retryable error; r does not change between attempts
+
+NUMERICAL EXAMPLE  r = 0.20, n = 3
+    A = (1 - 0.2^3) / (1 - 0.2)
+      = (1 - 0.008) / 0.8
+      = 0.992 / 0.8
+      = 1.2400 attempts per logical request
+
+INTERPRETATION
+    0.24 of every logical request is extra load caused by retrying.
+    At 40 logical requests/s that is 9.6 additional attempts/s, so
+    the downstream sees 49.6 attempts/s, not 40.
 ```
 
-**Why this is the base case.** It converts "the queue is growing" into a slope with units. A responder who measures the slope has already localised the defect to capacity or demand, and has already ruled out the whole `NUMERICAL_EDGE` family, because a numerical defect does not produce a linear backlog.
-
-**Validity condition.** The formula holds only while both rates stay constant. A backlog that grows for forty minutes and then plateaus indicates that `λ` fell or `μ` rose, not that the model was wrong; recompute with the observed segment boundaries rather than averaging across them.
-
-### 4.2 General case: retry multiplicity and amplified load
-
-Derivation. Let `r` be the probability that one attempt fails and is retried, assumed independent across attempts, and let `n` be the maximum attempt count. The expected number of attempts per logical request is the sum of the probabilities of needing each successive attempt: `1 + r + r² + … + r^{n-1}`, a geometric series with ratio `r`.
+The second base result converts attempts into a capacity fraction. It is the reason a retry storm is a `SCALE_FAILURE` and not merely a latency problem: the extra attempts consume the same permits as useful work.
 
 ```text
-FORMULA [CI-F2]: A(r, n) = (1 - r**n) / (1 - r)          for r < 1, n >= 1
-                 P_success(n) = 1 - r**n
-                 load multiplier = A(r, n) applied to downstream capacity
-WHERE: r is a probability in [0, 1); n is an integer attempt cap >= 1;
-       A [-] is expected attempts per logical request, dimensionless;
-       P_success [-] is the probability the request completes inside n attempts.
-CONSTRAINT: failure independence across attempts (violated by a persistent
-       outage or a shared rate limit), constant r during the retry window,
-       and a linear cost per attempt.
-NUMERICAL EXAMPLE: r = 0.20, n = 3.
-       A = (1 - 0.008) / 0.80 = 0.992 / 0.80 = 1.24 attempts per request.
-       P_success = 1 - 0.008 = 0.992, so 0.8% of requests exhaust three attempts.
-INTERPRETATION: a 20% failure rate raises downstream load by 24%, not by 20%,
-       because retries are themselves requests. Raising n from 3 to 4 adds
-       0.0016 attempts per request: the marginal retry buys a 0.16% success
-       gain and is almost never worth its tail latency.
+FORMULA [CI-F2]  utilisation after retry amplification
+    rho = lambda_0 * A(r, n) * S / c
+
+WHERE
+    lambda_0  logical arrival rate                        [requests/s]
+    S         mean service time per attempt               [s/attempt]
+    c         permits or workers available to attempts    [count]
+    rho       fraction of capacity consumed               [dimensionless, 0..1 for stability]
+
+CONSTRAINT
+    rho < 1; S is the mean of the same distribution the permits serve;
+    every attempt obtains exactly one permit for the whole of S
+
+NUMERICAL EXAMPLE  lambda_0 = 40, A = 1.24, S = 0.180, c = 10
+    offered  = 40 * 1.24            = 49.6 attempts/s
+    ceiling  = c / S = 10 / 0.180   = 55.56 attempts/s
+    rho      = 49.6 / 55.56         = 0.893
+
+INTERPRETATION
+    89.3 % of capacity is consumed, and 10.7 % is left for the tail.
+    The same workload without retries is rho = 40/55.56 = 0.720.
+    Retries alone moved the system from comfortable to critical.
 ```
 
-**The variant that matters operationally.** When `r` is not constant but rises with load — the usual case for a rate-limited downstream — the series diverges in effect even though it converges in form: retries add load, load raises `r`, and the fixed point is reached only when the client's attempt cap or the server's shedding stops the loop. That is why the retry cap and the retry budget are capacity controls, not politeness.
+### 4.2 General case
 
-**Validity condition.** Independence fails for a retry storm caused by one persistent fault: if the fault persists across the window, `r` is effectively 1 and `A = n` exactly. The probe that distinguishes the two is the distribution of final failure reasons: an independent-failure regime shows a mix of causes across attempts, a persistent-fault regime shows the same cause every time.
-
-### 4.3 Variants: permit waves, saturation, and in-flight count
-
-Derivation, permit waves. With `N` independent tasks each taking `L` seconds of wall time and a pool that admits at most `k` at once, the pool processes `ceil(N/k)` waves of `L` seconds, so elapsed time is `ceil(N/k)·L`. The coroutines are concurrent; the execution is serial in waves, and the speedup over a serial loop is exactly `ceil(N/k)` at best.
+The general case replaces "a permit is either busy or free" with a queue in front of the permits. The standard result is Erlang C for the probability that an arriving attempt must wait, and the derived mean wait.
 
 ```text
-FORMULA [CI-F3]: T_elapsed = ceil(N / k) * L           permits are the limit
-                 S_speedup = (N * L) / (ceil(N / k) * L) = N / ceil(N / k)
-WHERE: N [-] task count, integer >= 1; k [-] permits, integer >= 1;
-       L [s] per-task wall time, assumed uniform; T_elapsed [s].
-CONSTRAINT: tasks are independent and identical in duration; the limit is the
-       permit count, not I/O latency, CPU, or a downstream connection pool.
-NUMERICAL EXAMPLE: N = 40, k = 8, L = 0.250 s.
-       waves = ceil(40/8) = 5;  T = 5 * 0.250 = 1.25 s;  serial = 10.0 s.
-       speedup = 40/5 = 8.0x, which is exactly k, not N.
-INTERPRETATION: if a responder expects 40x and observes 8x, nothing is broken;
-       the expectation was "parallel" while the configuration is "concurrent
-       with 8 permits". Raising N without raising k moves elapsed time linearly
-       in ceil(N/k) and looks exactly like a slow downstream.
+FORMULA [CI-F3]  Erlang C wait for c identical permits
+    a      = lambda_eff * S                      offered load      [Erlangs]
+    rho    = a / c                               utilisation       [0..1]
+    P_wait = (a^c / (c! (1 - rho))) / (sum_{k=0..c-1} a^k/k! + a^c/(c!(1-rho)))
+    W_q    = P_wait * S / (c * (1 - rho))        mean queue wait   [s]
+    W      = W_q + S                             mean time in system [s]
+    L      = lambda_eff * W                      mean in system    [attempts]
+
+WHERE
+    c, S, lambda_eff as above; a is dimensionless but named Erlangs
+
+CONSTRAINT
+    rho < 1 strictly; arrivals Poisson; service exponential; c parallel
+    identical permits; single queue, no priority classes, no abandonment
+
+NUMERICAL EXAMPLE  c = 10, S = 0.180, lambda_eff = 49.6
+    a      = 49.6 * 0.180        = 8.928
+    rho    = 8.928 / 10          = 0.8928
+    P_wait = 0.648
+    W_q    = 0.648 * 0.180 / (10 * 0.1072) = 0.109 s
+    W      = 0.109 + 0.180       = 0.289 s
+    L      = 49.6 * 0.289        = 14.33 attempts in system
+
+INTERPRETATION
+    The wait is 60 % of the service time at 89 % utilisation, and it
+    grew from 16 ms at 40 requests/s. Queueing, not service, owns the
+    tail; the fix is fewer attempts or more permits, never a longer timeout.
 ```
 
-Derivation, saturation. Little's law states that the average number of items in a system equals the arrival rate times the average time in system: `L_inflight = λ·W`. It holds for any stable system under weak conditions, which is what makes it a diagnostic rather than a model: measure two of the three quantities and the third is determined, so a disagreement means the measurement windows differ.
+The general-case counterpart for work admitted in fixed waves (a batch of N items against k permits, each item independent) is exact rather than asymptotic, and is the one formula a responder can compute on a whiteboard.
 
 ```text
-FORMULA [CI-F4]: L_inflight = lambda * W
-WHERE: L_inflight [items] average concurrent items; lambda [items/s];
-       W [s] average time from entry to exit, measured on the same population.
-CONSTRAINT: steady state over the measurement window; a system that is filling
-       (arrivals exceed departures) is not in steady state and Little's law
-       describes no single instant.
-NUMERICAL EXAMPLE: lambda = 300 requests/s, W = 1.5 s gives L_inflight = 450.
-       At a 400-connection pool, 450 in flight means 50 waiters, so queueing --
-       not handler speed -- accounts for the latency above service time.
-INTERPRETATION: in-flight count and pool size are compared, never estimated.
-       A pool smaller than L_inflight is a queue; a pool much larger than
-       L_inflight is unused capacity being paid for.
+FORMULA [CI-F4]  wall time for a finite batch under k permits
+    T = ceil(N / k) * L_unit + R
+
+WHERE
+    N       items in the batch                              [count]
+    k       permits that may run at once                    [count]
+    L_unit  mean latency of one item                        [s]
+    R       residual work that is serial (setup, commit)     [s]
+
+CONSTRAINT
+    every item needs exactly one permit for its whole duration;
+    items are independent; the batch is fully materialised before dispatch
+
+NUMERICAL EXAMPLE  N = 40, k = 8, L_unit = 0.180, R = 0
+    waves = ceil(40 / 8) = 5
+    T     = 5 * 0.180    = 0.900 s
+    ideal with k = 40    = 0.180 s
+
+INTERPRETATION
+    The claim "40 concurrent tasks finish in 0.18 s" is false by 5x.
+    It is only true if k >= N, and k is set by the smallest of
+    permits, connection pool, downstream quota and file descriptors.
 ```
 
-**Validity condition for both.** Uniform `L` is the simplification that fails first: with a heavy-tailed duration distribution, `ceil(N/k)·L` understates elapsed time and the wave model must be replaced by a queueing calculation. The tell is a wave count that matches while elapsed time exceeds it.
+### 4.3 Variants
 
-### 4.4 Limits, counterexamples, and the two distortions that survive every fix
-
-The first distortion is fanout. A left join to a right table whose key is not unique produces `Σ_j c_j` rows for `n` parents, where `c_j` is the child count for parent `j`, so the multiplier is the mean child count.
+**Variant 1: a probe is a test, so it has sensitivity and specificity.** Choosing a probe is a decision under uncertainty, and the arithmetic is Bayes.
 
 ```text
-FORMULA [CI-F5]: F = (1/n) * sum over parents of c_j = rows_after / rows_before
-                 SUM_after = F * SUM_before + (contribution of the extra rows)
-WHERE: n [-] parent row count; c_j [-] child rows matching parent j, c_j >= 0;
-       F [-] fanout multiplier, dimensionless, F >= 0.
-CONSTRAINT: the child table's key is unique per (parent, event) pair; a child
-       table with its own duplicates multiplies F by that further multiplicity.
-NUMERICAL EXAMPLE: n = 1,000 parents, 1,300 child rows, so F = 1.30.
-       A revenue SUM of 84,000 currency units per 1,000 orders becomes 109,200
-       if every parent is multiplied by 1.3 identically, an inflation of 30.0%.
-INTERPRETATION: the defect is invisible in row-level spot checks, because each
-       row is correct. Only the count ratio before and after the join exposes
-       it, which is why the count belongs in the query's assertions, not the
-       reviewer's memory.
+FORMULA [CI-F5]  posterior that the mechanism is present, given a positive probe
+    PPV = (sens * p) / (sens * p + (1 - spec) * (1 - p))
+    NPV = (spec * (1 - p)) / (spec * (1 - p) + (1 - sens) * p)
+
+WHERE
+    p     prior probability the mechanism is present     [0..1]
+    sens  P(probe positive | mechanism present)          [0..1]
+    spec  P(probe negative | mechanism absent)           [0..1]
+    PPV   P(mechanism present | probe positive)          [0..1]
+
+CONSTRAINT
+    the probe's error rates were estimated on cases resembling this one;
+    the prior is honest; the probe is not run twice and counted twice
+
+NUMERICAL EXAMPLE  p = 0.25, sens = 0.90, spec = 0.95
+    PPV = (0.90 * 0.25) / (0.90 * 0.25 + 0.05 * 0.75)
+        = 0.225 / (0.225 + 0.0375)
+        = 0.225 / 0.2625
+        = 0.8571
+    NPV = (0.95 * 0.75) / (0.95 * 0.75 + 0.10 * 0.25)
+        = 0.7125 / 0.7375 = 0.9661
+
+INTERPRETATION
+    A positive probe is right 85.7 % of the time and a negative one
+    96.6 % of the time. A negative result is the stronger signal, so
+    design the probe to be run first on cases where the prior is low.
 ```
 
-The second distortion is censoring. If a scored token's probability falls below a floor `p_floor` and the harness reports `log(p_floor)` instead of the true value, the reported surprisal is *smaller* than the true surprisal, so the reported mean loss and perplexity are biased downward. The bias is one-sided and grows with the share of censored targets.
+**Variant 2: fanout and coverage are the same multiplication seen from two sides.** Fanout multiplies rows; coverage divides them; both are ratios that must be stated with their denominator.
 
 ```text
-FORMULA [CI-F6]: L_reported = (1/D) * [ sum over observed of s_i
-                                        + m * (-ln p_floor) ]
-WHERE: D [-] scored token count; s_i [nats] true surprisal of an observed token;
-       m [-] count of censored targets, m <= D; p_floor [-] clamp probability.
-CONSTRAINT: the clamp is a lower bound on probability and hence an upper bound
-       on surprisal per censored target; the true value may be larger, never smaller.
-NUMERICAL EXAMPLE: D = 1,000, true total surprisal 1,200.0 nats, m = 40,
-       mean true surprisal of those 40 assumed 12.0 nats, p_floor = 1e-5.
-       reported sum = (1,200.0 - 480.0) + 40 * 11.512925 = 720.0 + 460.517 = 1,180.52
-       L_reported = 1.18052 nats/token versus L_true = 1.20000 nats/token.
-INTERPRETATION: 4% censoring understates the mean by 1.62% and perplexity by
-       1.93% (3.25606 versus 3.32012). The direction is guaranteed by the clamp;
-       only the size depends on the assumption about the hidden 40.
+FORMULA [CI-F6]  row multiplication across a join, and revenue inflation
+    f_row  = rows(after join) / rows(parent)
+    S_bad  = f_row * S_good
+    delta  = S_bad - S_good = (f_row - 1) * S_good
+
+WHERE
+    f_row    mean children per parent on the joined key   [rows per parent]
+    S_good   sum over parent rows only                    [currency]
+    S_bad    sum after the join                           [currency]
+
+CONSTRAINT
+    the parent side is unique on the join key; the child side is not;
+    every child joins to exactly one parent; no filter is applied after
+
+NUMERICAL EXAMPLE  parents = 4,800,000 rows, children = 6,240,000 rows
+    f_row = 6,240,000 / 4,800,000 = 1.30
+    S_good = 4,800,000 units at 1.00 per row = 4,800,000
+    S_bad  = 1.30 * 4,800,000      = 6,240,000
+    delta  = 0.30 * 4,800,000      = 1,440,000  (+30.0 %)
+
+INTERPRETATION
+    A 30 % revenue jump with flat order counts is a join defect until
+    proven otherwise; the discriminator is COUNT(*) versus
+    COUNT(DISTINCT parent_key) over the same window.
 ```
 
-**The counterexample that breaks the obvious fix.** The natural response to censoring is to drop censored targets, which changes `D` as well as the numerator and therefore compares two different populations. Dropping 40 targets from a 1,000-token sample and reporting the mean of the remaining 960 yields a number that is unbiased for a *different* question — "how well does the model predict tokens it found easy" — and that question is not the one a promotion decision asks.
+**Variant 3: censoring biases a mean by a computable factor.** When values below a floor are replaced by the floor, the mean is not noisy — it is shifted, and the shift is bounded by the floor and the censored share.
 
-**Limits, stated as a list.** `CI-F1` fails under non-constant rates and priority classes. `CI-F2` fails under correlated failures. `CI-F3` fails under non-uniform durations. `CI-F4` fails outside steady state. `CI-F5` fails when the child table itself contains duplicates of the join key. `CI-F6` fails when the clamp floor is set below the tokenizer's true minimum probability, in which case no censoring occurs and the correction is unnecessary.
+```text
+FORMULA [CI-F7]  censored mean and its bias factor
+    mean_cens = (sum_{i not censored} s_i + m * ln(floor)) / N
+    bias      = mean_cens / mean_true
 
-Takeaway: five formulas and one inequality cover the catalog's arithmetic, and each carries an explicit condition under which it stops being true — which is the only reason to trust it during an incident.
+WHERE
+    N       tokens in the sequence                              [count]
+    m       tokens whose value was replaced by the floor        [count]
+    floor   clamp value in probability space (e.g. 1e-5)        [probability]
+    s_i     natural-log surprisal of token i                    [nats]
+    ln(floor) = ln(1e-5) = -11.5129                             [nats]
+
+CONSTRAINT
+    the floor is applied per token before the mean; N includes the
+    censored tokens; the true values are below the floor, not above it
+
+NUMERICAL EXAMPLE  N = 14, m = 1, floor = 1e-5, s_i = -0.12 for 13 tokens
+    sum      = 13 * (-0.12) + (-11.5129) = -1.56 - 11.5129 = -13.0729
+    mean_cens = -13.0729 / 14            = -0.9338 nats/token
+    mean_true = -0.12 nats/token
+    bias      = -0.9338 / -0.12          = 7.78x
+
+INTERPRETATION
+    One clamped token in fourteen inflates the reported loss 7.8x.
+    Two clamped tokens give -1.7476 and 14.6x. A loss that moves by
+    a factor when the sequence length changes is a censoring artefact,
+    not a model change.
+```
+
+**Variant 4: cold start is a sum of transfer and initialisation, not a function of image size alone.** The variant matters because teams optimise the additive term they can see.
+
+```text
+FORMULA [CI-F8]  cold start with a pull and an init phase
+    T_cold = B_needed / beta + m + t_init
+
+WHERE
+    B_needed  bytes that must be fetched before first request   [MB]
+    beta      effective pull bandwidth per replica              [MB/s]
+    m         engine overhead before layers are usable          [s]
+    t_init    process start, import, connection warm-up         [s]
+
+CONSTRAINT
+    layers are fetched on demand and not already on the node;
+    decompression is included in beta; no registry rate limiting
+
+NUMERICAL EXAMPLE  B_needed = 1,200 MB, beta = 180 MB/s, m = 0, t_init = 9 s
+    pull   = 1,200 / 180 = 6.67 s
+    T_cold = 6.67 + 9    = 15.67 s
+    warm   = 1.2 s
+    ratio  = 15.67 / 1.2 = 13.1x
+
+INTERPRETATION
+    43 % of the cold start is transfer and 57 % is initialisation.
+    Halving the image saves 3.3 s; halving imports saves 4.5 s.
+    Neither alone reaches the 1.2 s warm number.
+```
+
+**Variant 5: backlog age is the queue's integral, and it is the only queue metric with a clock.** Depth says how much work is waiting; age says how long the oldest item has waited, and the two diverge exactly when the service rate is close to the arrival rate.
+
+```text
+FORMULA [CI-F9]  backlog age under a rate deficit
+    B(t) = B0 + (lambda_in - mu_out) * t          while lambda_in > mu_out
+    age(t) = B(t) / mu_out                        as a lower bound on the oldest item
+
+WHERE
+    B0         backlog at the moment the deficit opened          [items]
+    lambda_in  arrival rate                                      [items/s]
+    mu_out     sustainable service rate                          [items/s]
+    age        time the oldest unprocessed item has waited        [s]
+
+CONSTRAINT
+    the deficit is sustained; service is FIFO; mu_out does not
+    degrade as the backlog grows (a queue that slows as it fills
+    diverges faster than the linear term predicts)
+
+NUMERICAL EXAMPLE  B0 = 0, lambda_in = 12, mu_out = 9.5, t = 40 s
+    B(40)  = 0 + (12 - 9.5) * 40 = 100 items
+    age    = 100 / 9.5           = 10.5 s
+
+INTERPRETATION
+    A depth of 100 items reads as "fine" in a dashboard that shows
+    depth against a 500-item limit. The age says the oldest item has
+    waited 10.5 s, which is the number a user experiences, and it is
+    already past most interactive budgets.
+```
+
+**Variant 6: the connection pool is the ceiling nobody sized.** The permit arithmetic in CI-F2 and CI-F3 uses `c`, and `c` is the minimum over every shared resource. Substituting the semaphore alone is the most common arithmetic error in capacity work because the semaphore is the visible number.
+
+```text
+FORMULA [CI-F10]  effective concurrency and its binding resource
+    c_eff = min(c_sem, c_pool, q_down * S, c_fd)
+    ceiling = c_eff / S
+
+WHERE
+    c_sem   semaphore permits                                   [count]
+    c_pool  connection handles                                  [count]
+    q_down  downstream quota                                    [requests/s]
+    c_fd    file descriptors available to the process           [count]
+    S       mean service time per attempt                        [s]
+
+CONSTRAINT
+    each request holds exactly one unit of each resource it uses;
+    the quota is expressed per second and must be multiplied by S
+    to be comparable with a count
+
+NUMERICAL EXAMPLE  c_sem = 40, c_pool = 8, q_down = 100, c_fd = 1024, S = 0.180
+    quota in count units = 100 * 0.180 = 18
+    c_eff = min(40, 8, 18, 1024) = 8
+    ceiling = 8 / 0.180 = 44.44 attempts/s
+
+INTERPRETATION
+    The semaphore claims 40 permits and the throughput is 44.44/s,
+    not 222.2/s. Any capacity plan built on 40 is wrong by 5x, and
+    the discrepancy shows up as queue wait with the semaphore
+    visibly not saturated — the signature in CI-01 and CI-09.
+```
+
+### 4.4 Limits and counterexamples
+
+**Limit of CI-F1.** The geometric sum assumes the cap is enforced and that `r` is constant across attempts. Remove the cap and `A(0.2, infinity) = 1/(1-0.2) = 1.25`: a 24 % overhead becomes a 25 % overhead, which is why "we cap retries" is worth only about one percentage point of load at `r = 0.2`. At `r = 0.4`, though, the cap matters much more: `A(0.4, 3) = 1.56` versus `1/(1-0.4) = 1.667`. The formula also fails when failures are correlated — a single downstream outage makes every attempt fail together, and the independence assumption then understates the retry load by a large factor.
+
+**Limit of CI-F3.** Erlang C requires `rho < 1` strictly. Substitute `lambda_eff = 55.56` at `c = 10, S = 0.18`: `a = 10.0`, `rho = 1.0`, and `W_q` diverges. The formula returns nothing useful at the boundary, which is itself the diagnostic: a queue whose wait is undefined is a queue at its ceiling, and no timeout increase changes that. The formula also assumes exponential service; a service with a heavier tail produces a larger wait at the same utilisation, so the computed wait is a lower bound when the downstream is bursty.
+
+**Limit of CI-F4.** The wave formula assumes every item needs one permit for its whole life. If an item releases its permit while awaiting I/O — normal in `asyncio` where the permit guards only the connection — the effective concurrency is the connection pool, not the semaphore. Substituting `k = 40` while the pool holds 8 connections returns 0.18 s and is wrong by 5x; the correct substitution is `k = min(semaphore, pool, quota)`.
+
+**Limit of CI-F5.** Bayes needs calibrated error rates. If the "probe" is a human reading logs, `sens` and `spec` are unknown and the arithmetic collapses to the prior. A second probe on the same evidence is not independent: applying the formula twice with the posterior as the new prior overstates confidence, which is why a second test only earns its cost when its errors are independent of the first.
+
+**Limit of CI-F6.** Fanout is a mean. When the child table has a skewed distribution, the mean ratio hides local multiplication: a key with 40 children inflates that key's contribution 40x while the global ratio stays 1.30. The formula also breaks with many-to-many joins, where the ratio equals the mean children per parent on both sides and the sum is inflated by the product.
+
+**Limit of CI-F7.** The bias formula assumes the floor is below the true values it replaces. If the floor is *above* the true value — for instance clamping at `1e-5` when the true probability was `1e-7` — the substituted value is an upper bound and the mean is biased toward zero, not away. The sign of the bias depends on which side the clamp sits, so the check is the direction of the movement, not its size.
+
+**Limit of CI-F8.** The pull term assumes layers are fetched on demand from a cold node. On a node with a warm layer cache, `B_needed` is only the changed layers, and `T_cold` collapses toward `t_init`. This is why the same image shows 15.67 s on a fresh node and 2.1 s on a warm one, and why a p50 cold-start improvement can coexist with an unchanged p99.
+
+**Limit of CI-F9.** The linear term holds only while the service rate is independent of the backlog. A queue whose per-item cost grows with depth — retries against a saturated downstream, a cache that thrashes, a database whose working set no longer fits — diverges faster than `(lambda_in - mu_out) * t`, and the age formula understates. The formula also fails at `lambda_in = mu_out` exactly: the backlog is then a random walk, depth stays bounded in expectation but the age grows without bound because the oldest item is never guaranteed service.
+
+**Limit of CI-F10.** The minimum is over resources held for the whole of `S`. A resource held for part of the request — a database connection released before the response is written — has an effective count of `c_res * S / S_held`, so substituting its raw count overstates capacity. The formula also assumes no resource is held across two requests; a pooled connection reused while the first request is still writing breaks the one-unit-per-request premise and makes the quota term non-linear.
+
+Takeaway: every formula in this catalog is a comparison instrument with a stated validity condition; when the condition fails, the formula's silence is itself the diagnosis.
 
 ## 5. Worked Numerical Example
 
-**Scenario (ILLUSTRATIVE).** A document-enrichment service reads 1,200 PDFs per hour from a queue, converts each page to text, calls an LLM to extract two fields, and writes a row per document into an analytics table that a revenue dashboard sums. Between 02:10 and 02:40 UTC the dashboard's daily revenue figure rises 30% with no new orders, and the enrichment service's p99 rises from 180 ms to 940 ms. Nobody has changed a model, a prompt, or a container image; one deploy changed a join in the dashboard query and another changed a retry constant in the enrichment client.
+**The complaint.** An internal analytics API reports p99 latency up by a factor of five and model spend up 24 % overnight. No deploy is recorded in the window. This is an ILLUSTRATIVE case built from the unit's arithmetic; the inputs are chosen to make each step checkable.
 
-**What the responder must decide.** Which of the two deploys explains which symptom, whether either symptom is a real business change, and what to roll back first. The example computes the three quantities that decide it: the fanout multiplier on the revenue sum, the retry-driven load multiplier on the model path, and the permit-wave elapsed time that explains the p99 if the retry story is false.
+**Inputs, stated before any computation.**
+- Baseline logical arrivals `lambda_0 = 40` requests/s; a retry cap of `n = 3` is configured with no jitter and no budget.
+- Per-attempt failure probability `r = 0.20`, taken from the validator-rejection counter (one probe, run first).
+- Service time per attempt `S = 0.180` s; permits `c = 10` (the semaphore), connection pool 32, downstream token quota 40 attempts/s.
+- A summariser call carries 22,000 input tokens and 800 output tokens; input priced 3.00 per million tokens, output 15.00 per million.
+- Eight of the forty coroutines perform a synchronous parse of about 0.25 s inside the loop.
 
-### Step 1 — Test the revenue figure for fanout
-
-Rule: `CI-F5`. The dashboard joins a 1,000-row order table to an event table and sums `order_amount`; the new join key is `(customer_id, day)` rather than `order_id`.
-
-```text
-rows before join, order table            = 1,000
-rows after join, event table matched     = 1,300
-fanout multiplier F = 1,300 / 1,000      = 1.30          [-]
-
-sum of order_amount before               = 84,000 currency units
-predicted sum after, if only F changed   = 84,000 * 1.30 = 109,200 currency units
-observed sum after                       = 109,200 currency units
-residual after removing fanout           = 0 currency units
-```
-
-The prediction matches the observation exactly, which is strong evidence but not proof: a genuine 30% revenue increase would produce the same total if it were distributed proportionally across customers. The discriminating check is the count ratio, and it is decisive here because a real increase changes `rows before` while fanout changes only `rows after`.
+**Step 1 — attempts per logical request.** Probe: divide transport attempts by logical requests over the same minute. The counter reports 62,000 attempts against 50,000 logical requests.
 
 ```text
-check: rows_after / rows_before = 1.30 on a day with no new orders
-     => the row count grew without any new parent row, so the extra rows are
-        join artefacts, and every additive measure over them is inflated.
+attempts/request = 62,000 / 50,000 = 1.24
+predicted        = (1 - 0.2^3) / (1 - 0.2) = 1.2400
 ```
 
-**Independent re-check.** Sum the 300 extra rows directly: if the extra rows carry the same `order_amount` distribution as the originals, their total is `84,000 × 0.30 = 25,200`, and `84,000 + 25,200 = 109,200`. The two routes agree, and they must, because both are the same identity rearranged. A disagreement would mean the extra rows are not a proportional sample, in which case the multiplier alone is insufficient and the sum must be recomputed on deduplicated keys.
+Agreement to three decimals means the retry cap and `r` explain the transport arithmetic exactly. This eliminates "the client is duplicating requests somewhere else" and leaves retry amplification as the mechanism.
 
-**Boundary case where the check breaks.** If the order table itself gained rows during the window — a backfill, for instance — `rows_before` is measured on a different population than `rows_after`, and the ratio conflates fanout with growth. The fix is to freeze the parent set: count `DISTINCT order_id` before and after the join. If `COUNT(DISTINCT order_id)` is unchanged while `COUNT(*)` rose, it is fanout, with no ambiguity.
-
-### Step 2 — Test the latency for retry amplification
-
-Rule: `CI-F2`. The enrichment client retries on a 429 response up to three attempts, with no jitter and a fixed 500 ms delay. The downstream reports 20% of first attempts rejected during the window.
+**Step 2 — offered load and utilisation.** The downstream does not see 40 requests/s; it sees 49.6.
 
 ```text
-r = 0.20, n = 3
-A = (1 - 0.20**3) / (1 - 0.20) = (1 - 0.008) / 0.80 = 0.992 / 0.80 = 1.24
-
-baseline downstream load   = 1,200 documents/hour * 1 attempt = 1,200 attempts/hour
-observed downstream load   = 1,200 * 1.24 = 1,488 attempts/hour
-added load                 = 288 attempts/hour = 24.0% above baseline
+offered to downstream = 40 * 1.24     = 49.6 attempts/s
+permit ceiling        = 10 / 0.180    = 55.56 attempts/s
+rho                   = 49.6 / 55.56  = 0.8928
+a (Erlangs)           = 49.6 * 0.180  = 8.928
+P_wait (c = 10)       = 0.648
+W_q                   = 0.648 * 0.180 / (10 * (1 - 0.8928)) = 0.109 s
+W                     = 0.109 + 0.180 = 0.289 s
 ```
 
-Now the second-order effect, which is the part that produces the latency symptom: the 240 documents that fail twice contribute a delay of `2 × 0.5 = 1.0 s` of retry delay each, and the 48 that fail three times contribute `2 × 0.5 = 1.0 s` as well (two waits between three attempts, with the third attempt succeeding). Total retry delay per hour is `288 × 0.5 = 144 s`, spread across 1,200 documents, which is 120 ms of added average latency — not 760 ms.
+Compare with the same system at `lambda_0 = 40` and no retries: `a = 7.2`, `rho = 0.720`, `P_wait = 0.254`, `W_q = 0.016` s, `W = 0.196` s. Queueing went from 16 ms to 109 ms — a 6.8x increase in wait — while service time did not move at all. That explains a 47 % rise in the mean and, through the queue's tail, a large part of the p99 rise.
+
+**Step 3 — the residual.** The reported p99 is five times 180 ms, so about 900 ms. The queue model gives a mean of 289 ms; the gap needs a second mechanism. Eight coroutines each block the loop for 0.25 s, so one pass through the batch stalls every other coroutine for `8 * 0.25 = 2.0` s. A request arriving at the start of a stall waits up to 2.0 s; the p99 of 900 ms falls inside that window. The discriminating check is the loop-lag histogram: a blocking call produces a lag distribution with a spike at the block duration and near-zero elsewhere, whereas pure queueing produces a smooth lag distribution. The spike is present.
+
+**Step 4 — the spend.** Spend is a product, so it can be checked independently of latency.
 
 ```text
-documents with >=1 retry = 1,200 * 0.20 = 240
-documents with >=2 retry = 1,200 * 0.20**2 = 48
-retry waits per hour     = 240 + 48 = 288
-total retry delay        = 288 * 0.5 s = 144 s
-mean delay per document  = 144 / 1,200 = 0.120 s = 120 ms
+per call     = 22,000 * 3.00 / 1e6 + 800 * 15.00 / 1e6
+             = 0.066 + 0.012
+             = 0.078 currency units
+baseline     = 40.0 * 0.078 * 3600 = 11,232.00 per hour
+after retry  = 49.6 * 0.078 * 3600 = 13,927.68 per hour
+increase     = 13,927.68 / 11,232.00 - 1 = 0.2400  (+24.0 %)
 ```
 
-**Interpretation.** 120 ms of added mean latency cannot explain a p99 that rose by 760 ms. So either the retry delay is not the mechanism, or the failures are correlated so that `r` is far higher inside the window than the 20% reported for the whole hour. That is the decisive fork, and Step 3 tests it.
+The predicted 24.0 % matches the reported 24 % exactly, which confirms that the retries are re-sending the full prompt rather than a cached prefix: a cached retry would have cost about a third as much and the increase would have been near 8 % rather than 24 %.
 
-**Independent re-check.** The load multiplier from the closed form (`1.24`) must equal the direct sum `1 + 0.20 + 0.04 = 1.24`. It does. If a responder instead computed `1.20` by adding only the first retry, downstream capacity would be under-provisioned by 3.3% of that load, which is small but compounding when the same arithmetic appears in a capacity plan.
-
-### Step 3 — Test the tail for permit-wave serialisation
-
-Rule: `CI-F3`. The client's concurrency limit is 8 permits and the observed service time per document is 0.250 s against the model endpoint. In a 30-second burst the queue delivered 40 documents at once — a redelivery after a consumer restart, which is exactly the kind of event that produces a short, sharp tail.
+**Step 5 — independent re-check of the queue arithmetic.** Little's law gives a second route to the same in-system population, and the decomposition into busy plus queued is a third.
 
 ```text
-N = 40, k = 8, L = 0.250 s
-waves   = ceil(40 / 8) = 5
-elapsed = 5 * 0.250 = 1.25 s  = 1,250 ms
-serial  = 40 * 0.250 = 10.0 s
-speedup = 40 / 5 = 8.0x
+L from Little        = 49.6 * 0.289        = 14.33
+L from busy + queued = 49.6 * 0.180 + 49.6 * 0.109
+                     = 8.928 + 5.406       = 14.33
 ```
 
-A document at the back of the burst waits four waves, i.e. `4 × 0.250 = 1.0 s = 1,000 ms` of queueing inside the client, before its own 250 ms of service begins. That is the p99 mechanism: not a slow downstream, not retries, but a burst admitted into a pool of eight and serialised in waves. The observed p99 of 940 ms sits between the fourth-wave start (750 ms) and the fifth-wave start (1,000 ms), consistent with a burst slightly smaller than 40 arriving.
+The two agree exactly because both are the same identity rearranged; the value of computing both is that a transcription error in `W` or `W_q` shows up as a mismatch. If the two disagree, the error is in the arithmetic, not in the model, and no operational decision should be taken until they agree.
 
-**Independent re-check.** In-flight count from Little's law with `λ = 40/30 = 1.333 documents/s` and `W = 0.250 s` gives `L_inflight = 0.333`, so the steady state needs one permit and the pool of eight is ample. The burst, not the pool size, is the defect: a redelivery of 40 documents at once is a `SCALE_FAILURE` in the consumer's batch admission, and no permit count that also fits the memory budget would absorb it.
-
-**Sensitivity note.** If `L` is 0.250 s on average but heavy-tailed with a p99 of 1.2 s, four waves of a heavy tail produce a much longer tail than the wave arithmetic suggests, and the wave count matching while elapsed time exceeds prediction is the tell. Conversely, if the burst had been spread over 3 seconds rather than delivered at once, `ceil(40/8)` would still be 5 but the walls between waves would be filled, and the tail would collapse to roughly `L` plus a small queueing term.
-
-### Step 4 — Cost the two corrections and pick the order
-
-The revenue defect is a publication defect: a wrong number is on a dashboard that someone may act on. The latency defect is a throughput defect that has not yet caused a missed SLA. The order follows from that asymmetry, not from which fix is easier.
+**Step 6 — correction, with the load recomputed.** Three changes, each independently justified: cap attempts at 2 (`A = 1 + 0.2 = 1.20`), add full jitter to the retry delay, and move the parse to a thread (`asyncio.to_thread` with a bounded executor).
 
 ```text
-revenue exposure  = 25,200 currency units overstated per day
-                   (the fanout delta, recomputed from Step 1)
-rollback cost     = one query revert + one refresh; ~6 minutes of dashboard staleness
-latency exposure  = 1 burst per consumer restart, ~1,200 ms of p99 for ~30 s
-                   with 1,488 - 1,200 = 288 retries/hour * 0.5 s = 144 s/hour of
-                   added downstream occupancy, i.e. 4.0% of one worker
+after cap 2 : offered = 40 * 1.20 = 48.0 attempts/s
+              rho     = 48.0 / 55.56 = 0.8640
+              W_q     ~ 0.070 s (Erlang C at c = 10, a = 8.64)
+              W       ~ 0.250 s
 ```
 
-**Verdict.** Revert the join first, because it changes a published number and the revert is cheap and exact. Fix the burst admission second, with a bounded batch size and a per-document deduplication key so the redelivery cannot multiply attempts. Fix the retry policy third: jittered backoff plus a retry budget, since the 24% load multiplier is a real capacity cost even though it is not the p99 mechanism.
+Then the prompt-prefix cache: 19,800 of the 22,000 input tokens are stable, priced at 0.30 per million.
 
-**Wrong path, and what it would have concluded.** A responder who saw the p99 first and added four workers to the pool would have spent money and changed nothing, because the pool was never the binding constraint (`L_inflight = 0.333` against eight permits). A responder who saw the revenue rise and attributed it to a promotion would have shipped a 30% overstatement into a planning cycle. The step that catches both is the count ratio in Step 1 and the in-flight comparison in Step 3 — two probes, each under a minute, each decisive.
+```text
+cached input = 19,800 * 0.30 / 1e6 + 2,200 * 3.00 / 1e6
+             = 0.00594 + 0.0066
+             = 0.01254
+per call     = 0.01254 + 0.012 = 0.02454
+saving       = 1 - 0.02454 / 0.078 = 68.5 %
+spend at 40/s = 40 * 0.02454 * 3600 = 3,533.76 per hour
+spend at 48/s = 48 * 0.02454 * 3600 = 4,240.51 per hour
+```
 
-**Remaining uncertainty.** The 20% rejection rate is an hourly average and the burst happened inside a thirty-second sub-window, so the effective `r` during the burst is unknown and could have been 100%. Under `r = 1.0` the retry term becomes `n = 3` attempts per document, tripling load, and the 144 s of retry occupancy becomes 360 s. Nothing in the example measures whether the dashboard's freshness SLA allows a 6-minute rollback, and nothing measures whether the burst arrived from redelivery or from the producer — that requires the consumer's offset log.
+**Sensitivity note.** The design is close to a wall, and the distance to it is the number worth publishing. With `r = 0.20` and cap 2 the offered load is 48.0 against a ceiling of 55.56, a margin of 13.6 %. If `r` rises to 0.35 — entirely plausible during a downstream degradation — the offered load becomes `40 * 1.35 = 54.0`, `rho = 0.972`, and the Erlang C wait at `rho = 0.972` is several times the service time. The system therefore has to be protected by a retry budget proportional to successes, not by the cap alone: at a 10 % budget the offered load cannot exceed 44.0 whatever `r` does, and `rho` stays at or below 0.792.
 
-Takeaway: compute the multiplier before choosing the fix, because a 1.30 fanout and a 1.24 retry multiplier look like the same "30% worse" symptom and require opposite corrections.
+**What the example demonstrates.** The latency number and the spend number were explained by two mechanisms that the same probe set separated: attempts-per-request proved retries, the lag histogram proved blocking, and the spend arithmetic proved the retries were uncached. No single metric would have done it, and neither of the two mechanisms alone accounts for both symptoms.
+
+Takeaway: a defensible triage ends with three independent numbers agreeing — an attempts ratio, a queue decomposition, and a cost product — and with a stated margin to the ceiling.
 
 ## 6. Visual / Geometric Intuition
 
-Four pictures carry the catalog's intuition: the backlog trajectory that separates a rate defect from a burst, the retry tree that shows where the extra attempts come from, the wave diagram that explains a p99 nobody can reproduce, and the decision tree that orders the probes. Each is schematic; every label is an exact value from Section 5 or Section 4.
-
-### 6.1 Backlog trajectory: rate defect versus burst
-
-The two shapes below are the fastest way to tell capacity from burst, and the test takes two samples one interval apart. A rate defect has a slope that persists; a burst has a step that either drains or does not, depending only on whether `μ > λ` in the quiet period.
+**The knee.** Wait time against arrival rate, for `c = 10` permits and `S = 0.180` s, computed with Erlang C at each point. The curve is flat for the first two-thirds of the range and then vertical; the vertical part is not a gradual degradation but a cliff.
 
 ```text
-backlog
-1,800 |                                              *  rate defect (CI-08)
-      |                                        *
-1,200 |                                  *
-      |                            *
- 600  |                      *                        ____  burst (CI-03)
-      |                *                    _______/
-   0  +----*----*----*--------*--------*---/------------------> t (min)
-          0    5   10   15   20   25   30   35
-              ^                            ^
-        backlog = 0                 drain begins; slope
-        at 02:10                   becomes -60 items/min
-
-  rate defect: lambda 150/s, mu 120/s -> +30/s = +1,800/min, no drain
-  burst:       +40 documents at once, drained at 8 permits * 4/s = 32/s
-               => 40 / 32 = 1.25 s to clear, so the step disappears by 02:11
+W_q (ms)
+1735 |                                                          *
+     |                                                         /
+ 219 |                                            *
+ 109 |                                *
+  34 |                       *
+  16 |                 *
+   8 |            *
+   2 |      *
+     +----+----+----+----+----+----+----+----+----+----+----+----
+        30   36   40   44   49.6 52   55          lambda (attempts/s)
+             rho .54 .65 .72 .79 .893 .936 .99
 ```
 
-Axes: minutes since the first symptom on the horizontal, items of backlog on the vertical. Key point: the two curves differ in *derivative after the event*, not in peak height. A responder who only sees the peak cannot distinguish them; a responder who takes two samples can, and the second sample costs one query.
+The operational reading: at 44 attempts/s the wait is 34 ms and nobody complains; at 49.6 it is 109 ms; at 55 it is 1,735 ms. The change from "fine" to "outage" spans 20 % of the arrival range. This is why a retry storm that adds 24 % of load is not a mild degradation.
 
-### 6.2 The retry tree and the attempt budget
-
-Each retry is a new request, so the tree below is also a load diagram. The widths are the attempt counts from `CI-F2` at `r = 0.20`, and the sum of the widths is `1.24` attempts per logical request.
+**Amplification against failure rate.** `A(0.2, 3) = 1.24` is the catalog's running example, but the shape matters more than the point: for small `r` the overhead is nearly linear, and the cap is what stops it.
 
 ```text
-1,000 logical requests
-  |
-  +-- 800 succeed on attempt 1                     (0 retries)
-  |
-  +-- 200 fail attempt 1
-        |
-        +-- 160 succeed on attempt 2               (1 retry  = 160 requests)
-        |
-        +-- 40 fail attempt 2
-              |
-              +-- 32 succeed on attempt 3          (2 retries =  64 requests)
-              |
-              +--  8 fail all three                (3 attempts, 24 requests)
-
-  total attempts = 1,000 + 160 + 64 + 24 = 1,248  -> 1.248 per logical request
-  closed form    = 1 + 0.2 + 0.04 + 0.008 = 1.248 attempts
+A
+1.60 |                                        *  r = 0.40, cap 3
+1.50 |
+1.40 |
+1.30 |                    *  r = 0.30
+1.24 |           *  r = 0.20, cap 3
+1.05 |  *  r = 0.05
+     +----+----+----+----+----+----+----+
+      0.05 0.10 0.15 0.20 0.25 0.30 0.40
 ```
 
-Axes: vertical depth is attempt number, horizontal width is request count. Key point: the third attempt contributes 64 requests to load and rescues only 32, so its load-to-rescue ratio is 2:1 — every attempt level has ratio `1/r = 5:1` at `r = 0.2`, which is why a retry cap of two is usually where the marginal value collapses.
+Two curves, not one: the geometric sum with a cap of 3, and the asymptote `1/(1-r)` without a cap. They differ by only 0.01 at `r = 0.2` and by 0.107 at `r = 0.4`. So "we cap retries" buys little at low failure rates and a great deal at high ones — the opposite of the intuition that a cap is a small safety measure.
 
-**Caption.** A retry storm is not a tree that grows deeper; it is a tree whose branching factor rises. At `r = 0.5` the same cap produces `1 + 0.5 + 0.25 = 1.75` attempts per request, a 75% load increase from a failure rate that a dashboard shows as "half the requests retried", which reads as benign.
-
-### 6.3 Permit waves: where the p99 comes from
-
-The wave diagram answers the question "why is the slowest request slow when nothing is slow". Each horizontal bar is one wave; the numbers inside are document indices in arrival order.
+**Memory against admitted concurrency.** Unbounded task creation turns a rate into retained bytes. At 19 KiB of frame, buffer and captured locals per task, the line crosses a 1 GB container at about 52,600 tasks.
 
 ```text
-time (ms)   0        250       500       750      1000      1250
-            |---------|---------|---------|---------|---------|
-wave 1      [ 1..8   ]
-wave 2                [ 9..16  ]
-wave 3                          [17..24  ]
-wave 4                                    [25..32  ]
-wave 5                                              [33..40  ]
-
-p50 of the burst: document 20 -> starts at 500 ms, ends 750 ms   = 750 ms total
-p90 of the burst: document 36 -> starts at 1000 ms, ends 1250 ms = 1250 ms total
-p99 of steady traffic (1 doc at a time): 250 ms
-
-  queueing delay = floor((i-1)/k) * L      i = arrival index, k = permits
-  total latency  = queueing delay + L
+RSS (MB)
+1200 |                                              /
+1000 |                                        *    972.8 MB at 50,000 tasks
+ 750 |                              /
+ 500 |                    /
+ 250 |        /
+   0 +--+----+----+----+----+----+----+----+----+----
+      5k  10k  20k  30k  40k  50k  60k    admitted tasks
 ```
 
-Axes: time in milliseconds; each bar is a wave of at most `k` documents. Key point: latency in a saturated pool is a step function of arrival index, so the distribution is multimodal with modes at `L, 2L, 3L, …`. A histogram with evenly spaced humps is diagnostic of a permit pool; a smooth long tail is diagnostic of a slow downstream.
+The line is straight because per-task state is roughly constant. A straight line is the signature of bounded per-item state; a curve that keeps rising after the backlog drains is the signature of a leak. Those two are separated by one measurement: does RSS fall when admissions stop?
 
-**Caption.** This is why "we cannot reproduce the p99" is a normal report: the p99 was produced by a burst that lasted thirty seconds, and replaying single documents never occupies more than one wave. Reproducing it requires replaying the burst shape, which is what the consumer's offset log preserves.
-
-### 6.4 The probe decision tree
-
-The catalog is large, so the first probe must be chosen by symptom shape rather than by topic familiarity. The tree below is the one a responder can run before the incident call starts.
+**Fanout as a multiplicative shadow.** Revenue before and after a join on a non-unique key.
 
 ```text
-symptom?
-  |
-  +-- "a number is wrong" ---------> is rows_after/rows_before != 1 on unchanged
-  |                                  parents?  --yes--> fanout (CI-05, CI-19)
-  |                                             --no --> NULL/boundary (CI-21, CI-22)
-  |
-  +-- "it is slow" ----------------> attempts/request > 1.05? --yes--> retries (CI-06)
-  |                                  in_flight > pool size?   --yes--> saturation (CI-08)
-  |                                  p99 multimodal?          --yes--> waves (CI-03)
-  |
-  +-- "it stopped" ----------------> last successful event time vs now
-  |                                  -- gap at a deploy --> signal/contract (CI-11, CI-26)
-  |                                  -- gap at a clock edge --> timezone (CI-18)
-  |
-  +-- "it is expensive" -----------> spend / request, split by component
-                                     -- input tokens up --> context (CI-13, CI-14)
-                                     -- attempts up     --> retries (CI-06)
-                                     -- instances up    --> cache miss (CI-27)
+rows        parents only        after join (f = 1.30)
+4,800,000   ####################
+6,240,000   ##########################  (+1,440,000 rows, +30.0 %)
+revenue     4,800,000 units -> 6,240,000 units
+            30 % of the reported number is duplication, not growth
 ```
 
-Key point: the tree's first question is about the *shape* of the complaint, because shape determines which family of probe can be decisive. "It is slow" with a multimodal p99 and "it is slow" with a smooth tail are two different investigations, and the histogram is cheaper than either.
+The visual point is that the inflation is uniform: every parent contributes 1.30 rows on average, so the chart looks like growth everywhere at once rather than a spike in one segment. Uniform inflation across all segments is a data-shape signature, not a business event.
 
-Takeaway: draw the backlog before arguing about capacity, draw the retry tree before adding workers, draw the waves before hunting a slow dependency, and choose the first probe from the symptom's shape rather than from the component you know best.
+**Censoring as a floor.** A distribution of per-token surprisal where one token is clamped at `ln(1e-5) = -11.5129`:
+
+```text
+surprisal
+  0.00 |  ##############################  13 tokens at 0.12 nats
+ -0.12 |-------------------------------------- true mean
+ -0.93 |  X                                   reported mean after 1 clamp
+-11.51 |                                      X  clamped token (1 of 14)
+```
+
+The reported mean sits at 7.8 times the true mean because a single point mass at the floor pulls it down. The shape also explains why the artefact is length-dependent: the same single clamped token in a 100-token sequence moves the mean by only 7 %, which is why the defect appears when sequences get short.
+
+Takeaway: queue waits are a cliff, retry overhead is nearly linear in the failure rate, memory under unbounded admission is a ramp, fanout is a uniform shadow, and censoring is a floor that drags a mean — each shape names its own probe.
 
 ## 7. Comparison / Selection Table
 
-The catalog's recurring decision is *which probe to run first*. A probe is judged on three properties: how fast it returns, whether its result eliminates a row rather than merely raising suspicion, and whether it is safe to run in production. The table ranks the unit's probes on those properties so a responder under time pressure can pick without re-deriving the reasoning.
+Choosing a probe is a selection problem with disqualifiers, not a preference. The rows below are the probes this catalog relies on, ordered by the time they take.
 
-| Probe | Returns in | Eliminates | Safe in prod | Cost | Fails when | Owner sheet |
-|---|---|---|---|---|---|---|
-| Count ratio before/after a join (`COUNT(*)` vs `COUNT(DISTINCT key)`) | seconds | fanout, duplicate-key inflation | yes, read-only | one extra aggregate per query | parent population changed in the window | SQL analytics |
-| Attempts per logical request | minutes | retry storm, client-side duplication | yes, from existing counters | a counter and a ratio | counters are per attempt and unlabeled | REST APIs |
-| In-flight count versus pool size | seconds | queueing versus slow handler | yes | one gauge comparison | the system is filling, not steady | Async Python |
-| p99 histogram, not scalar | minutes | wave serialisation, bimodal tails | yes | a histogram metric | buckets are too coarse to show modes | Async Python |
-| `EXPLAIN` row estimate versus actual rows | minutes | bad statistics, join order, spill | yes, on a replica | one plan plus one run | the plan cache hides the chosen plan | SQL analytics |
-| KV-cache bytes per request | seconds | context-length cost, concurrency loss | yes, arithmetic only | tokens × bytes/token | attention is sliding-window, not full | LLM fundamentals |
-| Template hash diff | seconds | prompt drift, duplicated system block | yes | one hash comparison | the template is built at runtime from config | LLM fundamentals |
-| Full-vocabulary log-probability check | minutes | censored loss, clamped floor | yes, on a replay sample | a replay of 50 items | the endpoint only returns top-k | LLM fundamentals |
-| `nr_throttled` and `nr_periods` in cgroup | seconds | CPU throttling versus slow code | yes | two counters | the workload is IO-bound | Docker |
-| Layer `CACHED` markers in build output | minutes | cache invalidation position | yes, in CI | one build log read | the builder rewrites timestamps | Docker |
-| Digest comparison local versus registry | seconds | "works locally" image drift | yes | two digests | the tag is rebuilt in place | Docker |
-| `Retry-After` versus client backoff | seconds | synchronised retry waves | yes | read one header, one config | the server omits the header | REST APIs |
-| Reason-code distribution | minutes | policy misroute, silent deferral | yes | a group-by on the ledger | reason codes are free text | All |
-| Offset-log replay of the burst shape | tens of minutes | burst admission, redelivery | yes, on a copy | a replay harness | the log has short retention | Async Python |
+| Probe | Answers | Resolves | Cost | Disqualified when |
+|---|---|---|---|---|
+| attempts / logical requests | retries versus slowdown | CI-06, CI-10, CI-15 | under 2 min if the counter exists | retries are issued by a client you cannot count |
+| loop-lag histogram | blocking call versus queue tail | CI-09, CI-06 | 5 min to enable, then continuous | the loop runs in a process pool by design |
+| queue decomposition `L = busy + Lq` | queueing versus service time | CI-01, CI-05, CI-06 | 10 min with `S` and `c` known | permits are not the binding limit |
+| attempts per idempotency key | duplicate effects versus provider fault | CI-07 | 3 min with a key-indexed table | keys are not persisted with the effect |
+| retry timestamp modulo delay | jitter presence | CI-08 | 2 min on recorded attempts | attempt start times are not logged |
+| substring assertion on the exact prompt | truncation versus wrong answer | CI-12, CI-13, CI-18 | 6 min, one request per template | the prompt is assembled client-side and not logged |
+| prompt-template hash diff | template drift | CI-18 | 4 min if both paths hash | hashes are not stored with scores |
+| token count versus `len(text)/4` | budget mis-sizing | CI-23, CI-20 | 1 min with a tokenizer | no tokenizer matching the model is available |
+| bytes per token on both sides | token versus byte normalisation | CI-17 | 5 min from stored counts | tokenizer identity was not recorded |
+| clamp-count per sequence | censored loss | CI-19 | 4 min from the dump | the dump stores only the mean |
+| `COUNT(*)` versus `COUNT(DISTINCT key)` | fanout versus growth | CI-30 | 2 min per query | the distinct key is not defined |
+| NULL share on the join key | inner-join drop | CI-31 | 1 min per column | the column is declared NOT NULL but was widened |
+| `ROWS` versus `RANGE` on the same window | frame semantics at ties | CI-32 | 3 min per query | the ordering key is unique by construction |
+| rows at exactly the boundary timestamp | interval inclusion | CI-33 | 1 min per boundary | the timestamp has sub-second precision and no exact hits |
+| pooled samples versus averaged percentiles | percentile aggregation | CI-34 | 4 min with shard samples | only per-shard aggregates were retained |
+| signal receipt inside the workload | PID 1 forwarding | CI-24 | 5 min, one stop with work in flight | the workload is a single binary already |
+| drain p99 versus grace period | deploy-time request loss | CI-25 | 3 min from the shutdown log | the workload is stateless and rejects instantly |
+| pull bytes versus needed bytes | cold-start attribution | CI-26, CI-27 | 10 min with layer sizes | the node cache state is unknown |
 
-**How to read the ranking.** The first three columns decide the choice: a probe that returns in seconds and eliminates a category beats a probe that returns in minutes and merely narrows it. The `Cost` column exists to stop a responder from reaching for the expensive probe first out of familiarity — the plan-and-run probe is the most informative item in the table and almost never the first one to run.
+**Selection rule, stated as an algorithm.** Start at the top of the table and stop at the first row whose disqualifier is false *and* whose outcome differs between the surviving hypotheses. That is the whole method; the table is ordered by cost because cost is the only variable the responder controls.
 
-**Selection rules, stated as three sentences.** If the symptom is a wrong number, the count ratio runs first because it is a read-only aggregate and it separates data shape from data change. If the symptom is latency, the histogram runs before any single dependency is instrumented, because a multimodal histogram removes three hypotheses at once. If the symptom is a stop, the gap timestamp is compared against the deploy timeline before any component is restarted, because a restart destroys the state that would have explained the gap.
+**Three choices the table settles.**
+- To separate retry load from a slow downstream, count attempts per logical request before touching latency at all. Latency percentiles cannot separate the two, because both raise p99.
+- To separate truncation from a wrong answer, assert on the presence of a sentinel string that appears only in the complete answer. Comparing the answer to an expected value mixes two questions.
+- To separate fanout from growth, compute the row ratio and the distinct-key ratio over the same window. If the ratio is 1.30 and the distinct count is flat, no amount of business explanation will remove the duplication.
 
-**When the table is the wrong instrument.** Under a data-loss symptom, no probe in this table is safe until writes are frozen: a count ratio on a table still receiving writes measures the writes. Under a security symptom — a leaked credential, an unexpected egress — the correct first action is containment by revocation, and every probe here becomes secondary because it reads the very data whose exposure is the incident.
+**What the table deliberately omits.** Profilers, distributed traces and log search all answer *where time went* but not *which mechanism*, and they cost minutes rather than seconds. They belong after a row of this table has narrowed the hypotheses to one, at which point a profiler confirms a mechanism already named.
 
-Takeaway: rank probes by decisiveness and speed, not by how much instrumentation they use; the cheapest decisive probe is the professional choice, and the most informative probe is usually the fourth one you run.
+**Comparison of containment options.** Containment is a separate choice with its own trade-offs, and the two axes are reversibility and evidence preservation.
+
+| Containment | Stops harm by | Reversible | Preserves evidence | Cost of being wrong |
+|---|---|---|---|---|
+| cap intake at a fixed rate | shedding excess load | yes, one config change | yes, shed count is a counter | users see errors under load |
+| disable the retry path | removing amplification | yes, feature flag | yes, attempts collapse visibly | failures surface as single errors |
+| serve a prior computed result | decoupling from the downstream | yes, TTL expires | no, hides the current failure from users | staleness becomes invisible |
+| raise permits | adding capacity | yes, one config change | yes, counters continue | multiplies the wrong effect |
+| extend timeouts | letting work finish | yes | yes, but the window blurs | converts a slow failure into a longer one |
+| drain and restart | clearing bad in-process state | yes, one restart | no, in-flight records lost unless flushed | recurrence is likely |
+
+The rule that follows: prefer the containment that leaves a counter behind. "Serve a prior result" is the only row that destroys the signal, so it belongs to customer-facing paths with a hard availability requirement and never to the path under investigation.
+
+Takeaway: probe by cost, stop at the first decisive row, and contain with something that leaves a counter — a containment you cannot see afterwards has removed the evidence for its own correction.
 
 ## 8. Failure Modes & Edge Cases
 
-The catalog is below: 32 issues, ordered by the layer in which they are first detectable. Every row carries the seven required fields; the prose under each row carries the mechanism and the number that makes the entry checkable. The ordering is deliberate — a responder reads the layer of the symptom, not the whole file — and the category counts are shown at the end of the section so a reader can see which families are dense and which are thin.
+The catalog is below in scannable form, 36 issues with seven fields each. The prose entries that follow carry the mechanisms that need numbers, because a table cell cannot hold a derivation.
 
-### 8.1 Async Python: scheduling, cancellation, and pools
-
-The five defects here share a property that makes them hard: the code is *correct* for the workload it was written against, and the defect appears only when the workload changes shape. None of them raises an exception on the happy path.
-
-| ID | Category | Symptom | Competing causes | Discriminating check | Correction | Prevention | Verify |
+| ID | Category | Symptom | Competing causes | Discriminating check | Correction | Prevention | Verification |
 |---|---|---|---|---|---|---|---|
-| CI-01 | CONCEPT_CONFUSION | 40 tasks take 1.25 s where 8 permits should give 0.25 s | slow downstream; missing permits | compare elapsed to `ceil(N/k)*L` | state the permit count as the capacity contract | publish `N`, `k`, `L` beside any speedup claim | replay 40 tasks, assert 5 waves |
-| CI-02 | SCALE_FAILURE | RSS climbs with backlog size, then the process is killed | leak in a library; large payloads | peak RSS versus `N * per-task bytes` | bound the fan-out with a semaphore or chunking | cap admitted tasks per unit time | replay 50,000 tasks, assert RSS bound |
-| CI-03 | VIOLATED_ASSUMPTION | `await` returns but the work keeps running after cancel | slow code; ignored exception | task count after cancel versus before | await cancellation and propagate it | cancellation owned by the caller, checked in `finally` | cancel mid-flight, assert zero live tasks |
-| CI-04 | SCALE_FAILURE | intermittent "Task was destroyed but it is pending" | real timeout; loop shutdown | live-task set versus retained references | retain a strong reference until completion | register every task in a supervised set | shutdown test with 1,000 tasks, assert none dropped |
-| CI-05 | NUMERICAL_EDGE | worst-case latency double the expected timeout | slow server; retry delay | recompute `n*t + sum(backoff)` | derive the budget from the worst case, not the per-attempt value | assert budget < caller's deadline in CI | replay a forced-timeout request, assert elapsed |
+| CI-01 | CONCEPT_CONFUSION | 40 tasks take 0.90 s where "40-way parallel" predicted 0.18 s | slow downstream; CPU saturation | compute `ceil(N/k)*L` with the real `k` | publish `N`, `k`, `L` beside every speedup claim | state the permit count in the API docstring | replay 40 tasks, assert 5 waves and 0.90 s |
+| CI-02 | SCALE_FAILURE | RSS climbs with backlog, container killed | library leak; large payloads | peak RSS against `N * 19 KiB` | bound admissions with a semaphore or chunking | cap admitted tasks per unit time | replay 50,000 tasks, assert RSS below 1 GB |
+| CI-03 | VIOLATED_ASSUMPTION | `await` returns but the work continues and the side effect lands | slow code; swallowed exception | live-task census before and after the timeout | cancel the inner task and await it in `finally` | cancellation owned by the caller of `create_task` | cancel mid-flight, assert zero live tasks |
+| CI-04 | SCALE_FAILURE | intermittent "Task was destroyed but it is pending" | real timeout; loop shutdown | live-task set against retained references | retain a strong reference until completion | register tasks in a supervised set | shutdown test with 1,000 tasks, assert none dropped |
+| CI-05 | NUMERICAL_EDGE | worst-case elapsed 7.5 s against a 5 s caller deadline | slow server; retry delay | recompute `n*t + sum(backoff)` | derive the budget from the worst case | assert budget < caller deadline in CI | replay a forced-timeout request, assert elapsed |
+| CI-06 | SCALE_FAILURE | downstream load 24 % above request rate | traffic growth; bigger queries | attempts per logical request | retry budget as a fraction of successes | cap attempts and add full jitter | replay 1,000 requests at `r=0.2`, assert 1.24 |
+| CI-07 | VIOLATED_ASSUMPTION | duplicate effects after a timeout | provider fault; double submit | effects per idempotency key | persist the key with the effect, return the earlier result | key created before the first attempt | replay the same key twice, assert one effect |
+| CI-08 | NUMERICAL_EDGE | retries arrive as one synchronised wave | genuine outage; capacity drop | retry timestamps modulo the delay | add full jitter, honour `Retry-After` | assert jitter is non-zero in a config test | replay 500 rejections, assert spread over the window |
+| CI-09 | VIOLATED_ASSUMPTION | p99 has a spike at a fixed value, mean barely moves | queueing tail; GC pause | loop-lag histogram against block duration | move blocking work to a bounded executor | ban synchronous I/O in coroutine bodies | replay 8 blocking calls, assert lag below 5 ms |
+| CI-10 | VIOLATED_ASSUMPTION | 429s keep arriving despite backoff | genuine quota exhaustion; retry storm | request rate against the declared quota | honour `Retry-After` as the sole retry clock | parse and log the header value | replay a 429 with `Retry-After: 2`, assert 2 s gap |
+| CI-11 | NUMERICAL_EDGE | retries fire 1,000x earlier than intended | server slowness; clock skew | compare wait to the header value's unit | convert units explicitly at the boundary | type the delay as milliseconds everywhere | replay `Retry-After: 2`, assert no attempt before 2,000 ms |
+| CI-12 | VIOLATED_ASSUMPTION | streamed answers end at exactly 60 s with partial text | model stop condition; client cancel | end-time clustering at a constant | raise the idle timeout or send keepalives | pin every hop's idle timeout | replay a 90 s stream, assert completion |
+| CI-13 | NUMERICAL_EDGE | request body silently shortened | client bug; wrong encoding | declared `Content-Length` against bytes sent | reject or chunk rather than truncate | validate declared against actual length | replay a 48 MB body, assert rejection |
+| CI-14 | CONCEPT_CONFUSION | healthy peers dropped as dead while data flows | real packet loss; proxy timeout | last inbound frame versus last pong | treat any inbound frame as liveness | document the liveness definition once | replay a slow-but-alive peer, assert kept |
+| CI-15 | SCALE_FAILURE | gateway memory grows with stalled consumers | memory leak; large frames | queue depth per connection | bounded queue, drop-oldest or close | per-connection cap and depth metric | replay a stalled consumer, assert close |
+| CI-16 | VIOLATED_ASSUMPTION | dashboard shows success while the payload reports failure | client bug; stale dashboard | parse the body, not only the status | fail on the documented error field | contract test per endpoint | replay an error body with status 200, assert failure |
+| CI-17 | CONCEPT_CONFUSION | candidate model "12 % better" per token, equal per byte | real quality gain; prompt drift | convert both to bits per byte | report bpb for cross-tokenizer claims | ban per-token comparisons across tokenizers | recompute from raw surprisals, assert 0.5 bpb both |
+| CI-18 | VIOLATED_ASSUMPTION | eval and serving scores differ on identical text | model nondeterminism; sampling | dump the templated prefix ids from both paths | pin template hash and tokenizer version | manifest hash in every score record | replay one item on both paths, diff ids |
+| CI-19 | NUMERICAL_EDGE | mean loss lower than any single token's loss | arithmetic bug; weighting | recompute from the dump and count clamps | store total surprisal and `N` beside the mean | assert `min(s) <= mean <= max(s)` | replay 14 tokens with one clamp, assert 7.78x |
+| CI-20 | SCALE_FAILURE | context fits but latency and spend triple | slower hardware; longer answers | tokens per component, plotted by `k` | size retrieval by `k`, not by relevance score | per-component token budget in the builder | replay `k=4` versus `k=16` |
+| CI-21 | NUMERICAL_EDGE | 12 % of outputs hit `max_new_tokens` exactly | verbose prompts; model change | share of outputs at the cap | raise the cap or add a stop sequence | alert on cap-hit share | replay a capped request, assert stop reason |
+| CI-22 | CONCEPT_CONFUSION | per-request cost falls while total spend rises | price change; more traffic | cost per request against cost per thousand tokens | price the unit you bill | one cost model per surface | replay cached and uncached calls, assert 68.5 % |
+| CI-23 | NUMERICAL_EDGE | budget sized on `len(text)/4` overruns by 30 % | longer answers; bigger documents | tokenizer count against the estimate | estimate with the model's own tokenizer | assert estimate error below 3 % | replay 22,000-token prompt, assert no overflow |
+| CI-24 | VIOLATED_ASSUMPTION | workload killed with work in flight at stop | slow handler; queue loss | process tree at stop, signal receipt | exec the workload as PID 1 | assert a single-process tree in an image test | stop with 30 s of work, assert drain |
+| CI-25 | NUMERICAL_EDGE | a share of requests lost on every deploy | client timeout; pod crash | drain p99 against the grace period | set grace above drain p99 with margin | derive grace from the drain histogram in CI | rolling restart, assert zero dropped |
+| CI-26 | CONCEPT_CONFUSION | image halved, cold start barely moved | slow runtime; CPU limit | pull time against init time | attack the larger term | report both terms per release | rebuild and compare, assert attribution |
+| CI-27 | SCALE_FAILURE | every deploy re-runs the full dependency install | registry slowness; bigger deps | rebuild time with the cache warm | copy lockfile and install before source | assert cache hit in CI | rebuild from cache, assert under 20 s |
+| CI-28 | NUMERICAL_EDGE | throttled at 40 % CPU usage | slow code; memory pressure | `nr_throttled` over `nr_periods` | raise the quota above observed demand | alert on throttle ratio, not usage | replay a burst, assert throttle ratio |
+| CI-29 | VIOLATED_ASSUMPTION | works locally, differs in the cluster | code difference; missing env var | image digest local versus deployed | deploy the tested digest, not the tag | promote by digest only | compare digests, assert equal |
+| CI-30 | VIOLATED_ASSUMPTION | revenue 30 % high after a join change | real growth; price change | `COUNT(*)` against `COUNT(DISTINCT parent)` | deduplicate the right side before aggregating | assert rows per parent in a test | replay the query, assert the 1.30 ratio |
+| CI-31 | NUMERICAL_EDGE | 4.2 % of rows vanish from an inner join | genuinely missing keys; filters | NULL share on both sides of the key | left join or coalesce the key | profile NULL share on join keys | replay the query, assert the 5,040 rows return |
+| CI-32 | NUMERICAL_EDGE | running total jumps by a whole peer group at a tie | duplicate events; bad ordering | `ROWS` versus `RANGE` output on the same window | state the frame explicitly | forbid implicit frames in review | replay a tied key, assert both outputs named |
+| CI-33 | NUMERICAL_EDGE | daily total double-counts the boundary row | late events; duplicate ids | rows at exactly the boundary timestamp | use half-open `>=` and `<` | lint for `BETWEEN` on timestamps | replay a midnight event, assert one count |
+| CI-34 | CONCEPT_CONFUSION | dashboard p99 higher than any shard's p99 | slow shard; bad timer | recompute the percentile on pooled rows | pool samples, then take the percentile | ban averaging percentiles | replay three shards, assert 1,980th of 2,000 |
+| CI-35 | NUMERICAL_EDGE | a ratio reports 3 instead of 3.5 | rounding; wrong numerator | recompute in floating point | cast before dividing | unit test the ratio expression | replay 7/2, assert 3.5 |
+| CI-36 | CONCEPT_CONFUSION | monthly rate differs from the 30-day rate by 4.35 % | seasonality; data gap | denominator days per period | normalise to a fixed unit | document the denominator per metric | replay both windows, assert 24/23 |
 
-**CI-01 — Concurrency mistaken for parallelism.** Mechanism: the pool admits eight tasks and the other 32 wait, so elapsed time is `ceil(40/8) × 0.250 = 1.25 s` while a responder who expected 40-way parallelism predicts 0.25 s. The competing explanation — a slow downstream — fails the same arithmetic: a slow downstream raises `L` for every task including the first, so the first task's completion time would also exceed 250 ms, and it does not.
+### 8.1 The issues that need arithmetic
 
-**CI-02 — Unbounded `gather`.** Mechanism: each admitted task holds a response buffer and a coroutine frame, about 1 KB per task in the constructed case, so 50,000 tasks at once retain roughly 51.2 MB of state before any payload. The leak hypothesis fails a specific test: RSS that tracks backlog size and falls after the backlog drains is bounded state, not a leak, whereas a leak's RSS stays high after the drain. Correction is a semaphore sized by the memory budget, not by a round number.
+**CI-01 — Concurrency mistaken for parallelism.** Mechanism: the semaphore admits eight items and the other 32 wait, so elapsed time is `ceil(40/8) * 0.180 = 5 * 0.180 = 0.90` s while a reader who assumed 40-way parallelism predicts 0.18 s. The "slow downstream" hypothesis fails a specific test: a slower downstream raises `L_unit` for every item including the first, so the first wave would also take longer than 180 ms, and it does not. Correction: publish `N`, `k` and `L_unit` beside any speedup claim. Verification: replay 40 items and assert five distinct completion clusters.
 
-**CI-03 — Cancellation that only stops the waiter.** Mechanism: `asyncio.wait_for` cancels the *awaiting* coroutine; a task started with `create_task` inside it is not cancelled unless the code cancels it, so the timeout returns while the work continues and the side effect still lands. The "slow code" hypothesis fails because the elapsed time of the *caller* is already correct; only the side-effect count is wrong. The check is a task census before and after the timeout, and the number that matters is the delta, not the total.
+**CI-02 — Unbounded gather.** Mechanism: each admitted coroutine retains a frame, captured locals and a response buffer, about 19 KiB in this constructed case, so 50,000 simultaneous tasks retain `50,000 * 19 KiB = 972.8 MB` before any payload is counted. The leak hypothesis fails one test: RSS that tracks backlog size and falls after the backlog drains is bounded per-item state; a leak's RSS stays high after the drain. Correction: size the semaphore from the memory budget — at 19 KiB per task and a 1 GB container, at most 52,600 concurrent tasks, and a working limit near 16,000 leaves 70 % of headroom.
 
-**CI-04 — Fire-and-forget tasks collected mid-flight.** Mechanism: the event loop holds only weak references to tasks, so a task whose only reference is the loop's can be garbage collected while pending — roughly 4 ms of work lost per dropped task in the constructed case, 240 ms across an hour of 1,000 drops. The "real timeout" hypothesis fails because this symptom appears only at shutdown or under memory pressure, never in steady state. Correction is a supervised set that holds strong references and is drained at exit.
+**CI-03 — Cancellation that only stops the waiter.** Mechanism: `asyncio.wait_for` cancels the awaiting coroutine, not a task started with `create_task` inside it, so the timeout returns while the work continues and the side effect still lands. The elapsed time of the caller is already correct, which is why the "slow code" hypothesis fails: only the side-effect count is wrong. Check: a task census immediately after the timeout minus the census before it, and the delta is the number that matters. Correction: cancel the inner task and await it inside `finally`, so the caller cannot return before the work has stopped.
 
-**CI-05 — Timeout budget arithmetic.** Mechanism: three attempts at 3 s each plus backoff waits of 0.5 s and 1.0 s give a worst case of `9 + 1.5 = 10.5 s`, while the caller's deadline is 6 s, so the client cannot honour the contract it advertises. The "slow server" hypothesis fails a boundary test: a request that fails instantly on all three attempts still consumes 1.5 s of backoff, which no server speed can remove. Prevention is an assertion in CI that `n·t + Σbackoff ≤ deadline`.
+**CI-05 — Timeout budget derived from one attempt.** Mechanism: three attempts at 2 s plus 1.5 s of backoff sum to `3 * 2 + 1.5 = 7.5` s of worst-case elapsed time, against a caller deadline of 5 s. The caller gives up at 5 s while the callee is still inside attempt three, so the retry that was meant to improve reliability produces a guaranteed timeout. Correction: derive the budget from the sum, and assert in CI that total budget is below the caller's deadline. Note the boundary: with jitter, the backoff sum is a distribution, and the worst case is the sum of the maxima, not the maximum of the sum.
 
-### 8.2 HTTP and WebSocket: retries, backpressure, and stream termination
+**CI-06 — Retry amplification as load.** Mechanism: `A(0.2, 3) = 1.24`, so 40 logical requests/s become 49.6 attempts/s. Against `c = 10` permits at 0.180 s the ceiling is 55.56 attempts/s, so `rho` moves from 0.720 to 0.893 and the Erlang C wait from 16 ms to 109 ms. The "traffic growth" hypothesis fails because the logical request counter is flat while the attempt counter rises; the two counters are separate series precisely so this comparison is possible.
 
-The defects here live in the contract between client and server: status semantics, retry eligibility, and the assumption that a stream that has not ended is still alive. Each has a look-alike in the transport layer, and the discriminator is almost always a header, a counter, or an offset rather than a log line.
+**CI-07 — Idempotency key created inside the retry loop.** Mechanism: with `r = 0.2` and three attempts, 100 logical operations generate 124 attempts, and a key minted per attempt makes each attempt a distinct operation, so up to 24 duplicate effects are admissible. The "provider fault" hypothesis fails because every duplicate carries a key the client itself generated and can list. Correction: create the key before the first attempt and persist it in the same transaction as the effect. Verification: replay the same key twice and assert exactly one effect and one `DUPLICATE_SUPPRESSED` reason code.
 
-| ID | Category | Symptom | Competing causes | Discriminating check | Correction | Prevention | Verify |
-|---|---|---|---|---|---|---|---|
-| CI-06 | SCALE_FAILURE | downstream load 24% above request rate | traffic growth; bigger queries | attempts per logical request | retry budget as a fraction of successes | cap attempts and add full jitter | replay 1,000 requests at `r=0.2`, assert 1.24 |
-| CI-07 | VIOLATED_ASSUMPTION | duplicate charges after a timeout | payment provider fault; double submit | count effects per idempotency key | persist the key with the effect, return the prior result | key created before the first attempt | replay same key twice, assert one effect |
-| CI-08 | NUMERICAL_EDGE | retries pile up in a synchronised wave | genuine outage; capacity drop | retry timestamps modulo the delay | honour `Retry-After`, add full jitter | assert jitter is non-zero in config test | replay 500 rejections, assert spread |
-| CI-09 | SCALE_FAILURE | gateway memory grows with slow consumers | memory leak; large frames | queue depth per connection | bounded queue, drop-oldest or close | per-connection queue cap and metric | replay a stalled consumer, assert close |
-| CI-10 | CONCEPT_CONFUSION | connections dropped as "dead" while data flows | real packet loss; proxy timeout | timestamp of last data versus last pong | treat any inbound frame as liveness | document the liveness definition | replay slow-but-alive peer, assert kept |
-| CI-11 | VIOLATED_ASSUMPTION | stream ends at exactly 60 s with partial output | model stop condition; client cancel | end time clustered at a constant | raise proxy idle timeout or send keepalives | pin every hop's idle timeout | replay a 90 s stream, assert completion |
-| CI-12 | NUMERICAL_EDGE | request body silently shortened | client bug; wrong encoding | byte length sent versus `Content-Length` | reject or chunk instead of truncating | validate declared against actual length | replay 48 MB body, assert rejection |
+**CI-09 — Blocking call inside the loop.** Mechanism: `time.sleep`, `requests.get` or a synchronous parse blocks the whole event loop, so eight coroutines that each block for 0.25 s stall every other coroutine for `8 * 0.25 = 2.0` s per pass. The signature is a lag histogram with a spike at the block duration and near-zero elsewhere; pure queueing produces a smooth lag distribution instead. Correction: `asyncio.to_thread` with an explicitly sized executor, so the thread count is a stated capacity rather than an implicit one.
 
-**CI-06 — Retry amplification.** Mechanism: at `r = 0.20` and three attempts, `A = 1.24`, so a downstream sized for 1,200 requests/minute receives 1,488. The "traffic growth" hypothesis fails because request *rate* and attempt *rate* diverge by exactly the multiplier, and the multiplier is computable from the failure rate the server already reports. Note the direction of blame: the server reports a 20% rejection rate, which reads as a server problem, while the 24% load increase is the client's contribution.
+**CI-11 — `Retry-After` read in the wrong unit.** Mechanism: the header carries seconds as an integer, and a client that treats it as milliseconds retries after 2 ms instead of 2,000 ms — a 1,000x early retry, which restarts the storm the header exists to prevent. Competing cause: clock skew, which produces a *late* retry, never an early one, so the direction of the error discriminates without any extra telemetry. Correction: parse into a named duration type at the boundary, and log the interpreted value next to the raw header.
 
-**CI-07 — Retry of a non-idempotent effect.** Mechanism: the client times out after the server committed, retries, and commits again; the ledger shows two effects for one logical operation. The "provider fault" hypothesis fails a key-based count: a provider fault produces duplicate effects with *different* keys only from different callers, whereas this defect produces duplicates under one key. Correction is not "retry less" but "make the key persistent and check it inside the same transaction as the effect".
+**CI-15 — Slow consumer with an unbounded per-connection queue.** Mechanism: 200 connections at 200 messages/s of 8 KiB with a 30 s write backlog hold `200 * 200 * 8192 * 30 = 9.83 GB` of pending bytes, which the gateway discovers as an out-of-memory kill rather than as a slow consumer. The "memory leak" hypothesis fails because the bytes are attributable to named connections and fall when those connections close. Correction: a bounded queue per connection with a stated policy — drop-oldest for lossy feeds, close for stateful ones — and a depth metric per connection.
 
-**CI-08 — Synchronised retry wave.** Mechanism: a fixed 500 ms backoff has a period the downstream can predict, so 500 rejections in one second become 500 retries 500 ms later — a spike of 5,000 requests/s against a 500/s capacity, a tenfold overshoot. The "capacity drop" hypothesis fails a timestamp histogram: synchronised retries cluster in a narrow band whose width equals the jitter, which is zero here. Correction is full jitter in `[0, base·2^attempt]`, plus honouring `Retry-After` where present.
+**CI-19 — Censored mean loss.** Mechanism: 13 of 14 tokens at `-0.12` nats and one clamped at `ln(1e-5) = -11.5129` give `(13 * -0.12 - 11.5129)/14 = -0.9338`, which is 7.78 times the true `-0.12`. Two clamped tokens give `-1.7476`, 14.6 times. The bound worth asserting is `min(s) <= mean <= max(s)`, because a mean outside the range of its own terms is arithmetic proof of a substitution, and no model change can produce it.
 
-**CI-09 — Slow consumer with an unbounded queue.** Mechanism: a client that reads at 3,000 frames/s while the server produces 5,000/s accumulates 2,000 frames/s; at 1 KB per frame that is 2.048 MB/s and 7.37 GB/hour of retained memory per stalled connection. The "memory leak" hypothesis fails a per-connection profile: leak memory is not released when the connection closes, queue memory is. Correction is a bounded per-connection queue with an explicit policy — close, or drop oldest with a counter.
+**CI-21 — Outputs truncated at the token cap.** Mechanism: 12 % of outputs end exactly at `max_new_tokens`, so the cap, not the model, decides where those answers stop. The "verbose prompt" hypothesis is testable: a prompt effect raises length across the distribution, while a cap produces a point mass at exactly one value. Correction: raise the cap only after checking the p99 of the natural stop-length distribution, and add a stop sequence where one exists; otherwise a raised cap converts truncation into spend.
 
-**CI-10 — Liveness confused with throughput.** Mechanism: the implementation resets its liveness timer only on data frames, so a peer that sends heartbeats but no application frames is declared dead after the idle timeout even though the socket is healthy. The "packet loss" hypothesis fails because packet loss drops *all* frame types, including pongs, and the check is whether any inbound frame arrived inside the window. Correction is to touch the liveness timer on every inbound frame, not on data frames only.
+**CI-25 — Grace period shorter than the drain.** Mechanism: the grace period is 10 s and the drain p99 is 14 s, so the stop signal kills one in a hundred requests at the tail — every deploy, invisibly, because the client sees a connection reset rather than an error the service records. Check: compare the grace constant to the drain p99 from the shutdown log; the two numbers live in different files, which is why the defect survives review. Correction: grace above drain p99 with margin, derived in CI from the histogram rather than chosen.
 
-**CI-11 — Stream cut by an intermediate idle timeout.** Mechanism: the model produces its first token in 2 s and then a 45-second gap during a long prefill or a tool call; the proxy's idle timeout is 60 s, but the gap plus 18 s of prior decode reaches it. The tell is that end times cluster at one constant, which no model stop condition produces, because stop conditions cluster at token counts. Correction is a keepalive comment frame or a raised idle timeout at the hop that owns the constant.
+**CI-26 — Image size confused with cold-start time.** Mechanism: at 1,200 MB and 180 MB/s the pull is 6.67 s and initialisation is 9 s, so `T_cold = 15.67` s against a 1.2 s warm start — 13.1x. Halving the image removes 3.3 s; halving imports removes 4.5 s. The "slow runtime" hypothesis is answered by the attribution itself: report both terms per release, because a team optimising whichever term it can see will otherwise report a 21 % win as a breakthrough.
 
-**CI-12 — Body truncated at a size limit.** Mechanism: a proxy with a 48 MB body limit reads 48 MB and forwards it, so the client's declaration of 48 MB succeeds while the actual 50 MB fails mid-stream and the server sees a short body. The "wrong encoding" hypothesis fails a length comparison: UTF-8 mis-encoding changes the byte count predictably, a truncation leaves a body shorter than the declared length with no encoding error. Correction is a 413 with the limit stated, never a silent trim.
+**CI-30 — Fanout in a join.** Mechanism: 4,800,000 parent rows joined to 6,240,000 child rows give `f = 1.30`, so a revenue sum built after the join reports 6,240,000 where the parent-only sum is 4,800,000 — a 30.0 % inflation that looks like growth in every segment simultaneously. Discriminating check: `COUNT(*)` against `COUNT(DISTINCT parent_key)` over the same window. If the row count rises 30 % while the distinct count is flat, the join is the mechanism and no business explanation survives.
 
-### 8.3 LLM inference: units, identity, and the boundary of a claim
+**CI-31 — NULL keys dropped by an inner join.** Mechanism: 4.2 % of 120,000 rows carry a NULL in the join key, so an inner join silently drops `120,000 * 0.042 = 5,040` rows. On the inflated 6.24 M-row result of CI-30 the same share is 262,080 revenue units — and the two defects compose, which is why they are tested together. Check: NULL share on both sides of the key before the join, not after, because after the join the evidence has been discarded.
 
-These six defects are the most expensive in the catalog, because each produces a *correct-looking number* that is then used to justify a decision. None of them fails loudly. The discriminator for all six is the same move: recompute the quantity from raw counts in a unit that the comparison cannot flatter.
+**CI-32 — `RANGE` versus `ROWS` at a tie.** Mechanism: the default frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`, which includes every peer of the current row, so a running total over four tied rows advances by the whole peer group at once rather than row by row. Both answers are defensible; what is not defensible is not knowing which one the query produced. Correction: state the frame explicitly in the query and in the review checklist, then verify by running both frames on a tied key and asserting the difference equals the peer-group sum.
 
-| ID | Category | Symptom | Competing causes | Discriminating check | Correction | Prevention | Verify |
-|---|---|---|---|---|---|---|---|
-| CI-13 | CONCEPT_CONFUSION | candidate model "8% better" but users see no change | real quality gain; prompt drift | convert both to bits/byte | report bpb for cross-tokenizer claims | ban per-token comparisons across tokenizers | recompute from raw surprisals, assert bpb |
-| CI-14 | VIOLATED_ASSUMPTION | scores differ between eval and serving on identical text | model nondeterminism; sampling | dump the exact templated prefix ids | pin template hash and tokenizer version | manifest hash in every score record | replay one item both paths, diff ids |
-| CI-15 | NUMERICAL_EDGE | mean loss lower than any single token's loss | arithmetic bug; weighting | recompute `Σs/D` from the dump | store total surprisal and `D` beside the mean | assert `min(s) <= mean <= max(s)` | replay 100 tokens, assert bound |
-| CI-16 | SCALE_FAILURE | context fits but latency and spend triple | slower hardware; longer answers | tokens per component, plotted | size retrieval by `k`, not by relevance | budget per component in the request builder | replay with `k=4` versus `k=16` |
-| CI-17 | NUMERICAL_EDGE | 12% of outputs hit `max_new_tokens` exactly | verbose prompts; model change | share of outputs at the cap | raise cap or add a stop sequence | alert on cap-hit share | replay capped request, assert stop reason |
-| CI-18 | CONCEPT_CONFUSION | "yesterday's" totals shift every night | data correction; late events | compare event time to process time | define the cut-off in UTC and fix the window | one timezone constant per pipeline | replay a DST boundary event |
+**CI-34 — Averaging percentiles.** Mechanism: three shards report p99 of 180, 940 and 210 ms; the arithmetic mean is 443.3 ms, which describes no request in any shard. Pooling 2,000 samples and taking rank `ceil(0.99 * 2000) = 1,980` gives the actual tail request. The defect is a `CONCEPT_CONFUSION` because a percentile is a rank and an average of ranks is not a rank. Correction: retain samples or a mergeable sketch per shard; if only aggregates remain, publish a maximum-of-p99 as a lower bound and label it as one.
 
-**CI-13 — Per-token loss used across tokenizers.** Mechanism: a coarser tokenizer groups more bytes per token, so each prediction is mechanically easier and per-token loss falls without any improvement per byte. In the sibling sheet's constructed example the same response text scores 7.19% better in nats/token, 8.20% better in perplexity, and 3.33% better in bits/byte — three correct numbers, one defensible claim. The "prompt drift" hypothesis is eliminated because drift changes the *content* being scored, which moves per-byte loss too; a tokenizer difference moves only per-token loss.
+**CI-04 — Task garbage-collected while pending.** Mechanism: `asyncio` holds only a weak reference to a task, so a task created and not retained can be collected mid-flight and its result never retrieved; the symptom is CPython's "Task exception was never retrieved" or "Task was destroyed but it is pending" rather than a wrong answer. The "real timeout" hypothesis fails because a timeout cancels deterministically and logs a cancellation, whereas this arrives with no cancellation record at all. Correction: keep every task in a supervised set until it completes, and remove it in a `finally`. Verification: shutdown with 1,000 tasks and assert the set is empty and no warnings were emitted.
 
-**CI-14 — Chat template mismatch.** Mechanism: evaluation scores raw user text while serving sends a templated prefix with role markers, so the model conditions on a different distribution than the one measured. The effect is not small: a duplicated system header adds 28 template tokens per request and can shift mean NLL by an amount comparable to a real quality difference. "Sampling nondeterminism" fails the id-diff test, because a nondeterministic sampler changes the *output* while a template mismatch changes the *input ids*, and the input ids are comparable without any sampling.
+**CI-08 — Synchronised retry wave.** Mechanism: 500 clients that failed together all sleep 1 s and retry at the same instant, so the downstream sees a spike of 500 attempts where it could absorb the same load spread over the window. The peak is `500` rather than the sustainable rate, and the second failure produces a second identical spike. The "genuine outage" hypothesis is excluded by the shape: an outage raises load continuously, while synchronised retries produce a periodic pattern whose period equals the delay. Correction: full jitter, `delay = uniform(0, base)`, so the 500 attempts spread across 1,000 ms.
 
-**CI-15 — A mean that cannot be a mean.** Mechanism: the harness averages a per-token loss computed from a clamped floor and a censored top-k, so the reported mean sits below the minimum of the observed surprisals. The check is an invariant, not a measurement: `min_i s_i ≤ mean ≤ max_i s_i` must hold for any weighted mean of non-negative surprisals. An arithmetic bug and a censoring bug both violate it; they are separated by whether the individual surprisals in the dump are themselves clamped.
+**CI-10 — Exponential backoff while ignoring `Retry-After`.** Mechanism: the server states when to return (2 s) and the client applies its own schedule (0.5 s doubling). The client therefore retries 4x too early at the first step and stays early until its schedule exceeds 2 s, which extends the throttling window it was trying to escape. The "genuine quota exhaustion" hypothesis is distinguishable by the request rate itself: honouring the header gives `20 + 20/2 = 30` attempts/s, ignoring it gives `40 + 20/0.5 = 80` — the higher rate is self-inflicted and visible in the attempt counter.
 
-**CI-16 — A context that fits is not a context that is affordable.** Mechanism: retrieval `k` raised from 4 to 16 adds 12 passages; at 1,400 tokens each that is 16,800 extra prompt tokens, so prefill compute and KV-cache bytes per request rise by 16,800 × 131,072 = 2.1 GiB of cache on the usual shape, and a 4× longer prompt costs 4× the prefill. The "slower hardware" hypothesis fails because TTFT scales with prompt tokens while inter-token latency does not, so a hardware regression would move both.
+**CI-12 — Stream cut at the proxy idle timeout.** Mechanism: each hop has its own idle timeout and the shortest wins; a 60 s proxy against a 90 s generation ends the response at 60 s with a complete-looking prefix. The "model stop condition" hypothesis fails a clustering test: a model's stop reasons distribute over time, while a proxy cut produces a point mass at exactly the configured value. Correction: send keepalive tokens or comments during generation so the connection is never idle for the full period, and pin every hop's idle timeout in one configuration file with the shortest value documented.
 
-**CI-17 — Silent truncation at the output cap.** Mechanism: 12% of responses end at exactly `max_new_tokens`, so the completion is cut mid-sentence and a downstream parser sees an incomplete JSON object. The share at the cap is a direct measurement, and it separates truncation from verbosity: verbose answers have a smooth length distribution, truncated ones have a point mass at the cap. Correction is a raised cap *plus* a stop-sequence audit, because a cap raise alone moves the pile-up.
+**CI-13 — Body truncated at a transport limit.** Mechanism: a body of `48 * 1024 * 1024 = 50,331,648` bytes exceeds a configured limit and is silently cut rather than rejected, so the receiver parses valid JSON that stops early and reports a field as missing rather than the request as invalid. Competing cause: a client serialisation bug, which produces a body whose declared length matches its content — the discriminator is declared `Content-Length` against bytes actually received, and the two differ only in the truncation case.
 
-**CI-18 — Event time mistaken for process time.** Mechanism: a nightly job filters `WHERE created_at >= CURRENT_DATE - 1` in server-local time while the source timestamps are UTC, so during the five hours when local time is behind UTC the job reads a window that overlaps yesterday and re-counts rows. The "late events" hypothesis is eliminated by checking whether the affected rows have event times inside both windows; late-arriving events move once, a timezone defect moves them every night at the same hour.
+**CI-14 — Pong liveness killing a healthy peer.** Mechanism: the liveness rule is "a pong within one interval", the interval is 30 s, and the peer's pong is delayed by a busy thread for 90 s while it streams data continuously. The rule drops a peer that is demonstrably alive. The "real packet loss" hypothesis is excluded by the inbound frame counter, which is still advancing at the moment of the drop. Correction: any inbound frame refreshes liveness, with an application heartbeat reserved for protocols where silence truly means dead.
 
-### 8.4 Containers: identity, signals, and cache position
+**CI-16 — Status code trusted over the body.** Mechanism: the endpoint returns 200 with an error object in the body — a documented behaviour — and the client checks only the status, so a failed operation is recorded as a success. The "client bug" hypothesis is excluded by the response bytes, which are identical to a successful call's bytes apart from the error field. Correction: parse the documented field and fail on it; keep a contract test per endpoint that feeds a known error body and asserts the client raises.
 
-Container defects are almost all identity defects: the thing that ran is not the thing that was tested, or the stop that was sent is not the stop that was received. Three of the five are visible in a digest or a counter, which makes them cheap to prove and expensive to guess.
+**CI-18 — Template drift between scoring paths.** Mechanism: the evaluation script prepends three sentences and the serving path prepends two, so identical text produces different token ids and scores differ by more than sampling noise. The "model nondeterminism" hypothesis fails because the difference persists at temperature 0 and reproduces byte-for-byte on the same path. Correction: hash the rendered prefix, store the hash with every score, and fail the comparison when the hashes differ rather than attributing the gap to the model.
 
-| ID | Category | Symptom | Competing causes | Discriminating check | Correction | Prevention | Verify |
-|---|---|---|---|---|---|---|---|
-| CI-19 | VIOLATED_ASSUMPTION | workload killed with work in flight at stop | slow handler; queue loss | process tree at stop, signal receipt | exec the workload as PID 1 | assert single-process tree in image test | send stop with 30 s of work, assert drain |
-| CI-20 | NUMERICAL_EDGE | a share of requests lost on every deploy | client timeout; pod crash | drain p99 versus grace period | set grace above drain p99 | budget = drain p99 + margin, in CI | rolling restart, assert zero dropped |
-| CI-21 | CONCEPT_CONFUSION | works locally, not in the cluster | code difference; missing env | digest local versus deployed | deploy the tested digest, not the tag | promote by digest only | compare digests, assert equal |
-| CI-22 | SCALE_FAILURE | cold start 24 s, not 1.2 s | slow runtime; CPU limit | image bytes pulled versus bytes needed | reorder layers, shrink base | assert image size budget in CI | rebuild from cache, assert pull time |
-| CI-23 | NUMERICAL_EDGE | throttled at 40% CPU usage | slow code; memory pressure | `nr_throttled` over `nr_periods` | raise quota or lower period sensitivity | alert on throttle ratio, not usage | replay burst, assert throttle ratio |
+**CI-20 — Retrieval depth as the cost driver.** Mechanism: retrieval returns `k` documents of about 900 tokens each, so `k = 4` sends 3,600 input tokens and `k = 16` sends 14,400 — a 4x increase in prefill work for the same question. At 3.00 per million tokens and 800 output tokens, per-call cost moves from `0.0108 + 0.012 = 0.0228` to `0.0432 + 0.012 = 0.0552`, a 2.42x rise that is not a 4x rise because the output term is fixed. Correction: a per-component token budget in the request builder, with `k` chosen by marginal answer quality rather than by retrieval score.
 
-**CI-19 — PID 1 that swallows the signal.** Mechanism: `ENTRYPOINT ["sh", "-c", "..."]` makes the shell PID 1, and the shell does not forward `SIGTERM` to its child, so the workload runs until `SIGKILL` at the end of the grace period — a 45 s grace minus 30 s of unforwarded drain work means the last in-flight batch is lost on every stop. The "slow handler" hypothesis fails because a slow handler still *finishes* within the grace period if the signal arrives; here the signal never arrives at the process that could react.
+**CI-22 — Unit confusion in unit economics.** Mechanism: cost per request falls because a cache now absorbs most input, while total spend rises because traffic doubled; both statements are true and the dashboard shows only the first. The discriminator is to price the unit being billed: cost per thousand tokens is what the invoice computes, and cost per request is a derived ratio whose denominator can move independently. Correction: one cost model per surface, with cached and uncached tokens priced separately, and both totals published.
 
-**CI-20 — Grace period shorter than the drain tail.** Mechanism: on stop, a server drains in-flight requests; if the drain p99 is 12 s and the grace period is 10 s, then with a uniform drain time the share of stops that lose work is `(12 − 10)/12 = 16.7%`. Note the arithmetic: the tail is what matters, so a mean drain of 2 s with a 12 s p99 loses the same share. The "client timeout" hypothesis fails because client-side loss correlates with *deploy events*, while a timeout correlates with load.
+**CI-23 — Token estimate from character count.** Mechanism: `len(text)/4` is a heuristic that underestimates code, tables and non-Latin scripts; an 88,000-character prompt estimated at 22,000 tokens is 28,600 tokens under a real tokenizer, a 23.1 % undercount that turns a budget into an overflow. The "longer answers" hypothesis is excluded because output tokens are counted exactly at generation and are not subject to the estimate at all. Correction: estimate with the model's own tokenizer and assert the estimate error stays below 3 % in CI.
 
-**CI-21 — Tag identity drift.** Mechanism: the cluster pulls `app:latest`, which was rebuilt after the test run, so the deployed bytes differ from the tested bytes with no build failure and no version change. The "missing env var" hypothesis fails a digest comparison: an env difference shows identical digests with different configuration, a tag drift shows different digests for the same tag. Correction is promotion by digest, which makes the tested artefact the deployed artefact by construction.
+**CI-27 — Dependency install re-run on every build.** Mechanism: source is copied before the lockfile, so any source change invalidates the dependency layer and the install repeats; at 240 s of install per build and 18 builds a day that is 72 minutes daily. Competing cause: a larger dependency set, which would show a rising install time at constant build count rather than a constant install time at rising build count. Correction: copy the lockfile, install, then copy source, so the invalidation point sits below the install layer.
 
-**CI-22 — Cold start dominated by transfer.** Mechanism: at 100 MB/s an extra layer of 2,400 MB costs 24 s of pull against a 1.2 s boot, so cold start is 95% network and 5% runtime — and reordering a dependency install above a source copy invalidates every later layer on each commit, which is how the layer becomes large. The "slow runtime" hypothesis fails because runtime time is unchanged between a warm and a cold start while pull time differs; the check compares a cached start to an uncached one.
+**CI-28 — CPU quota mistaken for CPU usage.** Mechanism: the quota is 0.4 cores against a 0.5-core demand, so `20 %` of the demand cannot be served and the container is throttled whenever it bursts, while average usage reads 40 % — the quota itself. The "slow code" hypothesis is excluded by `nr_throttled/nr_periods`, which rises whenever demand exceeds the quota regardless of mean usage. Correction: raise the quota above observed burst demand, and alert on the throttle ratio rather than on usage.
 
-**CI-23 — Throttled while idle-looking.** Mechanism: a CPU quota of 0.2 cores with a 100 ms period gives a 20 ms budget per period; a burst of 4 ms work every 20 ms consumes the budget exactly, so `nr_throttled/nr_periods` rises while the averaged usage reads 40%. The "slow code" hypothesis fails because the same code at the same rate runs faster with a larger quota; the counter ratio is the discriminator, not the usage percentage.
+**CI-29 — Tag deploys the wrong artifact.** Mechanism: an image is built, tested, and then a mutable tag is re-resolved at deploy time, so the deployed digest differs from the tested one; the difference is usually invisible until behaviour differs. The "missing environment variable" hypothesis is excluded by comparing digests, which is a string equality rather than an investigation. Correction: promote by digest, and print the digest in the deploy log next to the test log's digest.
 
-### 8.5 SQL analytics: three-valued logic, frame semantics, and fanout
+**CI-33 — Interval inclusion at the day boundary.** Mechanism: `WHERE ts BETWEEN '2026-11-09' AND '2026-11-10'` includes midnight of the 10th, so the first event of the next day is counted twice across two runs; with one event per 5,000 rows at the boundary, the error is 0.02 % — small enough to pass review and large enough to break a reconciliation. Correction: half-open intervals, `ts >= start AND ts < start + 1 day`, and a lint rule banning `BETWEEN` on timestamp columns.
 
-The nine defects here are the unit's most reproduced errors because they are *silent*: a query with a NULL predicate or a wrong frame returns fewer rows or a different number, never an error. Every row's discriminator is a count, and counts are cheap. The first two are fanout variants that differ in where the duplicate originates.
+**CI-35 — Integer division in a ratio.** Mechanism: `7/2` in integer arithmetic is 3, and a percentage computed as `count/total*100` with both operands integral returns a coarse number that looks like a rounding decision rather than a truncation. The "rounding" hypothesis is distinguishable by recomputing in floating point: rounding moves the value by at most 0.5, truncation by up to 1.0 and always downward. Correction: cast before dividing, and unit-test the expression with a known non-integral result.
 
-| ID | Category | Symptom | Competing causes | Discriminating check | Correction | Prevention | Verify |
-|---|---|---|---|---|---|---|---|
-| CI-24 | VIOLATED_ASSUMPTION | revenue 30% high after a join change | real growth; price change | `COUNT(*)` versus `COUNT(DISTINCT key)` | deduplicate the right side before aggregating | assert row count per join in tests | replay the query, assert 1.30 ratio gone |
-| CI-25 | NUMERICAL_EDGE | 4% of rows vanish from an inner join | genuinely missing keys; filters | count NULL keys on both sides | use a left join or coalesce the key | profile NULL share on join keys | replay the query, assert row count |
-| CI-26 | NUMERICAL_EDGE | running total jumps by a peer-group at a tie | duplicate events; bad ordering | compare `ROWS` and `RANGE` output | state the frame explicitly | forbid implicit frames in review | replay a tied key, assert equality |
-| CI-27 | NUMERICAL_EDGE | `COUNT(col)` understates total rows | filters; join loss | compare `COUNT(*)` and `COUNT(col)` | use `COUNT(*)` for row counts | document nullability per column | replay on a 4%-NULL column, assert delta |
-| CI-28 | NUMERICAL_EDGE | daily totals double-count a boundary row | late events; duplicate ids | rows with timestamp exactly at midnight | use half-open `>=` and `<` | lint for `BETWEEN` on timestamps | replay a midnight event, assert one count |
-| CI-29 | NUMERICAL_EDGE | integer division gives a percentage of 3 | rounding; wrong numerator | recompute in floating point | cast before dividing | unit test the ratio expression | replay 7/2, assert 3.5 |
-| CI-30 | CONCEPT_CONFUSION | dashboard p99 higher than any shard's p99 | slow shard; bad timer | recompute the percentile on pooled rows | pool samples, then take the percentile | ban averaging percentiles | replay three shards, assert pooled |
-| CI-31 | SCALE_FAILURE | one key's window scans 45% of the table | missing index; small table | rows per key versus total | pre-aggregate or partition by key | alert on skew ratio | replay hot key, assert scan share |
-| CI-32 | CONCEPT_CONFUSION | monthly rate differs from a 30-day rate by 3.2% | real seasonality; data gap | denominator days per period | normalise to a fixed unit | document the denominator per metric | replay both windows, assert ratio |
+**CI-36 — Denominator switched between periods.** Mechanism: a monthly rate computed over 31 days and a 30-day rate computed over 30 days differ by `31/30 - 1 = 3.33 %`, and the same pair over a 24-hour day against a DST-shortened 23-hour day differs by `24/23 - 1 = 4.35 %`; both are large enough to be reported as a trend. The "seasonality" hypothesis is excluded because a denominator artefact is exactly reproducible from the calendar while seasonality is not. Correction: normalise to a fixed unit and print the denominator beside every rate.
 
-**CI-24 — Fanout from a non-unique join key.** Mechanism: joining orders to events on `(customer, day)` instead of `order_id` multiplies each order by its event count, so a `SUM` over 1,000 orders with 1,300 matching events inflates by `1.30`. It is `VIOLATED_ASSUMPTION` rather than `NUMERICAL_EDGE` because the arithmetic is right: the assumption that the right side is unique per left row is what failed. The "real growth" hypothesis is eliminated by the distinct-key count, which stays at 1,000.
+### 8.2 The triage tree
 
-**CI-25 — NULL keys dropped by an inner join.** Mechanism: 4% of rows carry a NULL join key; `NULL = NULL` evaluates to unknown, so an inner join drops them silently — 48 of 1,200 rows, and 3,360 currency units of a 84,000 total. The "missing keys" hypothesis fails a two-sided count: if the keys are genuinely absent from the right table, the left table's non-null keys are unmatched, whereas NULL-keyed rows are unmatched on both sides and countable in the left table alone.
+The tree encodes the order in which the probes of Section 7 are worth running. Every branch ends in an issue ID, so the tree is a routing table rather than advice.
 
-**CI-26 — `RANGE` versus `ROWS` at a tie.** Mechanism: the default frame includes all *peers* of the current row, so with key values `[10, 10, 10, 20]` a running sum reports `30, 30, 30, 50` under `RANGE` and `10, 20, 30, 50` under `ROWS`. For the first row the difference is 20 units, a 100% error at the start of the window, and it is invisible in the total. The "duplicate events" hypothesis fails because duplicates change the row count, while peer inclusion leaves the count unchanged and changes only the frame membership.
+```text
+complaint
+ |
+ +-- "it is wrong" ---------> recompute the identity by hand
+ |      |                        disagree with the system -> arithmetic (CI-19, CI-35)
+ |      |                        agree, but the input was wrong -> contract (CI-18, CI-29)
+ |      +-- number too large ---> rows per key > 1?  --yes--> fanout (CI-30)
+ |                                NULL share on key? --yes--> dropped rows (CI-31)
+ |                                boundary row?      --yes--> interval (CI-33)
+ |
+ +-- "it is slow" ----------> attempts/request > 1.05? --yes--> retries (CI-06, CI-10)
+ |      |                     in_flight ~ pool size?   --yes--> saturation (CI-05)
+ |      |                     p99 spike at a constant? --yes--> blocking (CI-09)
+ |      |                     wait grows, service flat?--yes--> queue (CI-01)
+ |      +-- only at a deploy --> grace < drain p99?  --yes--> signal (CI-24, CI-25)
+ |
+ +-- "it is stuck" ---------> live tasks > expected?  --yes--> cancellation (CI-03, CI-04)
+ |                            queue depth rising?     --yes--> backpressure (CI-15)
+ |                            stream ends at 60 s?    --yes--> idle timeout (CI-12)
+ |
+ +-- "it is doubled" -------> effects per key > 1?    --yes--> idempotency (CI-07)
+ |                            attempts per key > 1?   --yes--> transport retry (CI-08)
+ |
+ +-- "it costs more" -------> input tokens up?        --yes--> context (CI-20, CI-23)
+                             attempts up?             --yes--> retries (CI-06)
+                             cached share down?       --yes--> prefix cache (CI-22)
+                             instances up?            --yes--> cold start (CI-26, CI-27)
+```
 
-**CI-27 — `COUNT(col)` is not a row count.** Mechanism: `COUNT(col)` counts non-NULL values, so a column with 4% NULLs reports 1,152 for a 1,200-row table — a 4% understatement that propagates into every per-row denominator. The "join loss" hypothesis fails because the discrepancy is exactly the NULL count, which is measurable independently with `COUNT(*) - COUNT(col)`.
+Two properties make the tree usable under pressure. First, no branch requires more than one counter, so the first probe can be run with what exists. Second, the branches are ordered by how often they terminate: "wrong" resolves fastest because arithmetic can be recomputed by hand, and "slow" resolves second because attempts-per-request usually exists.
 
-**CI-28 — `BETWEEN` on a timestamp boundary.** Mechanism: `BETWEEN '2026-01-01' AND '2026-01-02'` includes `2026-01-02 00:00:00`, so the row at midnight is counted in both days — one duplicated row per day boundary, 365 per year on a daily-grain table. The check is a targeted count of rows exactly at midnight, which is one row per day when the defect exists and zero when the query is correct.
+### 8.3 Four failure mechanisms that recur across layers
 
-**CI-29 — Integer division in a ratio.** Mechanism: `successes / total` with both integers truncates, so `7/2` reports `3` instead of `3.5` — a 14.29% understatement — and the error is largest for small counts, which is exactly where a small sample needs the most care. The "wrong numerator" hypothesis fails because the numerator is verifiable by counting rows; the tell is that the result is always an integer.
+**Mechanism A — an unbounded accumulator behind a bounded entry point.** The entry point enforces a rate, and a queue or collection behind it grows without limit. Instances: CI-02 (task list), CI-15 (per-connection write buffer), CI-20 (retrieved context). Discriminator: compare the accumulator's size to `rate * retention` and check whether size falls when the input stops. If it falls, the accumulator is bounded state under load; if it does not, the retention is a leak.
 
-**CI-30 — Percentiles averaged across shards.** Mechanism: with three shards of 100, 1,000 and 100 rows whose p99 values are 500 ms, 28.8 ms and 700 ms, the mean of per-shard p99 is 409.6 ms while the pooled p99 over all 1,200 rows is 700 ms — a 70.9% understatement. The "slow shard" hypothesis fails because the pooled value is computed from the same rows; the defect is the aggregation, not the data.
+**Mechanism B — a constant that lives in two files.** Two components each hold a related constant and nobody compares them: the 10 s grace period against the 14 s drain p99 (CI-25), the 60 s proxy idle timeout against a 90 s generation (CI-12), the caller's 5 s deadline against a 7.5 s retry budget (CI-05). Discriminator: print both constants from configuration in one place. This is the cheapest check in the catalog and the one most often skipped, because each file looks correct in isolation.
 
-**CI-31 — Skew that defeats a per-key window.** Mechanism: 1% of keys hold 45% of rows, so 540 of 1,200 rows sit in twelve keys; a per-key window over the hot key scans 45% of the table while the median key scans a handful of rows. The "missing index" hypothesis fails because an index on the hot key does not reduce the rows the window must read — the frame itself is large.
+**Mechanism C — a summary statistic computed before the grouping is complete.** The aggregate is right for its input and the input is the wrong population: per-shard p99 averaged across shards (CI-34), a mean computed over censored values (CI-19), a rate whose denominator is the wrong number of days (CI-36), a count taken after a fanout join (CI-30). Discriminator: recompute the statistic from the finest retained grain and compare; if the coarse number cannot be reproduced from the fine one, the grouping is wrong.
 
-**CI-32 — Denominators that differ by calendar length.** Mechanism: a monthly rate divides by 31 days in one period and 30 in the next, so a flat daily volume produces a 3.23% difference with no change in behaviour. The "seasonality" hypothesis fails a fixed-window recomputation: a 30-day rolling rate is identical across both months when the underlying daily volume is flat.
+**Mechanism D — a boundary expressed in the wrong convention.** The code and the data disagree about whether an interval includes its endpoint: `BETWEEN` on a timestamp (CI-33), `<=` in a pagination cursor, `RANGE` treated as `ROWS` (CI-32), a byte count compared before encoding (CI-13). Discriminator: construct one record exactly on the boundary and one a nanosecond either side, then count. This check costs a minute and is the only one that distinguishes inclusion from exclusion.
 
-### 8.6 Category census and the distribution of the catalog
+Takeaway: the catalog is long because defects are local, but the four mechanisms behind it are general — unbounded accumulators, duplicated constants, premature aggregation, and boundary conventions — and a team that tests those four catches most of the 36.
 
-The census below exists because a catalog with a lopsided category distribution misleads: a responder who reads many `SCALE_FAILURE` entries learns to suspect volume, which is the wrong prior for a wrong number.
+## 9. Complexity & Cost Analysis
 
-| Category | Count | Share | Most common layer | Typical discriminator |
+**Cost of a probe.** A probe's cost is the responder-minutes to run it plus the probability it fails to discriminate multiplied by the cost of falling back to a guess. The table below uses 6 minutes per probe and 45 minutes of rework for a wrong first containment, with the Bayes posterior of Section 4.3.
+
+| Probe | Minutes | Detects | Misses | Expected cost of using it |
 |---|---|---|---|---|
-| VIOLATED_ASSUMPTION | 7 | 21.9% | SQL and HTTP contracts | a count, ratio, or digest comparison |
-| NUMERICAL_EDGE | 10 | 31.3% | SQL boundaries, LLM units | an invariant the reported number must obey |
-| SCALE_FAILURE | 8 | 25.0% | async pools, containers, LLM context | a plotted cost curve against volume |
-| CONCEPT_CONFUSION | 7 | 21.9% | LLM claims, percentiles, parallelism | a recomputation in an invariant unit |
+| attempts per request | 2 | retries present | retries absent | 2 + 0.14 * 45 = 8.3 |
+| loop-lag histogram | 5 | blocking call | pure queueing | 5 + 0.14 * 45 = 11.3 |
+| idempotency-key effect count | 3 | duplicate effects | single effect | 3 + 0.10 * 45 = 7.5 |
+| prompt-hash diff | 4 | template drift | genuine model difference | 4 + 0.20 * 45 = 13.0 |
+| pooled percentile recompute | 4 | aggregation defect | real shard skew | 4 + 0.12 * 45 = 9.4 |
+| full trace review | 40 | nothing specific | most mechanisms | 40 + 0.50 * 45 = 62.5 |
 
-**Reading the census.** `NUMERICAL_EDGE` is the largest family at 31.3% (10 of 32), which matches the observation that boundary semantics generate more silent defects than any other mechanism: `<` versus `<=`, `ROWS` versus `RANGE`, integer versus float, NULL versus empty. `CONCEPT_CONFUSION` is the smallest at 21.9%, but it carries the highest cost per instance, because a confused comparison produces a defensible-looking claim rather than a visibly wrong number.
+The last row is the one that changes behaviour: a thorough trace review costs more than the rework it is meant to prevent unless the prior is very high. Probes win because they are cheap and specific, not because they are thorough.
 
-**What the census does not say.** It is not a frequency estimate from any real system. The distribution reflects which defects are teachable with a decisive probe, not which are common. A production telemetry study would very likely show a different mix, dominated by configuration drift, and this file makes no claim about that mix.
+**Cost of a false positive.** A probe that fires on the wrong mechanism costs more than no probe, because it also consumes the containment. Raising permits on a queueing defect costs idle capacity; raising them on an idempotency defect multiplies duplicate effects by the worker increase. At `c = 10` to `c = 16` with a duplicate-effect rate of 1 per 100 requests, the extra workers raise the duplicate rate proportionally — from 0.0625 per 1,000 to 0.1 per 1,000 — before the fix is in.
 
-**Cross-layer issues.** Four defects appear in more than one layer and are filed by first detectability, which is why the counts do not sum to the layer table sizes: duplicate effects (CI-07) also appear as a SQL count anomaly; censored loss (CI-15) also appears as an unexplained LLM spend drop; the fanout multiplier (CI-24) also appears as a retry-driven load figure; and grace-period loss (CI-20) also appears as a client timeout.
+**Retry cost, in currency.** At 49.6 attempts/s and 0.078 per call, the retried portion costs `9.6 * 0.078 * 3600 = 2,695.68` per hour, against a base of `40 * 0.078 * 3600 = 11,232.00`. The retries are 19.4 % of spend for 0 % of additional successful answers, since the successes are the same 40 per second. With the prefix cache in place the same retries cost `9.6 * 0.02454 * 3600 = 848.10` per hour, so caching reduces the absolute cost of the defect by 68.5 % while leaving the defect in place — a reminder that cost reduction and defect repair are separate work items.
+
+**Memory cost of admission.** At 19 KiB per task, the memory cost of concurrency `k` is `19 KiB * k`. A 1 GB container with a 70 % working budget holds 37,800 tasks; a 16,000-task limit costs 304 MB and is the largest round number that leaves room for payloads. The cost of choosing `k` too small is throughput, which is visible; the cost of choosing it too large is an out-of-memory kill, which is not attributable after the fact.
+
+**SQL cost.** A hot key scanning 45 % of a 12 M-row table touches 5.4 M rows per query. At 40 queries/minute that is 216 M row-touches per minute against whatever the engine's scan rate is, and the cost is not the mean but the contention. Pre-aggregation trades storage for scan: a daily rollup keyed by that key reduces the scan to the number of days in the window, at the price of a rebuild path that must be verified against the base table.
+
+**Cold-start cost.** A 15.67 s cold start on a 1.2 s warm baseline means any autoscaling event pays 13.1x the warm request time for the first requests on each new replica. With 20 replicas rolling, the cost is 20 * 15.67 = 313.4 s of degraded capacity per scale-out event; that number, not the image size, is what justifies the work of moving initialisation into a readiness gate.
+
+**Cost of the catalog itself.** Every row costs a maintainer about 20 minutes a year to re-verify, because a formula's inputs drift. Thirty-six rows is 12 hours a year, which is justified only if the catalog is used: the test of that is whether the issue IDs appear in incident notes and in replay names. An unused catalog is documentation debt with a maintenance bill.
+
+**Replay sample size, which is the cost nobody budgets.** A replay that proves a defect is gone must be large enough that the defect's expected count under the null is comfortably above zero. For a defect with pre-fix rate `p` per operation, the number of replayed operations needed to expect three occurrences is `n = 3/p`. At `p = 0.01` that is 300 operations — routine. At `p = 1/5000`, the boundary-double-count rate of CI-33, it is 15,000 operations, which is why boundary defects are verified by constructing the boundary record explicitly rather than by volume. The rule that follows: volume replays verify common defects, and constructed boundary records verify rare ones; a team that replays only at volume will close a boundary defect on evidence that could not have detected it.
+
+Takeaway: probes are cheap because they are specific, false positives are expensive because they consume containment, and the cost that decides most designs is not the mean but the tail event that autoscaling, deploys and retries all amplify.
+
+## 10. Key Theorems / Results Reference
+
+Each result below is stated with its condition and the sheet that owns its derivation. The catalog cites these by ID; a responder who needs the derivation goes to the owning sheet rather than re-deriving under pressure.
+
+**R-01 — Retry amplification (CI-F1).** For independent attempts with failure probability `r` and cap `n`, mean attempts per operation is `(1-r^n)/(1-r)`, and the uncapped limit is `1/(1-r)`. Condition: independence, enforced cap, retryable errors only. Owned by `01_Python_Async_and_Concurrency.md` as `R-01`.
+
+**R-02 — Utilisation after amplification (CI-F2).** `rho = lambda_0 * A * S / c`. Condition: every attempt holds one permit for the whole of `S`. The consequence used throughout is that a 24 % retry overhead consumes 24 % of capacity, not 24 % of the margin.
+
+**R-03 — Erlang C wait (CI-F3).** For `c` identical permits, Poisson arrivals and exponential service, mean queue wait is `P_wait * S / (c * (1 - rho))` with `P_wait` the standard Erlang C probability. Condition: `rho < 1`. Owned by `01_Python_Async_and_Concurrency.md` as `Q-01` and by `02_REST_APIs_and_WebSockets.md` as `Q-02`.
+
+**R-04 — Little's law (L-01).** `L = lambda * W` for a system in steady state with a well-defined boundary. Condition: means exist; window long enough for end effects to vanish. It is a conservation identity, not a provisioning rule, and it does not bound anything.
+
+**R-05 — Wave time under `k` permits (CI-F4).** `T = ceil(N/k) * L_unit + R`. Condition: one permit per item for its whole life; `k = min(semaphore, pool, quota, fds)`.
+
+**R-06 — Probe posterior (CI-F5).** `PPV = sens*p / (sens*p + (1-spec)*(1-p))`. Condition: calibrated error rates and an honest prior. The operating consequence: a negative probe is usually the stronger signal at low prior, so probes are designed to be cheap and frequently negative.
+
+**R-07 — Fanout inflation (CI-F6).** `S_bad = f_row * S_good`. Condition: unique parent side, non-unique child side, no post-join filter. Consequence: uniform inflation across segments is a data-shape signature.
+
+**R-08 — Censoring bias (CI-F7).** A per-token floor at `f` with `m` clamped tokens shifts the mean to `(sum + m*ln f)/N`; the bias factor is that quotient over the true mean. Condition: the floor sits below the true values, so the substitution is a lower bound on surprisal.
+
+**R-09 — Cold-start attribution (CI-F8).** `T_cold = B_needed/beta + m + t_init`. Condition: cold node, on-demand pulls. Consequence: attribute before optimising, because the two terms respond to different work.
+
+**R-10 — Half-open interval.** A daily bucket `[d, d+1)` counts each event once; `BETWEEN` over timestamps counts boundary events twice, at a rate of one per boundary per bucket — 0.02 % of a 5,000-row hourly bucket, which is invisible in review and material in a 12-month sum.
+
+**R-11 — Percentile pooling.** The p-th percentile of a pooled sample is the value at rank `ceil(p * n)` of the pooled order statistic. It is not the mean of per-shard percentiles, because the mean of ranks is not a rank. Condition: samples or a mergeable sketch retained per shard.
+
+**R-12 — Three-valued logic.** `NULL` compares as unknown, so a predicate on a nullable column removes rows from inner joins and `WHERE` clauses without error. The check is a NULL share before the join; after the join the evidence is gone.
+
+**R-13 — Amdahl-style ceiling for permit-bound work.** With serial fraction `s`, speedup from `k`-fold concurrency is bounded by `1/(s + (1-s)/k)`. At `s = 0.1` and `k = 8` the ceiling is `1/(0.1 + 0.1125) = 4.7`, not 8 — which is why "eight permits" never yields eight-fold speedup on real work.
+
+**R-14 — Cache saving identity.** With stable prefix share `h` priced at rate `pc` and the rest at `p`, per-call cost is `h*cached_rate + (1-h)*p` for input plus output. At `h = 0.90`, `cached_rate = 0.30/M` and `p = 3.00/M`, input cost falls from 0.066 to 0.01254 — a 68.5 % total saving once output is included, not the 90 % that `h` suggests.
+
+Takeaway: fourteen results cover the whole catalog, and each one is a comparison instrument with a named condition — cite the ID, substitute the numbers, and check the condition before believing the answer.
+
+## 11. Interview / Exam Questions
+
+Fifteen questions, half of them requiring computation or diagnosis. Each answer stands on its own; the follow-up is the question an interviewer actually asks next.
+
+**Q1 — 40 tasks run against 8 permits at 180 ms each. What is the elapsed time, and what is the most common wrong answer?**
+Answer: 0.90 s, computed as `ceil(40/8) * 0.180 = 5 * 0.180`. The common wrong answer is 0.18 s, from assuming 40-way parallelism.
+Reasoning: the permit count is a capacity contract; the work is concurrent but not parallel, so it proceeds in five serial waves.
+Follow-up: which single number would you publish to prevent the error recurring? The triple `N`, `k`, `L_unit`, because the claim is only checkable when all three are visible.
+
+**Q2 — A service reports a 24 % rise in downstream load with flat request rates. Give the first probe and the two candidate mechanisms.**
+Answer: count attempts per logical request. If it is 1.24, retry amplification with `r = 0.2` and a cap of 3 explains the load exactly; if it is 1.00, the extra load is coming from another client.
+Reasoning: the logical counter and the attempt counter are separate series, so the ratio discriminates without any latency data.
+Follow-up: what would make the ratio 1.24 but the mechanism something else? A client that retries outside the counted path — which is why the attempt counter must sit at the last hop before the downstream.
+
+**Q3 — You have a 25 % prior that a defect is a retry storm. Your probe has sensitivity 0.90 and specificity 0.95. It comes back positive. What is the probability you are right, and what would a negative have told you?**
+Answer: positive gives `0.225 / 0.2625 = 0.857`; negative would have given a 0.966 probability of absence.
+Reasoning: at low prior, false positives from the 5 % specificity gap are 0.0375 against 0.225 of true positives, so three in twenty positives are wrong.
+Follow-up: the probe costs 6 minutes and rework costs 45. Is it worth running? Expected cost with the probe is `6 + 0.143*45 = 12.43`; without it, a coin-flip guess costs 22.5, so yes.
+
+**Q4 — A retry is configured with a 1 s fixed delay after 500 simultaneous rejections. Describe what the downstream sees, and the fix.**
+Answer: a single wave of 500 attempts at `t + 1 s`, then another at `t + 2 s` if those fail. The fix is full jitter, so delays spread over `[0, 1]` s and the wave becomes a ramp.
+Reasoning: a fixed delay synchronises clients that failed together, which is exactly the population that failed together.
+Follow-up: does jitter reduce total load? No — it reduces peak load and leaves the mean unchanged, which is why the cap and the budget still matter.
+
+**Q5 — A caller has a 5 s deadline. The callee retries three times at 2 s with 1.5 s of backoff. What is the worst-case elapsed time and what breaks?**
+Answer: `3*2 + 1.5 = 7.5` s, so the caller abandons at 5 s while the callee is inside attempt three; the final attempt is spent on a response nobody will read.
+Reasoning: the retry budget must be derived from the caller's deadline, not from the per-attempt timeout.
+Follow-up: how would you state the invariant in CI? `n*t + sum(backoff) < deadline`, with backoff evaluated at its maxima and the assertion failing the build.
+
+**Q6 — 100 logical operations produce 124 attempts, and the idempotency key is generated inside the retry loop. How many duplicate effects are admissible and how do you prove the count?**
+Answer: up to 24, one per retry, because each retry presents a new key and is therefore a new operation. Prove it by counting effects grouped by the *operation* id: the distribution shows operations with two and three effects.
+Reasoning: the key must be minted before the first attempt and committed in the same transaction as the effect; anything else identifies attempts.
+Follow-up: what does the replay assert? Two deliveries of the same key produce one effect and one `DUPLICATE_SUPPRESSED` reason code.
+
+**Q7 — p99 rises five-fold with a flat mean service time and a lag histogram showing a spike at 250 ms. Name the mechanism and the check that excludes queueing.**
+Answer: eight coroutines each blocking the loop for 0.25 s, producing a 2.0 s stall per pass. Queueing is excluded because queueing produces a smooth lag distribution with no spike at a fixed duration.
+Reasoning: a blocking call stalls every coroutine, so the p99 is bounded by the block duration and the arrival phase, not by permit contention.
+Follow-up: why is the mean almost unchanged? Only requests that arrive inside the stall are delayed, and 2 s of stall in a 60 s window touches 3 % of arrivals.
+
+**Q8 — A WebSocket peer sends frames but its pong is 90 s late. Your liveness rule drops it. What did you confuse, and what is the safer rule?**
+Answer: pong liveness with transport liveness. The safer rule is "any inbound frame counts as liveness", with a separate application-level heartbeat for the cases where silence must be detected.
+Reasoning: a peer streaming data is demonstrably alive; requiring a pong as well makes the check stricter than the property it claims to measure.
+Follow-up: when is pong-only correct? When the protocol is request/response and silence really does mean dead — and then the interval must be documented as a contract.
+
+**Q9 — Two tokenizers report 2.05 and 1.80 nats per token on the same text, with 4.1 and 3.6 bytes per token. Which model is better?**
+Answer: neither — both are `0.5` nats per byte. The per-token difference of `1.80/2.05 - 1 = -12.2 %` is entirely the tokenizer's bytes-per-token ratio.
+Reasoning: per-token loss divides the same total surprisal by a different count; per-byte loss divides by a count that is a property of the text.
+Follow-up: when is per-token legitimate? Within one tokenizer, where the ratio is constant, and then only for comparisons at equal token counts.
+
+**Q10 — A 14-token sequence has 13 tokens at 0.12 nats and one clamped at 1e-5. Compute the reported mean and explain the size of the error.**
+Answer: `(13*(-0.12) + ln(1e-5))/14 = -13.0729/14 = -0.9338` nats, which is 7.78 times the true mean of 0.12.
+Reasoning: the clamp substitutes `-11.5129` for a value that is lower still, so the mean is pulled toward the floor by `(11.3929)/14 = 0.8137` nats per token.
+Follow-up: what assertion catches it? `min(s) <= mean <= max(s)`, plus a stored clamp count per sequence.
+
+**Q11 — 4.8 M parent rows join to 6.24 M child rows and a revenue sum rises 30 %. Give the two checks and say why order matters.**
+Answer: `COUNT(*)` against `COUNT(DISTINCT parent_key)` before aggregation, and NULL share on the key on both sides. Order matters because a NULL key drops rows from an inner join, so a fanout defect and a NULL defect can cancel or compound, and testing after the join has discarded the evidence.
+Reasoning: fanout multiplies `4.8 M` by `1.30` to `6.24 M`; a 4.2 % NULL drop on the inflated set removes 262,080 units, which is small enough to hide inside the inflation.
+Follow-up: how do you prove the fix? The replay must return the parent count for `COUNT(*)` and the same sum for both the pre-join and post-join queries.
+
+**Q12 — Three shards report p99 of 180, 940 and 210 ms. Your dashboard says 443 ms. What is wrong and what is the right number?**
+Answer: the dashboard averaged three percentiles, which describes no request. Pool the samples: with 2,000 pooled samples the p99 is the 1,980th order statistic, which lies in the shard that produced the 940 ms values.
+Reasoning: a percentile is a rank; the mean of ranks is not a rank, and pooling changes which request occupies the rank.
+Follow-up: if only aggregates survive, what do you publish? A maximum of per-shard p99 as a labelled lower bound, because the pooled percentile cannot be smaller than the largest shard percentile.
+
+**Q13 — A grace period is 10 s and the drain p99 is 14 s. What exactly is lost per deploy, and why does nobody see it?**
+Answer: about 1 % of in-flight requests at the tail, terminated by the stop signal. Nobody sees it because the client observes a connection reset and the service records no error — the record is destroyed with the process.
+Reasoning: the two numbers live in different files, so each looks correct in isolation; the invariant is `grace > drain_p99 + margin`.
+Follow-up: how would you test it? Roll one replica with 30 s of work in flight and assert zero dropped requests and a logged drain count.
+
+**Q14 — A join change doubles the row count with the distinct key count flat. A colleague says growth is broad-based. What is the diagnosis and the cheapest disproof?**
+Answer: fanout. The cheapest disproof is the ratio `rows/parent = 1.30` together with a flat distinct count — broad-based growth moves both.
+Reasoning: uniform inflation across every segment is a data-shape signature; genuine growth concentrates somewhere and usually moves the distinct count as well.
+Follow-up: what if the distinct count also rises 30 %? Then you have both new parents and new children, and the join still needs deduplication before the sum.
+
+**Q15 — An image falls from 1.2 GB to 900 MB and cold start moves from 15.67 s to 12.3 s. Was the work worth it, and what would you do next?**
+Answer: the pull fell from 6.67 s to 5.0 s, saving 1.67 s, so the remaining cold start is dominated by 9 s of initialisation. The next unit of work is initialisation, not bytes.
+Reasoning: `T_cold = B/beta + t_init`, and after the change the second term is 73 % of the total, so its elasticity is higher.
+Follow-up: how do you cut initialisation without hiding the cost? Move imports behind first use and gate readiness on a warm-up request, so the cost moves into the readiness window rather than the request path.
+
+Takeaway: the questions that separate candidates are the ones that ask for a number and then for the condition under which the number is wrong — the second half is where the mechanism shows.
+
+## 12. Quick Reference Card
+
+| If you see | First probe | Likely issue | Containment that keeps the counter |
+|---|---|---|---|
+| elapsed 5x the predicted wave time | `ceil(N/k)` with the real `k` | CI-01 | none needed; publish `N`, `k`, `L` |
+| RSS rising with backlog | size against `N * 19 KiB` | CI-02 | cap admitted tasks |
+| timeout returns, effect still lands | live-task census delta | CI-03 | disable the side effect, not the timer |
+| load 24 % above request rate | attempts per logical request | CI-06 | retry budget as a fraction of successes |
+| duplicate effects after a timeout | effects per operation id | CI-07 | disable retries for that path |
+| p99 spike at a fixed duration | loop-lag histogram | CI-09 | move the block off the loop |
+| retries in one synchronised wave | timestamps modulo delay | CI-08 | add jitter, honour `Retry-After` |
+| stream ends at exactly 60 s | end-time histogram | CI-12 | raise the idle timeout |
+| "12 % better" per token | convert to bits per byte | CI-17 | none; report bpb |
+| loss below the minimum token loss | clamp count per sequence | CI-19 | none; recompute from the dump |
+| outputs ending at the cap | share at `max_new_tokens` | CI-21 | lower the cap, add a stop sequence |
+| killed with work in flight | signal receipt inside the workload | CI-24 | extend grace, do not restart faster |
+| request loss on every deploy | drain p99 versus grace | CI-25 | grace above drain p99 |
+| revenue up 30 % with flat orders | `COUNT(*)` versus distinct key | CI-30 | deduplicate the right side |
+| 4.2 % of rows missing | NULL share on the key | CI-31 | left join, keep the rows |
+| dashboard p99 above every shard | pooled rank, not mean of ranks | CI-34 | publish a labelled lower bound |
+
+**The four categories, one line each.** `VIOLATED_ASSUMPTION` — the contract drifted. `NUMERICAL_EDGE` — a boundary produced a finite wrong answer. `SCALE_FAILURE` — the cost curve turned vertical. `CONCEPT_CONFUSION` — two quantities sharing a name were swapped.
+
+**The five stages, in order.** Classify, probe, contain, correct, replay. Never contain before the probe, and never close without a replay at the boundary.
+
+**The four recurring mechanisms.** Unbounded accumulator, duplicated constant, premature aggregation, boundary convention. Testing these four catches most of the catalog.
+
+**The condition to state before believing any number.** Every formula here has one — `rho < 1`, independence, a calibrated error rate, a unique parent key, a floor below the true value — and a number quoted without its condition is a guess with decimals.

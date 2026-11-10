@@ -1,9 +1,9 @@
 ---
 case_id: "CASE-01-10-001"
 case_title: "Retail CPG demand forecasting for bounded replenishment"
-case_version: "1.0"
+case_version: "1.1"
 created: "2026-11-07"
-last_reviewed: null
+last_reviewed: "2026-11-10"
 status: "proposed"
 content_status: "draft"
 case_type: "predictive-ml"
@@ -12,1222 +12,1008 @@ primary_pattern: "evaluation-mismatch"
 secondary_patterns: ["data-leakage", "model-monitoring"]
 evidence_level: "not-measured"
 source_basis: "illustrative"
-as_of_date: "2026-11-07"
+as_of_date: "2026-11-10"
 owner_role: "Retail replenishment lead"
 source_index: "INDEX.md"
 review_trigger: "Change to order timing, inventory semantics, or available historical snapshots"
 ---
-# Case Study: Retail CPG Demand Forecasting at Scale
+
+# Retail CPG Demand Forecasting at Scale
+
+Every store count, order quantity, cost, service level, and pipeline latency printed in this case is a constructed teaching input, labelled ILLUSTRATIVE where it drives arithmetic. No retailer, supplier, dataset, deployment, or measured result is described. The arithmetic is recomputed and self-checked (§6, §9), so the derivations can be reused with real inputs, but the numbers themselves must never be cited as an observation. Statements about how systems behave in general are marked as design reasoning. Where a fact would need a real contract, source system, or jurisdiction, the case says `unknown` instead of inventing one.
 
 ## 1. The One-Line Framing
-Given point-in-time store-SKU sales, inventory, receipts, and approved promotion plans, propose a daily case-pack order for a replenishment planner, constrained by shelf capacity, pack size, and order deadlines, compared with a seasonal-naive reorder rule.
-The task is probabilistic forecasting followed by a bounded replenishment decision, not merely minimizing prediction error.
-Primary success is lower realized replenishment cost without unacceptable service degradation; it is not measured.
-The primary pattern is evaluation-mismatch; secondary patterns are data-leakage and model-monitoring.
-All entities, numbers, policies, calculations, incidents, and architecture below are constructed for teaching; there is no implied retailer, deployment, log, or measured outcome.
-The directory entry names a topic, not an accessible implementation or evidence of a real system.
+
+A grocer must decide tonight, per store and per item, how many case packs to order so that the shelf survives until the following delivery, and the only defensible question is which order quantity minimises expected shortage plus holding cost under the demand uncertainty known at that hour.
+The forecast is a means; the order is the decision; the cost is the objective. Optimising mean absolute percentage error is a proxy that can move in the opposite direction to the cost it is supposed to represent.
+A distributional forecast plus a critical-ratio rule outperforms a point forecast plus a fixed safety allowance when the cost asymmetry is stable and the forecast's spread is honest.
+The case is a cautionary design exercise: the same pipeline that produces a good backtest can produce a bad order, and the gap opens in five specific places — censored sales, promotion leakage, pack rounding, lead-time variance, and evaluation windows that are not decision windows.
+Primary pattern is evaluation-mismatch, because the whole failure mode is a scoring choice that looks reasonable in a notebook and is wrong at the shelf.
+Secondary patterns are data-leakage (vintage of promotion and price records) and model-monitoring (detecting when the decision, not the forecast, is degrading).
+The intended reader is a forecasting practitioner who already knows how to fit a model and now has to defend an order quantity to a planner who carries the pager.
 
 ## 2. Context & Background
-A fictional grocer sells ambient consumer packaged goods (CPG) through physical stores.
-A stock-keeping unit (SKU) identifies one sellable product and pack size.
-Each evening a planner reviews orders for the next supplier shipment.
-An order placed today arrives before the store opens two mornings later, if the supplier performs as assumed.
-Daily decisions seek to cover the interval until the next regular delivery while avoiding excess shelf and backroom stock.
-Inventory position means on-hand plus reliable incoming units minus committed units, all as known at the cutoff.
-Sales reflect fulfilled purchases, not necessarily customer demand when shelves are empty.
-The scenario assumes 1,000 stores and 2,000 active SKUs per store, or up to two million decision series.
-This is an illustrative upper bound, not an observed store fleet or benchmark.
-The replenishment lead owns the action; store operations own physical counts; data engineering owns feeds; ML operations owns model releases.
-Merchandising owns the promotion plan, and supplier operations owns shipment commitments.
-The assumed current approach uses the previous matching weekday's sales and a fixed safety allowance, with planner edits.
-No previous model attempts, measured baseline weaknesses, legal requirements, or actual company conditions are asserted.
-The time zone is local store time for business days; timestamps are recorded in UTC with store-zone history.
-The scope excludes perishables, returns to vendor, transfer optimization, price selection, and causal promotion effects.
-A planner can reject a recommendation; the scenario does not assume automated purchase orders.
+
+The fictional setting is a grocery chain with 1,000 stores and about 2,000 active ambient-grocery items per store, so roughly two million store-item series exist in the catalogue.
+Not all of them are replenished daily: about 4% of series need a decision on any given night, which gives 80,000 orders per day and about 29.2 million decisions per year at that rate.
+Series count matters for two reasons: the cost of a per-series artefact (storage, monitoring, explanation) multiplies, and any per-series false-alarm rate multiplies into an operational queue.
+Deliveries arrive on a two-day cycle for most of the estate, so tonight's order must cover tomorrow and the day after, with the next order opportunity intervening.
+Shelf space is finite. A pack that does not fit on the shelf must be stored in the backroom, which is where shrink, misplacement, and unrecorded stock live.
+Sales are recorded at the register after the fact; demand exists before the sale does, and the difference is exactly the information the forecast needs.
+When a shelf is empty the register records nothing, so the worst service failures remove their own evidence from the training data.
+Merchandising publishes promotions with effective dates; the publication timestamp, the ingestion timestamp, and the effective date are three different clocks and only the first two constrain what a backtest may see.
+Supplier lead time is contractual on paper and variable in practice. The case treats it as an assumption to test rather than a constant to trust.
+Store operations physically counts stock on a schedule that is coarser than the order cycle, so the inventory position used at the cutoff is partly inferred.
+Data engineering owns the feeds; ML operations owns model releases; merchandising owns the promotion plan; the replenishment lead owns the order and the override.
+The status quo is a rule of thumb: order the previous matching weekday's sales plus a fixed safety allowance, then let planners edit obvious outliers.
+That rule is not stupid. It is transparent, it degrades gracefully, and it encodes years of tacit knowledge about local conditions.
+The proposed change is narrower than "replace the rule". It is: replace the rule with a forecast-assisted recommendation that a planner can accept, modify, or reject, and measure the combined system.
+Scope exclusions are perishables, fresh produce, pharmacy, returns to vendor, inter-store transfers, price optimisation, assortment decisions, and supplier negotiation.
+Also excluded: automated purchase orders. The scenario keeps a human on the release path, which is a policy constraint, not a maturity limit.
+Legal, privacy, and employment considerations are jurisdiction-specific and unspecified here; the case flags the omission rather than asserting compliance.
+The organisation's current measurement practice is weekly weighted absolute percentage error (WAPE) at the item-store-day level, reported by category, with no cost translation and no separation of stocked and unstocked days.
+That practice is the seed of the evaluation-mismatch: it measures the forecast on a population, window, and unit that do not match the decision.
+
+The operating rhythm deserves attention because it determines what "protection period" means. Most stores receive on a two-day cycle, some on a three-day cycle, and a minority on a daily cycle for the fastest lines.
+If the cycle length differs by store, then a single model trained on a pooled horizon is averaging over three different decision problems with three different variance scalings. The variance scales with the square root of the period, so a three-day store has 1.22 times the spread of a two-day store at identical daily variability.
+That is not a huge difference, and that is exactly why it is dangerous: it is small enough to survive a pooled training run and large enough to mis-set the safety stock in one of the two populations.
+The second rhythm is the week: demand on Saturday is not demand on Tuesday, and the protection period starting on Friday covers a weekend while the one starting on Monday does not. Day-of-week composition inside the period changes the mean, not just the spread.
+A model that predicts per-day demand and sums it can represent this; a model that predicts the period aggregate directly must be given day-of-week composition as a feature or it will learn a weekly average and apply it to every origin.
+The third rhythm is the merchandising calendar: promotions cluster on month boundaries and paydays, so promoted and non-promoted periods are not randomly distributed across the test window. A four-week test that happens to miss a major promotion will flatter any model that does not handle promotions.
+The fourth rhythm is financial: inventory is counted and valued at period end, so an ordering policy that over-orders in the last week of a period and under-orders in the first will look better on the period-end balance than it is on average. Any cost evaluation must span whole periods.
+These four rhythms are the reason the evaluation window cannot be chosen for convenience. A window that is one week long can be dominated by a single promotion; a window that is one year long dilutes a genuine regression into a seasonal average.
 
 ## 3. The Business Question
-Illustrative stakeholder question: Which pack-multiple order should each eligible store place before tonight's cutoff to cover its next protection period at acceptable shortage and holding risk?
-The decision owner is the replenishment lead, not the model developer.
-Available actions are current rule, proposed forecast-assisted order, or defer to a planner when inputs fail.
-The daily cutoff triggers one decision per eligible store-SKU.
-The proposed objective is total purchase-order-independent shortage and holding cost over the evaluation window.
-Purchase cost is omitted only where equal across choices; changing unit cost or discounts requires a new objective.
-Hard scenario constraints are nonnegative integer packs, shelf capacity, valid item-store eligibility, and a supplier order deadline.
-Business costs and service risk can disagree with weighted absolute percentage error (WAPE); the latter is a diagnostic proxy only.
-No-change is the current rule, with its planner override workflow preserved.
-A failed forecast does not authorize an unconstrained order.
+
+The question the case answers: for each eligible store-item on each order date, which case-pack quantity should be proposed so that expected shortage cost plus expected holding cost over the protection period is minimised, and does a distributional forecast beat the current rule on that quantity?
+The decision owner is the replenishment lead. The model developer supplies a distribution, a recommended quantity, and an explanation; the lead supplies the release decision and owns the consequence.
+Available actions per series-night are: accept the recommended quantity, substitute a planner-chosen quantity, defer the order and accept a later delivery slot, or mark the series as not orderable tonight.
+A deferral is a real action with a real cost, and it must appear in the measurement, otherwise the system is rewarded for declining hard cases.
+The proposed objective is expected total cost per store-item-period, composed of shortage cost on unmet demand and holding cost on units carried beyond the period.
+Shortage cost is a modelling choice, not an accounting fact: it bundles lost margin, substitution, basket abandonment, and goodwill into one number per unit.
+Holding cost similarly bundles capital, storage, handling, and the risk of obsolescence into one number per unit per period.
+Because both costs are approximations, the recommended order is only as good as the ratio between them; the case therefore reports the quantity as a function of that ratio rather than as a single number.
+Hard constraints are non-negative integer case packs, a per-item shelf capacity, item-store eligibility, and the supplier's order cutoff time.
+Diagnostics are WAPE, bias, prediction-interval coverage, fill rate, and the count of planner overrides. None of them is the objective; each explains part of the objective's movement.
+The no-change option is the current rule with its override workflow intact, evaluated on the identical dates, series, and cost function.
+A forecast that fails the guardrails does not authorise an unconstrained order: the system falls back to the rule and records the fallback reason.
+The business question also has a negative form worth stating: if the forecast cannot beat the rule after costs are applied, the correct output is to keep the rule and stop spending on the model, and the evaluation must be capable of returning that answer.
 
 ## 4. Assumptions & Constraints
-| ID | Assumption or constraint | Type and status | Verification plan | Impact and fallback | Owner / trigger |
-|---|---|---|---|---|---|
-| A-01 | Two-day lead time and daily ordering | Business, illustrative | Compare historical arrival timestamps with orders | Late arrival invalidates protection period; planner review | Supplier operations / lead-time shift |
-| A-02 | Inventory snapshots represent saleable units | Data, unverified | Reconcile counted, damaged, reserved and shelf stock | Bad position changes order; hold stale item | Store operations / reconciliation failure |
-| A-03 | Promotion plan is known at cutoff | Data, unverified | Replay publication and ingestion timestamps | Future-plan leakage; use last published version | Merchandising / late amendments |
-| A-04 | Stockouts are observable | Data, unverified | Compare shelf availability with receipts and counts | Sales understate latent demand; flag uncertainty | Data owner / missing availability |
-| A-05 | Costs can be approximated per protection period | Business, illustrative | Finance reviews margin, substitution and carrying cost | Wrong quantile and order; default rule | Finance / cost revision |
-| C-01 | Orders fit physical maximum and case multiples | Physical, scenario rule | Reconcile pack master and capacity master | Reject invalid proposal, do not silently round beyond cap | Replenishment / master-data change |
-| C-02 | Cutoff must be met | Operational, scenario rule | Measure end-to-end timeliness at order handoff | Fallback or defer; missed shipments | Operations / schedule change |
-| C-03 | Limit access to operational data | Security, proposed | Review service identity, permissions and retention | Disable unauthorized access, investigate | Security / access change |
-The three most consequential assumptions are inventory correctness, lead-time stability, and point-in-time availability of promotion and inventory data.
-An approved promotion is an input only if published and ingested by the decision cutoff; approval after that time cannot be backdated into a backtest.
-The hard constraints are scenario choices, not claims about an external policy.
-Privacy and legal applicability require an actual jurisdiction and assessment; store-SKU aggregation is not a substitute for access controls.
+
+| ID | Assumption or constraint | Type / status | Impact and fallback |
+|---|---|---|---|
+| A-01 | Two-day lead, daily ordering, one protection period per order | Business, illustrative | Late arrivals invalidate the period; planner review |
+| A-02 | Inventory snapshots represent saleable units at cutoff | Data, unverified | Wrong position shifts the order; quarantine the series |
+| A-03 | Promotion plan is published and ingested before cutoff | Data, unverified | Future-plan leakage; use last published version only |
+| A-04 | Stockouts are partially observable via availability feed | Data, unverified | Sales understate demand; segment and flag, never patch silently |
+| A-05 | Per-unit shortage and holding costs are stable within a category | Business, illustrative | Wrong quantile; recompute the critical ratio per category |
+| A-06 | Demand over the protection period is approximately normal above a volume floor | Modelling, testable | Heavy tails and count data break it; use empirical quantiles |
+| C-01 | Orders are whole case packs within shelf capacity | Physical, scenario rule | Rounding can cost more than the model saves |
+| C-02 | Recommendation must be handed off before the supplier cutoff | Operational, scenario rule | Fallback to rule; measure timeliness end to end |
+| C-03 | A named planner remains accountable for the release | Policy, scenario rule | No automation; logging must attribute the human decision |
+| C-04 | Operational data access is scoped to named services and roles | Security, proposed | Unauthorised access disabled and investigated |
+
+A-02 deserves emphasis: inventory position is on-hand plus reliable in-transit minus committed, and the in-transit term is the one that silently corrupts recommendations when a receipt is recorded late.
+A-03 is the leakage surface. An approved promotion is usable only if its publication timestamp precedes the decision cutoff; approval at 23:40 for a cutoff of 22:00 cannot be backdated into a Monday backtest.
+A-04 is the reason service cannot be measured from sales alone. The availability feed is itself noisy, and its noise is correlated with the very stockouts it reports.
+A-05 fixes the objective's shape. The critical ratio depends only on the ratio of shortage to holding cost, so a 10% error in both costs is harmless while a 50% error in their ratio moves the order materially.
+A-06 is a testable distributional assumption, not a convenience: its failure is demonstrated in §6 with a slow-moving item where the normal approximation produces a negative order.
+C-01 has a consequence that is usually ignored: rounding a continuous optimum up to the next pack multiple is not free, and rounding up repeatedly across a large estate converts a small per-series bias into a large inventory bias.
+C-02 and C-03 define the fallback and accountability structure. Both must appear in the evaluation, because a system evaluated without its fallback path is evaluated on a population that does not exist.
+The three most consequential assumptions are inventory correctness, lead-time stability, and point-in-time publication of promotion and price records.
+Each assumption carries a verification plan and a trigger. An assumption with no trigger is a belief, and beliefs do not belong in a decision system's specification.
+A-05 is the one assumption that is routinely treated as a technical detail and is in fact a governance question. The ratio Cu/Co is set by finance and merchandising, and changing it changes every recommendation in the estate within one scoring cycle.
+The practical implication is that the cost parameter needs an owner, a review cadence, and a version number, exactly like the model. A cost change that is not versioned makes historical recommendations unreproducible and turns every post-incident review into an argument.
+There is also a structural problem with A-05: the true shortage cost is not constant across an item's life cycle. A discontinued item has near-zero goodwill cost and a high obsolescence cost; a flagship item has the reverse. A single per-category ratio is an average over both.
+The mitigation is not a more elaborate cost model, which would be unfalsifiable. It is a category-level ratio plus an item-level flag for items in run-out or launch, with an explicit different rule for those flags.
+Capacity, C-01, has a similar hidden structure. Shelf capacity in units is a derived quantity from facings, depth, and pack dimensions, and it changes when a planogram is reset. A stale capacity figure silently caps the order at a quantity that no longer fits.
+The fallback when a capacity figure is missing is not to use a category default. It is to escalate the series, because a default cap is a fabricated constraint and it will bind on exactly the high-volume items where the error matters.
+C-03's human accountability has an evaluation consequence that is easy to miss: the measured system is human-plus-model, so a model improvement that the planners ignore produces no measurable benefit, and a planner behaviour change produces a benefit with no model change.
+Attribution therefore needs an override log with reason codes, and the analysis in §12 treats the override path as a separate treatment arm rather than as noise.
+Security, C-04, is scoped to service identities and read/write separation. The scoring job reads operational data and writes recommendations; it does not write to the purchase-order system, which limits the blast radius of a model fault to a bad recommendation rather than a bad order.
 
 ## 5. Data, Tools & Method
+
 ### 5a. Data Specification
-The decision grain is store ID, SKU ID, and local order date; forecasts cover cumulative demand in the specified protection period.
-Inputs are transaction sales, inventory position, shipment status, store calendar, product master, price, and promotion plan.
-Each source has event time, publication time, ingestion time, and version; the latest revision is not necessarily the historical truth available to a decision.
-The illustrative historical window is two years with weekly rolling origins, and a later untouched four-week test; no dataset was obtained.
-Events belong to their local business day using the time zone effective for that store on the event date.
-Training labels are final observed unit sales after the outcome-maturity delay, but the label represents sales rather than uncensored demand on unavailable days.
-A stockout indicator gates evaluation segments; a latent-demand target requires independently justified estimation and is not treated as observed truth.
-Exclude permanently closed stores and discontinued item-store pairs before each decision date, not using future closure status.
-Zero sales on an open stocked day differ from missing sales, a closed store, or unavailable inventory.
-Join promotion and product history using effective-time intervals and only records available by the historical cutoff.
-Enforce one eligible record per decision key; quarantine duplicate master records rather than multiplying transaction rows.
-Hold out future time, preserve overlapping-horizon dependence in uncertainty calculations, and avoid randomly splitting daily rows.
-#### Point-in-time field contract
-Each contract is illustrative and must be mapped to actual source owners and retention rules before implementation.
-##### D-01. Store identity
-- Meaning: Stable store identifier.
-- Validation: Reject unknown or remapped keys.
-- Proposed source: Store master effective history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A merged store can silently mix locations; quarantine uncertainty instead of silently inventing a value.
-##### D-02. SKU identity
-- Meaning: Sellable SKU identifier.
-- Validation: Reject unmatched item.
-- Proposed source: Product master effective history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A product transition can corrupt historical series; quarantine uncertainty instead of silently inventing a value.
-##### D-03. Decision origin
-- Meaning: Local cutoff and UTC instant.
-- Validation: Reject absent or ambiguous cutoff.
-- Proposed source: Replenishment schedule; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A date alone does not establish feature availability; quarantine uncertainty instead of silently inventing a value.
-##### D-04. Business date
-- Meaning: Store-local trading day.
-- Validation: Derive using effective zone.
-- Proposed source: Store calendar and time-zone history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: UTC midnight can place a sale in the wrong day; quarantine uncertainty instead of silently inventing a value.
-##### D-05. Transaction identifier
-- Meaning: Unique source sale event ID.
-- Validation: Deduplicate exact delivery retries.
-- Proposed source: Point-of-sale event stream; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Conflicting same-ID events require source reconciliation; quarantine uncertainty instead of silently inventing a value.
-##### D-06. Sale event time
-- Meaning: When the sale occurred.
-- Validation: Keep separate from ingestion time.
-- Proposed source: Point-of-sale event; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Late-arriving events cannot become historical features early; quarantine uncertainty instead of silently inventing a value.
-##### D-07. Sales quantity
-- Meaning: Gross fulfilled saleable units.
-- Validation: Validate integer units and transaction type.
-- Proposed source: Point-of-sale line; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Sales alone do not reveal unmet demand; quarantine uncertainty instead of silently inventing a value.
-##### D-08. Return quantity
-- Meaning: Units returned by customers.
-- Validation: Keep separate from gross sales.
-- Proposed source: Returns stream; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Return posting dates need not match sale dates; quarantine uncertainty instead of silently inventing a value.
-##### D-09. Record publication time
-- Meaning: When a source released a record.
-- Validation: Require no later than origin.
-- Proposed source: Source publication metadata; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Later corrections cannot be backdated into replay; quarantine uncertainty instead of silently inventing a value.
-##### D-10. Record ingestion time
-- Meaning: When the pipeline could access the record.
-- Validation: Require no later than origin.
-- Proposed source: Landing-zone audit log; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Publication alone does not prove pipeline availability; quarantine uncertainty instead of silently inventing a value.
-##### D-11. Inventory on hand
-- Meaning: Count of stock on premises.
-- Validation: Check unit and age.
-- Proposed source: Inventory snapshot; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: On-hand includes unsaleable stock unless defined otherwise; quarantine uncertainty instead of silently inventing a value.
-##### D-12. Saleable status
-- Meaning: Whether units can actually be sold.
-- Validation: Exclude damaged and quarantined units.
-- Proposed source: Inventory status ledger; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Status changes can occur between snapshots; quarantine uncertainty instead of silently inventing a value.
-##### D-13. Committed units
-- Meaning: Stock already promised to orders.
-- Validation: Deduct only if not already netted.
-- Proposed source: Order reservation ledger; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Double subtraction inflates replenishment; quarantine uncertainty instead of silently inventing a value.
-##### D-14. Reliable incoming units
-- Meaning: Confirmed receipts expected before demand exposure.
-- Validation: Use current supplier commitment.
-- Proposed source: Shipment and order feeds; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Late shipments invalidate position; quarantine uncertainty instead of silently inventing a value.
-##### D-15. Arrival timestamp
-- Meaning: Time units became available for sale.
-- Validation: Compare with promised arrival.
-- Proposed source: Receipt ledger; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Warehouse arrival is not necessarily shelf availability; quarantine uncertainty instead of silently inventing a value.
-##### D-16. Availability indicator
-- Meaning: Whether customers could purchase during a period.
-- Validation: Distinguish unknown from available.
-- Proposed source: Shelf availability or reliable proxy; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A daily flag may hide an intraday stockout; quarantine uncertainty instead of silently inventing a value.
-##### D-17. Store operating hours
-- Meaning: Intervals when store is open.
-- Validation: Use effective schedule known at origin.
-- Proposed source: Store calendar; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Closure zero differs from zero customer demand; quarantine uncertainty instead of silently inventing a value.
-##### D-18. Promotion identifier
-- Meaning: Approved planned promotion.
-- Validation: Use revision available at cutoff.
-- Proposed source: Merchandising plan history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Final campaign details can leak into earlier forecasts; quarantine uncertainty instead of silently inventing a value.
-##### D-19. Promotion effective interval
-- Meaning: Start and end of approved campaign.
-- Validation: Join by effective and availability times.
-- Proposed source: Promotion version ledger; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Intervals can overlap during amendments; quarantine uncertainty instead of silently inventing a value.
-##### D-20. Price
-- Meaning: Customer-facing unit price.
-- Validation: Normalize currency and unit.
-- Proposed source: Price history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Post-hoc corrections are not historical inputs; quarantine uncertainty instead of silently inventing a value.
-##### D-21. Price effective interval
-- Meaning: When a price applies in store.
-- Validation: Use valid version as of cutoff.
-- Proposed source: Price version ledger; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A price-change event can arrive late; quarantine uncertainty instead of silently inventing a value.
-##### D-22. Case-pack size
-- Meaning: Saleable units per supplier case.
-- Validation: Require positive integer and effective version.
-- Proposed source: Supplier item master; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Pack changes can invalidate previously feasible quantities; quarantine uncertainty instead of silently inventing a value.
-##### D-23. Capacity
-- Meaning: Maximum additional saleable units.
-- Validation: Require nonnegative quantity and current scope.
-- Proposed source: Store layout master; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Shared receiving capacity is not a per-item limit; quarantine uncertainty instead of silently inventing a value.
-##### D-24. Supplier lead time
-- Meaning: Interval from accepted order to saleable receipt.
-- Validation: Retain a distribution if uncertain.
-- Proposed source: Order and receipt history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Mean lead time can mask tail disruption; quarantine uncertainty instead of silently inventing a value.
-##### D-25. Order cutoff
-- Meaning: Latest valid handoff instant.
-- Validation: Enforce store and supplier calendar.
-- Proposed source: Order schedule; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Time-zone and holiday shifts change the deadline; quarantine uncertainty instead of silently inventing a value.
-##### D-26. Eligibility interval
-- Meaning: Dates when store can replenish SKU.
-- Validation: Use status known at each origin.
-- Proposed source: Assortment master; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Future delisting must not exclude earlier examples; quarantine uncertainty instead of silently inventing a value.
-##### D-27. Store opening date
-- Meaning: First active trading day.
-- Validation: Audit known launch status.
-- Proposed source: Store master history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Cold-start evaluation must not use future sales; quarantine uncertainty instead of silently inventing a value.
-##### D-28. Item launch date
-- Meaning: First item availability date.
-- Validation: Audit effective assortment.
-- Proposed source: Item and assortment history; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Similar-item mapping can itself be revised later; quarantine uncertainty instead of silently inventing a value.
-##### D-29. Holiday calendar
-- Meaning: Local nonstandard trading dates.
-- Validation: Version by region and year.
-- Proposed source: Approved store calendar; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Calendar effects vary with region and store hours; quarantine uncertainty instead of silently inventing a value.
-##### D-30. Feature missingness
-- Meaning: Whether a field was truly unknown.
-- Validation: Use explicit missing-state indicator.
-- Proposed source: Feature pipeline metadata; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Silently imputing a zero changes the meaning; quarantine uncertainty instead of silently inventing a value.
-##### D-31. Label maturity
-- Meaning: When sales and corrections are final enough for evaluation.
-- Validation: Delay scoring until agreed maturity.
-- Proposed source: Source close process; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Premature labels can create false forecast regressions; quarantine uncertainty instead of silently inventing a value.
-##### D-32. Model artifact version
-- Meaning: Exact forecast estimator and parameters.
-- Validation: Bind to a checksum.
-- Proposed source: Model registry; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: An unversioned model prevents reproducible replay; quarantine uncertainty instead of silently inventing a value.
-##### D-33. Feature schema version
-- Meaning: Field names, units, transforms and semantics.
-- Validation: Require compatible model bundle.
-- Proposed source: Feature registry; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Matching column names do not prove matching meaning; quarantine uncertainty instead of silently inventing a value.
-##### D-34. Policy version
-- Meaning: Rounding and constraint behavior.
-- Validation: Record version on each decision.
-- Proposed source: Replenishment rules repository; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Changing policy can move outcomes without model drift; quarantine uncertainty instead of silently inventing a value.
-##### D-35. Recommendation revision
-- Meaning: Version of proposed quantity for an order date.
-- Validation: Reject conflicting duplicate revisions.
-- Proposed source: Recommendation store; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Manual correction must not create an untracked new order; quarantine uncertainty instead of silently inventing a value.
-##### D-36. Override reason
-- Meaning: Structured planner explanation.
-- Validation: Allow missing only with explicit reason.
-- Proposed source: Planner workflow; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Override selection is not a randomized label; quarantine uncertainty instead of silently inventing a value.
-##### D-37. Downstream acknowledgement
-- Meaning: Supplier or order system acceptance status.
-- Validation: Reconcile ambiguous timeouts.
-- Proposed source: Order handoff ledger; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A timeout does not establish nonreceipt; quarantine uncertainty instead of silently inventing a value.
-##### D-38. Source manifest
-- Meaning: Expected partitions and extraction watermarks.
-- Validation: Require completeness before scoring.
-- Proposed source: Data platform control plane; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: An absent partition is not a zero-sales partition; quarantine uncertainty instead of silently inventing a value.
-##### D-39. Capacity unit
-- Meaning: Units, cases, weight or volume of permitted storage.
-- Validation: Convert before comparing quantities.
-- Proposed source: Store capacity master; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: Mixed units silently break constraint checking; quarantine uncertainty instead of silently inventing a value.
-##### D-40. Prediction horizon
-- Meaning: Dates covered by cumulative forecast.
-- Validation: Match order and receipt timetable.
-- Proposed source: Forecast configuration; the source has not been accessed for this case.
-- Availability: retain the record version and the publication and ingestion instants relevant to the forecast origin.
-- Failure boundary: A daily forecast is not automatically the protection-period distribution; quarantine uncertainty instead of silently inventing a value.
+
+The decision grain is store identifier, item identifier, and local order date. Each row is one decision, and each decision yields one recommended quantity and one realised outcome.
+The label grain is store-item-day units sold, aggregated to the protection-period horizon for the decision that consumed it.
+Cutoff is 22:00 store-local time on the order date. Everything used by the feature set must be present with a publication timestamp at or before that instant, in the store's time zone, not the warehouse's.
+Population: open stores, active items, items eligible for replenishment on the cycle, and series with at least 180 days of history. New items enter a separate cold-start path and are not scored by this model.
+Keys: store identifier, item identifier, and order date form the natural key; a surrogate decision identifier maps to the recommendation and the human release for audit.
+Units: demand and supply in single units; orders in case packs; costs in currency per unit; lead time in calendar days; capacity in units of shelf facings converted to units.
+Not available at decision time: tonight's actual sales (the business day is still open at some stores), tomorrow's weather observation, competitor stock, supplier production status, and any promotion approved after cutoff.
+Also not available: the true demand on a stocked-out day. That value is latent by construction and must be estimated or bounded, never read off a table.
+The illustrative history is two years of daily rows with weekly rolling origins and a four-week untouched test period. No source data was obtained for this document.
+Events are assigned to the local business day using the store's time zone in force on that date, because daylight-saving transitions otherwise create 23-hour and 25-hour days that distort daily aggregates.
+Training labels use finalised sales after the returns and corrections window closes, which is typically several days after the sale. The model must know which label vintage it was trained on.
+Exclusions computed per decision date: permanently closed stores, delisted items, items in seasonal range only, and stores under remodel. Exclusions must use information available at that date, not the eventual closure flag.
+Zero sales on an open, stocked day are a real observation of zero. Zero sales on a stocked-out day, a closed store, or a missing feed are not, and conflating them is the single most common label corruption in retail forecasting.
+Duplicate master records are quarantined, not joined: a duplicated item master multiplies transaction rows and inflates both the label and the feature.
+Effective-dated joins are mandatory for price, promotion, pack size, and category. A current-record join leaks the future into the past and is invisible in offline metrics that use one snapshot for everything.
+Holdout is strictly forward in time, with an embargo long enough that the training label at the boundary is fully mature before the test period begins.
+Overlapping multi-horizon evaluation is permitted but the uncertainty calculation must account for the dependence it creates; treating overlapping folds as independent observations is a standard way to manufacture significance.
+The following field contracts are illustrative, and each must be mapped to a real source owner, retention rule, and quality monitor before implementation.
+
+#### D-01 Quantity sold
+Meaning: units scanned at the register for the store-item-day, net of voids, before returns processing.
+Availability: end of business day plus a settlement delay; not reliable at the 22:00 cutoff for the current day.
+Grain: one row per store, item, and business date.
+Failure boundary: a partial-day feed looks like demand collapse; the case treats the current day as unavailable rather than as a low value.
+Owner: transaction data engineering, with a freshness monitor at the feed boundary.
+
+#### D-02 Inventory position
+Meaning: on-hand saleable units plus confirmed in-transit minus committed customer orders, at snapshot time.
+Availability: nightly snapshot from the store system, sometimes stale by one cycle when a store sync fails.
+Grain: one row per store and item per snapshot, with a distinct snapshot timestamp.
+Failure boundary: a stale snapshot reports stock that has already sold; the recommendation then over-orders and the error compounds over the protection period.
+Owner: store systems engineering; quality gate on snapshot age, not on row presence.
+
+#### D-03 Receipt and shipment status
+Meaning: supplier-confirmed dispatch and arrival events for the store, including quantity and expected arrival date.
+Availability: updated when the supplier confirms, which may be after the order cutoff for the same cycle.
+Grain: one row per purchase order line, with event time and recorded time.
+Failure boundary: a recorded receipt that has not physically arrived creates phantom inventory; reconcile against counted stock before trusting the position.
+Owner: supply chain integration; alert on confirmed versus arrived divergence.
+
+#### D-04 Store calendar
+Meaning: opening hours, closures, remodels, and local holidays per store and date.
+Availability: published in advance, but amended at short notice for weather and staffing.
+Grain: one row per store per date, effective-dated.
+Failure boundary: an unlisted closure produces a zero-sales row that the label treats as demand destruction.
+Owner: store operations; amendments must carry a timestamp so backtests can honour the version in force.
+
+#### D-05 Promotion plan
+Meaning: planned mechanic, discount depth, display type, and start and end dates per item and store cluster.
+Availability: published by merchandising, ingested by the analytics platform; both timestamps are recorded.
+Grain: one row per promotion version per item-store or cluster, effective-dated.
+Failure boundary: a plan ingested after the cutoff but before the effective date leaks future intent; the backtest must use the version available at each origin.
+Owner: merchandising systems; version history is a hard requirement, not a nice-to-have.
+
+#### D-06 Price and cost
+Meaning: shelf price, unit cost, and margin per item per store per date, with effective intervals.
+Availability: price changes are approved in advance and applied at a scheduled time; cost updates arrive with supplier agreements.
+Grain: one row per item-store-date interval.
+Failure boundary: applying today's price to last year's sales rewrites history and corrupts the cost that the objective uses.
+Owner: pricing and finance; interval integrity checked by overlap detection.
+
+#### D-07 Item and pack master
+Meaning: pack size, case multiple, unit dimensions, shelf capacity, and substitution group.
+Availability: master data, changed by range reviews and supplier pack changes.
+Grain: one row per item per effective interval, plus one capacity figure per store-item where measured.
+Failure boundary: a pack-size change without an effective date makes historical orders incomparable in units; normalise or exclude the window.
+Owner: master data management; the case treats pack size as immutable within an evaluation window.
+
+#### D-08 Availability and stockout feed
+Meaning: shelf-availability observations from store scans, order pickers, or planogram audits, with observation timestamps.
+Availability: sparse and irregular; coverage varies by store and by day of week.
+Grain: one row per observation, aggregated to a daily indicator with a coverage count.
+Failure boundary: absence of an observation is not evidence of availability; treat unobserved days as unknown and report coverage alongside every service metric.
+Owner: store operations analytics; coverage is reported, never imputed silently.
+
 ### 5b. Tools & Stack
-The proposed stack is an orchestrated batch pipeline, immutable versioned object storage, a warehouse, a model registry, and a planner-facing order export.
-No specific vendor, library version, cloud instance, hardware benchmark, software deployment, or run is asserted.
-Warehouse queries prepare point-in-time features; a batch model job emits distributional demand forecasts and lineage.
-A separate deterministic policy applies cost, position, capacity, and pack constraints; this separation permits replay.
-The data platform owns snapshots, the modeling team owns forecasts, and the replenishment platform owns order validation.
+
+Storage and compute are deliberately generic: a columnar warehouse for the decision-grade history, an orchestration layer that materialises point-in-time feature snapshots, and a batch scoring job that writes recommendations before the cutoff.
+The forecasting component is a quantile or distributional model. The case does not depend on the family; it depends on the output being a predictive distribution over protection-period demand.
+A hierarchical reconciliation layer is useful because store-item forecasts are noisy and category totals are comparatively stable, but reconciliation must preserve the item-level spread, not just the mean.
+The optimiser is a small piece of arithmetic: invert the distribution at the critical ratio, round to pack, clamp to capacity, and check constraints. It does not need a solver.
+The evaluation harness replays decisions rather than scoring forecasts, which means it needs the cost function, the eligibility mask, and the fallback path, all versioned alongside the model.
+Experiment tracking records the feature snapshot identifier with each model artefact, so a score can be reproduced from a specific vintage rather than from "the data".
+Monitoring needs three surfaces: forecast quality on matured labels, decision quality on realised cost, and process quality on timeliness, fallback rate, and override rate.
+Alerting routes by owner: a feed delay goes to data engineering, a bias shift goes to the category analyst, a cost regression goes to the replenishment lead.
+Access control is by service identity with least privilege; the recommendation job reads operational data and writes recommendations, and it does not write to the order system.
+The order system integration is deliberately one-way with a human release step, so a model fault cannot create a purchase order without a person approving it.
+The batch window deserves a budget rather than an aspiration. On the constructed pipeline, the snapshot stage takes 38 seconds of the 100-second budget, scoring 22, optimisation 6, constraint application 4, and handoff 18, leaving 12 seconds of headroom.
+Snapshot is 38% of the budget and also the stage most likely to expand, because it fans out across sources. Any change to snapshot logic must be accompanied by a measurement of the cutoff tail, not of the mean.
+The handoff stage is the second-largest and is the one most often left unmeasured, because it crosses an organisational boundary between analytics and the order system. An unmeasured handoff is where cutoffs are missed.
+A practical guard is to instrument the cutoff as a deadline with a per-stage remaining-time metric, so the alert fires when the remaining budget falls below a threshold rather than when the process finishes late.
+The stack also needs a replay harness that runs in minutes, not hours, because the most common production question is "what would the model have said on Tuesday given what we knew on Tuesday". A harness that takes a day to answer that question will not be used.
+
 ### 5c. Method Summary
-The baseline predicts the prior matching weekday's demand, aggregated over the protection period, then applies the same pack and capacity constraints.
-The baseline uses the same available data, stockout treatment, and decision deadline as the proposed method.
-A seasonal moving average smooths noise but can lag promotions and distribution shifts.
-A global quantile regression model shares information across related series; it is only proposed, not fitted.
-A hierarchical approach can reconcile store-level and regional aggregate forecasts, but reconciled quantiles need not preserve calibration.
-Intermittent-demand methods can beat a global model on sparse items; selection needs comparable rolling-origin backtests.
-A deep sequence model may capture nonlinear seasonality but introduces complexity and must beat simpler candidates on decision cost.
-Fit quantiles separately or use a distributional objective; check quantile crossing and repair monotonically with recalibration validation.
-Hyperparameters are selected on earlier rolling validation origins; the last chronological test remains untouched.
-No alternative was tested, and no model-selection claim is made.
-### 5d. Provenance, Quality, Exclusions and Leakage Controls
-The source directory inventory identifies only the desired topic; its content is unavailable and no source-system records were accessed.
-SRC-01: [Hyndman and Athanasopoulos, Forecasting: Principles and Practice, third edition, time-series cross-validation](https://otexts.com/fpp3/tscv.html), online edition; accessed 2026-11-07; supports rolling-origin evaluation, not any retail result.
-SRC-02: [scikit-learn common pitfalls, data leakage](https://scikit-learn.org/stable/common_pitfalls.html), online documentation, accessed 2026-11-07; supports fitting transformations without test information, not model efficacy.
-Recheck these method references when the cited material or evaluation design changes; neither source describes this fictional architecture.
-Retain immutable extraction manifests, source watermarks, missingness, duplicate counts, and schema versions for any real run.
-Permission to access an aggregate does not imply permission to join customer-level transactions; use minimum required fields.
-Stockout periods are not thrown away without reporting the excluded share by store, item, and season.
-A promotion effective tomorrow is usable only if the correct version was actually available today.
-A corrected inventory snapshot published tomorrow is prohibited as a feature for today's historical forecast.
-Fit imputers, encoders, scaling, and model selection within each training fold; future information remains outside each fit.
-### 5e. Reproducibility and Method-Selection Ledger
-RUN-01: no training or backtest was run; no code revision, model artifact, seed, dependencies, or data snapshot exists.
-A future run must record immutable source manifests, time-zone database version, code revision, dependencies, parameters, fold definitions, seeds, and model checksum.
-A seed is insufficient to guarantee identical results across nondeterministic hardware and software environments.
-DEC-01 selects a proposed global quantile forecast for evaluation, not production adoption.
-DEC-02 retains the seasonal rule as the required baseline, not a claimed inferior result.
-CLM-01 is the bounded arithmetic in Section 6; it is derived from constructed inputs, not measured business performance.
-CLM-02 is the proposed evaluation requirement in Section 9; it is not evidence that a release passed.
+
+Step one is to rebuild the decision population for history: which series were eligible, on which dates, with which cutoff, and which version of each input was visible.
+Step two is to construct the label with the correct vintage and a censoring flag, so the model can be trained and evaluated with awareness of unobserved demand.
+Step three is to fit a distributional model with the protection-period aggregate as the target, not the daily value, because the decision covers the aggregate and the aggregate's variance is not the daily variance divided by the horizon.
+Step four is to convert the distribution into a quantity using the critical ratio implied by the cost inputs, then apply pack rounding, capacity, and eligibility constraints.
+Step five is to replay the current rule and the proposed system over the same origins with the same cost function, and to compute the cost difference with a dependence-aware uncertainty interval.
+Step six is a stress pass: re-run the replay with the forecast's spread understated, with the mean biased, and with lead time randomised, and record how the cost difference moves.
+Step seven is a shadow period: produce recommendations without releasing them, compare against planner decisions, and investigate the largest divergences before any live release.
+The method-selection ledger in §5e records what was considered and rejected, because "we chose a gradient-boosted quantile model" is not a justification without the alternatives it beat.
+Every step writes an artefact with a hash, a timestamp, and an owner. The replay must be re-runnable from those artefacts alone.
+
+The target choice deserves a paragraph of its own, because it is the most common modelling error in this domain after leakage.
+Predicting daily demand and summing three daily forecasts gives an unbiased mean for the period but a variance that depends on the error correlation between days. If the three daily errors are independent, the period error variance is three times the daily error variance; if they are perfectly correlated, it is nine times.
+Neither extreme is realistic. Serial correlation in daily errors is typically positive at short lags, so the truth sits between the two, and a model trained on daily targets with an independence assumption understates the period spread.
+Predicting the period aggregate directly avoids the correlation question entirely, at the cost of fewer effective training rows: two years of daily history gives about 730 daily targets but only about 243 three-day aggregates, and the aggregates overlap if computed at every origin.
+The overlap reduces effective sample size again, so the aggregate target needs a longer history or a hierarchical structure that borrows strength across items. That is the honest trade: fewer, better-matched targets against more, mismatched ones.
+A workable compromise is to train on daily demand with a model that captures serial correlation (lags, day-of-week, promotion state) and then form the period distribution by simulation from the fitted residual structure, rather than by multiplying variances.
+Simulation is also the cleanest route to non-normal features such as skew for promoted items, where the period demand distribution is right-skewed because a promotion either works or does not.
+
+### 5d. Provenance, Quality, Exclusions, Leakage
+
+Provenance for each input is a triple: source system, extraction time, and transformation version. A feature without a provenance triple cannot be replayed and therefore cannot be defended.
+Quality checks run before scoring and are blocking: snapshot age, row counts by store, duplicate keys, null rates on required fields, and calendar coverage.
+A blocked store falls back to the rule for that night; a blocked item falls back for that item. Fallback is a first-class outcome, not an error to be suppressed.
+Exclusions are computed per decision date from effective-dated records, which prevents the classic error of excluding stores because they closed later.
+Leakage detection is a standing test suite: a feature set is scored against a deliberately futured-shifted label, and any feature that predicts the future too well is flagged for review before it is trusted.
+Leakage in this domain has three common shapes: current-record joins on price and promotion, aggregates that include the target day, and normalisation statistics fitted on the full history including the test period.
+A fourth shape is subtle: using the supplier's final confirmed quantity as a feature when the confirmation happened after the cutoff. The value is real, but it was not knowable, and using it produces a backtest that cannot be reproduced live.
+Censoring is handled by segmentation, not by imputation: stocked-out days are excluded from the demand label and counted in a separate coverage band, and the service metrics are reported for stocked and unstocked segments separately.
+Exclusions must be reported as counts, because a model that is good on 60% of the population and silent on the other 40% is not a good model.
+The evaluation population is frozen at the start of the test period, with a written list of eligible series and the reason for each exclusion, so that later re-runs cannot quietly change the denominator.
+A fifth leakage shape is worth naming because it survives most review processes: aggregating a feature over a window that ends after the cutoff. A twelve-week average sales feature computed as of the label date, rather than as of the order date, contains three days of the very demand it is predicting.
+The detection test for that shape is mechanical: for each feature, recompute it using only rows with timestamps strictly before the cutoff and compare. A feature that changes has a window that crosses the cutoff, and the size of the change is an estimate of the leak.
+Quality gates are blocking at the store level and informative at the item level. A store missing its inventory snapshot cannot be safely scored; a single item missing a price record can be scored with the rule and labelled.
+Null handling follows the same principle: a missing promotion record means "no planned promotion known", which is a valid state, while a missing price means "cannot compute cost", which is a blocking state. Treating both as zero is a common and silent error.
+Censoring correction is bounded, not free. The availability feed observes an item on a subset of days, and its coverage is correlated with store size and staffing, so a correction built from it is more reliable in large stores than small ones. The evaluation reports correction coverage by store size band.
+
+### 5e. Reproducibility & Method-Selection Ledger
+
+| Option considered | Why rejected or chosen |
+|---|---|
+| Seasonal naive plus fixed allowance | Chosen as baseline: transparent, no distribution, no spread |
+| Point forecast plus service-level multiplier | Rejected: needs a spread it does not have, and hides the cost ratio |
+| Quantile regression at a single quantile | Considered: adequate if the cost ratio is fixed per category |
+| Distributional model with full predictive spread | Chosen: supports cost-based order and spread diagnostics |
+| Hierarchical reconciliation to category totals | Chosen with caveats: improves stability, must preserve item spread |
+| Deep sequence model at store-item grain | Deferred: cost per series and explanation burden unclear at this scale |
+| Manual planner heuristics as the only method | Rejected as sole method: not measurable against a cost function |
+
+Reproducibility needs five artefacts: the population mask, the feature snapshot, the model artefact, the cost parameters, and the code revision. Any missing artefact voids the replay.
+The ledger records a decision date and an owner for each choice, so a later reviewer can see whether the rejection reason still holds.
+A rejected option is not permanent. The deep-model deferral carries an explicit revisit trigger: reconciliation gains exceed 5% of shortage cost in two consecutive categories.
+Cost parameters are versioned separately from the model, because finance can change a cost input without retraining, and a changed cost changes the recommended order.
+Every number in §11 is derived from these artefacts by the same code path, so the report cannot drift from the evaluation.
 
 ## 6. Analysis Walkthrough
-The decisive constructed example shows that decision constraints can change the order even when a demand target is known; it does not establish an improved forecast.
-At the cutoff, assume 20 saleable units on hand, 8 reliable units due before the protection period, and 3 units committed to existing orders.
-These values are illustrative, mutually exclusive inventory categories and have no backing transaction records.
-Inventory position is 20 + 8 - 3 = 25 units.
-Suppose a calibrated cumulative demand forecast for the protection period has an illustrative decision target of 53 units.
-The unconstrained shortage to target is 53 - 25 = 28 units.
-The supplier case pack is 6 units, and remaining physical capacity admits at most 30 additional units.
-The following policy chooses the smallest feasible pack multiple that reaches the target when possible; otherwise it chooses the maximum feasible multiple.
-This operational rule is not necessarily the exact cost-minimizing discrete action when pack rounding overshoots the demand distribution.
+
+The walkthrough starts from a single series so the arithmetic is checkable, then generalises to the estate, then breaks the assumptions deliberately.
+
+### 6.1 Base case: one fast-moving item
+
+The series is store 0412, item 33915, a fast-moving ambient item with a stable shelf. ILLUSTRATIVE inputs: mean demand 12 units per day, day-to-day standard deviation 6 units, protection period 3 days, case pack 6 units, shelf capacity 120 units.
+Demand per day is treated as independent across days for this first pass, which is itself an assumption to test later.
+
 ```text
-FORMULA [Q-01]: P = H + R - C
-WHERE: P inventory position [units]; H saleable on-hand [units];
-       R reliable incoming [units]; C commitments [units].
-CONSTRAINT: no double counting; R arrives in time; non-saleable units excluded.
-NUMERICAL EXAMPLE: P = 20 + 8 - 3 = 25 units.
-INTERPRETATION: only 25 units are available to cover future demand under assumptions.
-FORMULA [Q-02]: q = min(k*ceil(max(0,T-P)/k), k*floor(M/k))
-WHERE: q order [units]; k pack size [units/pack]; T target [units];
-       P position [units]; M incremental physical capacity [units].
-CONSTRAINT: k positive integer; M nonnegative; no minimum-order or shared-capacity constraints.
-NUMERICAL EXAMPLE: q = min(6*ceil(28/6),6*floor(30/6)) = min(30,30) = 30 units.
-INTERPRETATION: five packs yield position 55 units, two above the target.
+FORMULA
+  m = mu_d * P                      protection-period mean demand, units
+  s = sigma_d * sqrt(P)             protection-period standard deviation, units
+WHERE
+  mu_d    = 12 units/day   (mean daily demand, > 0)
+  sigma_d = 6 units/day    (daily standard deviation, >= 0)
+  P       = 3 days         (protection period, integer >= 1)
+  independence of daily demand is assumed
+CONSTRAINT
+  s uses sqrt(P), not P; scaling the standard deviation linearly
+  overstates the spread by a factor of sqrt(P) = 1.732 here.
+NUMERICAL EXAMPLE
+  m = 12 * 3         = 36.0000 units
+  s = 6 * sqrt(3)    = 6 * 1.7320508 = 10.3923 units
+  coefficient of variation s/m = 0.2887
+INTERPRETATION
+  The order must cover 36 units on average and roughly 10 units of
+  one-sigma variation. Any rule that adds a fixed number of units
+  is implicitly asserting a spread; that assertion should be explicit.
 ```
-Independent check: four packs yield 24 units and position 49, below target; five yield 30 units and position 55; six packs exceed capacity.
-If capacity falls to 24, the order is 24 and position is 49; the target is missed by four units and an exception is sent to the planner.
-If position increases to 56, the proposed order is zero; negative orders are not returned to suppliers automatically.
-The target of 53 must come from a properly calibrated protection-period distribution, not the sum of daily marginal quantiles.
-For a single-period idealization with linear underage cost Cu and overage cost Co, the critical ratio is Cu/(Cu+Co).
-This result assumes known demand distribution, independent unconstrained unit ordering, risk neutrality, and no salvage or fixed costs beyond the given costs.
+
 ```text
-FORMULA [Q-03]: alpha = Cu / (Cu + Co)
-WHERE: alpha desired demand quantile [dimensionless]; Cu underage cost [currency/unit];
-       Co overage cost [currency/unit].
-CONSTRAINT: Cu and Co nonnegative and sum positive; continuous-demand idealization.
-NUMERICAL EXAMPLE: Cu = 4 and Co = 1, so alpha = 4/(4+1) = 0.8.
-INTERPRETATION: the 80th percentile is the ideal unconstrained target under these assumptions.
+FORMULA
+  F(S*) = Cu / (Cu + Co)            newsvendor critical ratio
+  S*    = m + z * s,  z = Phi^-1[ Cu / (Cu + Co) ]
+WHERE
+  Cu = 3.50 currency units per unit short   (lost margin plus goodwill)
+  Co = 0.80 currency units per unit held    (capital, handling, obsolescence)
+  Phi^-1 is the standard normal quantile function
+CONSTRAINT
+  0 < Cu and 0 <= Co; if Co = 0 the ratio is 1 and the quantile diverges,
+  so the cost model requires a strictly positive holding cost.
+NUMERICAL EXAMPLE
+  ratio  = 3.50 / (3.50 + 0.80) = 3.50 / 4.30 = 0.813953
+  z      = Phi^-1[0.813953]     = 0.892565
+  safety = 0.892565 * 10.3923   = 9.2758 units
+  S*     = 36.0000 + 9.2758     = 45.2758 units
+INTERPRETATION
+  The target is not a 95% service level; it is the point where the
+  marginal cost of one more unit equals the marginal cost of one
+  fewer unit. That point moves with the cost ratio, not with habit.
 ```
-The marginal cost of adding a unit is Co when demand is below the unit and the marginal avoided shortage cost is Cu when demand is above it; equating expected marginal costs yields Q-03.
-Independent check: 0.8*1 = 0.2*4, so the expected marginal overage and underage terms balance at the ideal quantile.
-If Cu falls to 1 with Co still 1, the ratio is 0.5; the relevant target becomes the median, whose value is not supplied.
-If both costs are zero, the ratio is undefined and no cost-based target is identified.
-For integer demand or case packs, evaluate expected costs of feasible pack orders directly; the continuous formula is an informative starting point, not a guarantee of the discrete optimum.
-Quantiles must cover demand across lead time plus review interval as defined by the actual order and receipt timetable.
-A late supplier and uncertain lead time widen or mix that protection-period distribution; the fixed-horizon target may understate shortage risk.
-No real baseline, score, revenue, intervention effect, or improvement has been measured.
+
+```text
+FORMULA
+  E[short]  = s * phi(z) - (S - m) * (1 - Phi(z))
+  E[excess] = S - m + E[short]
+  Cost      = Cu * E[short] + Co * E[excess]
+WHERE
+  z = (S - m) / s; phi and Phi are the standard normal density and CDF
+  E[short] is expected unmet demand in units per period
+CONSTRAINT
+  The identity E[excess] - E[short] = S - m holds exactly for any
+  distribution, which is a useful arithmetic self-check.
+NUMERICAL EXAMPLE at the rounded order S = 48 (eight packs of six)
+  z         = (48 - 36) / 10.3923 = 1.15470
+  phi(z)    = 0.20482,  1 - Phi(z) = 0.12411
+  E[short]  = 10.3923 * 0.20482 - 12 * 0.12411 = 2.1285 - 1.4893 = 0.6393
+  E[excess] = 48 - 36 + 0.6393 = 12.6393
+  Cost      = 3.50 * 0.6393 + 0.80 * 12.6393 = 2.2376 + 10.1114 = 12.3490
+  Fill rate = 1 - 0.6393 / 36 = 0.98224
+INTERPRETATION
+  Rounding 45.2758 up to 48 buys a 1.2 percentage-point fill-rate gain
+  and costs 0.3789 currency units per period against the continuous
+  optimum of 11.9701. At 80,000 decisions per night that rounding is
+  a real budget line, not a rounding detail.
+```
+
+```text
+FORMULA
+  Cost_rule = Cu * E[short | S = m + k] + Co * E[excess | S = m + k]
+WHERE
+  current rule: S = previous matching weekday sales + 3 units
+  expressed as S = m + 3 with m = 36, so the implied safety is 3 units
+CONSTRAINT
+  A fixed allowance is a constant in units, so its implied service
+  level falls as the series' variability rises; the rule is only
+  defensible for series with similar spread.
+NUMERICAL EXAMPLE
+  S         = 39.0000
+  z         = (39 - 36) / 10.3923 = 0.28868
+  E[short]  = 10.3923 * 0.38271 - 3 * 0.38641 = 3.9773 - 1.1592 = 2.8181
+  E[excess] = 3 + 2.8181 = 5.8181
+  Cost      = 3.50 * 2.8175 + 0.80 * 5.8175 = 9.8612 + 4.6540 = 14.5152
+  Fill rate = 1 - 2.8181 / 36 = 0.92172
+INTERPRETATION
+  The rule's implied fill rate is 92.2% against 98.2% for the rounded
+  optimum, and its cost is 17.5% higher. Most of the gap is shortage
+  cost, which is exactly the cost the WAPE report never shows.
+```
+
+### 6.2 General case: many series and a cost-sensitive ranking
+
+The estate-level arithmetic is a sum of per-series costs, so the decision rule is unchanged; what changes is the ranking of where to invest effort.
+A useful decomposition separates the cost gap into a mean-error component and a spread-error component, because they have different fixes: better features versus better distribution estimation.
+If the forecast mean is unbiased and the spread is understated by a factor k, the recommended order is m + z·(k s) while the true distribution has spread s, so the realised z is z/k and service falls even though the model "looks calibrated" on its own terms.
+The numeric size of that effect is in §6.4. It is large enough that a spread diagnostic belongs in the release gate, not in a dashboard.
+
+### 6.3 Variants: pack rounding, capacity, and correlated errors
+
+Pack rounding is a variant of the base problem: the feasible set is a lattice, so the optimum is the best lattice point, not the rounded continuous optimum in general.
+Capacity is a second lattice constraint applied from above; when the unconstrained optimum exceeds capacity, the true decision is the capacity limit plus a separate escalation, not a silently clamped order.
+
+```text
+FORMULA
+  S_k = ceil( (m + z*s) / k ) * k       smallest feasible order at pack k
+  Delta = S_k - (m + z*s)                rounding increment, units
+  Extra_cost = Cu*(E[short|S*] - E[short|S_k]) + Co*(E[excess|S_k] - E[excess|S*])
+WHERE
+  k = 6 units per pack; S* is the continuous optimum 45.2758
+  the increment is always in [0, k), so the mean increment is about k/2
+CONSTRAINT
+  Rounding up is not always the cheaper lattice point: at S* near the
+  lower edge of a pack interval, rounding up can be worse than rounding down.
+NUMERICAL EXAMPLE
+  Rounding up:   ceil(45.2758 / 6) = 8 packs = 48 units, Delta = 2.7242
+  Rounding down: floor(45.2758 / 6) = 7 packs = 42 units
+  Cost at 48 = 12.3490;  cost at 42 = 12.6189
+  Rounding up wins here by 0.2699 per period, but the margin is small
+  Mean increment over a uniformly positioned S* = 3.0 units = 8.3% of 36
+INTERPRETATION
+  The lattice forces a choice between two suboptimal points, and the
+  better choice depends on where the continuous optimum falls inside
+  the pack interval. Evaluating only the rounded-up point silently
+  biases the order upward across the estate by about half a pack.
+```
+
+At 80,000 decisions per night, a systematic half-pack upward bias of 3 units on every series is 240,000 units of extra inventory per night in the constructed estate, which is why the rounding rule is a first-class decision and not a formatting step.
+
+```text
+FORMULA
+  S_unconstrained = m + z*s
+  S_feasible      = min( ceil(S_unconstrained / k)*k , C )
+  Escalation flag = 1 if S_unconstrained > C
+WHERE
+  C = shelf capacity in units; a fast line with mu_d = 45, sigma_d = 9,
+  P = 3, k = 6, C = 120 for this constructed store
+CONSTRAINT
+  When the optimum exceeds capacity the problem is infeasible, not
+  constrained-optimal: clamping silently converts a capacity problem
+  into an inventory under-protection that no ordering rule can fix.
+NUMERICAL EXAMPLE
+  m = 45*3 = 135.0000 units;  s = 9*sqrt(3) = 15.5885 units
+  S_unconstrained = 135 + 0.892565*15.5885 = 135 + 13.9136 = 148.9136
+  S_feasible = min(150, 120) = 120;  escalation flag = 1
+  At C = 120: z = (120-135)/15.5885 = -0.96234
+  E[short] = 16.3948 units;  fill = 1 - 16.3948/135 = 0.87856
+  Shortfall against the unconstrained optimum = 148.9136 - 120 = 28.9136 units
+INTERPRETATION
+  Capacity removes 28.91 units of the intended safety, dropping fill to
+  87.9% and raising cost to 57.3820 against 17.9551 unconstrained. The
+  binding constraint must be reported as a capacity defect to the range
+  team, because no forecasting improvement can recover it.
+```
+
+The capacity arithmetic is the clearest example in the case of a "model failure" that is not a model failure. A dashboard that reports only fill rate will show this series as a persistent underperformer, and the natural response — retrain, add features, raise the safety factor — is exactly wrong, because the recommended quantity is already at the physical ceiling.
+Raising the ceiling does work, and the arithmetic quantifies how much: 132 units gives fill 0.9420, 138 gives 0.9642, and 144 gives 0.9798, so about three units of shelf space buys roughly two points of fill until the curve flattens near the unconstrained optimum.
+That trade is a range and planogram decision with a currency price, and stating it in those terms converts a modelling complaint into a merchandising case.
+
+```text
+FORMULA
+  P(covered) = Phi( z_stated / k )
+WHERE
+  z_stated is the z used to build the interval, k is the ratio of the
+  true spread to the assumed spread (k > 1 means understated spread)
+CONSTRAINT
+  The identity holds for a symmetric interval on a normal target with
+  correctly estimated mean; mean error reduces coverage asymmetrically.
+NUMERICAL EXAMPLE
+  z_stated = 1.6449 (nominal 95%)
+  k = 0.8 (spread overstated): coverage = Phi(2.0561) = 0.98011
+  k = 1.0:                      coverage = Phi(1.6449) = 0.95000
+  k = 1.2 (spread understated): coverage = Phi(1.3708) = 0.91477
+INTERPRETATION
+  A 20% spread error moves coverage by 3 points, which is small. The
+  §6.4 case of a 2.24x lead-time error moves it far more, which is why
+  lead-time variance, not parameter noise, is the dominant spread risk.
+```
+
+Correlated errors across series change aggregation, not the per-series rule. Twenty independent series with standard deviation 10.3923 each sum to a standard deviation of 46.4758, while perfectly correlated series sum to 207.846.
+The practical consequence: category-level service is far more stable than item-level service, so a category dashboard can look healthy while a specific item is chronically empty.
+Reconciliation exploits this, but it must be applied with care, because forcing item forecasts to add up to a stable total can flatten a genuine item-level signal.
+The arithmetic of that hazard is worth stating. If the item variance is 108 and the category is the sum of 20 independent items with variance 2160, a naive reconciliation that trusts the category and shrinks items toward it assigns the item a weight of only 108/2268 = 0.0476.
+At that weight the model's item-level signal is almost entirely discarded, so a genuine item-level shift of 20% becomes a 1% adjustment. Reconciliation weights must be set from measured error covariances, not assumed.
+The intermediate case is the one that matters in practice: items in the same category are positively correlated through shared promotions and shared weather, so the true category variance sits between 2160 and 43200, and the correct weight sits between 0.0476 and 1.
+
+### 6.4 Boundary and counterexample
+
+```text
+FORMULA
+  Var(D_L) = E[L] * sigma_d^2 + mu_d^2 * Var(L)
+WHERE
+  L is lead time in days, random; D_L is demand over the lead time
+  mu_d = 12 units/day, sigma_d = 6 units/day
+  Case A: E[L] = 2, Var(L) = 0 (deterministic)
+  Case B: E[L] = 2, Var(L) = 2 (two-day mean, 1.414-day standard deviation)
+CONSTRAINT
+  The formula assumes L is independent of daily demand. Positive
+  correlation (promotions delay deliveries) makes the true variance larger.
+NUMERICAL EXAMPLE
+  Case A: Var = 2 * 36 + 144 * 0 = 72.0000,  sd = 8.4853 units
+  Case B: Var = 2 * 36 + 144 * 2 = 360.0000, sd = 18.9737 units
+  Ratio of variances = 360 / 72 = 5.0000
+  Ratio of standard deviations = sqrt(5) = 2.2361
+INTERPRETATION
+  Treating a two-day lead time as deterministic understates the
+  protection-period spread by a factor of 2.24 in standard deviation.
+  A model fitted on deterministic-lead history and deployed on
+  variable-lead reality is systematically under-protected, and the
+  shortfall appears first on exactly the days that matter.
+```
+
+The formula breaks in the slow-moving regime. For an item with mean 1.2 units per day, a normal approximation with standard deviation sqrt(1.2) = 1.0954 places 13.7% of its mass below zero, and the critical-ratio rule returns S* = 1.2 + 0.892565 × 1.0954 = 2.1778 units, which is not an order anyone can place.
+The correct treatment for that item is a count distribution. With Poisson demand at mean 1.2, an order of 2 units covers demand with probability 0.8795 and yields a fill rate of 0.8843, while the same order quantity means something entirely different under the normal assumption.
+The boundary is not a technicality: in a catalogue of two million series, the low-volume tail is where most of the series are, and where normal approximations and percentage-error metrics both fail.
+
+```text
+FORMULA
+  WAPE = sum |y - yhat| / sum y
+  E|X - mu| = sigma * sqrt(2/pi) = 0.797885 * sigma   for X ~ N(mu, sigma^2)
+WHERE
+  y is realised units, yhat is the forecast, sums run over a window
+CONSTRAINT
+  The second identity holds only for a normal variable with known mean.
+  For a skewed or count distribution the constant is different, and
+  for a forecast with bias the mapping shifts with the bias.
+NUMERICAL EXAMPLE
+  WAPE of 0.30 on a series with mean 36 implies, under the identity,
+  sigma = 0.30 * 36 / 0.797885 = 10.8 / 0.797885 = 13.5358 units
+  whereas the decision model needs sigma = 10.3923 units.
+  WAPE of 0.20 implies sigma = 9.0239 units.
+INTERPRETATION
+  A WAPE target is not a spread input. Converting a WAPE figure
+  into a safety stock requires the distribution and the bias, so a
+  category WAPE target cannot be translated into a service promise
+  without those two extra objects.
+```
+
+### 6.5 Leakage and censoring arithmetic
+
+```text
+FORMULA
+  E[observed sales] = (1 - p) * mu + p * f * mu
+WHERE
+  p = fraction of days stocked out at some point, f = fraction of
+  demand still captured during a partial stockout
+CONSTRAINT
+  Both p and f are unobserved in a pure sales table; they are
+  estimated from the availability feed and are therefore uncertain.
+NUMERICAL EXAMPLE
+  p = 0.08, f = 0.60, mu = 12
+  E[sales] = 0.92 * 12 + 0.08 * 0.60 * 12 = 11.04 + 0.576 = 11.6160
+  understatement = 1 - 11.616 / 12 = 0.0320, i.e. 3.2%
+  naive fill rate  = 11.616 / 12 = 0.9680
+INTERPRETATION
+  An item that is empty 8% of days still reports a 96.8% fill rate
+  if the ratio is computed from sales against its own forecast. The
+  metric is measuring the shelf, not the promise, and it is upward
+  biased by exactly the censoring it fails to model.
+```
+
+```text
+FORMULA
+  inflation = 1 + 2 * sum_{l=1..h-1} (1 - l/h)
+  n_eff     = n_cells / inflation
+WHERE
+  h is the forecast horizon in periods, n_cells counts every
+  origin-horizon pair, and the correlation between overlapping
+  errors decays linearly to zero at lag h
+CONSTRAINT
+  The linear-decay assumption is a simplification; a strongly
+  persistent error process gives a larger inflation and a smaller
+  effective sample, so this bound is generous.
+NUMERICAL EXAMPLE
+  h = 4, origins = 104 weekly, cells = 416
+  sum   = 0.75 + 0.50 + 0.25 = 1.50
+  inflation = 1 + 3.00 = 4.0000
+  n_eff = 416 / 4 = 104.0000
+INTERPRETATION
+  The 416 fold scores behave like 104 independent observations.
+  Confidence intervals built on 416 overstate precision by a
+  factor of two in standard error, which is enough to promote a
+  model whose improvement is noise.
+```
+
+The censoring correction also changes the comparison between the rule and the model, because the rule was tuned against the censored series and inherits its bias.
+A model trained on observed sales learns to under-order on frequently empty items, then reports excellent accuracy on those same items, because it is predicting its own constraint.
+The diagnostic that separates these cases is a plot of forecast error against stockout frequency; a downward trend in under-forecast as stockout frequency rises is the signature of label censoring.
+
+### 6.6 Estate-level arithmetic
+
+At 80,000 decisions per night, a per-decision cost difference of 2.17 currency units between the rule and the model is 173,600 currency units per night on this constructed cost model, before any implementation cost, and it is far too large to believe without checking the inputs.
+That scale is a warning, not a forecast: the arithmetic assumes every series has the same cost parameters and the same demand variability, which is false, and it assumes the model achieves the theoretical optimum, which it will not.
+The defensible use of the estate multiplication is as a sensitivity tool: recompute it under three cost ratios and record how the ranking of categories changes, then invest where the ranking is stable.
+For the constructed estate, the ranking is stable under Cu between 2.00 and 5.00 but reverses around Cu = 1.00, where the critical ratio 0.5556 pushes the order below the mean and the rule happens to be closer to optimal.
+
+### 6.7 How much evidence the pilot can produce
+
+A pilot that cannot detect the effect it is looking for is a pilot that will end in an argument about noise, so the sample size is part of the design.
+
+```text
+FORMULA
+  n = ( z_{1-alpha/2} + z_{power} )^2 * sigma_d^2 / delta^2
+  MDE = ( z_{1-alpha/2} + z_{power} ) * sigma_d / sqrt(n)
+WHERE
+  delta  = true mean cost difference per decision, currency units
+  sigma_d = standard deviation of the per-decision paired cost difference
+  two-sided alpha 0.05, power 0.80; n counts decisions, not days
+CONSTRAINT
+  Paired differences must be computed per decision on identical rows,
+  and the independence assumption is violated by shared promotions,
+  so the true n is larger by the variance inflation of the block design.
+NUMERICAL EXAMPLE
+  Pilot: 200 stores x 300 eligible items x 4% decision rate x 7 days = 16,800 rows/week
+  Four weeks gives n = 67,200 decisions.
+  With sigma_d = 8.0 currency units per decision:
+  MDE = (1.959964 + 0.841621) * 8.0 / sqrt(67,200) = 2.801585 * 8.0 / 259.23 = 0.0865
+  For power 0.80 at delta = 2.17: n = (2.801585 * 8.0 / 2.17)^2 = 106.7 decisions
+INTERPRETATION
+  The pilot is overpowered for the main effect and underwhelming for
+  subgroup claims: a 0.0865 per-decision MDE over four weeks does not
+  license a per-category conclusion, because each category holds about
+  a fiftieth of the rows and its MDE is larger by sqrt(50) = 7.07.
+```
+
+The asymmetry matters: the headline comparison is easy to power and the interesting comparisons (one category, one store band, one promotion type) are hard.
+The honest response is to pre-register one primary comparison and a small number of secondary comparisons with a stated multiple-comparison adjustment, and to treat everything else as exploratory.
+A second power issue is dilution. If 20% of decisions fall back to the rule, the measured effect is 80% of the model's effect, so a pilot sized for the full effect will under-detect by a fifth unless the fallback share is estimated first.
+The pilot design should therefore report the fallback share as a primary descriptive statistic, and treat the model-only subset as a pre-specified secondary population rather than as the headline.
+Finally, the paired design assumes the same decisions in both arms, which is true in replay but not in a live store-level holdout, where the two arms face different realised demand. Live holdouts need a cluster-randomised sample size, not a paired one.
+
+### 6.8 Promotion mixtures break the single-normal shortcut
+
+A promoted week is not a shifted normal; it is a mixture, because the promotion either lands or does not. Treating it as one normal with the averaged mean and the averaged variance is the most common way a well-built model loses money on promoted items.
+
+```text
+FORMULA
+  D = (1-p) * N(mu_1, sigma^2) + p * N(mu_2, sigma^2)
+  E[D]  = (1-p)*mu_1 + p*mu_2
+  Var[D] = (1-p)*(sigma^2 + mu_1^2) + p*(sigma^2 + mu_2^2) - E[D]^2
+  F(S)  = (1-p)*Phi((S-mu_1)/s_P) + p*Phi((S-mu_2)/s_P),  s_P = sigma*sqrt(P)
+WHERE
+  p = 0.30 probability a planned promotion actually executes
+  mu_1 = 12 units/day (unpromoted daily mean), mu_2 = 26.4 = 2.2 * 12
+  sigma = 6 units/day within each regime, P = 3 days
+CONSTRAINT
+  The variance identity is the law of total variance and must use the
+  unconditional mean; using the average of the two variances alone
+  omits the between-regime term p(1-p)(mu_2-mu_1)^2, which dominates.
+NUMERICAL EXAMPLE
+  E[D]   = 0.7*12 + 0.3*26.4 = 8.4 + 7.92 = 16.3200 units/day
+  Var[D] = 0.7*(36 + 144) + 0.3*(36 + 696.96) - 266.3424
+         = 126.0000 + 219.8880 - 266.3424 = 79.5456, sd = 8.9188
+  Between-regime term alone p(1-p)(14.4)^2 = 0.21 * 207.36 = 43.5456, i.e. 55% of the variance
+  Period: mean 48.9600, var 238.6368, sd 15.4479
+  Normal shortcut: S = 48.96 + 0.892565*15.4479 = 62.7508
+  True mixture quantile at 0.813953: S = 76.0248
+  Shortfall at the shortcut: F(62.7508) = 0.7135, not 0.8140
+INTERPRETATION
+  The single normal matches the mean and the variance and still misses
+  the quantile by 13.27 units, because the mixture is skewed: the
+  promotion regime contributes a long right shoulder. Ordering at the
+  shortcut costs 32.6262 against 29.2962 per period, a 3.33-unit gap
+  that is invisible in any mean or variance comparison.
+```
+
+The skewness is 0.3535 for this mixture, which is small in absolute terms but large enough to move a high quantile by a fifth of a standard deviation. Skew matters at the quantile, not at the centre, which is why mean and variance diagnostics cannot catch it.
+The practical rule is to compute the decision quantile from the mixture directly, or from the simulated distribution, whenever the promotion execution probability is below about 0.9. Above that threshold a single normal is a good approximation, because the between-regime term shrinks with p(1-p).
+The failure mode has an uncomfortable property: it is worst for items where promotions are planned but unreliable, which are exactly the items a merchandising team cares most about, so the error concentrates where it is most visible.
 
 ## 7. The Finding
-Do not deploy the proposed model automatically: evaluate it against the current seasonal rule first, with the same cutoff and order constraints.
-In CLM-01's constructed example, the feasible policy produces five packs, or 30 units, from a 53-unit target and a 25-unit position.
-That arithmetic is not a measured improvement or proof of minimum expected cost under discrete packs.
-Inventory accuracy, latent demand during stockouts, and lead-time uncertainty could change the result; the next justified action is a historical point-in-time replay followed by controlled evaluation.
+
+The finding is not "the model beats the rule". It is that the evaluation, as practised, cannot distinguish a good order from a good forecast, and that the two differ by roughly 15% of the controllable cost on the constructed example.
+Concretely, three claims survive the arithmetic: a cost-based critical ratio moves the order materially away from a fixed allowance; the pack multiple absorbs a meaningful share of the theoretical gain; and a misestimated spread costs more than a modest mean error.
+The third claim is the least intuitive and the most consequential. A mean error of 3 units (8.3% of the mean) costs less than a 50% understatement of the spread at the same order quantity, because the spread enters the tail while the mean shifts the whole distribution.
+The finding also has a negative branch: at low cost ratios, or for very slow movers, the current rule is competitive, and the honest recommendation is to keep it and narrow the model's scope.
+Reporting that branch is part of the deliverable. A comparison that can only conclude in favour of the new method is not a comparison.
+The measurement implication is that the unit of evaluation must be the decision (store, item, date, quantity, cost), not the forecast row (store, item, date, error).
+Once the unit is the decision, the population, window, comparator, and cost function all become explicit, and the evaluation stops being gameable by choosing a favourable slice.
+There is a fourth claim that the arithmetic supports and that is rarely stated: most of the achievable gain comes from the first correction, not the last. Moving from a fixed allowance to a cost-based ratio captures the bulk of the difference; moving from a cost-based ratio to a fully distributional model captures a smaller increment that is harder to defend.
+The reason is structural. The fixed allowance embeds an implicit service level that can be far from the cost-optimal one, so correcting it is a large move. Once the service level is approximately right, the remaining error is the shape of the distribution, which matters mainly in the tail.
+This ordering has a practical consequence for sequencing: a team that cannot yet emit a distribution can still capture most of the benefit by estimating the mean and the spread separately from residual history, and should do that first rather than waiting for a full probabilistic model.
+The second-order claim is about the spread. Among the residual errors, the lead-time variance component is larger than the parameter-estimation component, so the effort should go to measuring lead times and their dispersion before it goes to model refinement.
+A simple test separates the two: recompute the recommended quantity with the spread doubled and with the mean shifted by one standard error, and compare the cost impact. In the constructed example the spread change moves fill by 5 points while the mean shift moves it by 1.5, so the ordering is unambiguous here.
+The third-order claim concerns the interface. A recommendation presented without its cost curve invites the planner to override toward service, which systematically undoes the cost optimisation. Showing the plateau converts the conversation from "more stock" to "where on this curve do we want to be".
+Finally, the finding includes a claim about the measurement regime itself: the existing weekly WAPE report, kept unchanged, will continue to show improvement while cost degrades, and will therefore keep the project alive past the point where it should be stopped or re-scoped.
 
 ## 8. System/Solution Design
-### 8a. Offline / Training / Batch Path
+
+The design has six stages: point-in-time snapshot, distributional forecast, decision optimisation, constraint application, human release, and measurement.
+
 ```text
-Sales + inventory + shipment + approved plans -> immutable snapshots -> validate/quarantine
-   -> point-in-time joins -> rolling train/validation -> model and calibration gate
-   -> versioned registry -> scheduled batch forecast -> deterministic bounded policy
-   -> planner review -> idempotent order handoff -> receipt and sales feedback
+Stage 1  Snapshot      materialise features as of the 22:00 cutoff, with
+                       a recorded vintage identifier per source
+Stage 2  Forecast      predict a distribution over protection-period
+                       demand per eligible store-item
+Stage 3  Decide        invert at the category critical ratio, producing
+                       a continuous quantity and its cost curve
+Stage 4  Constrain     round to pack, clamp to capacity, apply eligibility
+Stage 5  Release       present to the planner with a reason code and a
+                       one-click fallback to the rule
+Stage 6  Measure       join to realised demand net of censoring, compute
+                       cost, and attribute overrides
 ```
-Each arrow is proposed, not an assertion of a deployed component.
-Features are computed only from the snapshot visible at the forecast origin.
-Persist source manifests, schema, lineage, model version, policy version, and decision timestamp alongside every output.
-The scheduler partitions by store and date, bounds retry work, and marks incomplete partitions rather than inventing zero forecasts.
-### 8b. Online / Serving / Real-Time Path
-The system is batch-first; there is no proposed low-latency online inference API.
-A planner-facing review and order handoff is an interactive control path, not a separate forecast-serving claim.
-```text
-Planner identity -> authorized store scope -> latest eligible recommendation + freshness
- -> approve/override/defer -> constraint recheck -> idempotent order export
- -> acknowledgement + audit record; failure -> hold + alert + owned manual process
-```
-A valid request identifies the store, SKU, business date, recommendation version, actor, and action.
-The handoff validates current capacity, item eligibility, and cutoff again because these may change after batch generation.
-The idempotency key is the store-SKU-order-date and decision revision; the downstream contract must reject conflicting duplicates.
-Approval cannot silently overwrite an already accepted order: reconcile downstream acknowledgements before issuing a correction.
-If model, inventory, or registry inputs are stale, mark the recommendation unavailable and route to the approved manual process.
-A seasonal fallback is valid only if its own input freshness and hard constraints pass; otherwise defer and escalate.
-Log a reason code for every override without recording unnecessary personal information.
-### 8c. Key Design Decisions
-| ID | Choice | Alternative | Tradeoff and boundary | Revisit |
-|---|---|---|---|---|
-| DEC-01 | Batch global quantile model proposed | Local or seasonal model | Shared statistical strength versus heterogeneous segments | Fails rolling-origin decision gate |
-| DEC-02 | Same bounded policy for candidate and baseline | Different policy per model | Fair comparison; may hide best jointly optimized policy | After isolated model comparison |
-| DEC-03 | Planner approval | Automatic ordering | Safer initial release, requires staff capacity | After controlled evidence and approval |
-| DEC-04 | Quarantine missing position | Forward-fill indefinitely | Lower silent error, more manual cases | Verified bounded inventory freshness |
-### 8d. Architecture Artifacts and Operational Readiness
-A proposed on-time recommendation SLI is eligible decision keys with a valid, constraint-checked output before cutoff divided by all eligible keys that day.
-Proposed target: at least 99% over a rolling 28-day window; it is a scenario objective, not an observed service level.
-Also measure late, quarantined, fallback, and manually resolved keys separately so excluding failures cannot inflate the SLI.
-Alert the on-call data engineer when input freshness breaches the configured cutoff; alert replenishment operations when pending orders approach deadline.
-Use bounded retries with backoff before cutoff; after cutoff stop automatic retry and escalate rather than sending late duplicate orders.
-Hold a previous model and matching feature/policy schema for rollback; verify backward compatibility before any release.
-Use least-privilege service identities, encrypted transport and storage, audited role-based planner access, and retention approved by the data owner.
-Restore exercises must verify source manifests, replayed decision IDs, order acknowledgements, and no duplicate purchase orders; none has been executed.
-For illustrative sizing, two million eligible series times 28 horizon-day forecast values equals 56 million values per daily run.
-At four bytes per value the raw numeric payload is 224 million bytes, or approximately 213.6 MiB, before identifiers, metadata, storage encoding, replicas, logs, and intermediate data.
-Independent check: 2,000,000 * 28 * 4 = 224,000,000 bytes; divide by 1,048,576 for MiB.
-Doubling stores or horizon doubles this raw payload, while cross-features and model state can dominate actual memory; no throughput or latency benchmark follows.
-Use partition-level manifests and checkpoints to resume only failed work; ensure every partition sees the correct cutoff and model version.
-No price is supplied: compute, storage, egress, retries, and planner labor remain unpriced and require finance measurement.
+
+Stage 1 is where most production incidents originate, so it carries blocking quality gates and an explicit "unknown" state that propagates instead of being defaulted.
+Stage 2 must emit a distribution, not a number. If the model cannot emit one, the pipeline can still run with an empirical quantile from the residual history, which is a legitimate fallback and must be labelled as such.
+Stage 3 computes the recommended quantity and, in parallel, the cost curve around it, so the planner can see whether the recommendation is a sharp optimum or a flat plateau.
+Stage 4 is arithmetic with hard rules. A recommendation that violates capacity is escalated with the binding constraint named; it is never silently clamped, because a clamp hides a data or demand problem.
+Stage 5 is a workflow with attribution: accept, modify, or reject, each with a reason code, and the modification magnitude recorded. The recorded override is the most valuable training signal the system produces.
+Stage 6 joins recommendations to outcomes after the label matures, computes realised cost for the system and for the counterfactual rule on the same rows, and separates the effect of the model from the effect of planner edits.
+The system also needs a fallback path that is exercised in production, not just coded: a synthetic fallback drill every week keeps the rule path warm and measured.
+Model artefacts are versioned with the snapshot identifier, so any recommendation can be recomputed exactly, which is the precondition for investigating an incident.
+Alerts are tiered by blast radius: a single store's feed failure pages the store's support queue, a category-wide bias shift notifies the category analyst, and a system-wide timeliness breach pages the platform owner.
+The interface shows a distribution band, the binding constraint, and the top three contributing features. Explanations that cannot be checked are worse than none, because they transfer false confidence.
+Nothing in the design writes directly to the purchase-order system. That is a deliberate safety property, and it also means the measured effect is the effect of the human-plus-model system, which is the only effect that exists.
+
+Three design alternatives were considered and rejected, and the reasons are instructive.
+The first was a per-night automated release with a planner reviewing exceptions. Rejected because the exception rate cannot be bounded a priori, and an unbounded exception workload converts a control into a bottleneck that planners route around.
+The second was a per-series model per store, which gives maximum flexibility and an unmaintainable artefact count: two million models with two million monitoring configurations is not a system, it is a database of incidents.
+The third was a single pooled model with store and item embeddings. Chosen for the base design, because it shares strength across the long tail and produces one artefact to monitor, at the cost of weaker local adaptation.
+The hybrid chosen in practice is a pooled model plus a small set of category-level corrections that are themselves learned, rather than a separate model per category. This keeps the artefact count low while allowing category cost ratios to enter through the decision step rather than through the forecast.
+The decision step is where the category specificity belongs, because the cost ratio is a category property and the demand shape is largely a store-item property. Separating them keeps the model's job simple and makes the cost parameters auditable on their own.
+A further design detail is the recommendation's reason code, which must be one of a small closed set: accepted by planner, modified upward, modified downward, rejected, fallback to rule, escalated for capacity, escalated for data quality. Closed sets are analysable; free text is not.
+The reason code set also drives the monitoring: a rising "escalated for data quality" count is a data incident, while a rising "modified upward" count is a service-versus-cost disagreement between the planners and the finance-approved ratio, which is a governance conversation rather than an engineering one.
+Both of those are more useful than a generic accuracy alert, which tells you something moved but not which conversation to have.
 
 ## 9. Evaluation & Validation
-The intended protocol is not executed; no gate has passed or failed.
-Use rolling-origin training and validation, followed by a locked final four-week chronological test with mature labels.
-Both baseline and candidate see identical point-in-time data, constraints, eligibility, and review deadlines.
-The primary proposed decision metric is total shortage-plus-holding cost in currency per eligible store-SKU-period, aggregated as total cost divided by eligible periods.
-Its numerator is realized modeled shortage and holding cost from transaction, inventory, and agreed cost records; its denominator includes all eligible periods, including fallback cases.
-Actual lost demand is not directly observed during stockouts, so costs need a validated demand estimate or a separately identified experiment; report both uncertainty and censoring.
-The illustrative decision gate is at least 2% lower cost than baseline on the locked test with no deterioration beyond agreed guardrails, selected before evaluation.
-This is a proposed threshold, not a measured gain or universally appropriate minimum.
-Guardrails include units filled divided by units demanded where demand is observable, stockout rate, waste, planner workload, order validity, and on-time recommendation SLI.
-WAPE is sum of absolute unit errors divided by sum of observed actual unit sales, over eligible mature store-SKU-periods; undefined when actual total is zero.
-For illustration, actual sales [10,20] and forecasts [12,17] give absolute errors 2 and 3; WAPE = 5/30 = 16.67%, not the mean of per-item percentages.
-These constructed numbers are not a backtest, and WAPE on censored sales can reward a model that predicts stockouts.
-Quantile coverage is the share of mature uncensored observations at or below the forecast quantile; dependence and discreteness affect interpretation.
-Check coverage by promotion, store, product family, intermittency, horizon, and availability, with sample counts and uncertainty.
-Use clustered or block resampling by store and time as appropriate for dependence; overlapping protection periods are not independent observations.
-A model may reduce forecast error while worsening cost if errors shift into expensive shortages; evaluate decisions directly.
-For any pilot, randomize at a unit that limits shared supplier and store spillovers, record eligibility before assignment, and track contamination and sample-ratio imbalance.
-A pilot's power, minimum detectable effect, allocation, stopping rule, and owner require actual historical variance and operational input; none is supplied.
-Use shadow mode to validate interfaces and timeliness but do not claim causal business benefit from shadow predictions.
-After shadow, a pre-specified controlled pilot could estimate incremental outcomes if randomization and measurement assumptions hold.
-No artifact, sample size, observed interval, production outcome, or causal estimate exists for this scenario.
+
+Numerators and denominators are defined per metric, because the same word "accuracy" can mean four different arithmetic objects in this domain.
+
+| Metric | Numerator | Denominator / population | Window |
+|---|---|---|---|
+| Cost per decision | realised shortage plus holding cost | eligible decisions, stocked and unstocked | test period, 4 weeks |
+| Fill rate | units demanded minus units short | units demanded, censoring-corrected | same rows |
+| WAPE | absolute error sum | realised sales sum, stocked days only | same rows |
+| Bias | sum of signed error | count of decisions | same rows |
+| Coverage | realised demand at or below stated quantile | decisions with a distribution | same rows |
+
+The population is the frozen eligibility mask from §5d. Decisions that fell back to the rule are included and labelled, because excluding them measures a system that was never deployed.
+The comparator is the current rule evaluated on identical rows with identical labels and identical cost parameters, plus a "planner actual" comparator for retrospective context.
+Guardrails are: no more than a 2 percentage-point fall in fill rate on any category, no increase in the override rate above 25%, no decision later than the cutoff, and no category with a bias exceeding 5% of mean demand.
+Uncertainty is reported for the cost difference using a block bootstrap over order dates, which respects the dependence created by shared promotions and shared supply. Overlapping-horizon cells are never treated as independent.
+A second uncertainty statement covers parameter risk: recompute the cost difference under Cu ± 30% and Co ± 30% and report the interval, because the cost inputs are estimates and the conclusion must not be an artefact of a point estimate.
+Validation stages are: backtest on frozen history, shadow run against live decisions, then a limited live release with a holdout of stores. Each stage has an exit criterion and each stage's result is recorded.
+The backtest exit criterion is a positive cost difference whose uncertainty interval excludes zero, plus all guardrails satisfied in two consecutive four-week windows.
+The shadow exit criterion is agreement with planner decisions on at least 85% of rows, and an explanation for every systematic disagreement above 10% of quantity.
+The live exit criterion is that realised cost on treated stores is not worse than control stores, with the comparison pre-registered before the release.
+Status of each element in this design is `not executed`: no data has been obtained and no model has been trained. The evaluation specification is complete; its results are not.
+Ablations are specified in advance: rule-only, forecast-mean-plus-fixed-allowance, forecast-mean-plus-cost-ratio, forecast-distribution-plus-cost-ratio, and the full system with planner overrides. Each answers a different question.
+The ablation set is what makes a failure interpretable. If the third variant is good and the fourth is not, the problem is the distribution; if all forecast variants fail equally, the problem is upstream data.
+
+Two further validation elements are often omitted and matter here.
+The first is a stability check across time: the same comparison run on four consecutive four-week windows, reported separately rather than pooled. A method whose advantage is concentrated in one window is a method that has captured a specific event, not a general improvement.
+The second is a placebo check: apply the decision rule to a randomised version of the forecast that preserves the mean but not the spread, and confirm it performs worse. If the randomised version performs equally well, then the spread is doing no work and the model's cost is unjustified.
+The guardrails deserve their own arithmetic, because a guardrail that is not quantified is a sentiment.
+A 2 percentage-point fill-rate fall on a category with mean demand 36 units per period corresponds to expected shortage rising from 1.0580 to 1.7780 units, which under the constructed costs is a shortage cost increase of 2.52 currency units per decision. That is a real budget line and should be stated as such rather than treated as a categorical prohibition.
+The 25% override-rate guardrail is a process threshold, not an outcome one. Its purpose is to catch a usability regression early: when planners modify a quarter of recommendations, the system is functioning as a reference rather than as a decision aid, and the measured effect will be dominated by planner judgement.
+The bias guardrail of 5% of mean demand is 1.8 units on the worked series, which corresponds to about 1.7% of the protection-period standard deviation. That is a tight band, deliberately: a bias of that size is detectable with four weeks of data at the estimated standard error, so the guardrail is enforceable rather than aspirational.
+Detection power for the bias guardrail follows from the standard error: with 104 weekly observations and a period standard deviation of 10.3923, the standard error of the mean error is 1.019 units, so a 1.8-unit bias is about 1.8 standard errors and detectable at moderate power.
+
+### 9a. What is executed and what is not
+
+| Element | Status |
+|---|---|
+| Population definition and frozen mask | specified, not executed |
+| Label construction with censoring flags | specified, not executed |
+| Distributional model fitting | not executed |
+| Cost-based decision step and pack lattice | arithmetic executed on the worked series only |
+| Estate-level replay against the rule | not executed |
+| Block-bootstrap cost interval | specified, not executed |
+| Guardrail instrumentation | specified, not executed |
+| Shadow run and live holdout | not executed |
+
+The only executed element is the arithmetic in §6 on a single constructed series. Everything else is a specification, and the specification is the deliverable.
+Stating that plainly is part of the case's evidence discipline: a reader can reuse the specification, but cannot cite this document as evidence that a retail forecasting system improved service or cost.
 
 ## 10. Action Taken
-No action taken as of 2026-11-07; this is a proposed design exercise with no organization or approval record.
-The recommended next decision is whether the replenishment owner authorizes point-in-time replay and a shadow implementation.
-The proposed owner would approve the protocol and thresholds before the final test, with data engineering supplying lineage and operations supplying manual fallback.
-No store, supplier, model version, or customer is in an actual release scope.
-A future rollout would progress from replay to shadow to a small controlled pilot, subject to operational readiness and formal approval.
-A future stop trigger is a breached pre-specified service guardrail, invalid order, material input failure, or missed cutoff; operations owns the stop.
-Rollback means disable model-assisted recommendations, restore a compatible previous version if safe, and reconcile any exported orders before returning to manual rules.
-No automatic ordering is recommended on the basis of this constructed example.
+
+The action is a decision memo, not a deployment. It proposes a scoped pilot on two categories and 200 stores with a four-week shadow period before any live release.
+The memo names the decision owner, the fallback owner, the data-quality gate owner, and the accountable executive for the cost parameters.
+It also states what would cause the pilot to stop: a guardrail breach in two consecutive windows, a data-quality gate that cannot be met, or a cost difference indistinguishable from zero after four weeks.
+Three changes to existing practice are proposed alongside the model. First, report service on stocked days separately from unstocked days. Second, version promotion and price records so backtests can use the right vintage. Third, record planner overrides with reason codes.
+None of those three changes requires the model, and any one of them would improve the current rule's measurement, which is a useful way to argue for them.
+The memo explicitly declines three tempting expansions: automated release, promotion-elasticity modelling, and inter-store transfer optimisation, each with a stated reason and a revisit trigger.
+A data-quality remediation list accompanies the pilot: snapshot age monitors on three feeds, a duplicate-master quarantine process, and a calendar amendment log.
+Training material for planners covers how to read the distribution band, what the binding constraint means, and when a fallback is the right answer.
+The release plan includes a rollback that is a configuration switch, tested before the pilot, because a rollback that has never been executed is a hope.
+
+The pilot's governance is deliberately boring, because novelty in governance is how pilots become permanent without a decision.
+A weekly review reads five numbers: decisions produced, fallback rate, override rate with reason mix, realised cost difference against the rule, and the current cost-parameter version.
+The review has one decision to make each week: continue, adjust, or stop. "Adjust" covers cost parameters, feature windows, and the pack rule, and each adjustment is versioned so the effect of the adjustment is measurable rather than confounded with the effect of the model.
+A stop is recorded with its reason and does not require a second pilot to restart; the artefacts remain and the replay can be re-run when the blocking condition clears.
+Stakeholder communication is a one-page summary per week with the same five numbers, plus the largest single decision error and its explanation. The largest-error item is included specifically because it is the one a planner will be asked about by a store manager.
+The pilot also keeps a control group of stores on the rule for the full period, and the control group is chosen before the pilot from matched store pairs rather than after it from whatever happened to be available.
+Matching uses store size band and historical fill rate, because those two variables explain most of the between-store variation in the outcome. Residual imbalance is reported rather than adjusted away.
+The final pilot report is written to a template fixed at the start, which prevents the report from becoming a narrative constructed after the results were known. The template has sections for the pre-registered comparison, the secondary comparisons, the guardrails, the incidents, and the recommendation with its negative case.
+No part of the pilot writes automated orders, changes the supplier contract, or alters the planner's accountability, which keeps the decision reversible at every point.
 
 ## 11. Outcome & Results
-Outcome not yet measured; no implementation or evaluation has occurred.
-Figures in this case are constructed teaching values, not measurements of a named organization or evidence of realized impact.
-| Metric | Baseline | Candidate | Change and uncertainty | Status / limitation |
-|---|---|---|---|---|
-| Cost per eligible period | Not measured | Not measured | Not estimable | Proposed locked test; censored demand concern |
-| Demand fill rate | Not measured | Not measured | Not estimable | Requires defensible demand denominator |
-| On-time eligible recommendations | Not measured | Not measured | Not estimable | Proposed SLI; no service exists |
-| Planner override and labor | Not measured | Not measured | Not estimable | Requires action logs and time study |
-| Waste and excess inventory | Not measured | Not measured | Not estimable | Requires consistent valuation and measurement window |
-The proposed measurement owner is the replenishment analytics lead, using the pre-specified locked test and later controlled pilot if authorized.
-The proposed decision trigger is the Section 9 gate together with operational and business guardrails; an inconclusive result does not authorize a claim of improvement.
+
+ILLUSTRATIVE constructed results for the worked series, produced by the arithmetic in §6 and not by any measurement:
+
+| Quantity | Current rule | Rounded optimum | Continuous optimum |
+|---|---|---|---|
+| Order quantity, units | 39 | 48 | 45.2758 |
+| Expected shortage, units | 2.8181 | 0.6393 | 1.0580 |
+| Expected excess, units | 5.8181 | 12.6393 | 10.3338 |
+| Cost per period | 14.5152 | 12.3490 | 11.9701 |
+| Fill rate | 0.9217 | 0.9822 | 0.9706 |
+| Stockout probability | 0.3864 | 0.1241 | 0.1860 |
+
+The cost difference between the rule and the rounded optimum is 2.1662 currency units per period, which is 14.9% of the rule's cost.
+The pack constraint consumes 0.3789 of that, or 17.5% of the total gain, which is the part that a continuous-optimum report would overstate.
+Stockout probability falls from 38.6% to 12.4% while fill rate rises by 6 percentage points. The two service measures move together here but need not in general, which is why both are reported.
+On the estate arithmetic of §6.6 the same per-decision difference implies a large nightly figure on the constructed cost model; that figure is deliberately not presented as a saving, because the uniformity assumptions do not hold and the model will not achieve the theoretical optimum.
+Three sensitivities bound the claim. Understated spread by 50% at the continuous optimum reduces fill from 97.1% to 92.6% and roughly doubles expected shortage to 2.6506 units, so the spread estimate carries most of the risk.
+A mean understatement of 3 units lowers fill to 95.2%; an overstatement of 3 units raises fill to 98.3% and raises excess cost, so mean bias trades service against inventory in a predictable direction.
+At a cost ratio of 0.5556 the optimal packed quantity is 42 units and the rule's 39 costs 7.4715 against 8.0730, so the rule is actually cheaper by 0.6015 per period; the method's advantage inverts for categories where holding dominates shortage.
+No operational result is claimed. There was no pilot, no deployment, and no measured change in service or cost.
+
+The cost difference decomposes into three additive parts, which is useful because each part has a different owner and a different fix.
+
+| Component | Size, currency units per period | Owner of the fix |
+|---|---|---|
+| Service-level correction, continuous optimum, no pack constraint | +2.5451 | category analyst with finance |
+| Pack rounding penalty at pack 6 | −0.3789 | range and pack governance |
+| Total, rule to rounded optimum | +2.1662 | shared |
+
+The first component is 14.5152 − 11.9701 = 2.5451, the gain from moving the order from 39 units to the unconstrained cost optimum of 45.2758.
+The second is 11.9701 − 12.3490 = −0.3789, the cost of being forced onto the pack lattice, which is negative because rounding can only move the order away from the continuous optimum.
+An alternative decomposition attributes the whole 2.1662 to the ratio correction evaluated at the packed quantity and then reports the pack penalty separately as an unavoidable constant; the difference between the two presentations is only where the interaction is booked, and both must state which convention they use.
+The pack penalty is listed as belonging to range and pack governance, not to the model, and that attribution matters: a team that owns only the model will be held responsible for a cost it cannot influence.
+The ratio correction belongs to finance and the category analyst, and in a well-run organisation it is the cheapest available improvement, because it requires no model at all: applying the critical ratio to the existing rule's mean forecast captures most of it.
+That is the single most actionable line in this case, and it is also the least attractive to a modelling team, which is a fair summary of why evaluation-mismatch persists in practice.
+The tail of the distribution shows where the remaining risk sits. Under the rounded optimum, the probability of a stockout is 12.4%, so roughly one decision in eight still empties the shelf before the next delivery, and the expected shortage conditional on a stockout is 0.6393 / 0.1241 = 5.15 units.
+That conditional figure is what a store manager experiences: eight times in ten nothing happens, and the ninth time the shelf is short by about five units. A recommendation presented only as an average understates the visible experience, which is one reason planners override toward more stock.
 
 ## 12. Failure Modes & What Went Wrong
-No incident or rejected mitigation occurred; the following are hypothetical diagnostic exercises, not observed failures.
-Each exercise starts with a symptom, separates plausible causes, and gives a safe intervention plus verification.
-### F-01. Stockout-censored sales
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Flat low sales despite repeated empty shelves.
-- Competing explanation: True demand decline.
-- Discriminating check: Compare shelf availability and receipts with sales; a shelf-empty interval with demand proxies supports censoring.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Hold automatic quantity and route to planner; preserve the original output and decision audit trail.
-- Prevention: Estimate demand only with a validated censoring approach; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-02. Inventory snapshot delay
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Recommendations spike after inventory-feed delay.
-- Competing explanation: Genuine demand surge.
-- Discriminating check: Compare ingestion watermark and snapshot age with transaction timestamps.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Quarantine stale positions and use approved manual review; preserve the original output and decision audit trail.
-- Prevention: Set freshness SLA and replay delayed-feed scenarios; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-03. Late promotion amendment
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Promotion forecast is unexpectedly optimistic in backtest.
-- Competing explanation: Leakage from a later plan revision.
-- Discriminating check: Compare feature publication and ingestion times with each forecast origin.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Rebuild affected folds using available plan versions; preserve the original output and decision audit trail.
-- Prevention: Contract immutable promotion revisions and cutoff checks; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-04. Duplicate transaction events
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Sales and order quantities double for a subset.
-- Competing explanation: Genuine high volume.
-- Discriminating check: Compare transaction IDs and source reconciliation totals.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Deduplicate by source event identity and hold affected partitions; preserve the original output and decision audit trail.
-- Prevention: Test retries and duplicate delivery in ingestion; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-05. Missing transaction partition
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: A whole store appears to have zero demand.
-- Competing explanation: Store closure.
-- Discriminating check: Compare partition manifest, register health, and store open status.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Mark sales missing rather than zero and defer; preserve the original output and decision audit trail.
-- Prevention: Alert on missing partitions before forecast deadline; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-06. Wrong store time zone
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Forecast errors peak around midnight or daylight-saving changes.
-- Competing explanation: Real late-night shopping shift.
-- Discriminating check: Recompute event-to-business-day attribution using effective store-zone history.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Quarantine affected days and rebuild using correct time zone; preserve the original output and decision audit trail.
-- Prevention: Test DST gaps, repeated hours, and zone changes; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-07. Unit conversion error
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: One SKU forecast differs by a factor of case size.
-- Competing explanation: Demand step change.
-- Discriminating check: Compare unit, case and pack master changes to transaction units.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Block incompatible unit conversions and require reconciliation; preserve the original output and decision audit trail.
-- Prevention: Version the unit master and validate dimensions; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-08. Conflicting SKU master
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: A SKU appears eligible under multiple pack sizes.
-- Competing explanation: Legitimate package transition.
-- Discriminating check: Check effective dates and source-system overlap.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Quarantine ambiguous master rows and request resolution; preserve the original output and decision audit trail.
-- Prevention: Enforce one effective master per key and cutoff; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-09. Calendar misalignment
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Weekday forecasts lag the true day by one.
-- Competing explanation: Unusual holiday behavior.
-- Discriminating check: Compare forecast origin and business-calendar mapping around week boundaries.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Recompute calendar features and isolate affected runs; preserve the original output and decision audit trail.
-- Prevention: Include holiday and calendar-transition fixtures; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-10. Closed store zeros
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Model learns systematic low demand for closed stores.
-- Competing explanation: Genuine low-volume open days.
-- Discriminating check: Join operating calendar known at cutoff and compare POS activity.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Separate closed-day from eligible open-day zero labels; preserve the original output and decision audit trail.
-- Prevention: Track exclusion counts by store and calendar period; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-11. Sparse intermittent series
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Most predictions are nearly zero with occasional extreme misses.
-- Competing explanation: Broken sales feed.
-- Discriminating check: Check nonzero-sale intervals and feed completeness independently.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Compare intermittent baseline and global model on sparse cohort; preserve the original output and decision audit trail.
-- Prevention: Segment evaluation by demand occurrence and size; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-12. New SKU cold start
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: No item-specific history is available.
-- Competing explanation: SKU identifier mapping failure.
-- Discriminating check: Check product launch date and parent-item mapping history.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Use category priors or planner decision with clear uncertainty; preserve the original output and decision audit trail.
-- Prevention: Backtest pseudo-cold-start cohorts without future history; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-13. New store cold start
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: A new location inherits an unsuitable mature-store profile.
-- Competing explanation: Store mapping bug.
-- Discriminating check: Compare opening date, analogous-store selection and initial receipts.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Require local planner approval and conservative valid baseline; preserve the original output and decision audit trail.
-- Prevention: Backtest historical openings and monitor adaptation; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-14. Demand shift
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Errors rise across stores after an assortment change.
-- Competing explanation: Data pipeline break.
-- Discriminating check: Compare upstream counts and residual shifts at unaffected control categories.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Escalate affected categories and shorten retrain interval only after diagnosis; preserve the original output and decision audit trail.
-- Prevention: Monitor residuals and source-health signals separately; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-15. Promotion confounding
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Predicted promotion uplift looks too large.
-- Competing explanation: Misconfigured promotion indicator.
-- Discriminating check: Check plan timestamps and compare contemporaneous pricing and placement changes.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Avoid causal claims and constrain reliance until validated; preserve the original output and decision audit trail.
-- Prevention: Use randomized or credible quasi-experimental evidence for causal uplift; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-16. Price endogeneity
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Model associates higher prices with high sales.
-- Competing explanation: Incorrect currency conversion.
-- Discriminating check: Audit effective prices and merchandising choices before interpreting coefficients.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Use forecasts only within observed support and review promotion decisions; preserve the original output and decision audit trail.
-- Prevention: Keep predictive associations separate from pricing policy; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-17. Quantile crossing
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Predicted 90th percentile is below 50th percentile.
-- Competing explanation: Wrong percentile labels.
-- Discriminating check: Inspect raw model outputs and quantile column mapping.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Apply monotonic correction with calibration re-evaluation; preserve the original output and decision audit trail.
-- Prevention: Test ordering and coverage on every release; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-18. Miscalibrated tails
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Observed mature coverage misses the intended quantile.
-- Competing explanation: Temporary sampling noise.
-- Discriminating check: Inspect cohort counts and time-block uncertainty as well as systematic bias.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Use baseline or planner review for affected high-risk cohorts; preserve the original output and decision audit trail.
-- Prevention: Monitor conditional coverage after labels mature; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-19. Aggregated quantile misuse
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Summed daily 80th percentiles drive excessive or insufficient inventory.
-- Competing explanation: Incorrect inventory position.
-- Discriminating check: Compare simulated or direct cumulative-demand quantile with sum of marginals.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Replace aggregation with a joint or direct horizon forecast; preserve the original output and decision audit trail.
-- Prevention: Test positive and negative cross-day dependence; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-20. Late supplier receipt
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Stockouts rise despite accurate sales forecasts.
-- Competing explanation: Unexpected demand shock.
-- Discriminating check: Compare promised and actual arrival timestamps and demand residuals.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Update expected receipts and escalate missing shipment; preserve the original output and decision audit trail.
-- Prevention: Model lead-time uncertainty and track supplier reliability; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-21. Commitment double count
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Orders are consistently too high.
-- Competing explanation: Legitimate backlog growth.
-- Discriminating check: Reconcile whether reserved orders were already subtracted from on-hand.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Recompute position with mutually exclusive categories; preserve the original output and decision audit trail.
-- Prevention: Version inventory-position semantics and accounting tests; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-22. Damaged inventory included
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Forecasted position appears healthy but shelves are empty.
-- Competing explanation: Delayed shelf replenishment.
-- Discriminating check: Compare saleable and damaged quantities and shelf availability.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Exclude unsaleable stock; request count if uncertain; preserve the original output and decision audit trail.
-- Prevention: Reconcile status codes with physical inventory; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-23. Capacity master stale
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Orders exceed physical shelf or backroom capacity.
-- Competing explanation: Planner override after validation.
-- Discriminating check: Compare current layout and capacity effective date to order timestamp.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Stop export and revalidate using confirmed cap; preserve the original output and decision audit trail.
-- Prevention: Add capacity version and final pre-export check; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-24. Case pack changed
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Supplier rejects valid-looking orders.
-- Competing explanation: Downstream API outage.
-- Discriminating check: Compare supplier master effective pack size and order divisibility.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Hold affected SKUs and obtain updated master; preserve the original output and decision audit trail.
-- Prevention: Test effective-date transitions at cutoff; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-25. Rounding creates high overage
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Case-rounded order overshoots target by nearly a full pack.
-- Competing explanation: Forecast high bias.
-- Discriminating check: Compare continuous target with expected cost across feasible discrete packs.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Review feasible neighboring packs under agreed cost model; preserve the original output and decision audit trail.
-- Prevention: Evaluate pack-size segments and explicit discrete optimization; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-26. Shared capacity oversubscription
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Individually valid SKU orders exceed store receiving capacity.
-- Competing explanation: Single-SKU master error.
-- Discriminating check: Sum candidate order volumes by store delivery window.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Hold batch and allocate via approved shared constraint policy; preserve the original output and decision audit trail.
-- Prevention: Include cross-SKU capacity as an explicit coupled decision; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-27. Duplicate order export
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Supplier reports duplicate purchase orders.
-- Competing explanation: Two legitimate order revisions.
-- Discriminating check: Compare idempotency key, acknowledgements, and revision history.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Stop retries and reconcile accepted orders before correction; preserve the original output and decision audit trail.
-- Prevention: Test retry-after-timeout and conflicting revisions end to end; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-28. Lost acknowledgement
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Exporter times out after a supplier accepted an order.
-- Competing explanation: Supplier never received the order.
-- Discriminating check: Query authoritative acceptance state using the idempotency key.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Do not send a new key until state is reconciled; preserve the original output and decision audit trail.
-- Prevention: Exercise ambiguous timeout and recovery runbooks; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-29. Late batch completion
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Recommendations miss the purchasing cutoff.
-- Competing explanation: Upstream data delay.
-- Discriminating check: Inspect job spans and source watermarks to localize critical path.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Use valid fallback before deadline or defer; preserve the original output and decision audit trail.
-- Prevention: Set per-stage budgets and alert on deadline risk; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-30. Schema incompatibility
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Rollback fails to read a newer feature snapshot.
-- Competing explanation: Corrupt model artifact.
-- Discriminating check: Compare schema compatibility and artifact checksums.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Disable affected output and restore compatible version pair; preserve the original output and decision audit trail.
-- Prevention: Canary migration and retain versioned rollback bundles; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-31. Planner override surge
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Many recommendations are replaced by manual quantities.
-- Competing explanation: New local event absent from data.
-- Discriminating check: Analyze reason codes, cohorts, and whether interface defaults changed.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Route impacted cohort to human review; preserve the original output and decision audit trail.
-- Prevention: Review override outcomes without treating all overrides as correct labels; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-32. Metric denominator shift
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: WAPE improves while stockouts worsen.
-- Competing explanation: Actually better forecasting.
-- Discriminating check: Recompute on stable eligible cohorts and inspect missing/censored shares.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Block rollout pending complete denominator reconciliation; preserve the original output and decision audit trail.
-- Prevention: Publish exclusions and business metrics with scorecards; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-33. Backtest leakage
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Offline score is implausibly strong.
-- Competing explanation: Genuine strong seasonality.
-- Discriminating check: Trace newest input availability and compare a strict as-of replay.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Invalidate contaminated folds and preserve untouched test; preserve the original output and decision audit trail.
-- Prevention: Add as-of join assertions and train-only transforms; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-34. Overlapping evaluation windows
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Confidence interval appears very narrow.
-- Competing explanation: Large truly independent sample.
-- Discriminating check: Check repeated store and shared-date dependence among periods.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Recompute clustered or block-resampled uncertainty; preserve the original output and decision audit trail.
-- Prevention: Predefine resampling unit and temporal blocks; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-35. Model training skew
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: A subset of forecasts changes after feature pipeline migration.
-- Competing explanation: Genuine model improvement.
-- Discriminating check: Compare feature values for identical keys and cutoff across pipelines.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Roll back paired model-feature version and hold affected output; preserve the original output and decision audit trail.
-- Prevention: Run point-in-time parity fixtures before promotion; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-36. Excess fallback
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Most stores receive baseline while aggregate SLI appears healthy.
-- Competing explanation: Actually successful model coverage.
-- Discriminating check: Separate model, fallback, quarantine and missing populations.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Escalate input availability and report model coverage separately; preserve the original output and decision audit trail.
-- Prevention: Set explicit model-coverage and freshness guardrails; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-37. Security scope error
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: A planner can see another region's recommendations.
-- Competing explanation: Legitimate cross-region access.
-- Discriminating check: Inspect authorized scope, policy decision logs, and identity mapping.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Revoke access and investigate exposure; preserve the original output and decision audit trail.
-- Prevention: Test authorization boundaries and review entitlement changes; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-38. Store substitution
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: A stockout shifts demand to a neighboring SKU.
-- Competing explanation: Independent demand changes.
-- Discriminating check: Compare nearby substitute sales and availability over the same period.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Avoid attributing all shift to the forecasting model; preserve the original output and decision audit trail.
-- Prevention: Design pilot randomization to reduce interference; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-39. Return misclassification
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Net sales become negative for some daily observations.
-- Competing explanation: Real corrections and returns.
-- Discriminating check: Inspect transaction types and posting dates separately.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Separate gross sales, returns and corrections before modeling demand; preserve the original output and decision audit trail.
-- Prevention: Reconcile returns using explicit source semantics; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
-### F-40. Promotion plan missing
-- Evidence status: hypothetical; this is a designed diagnostic, not an incident.
-- Symptom: Promotion feature defaults to false during feed failure.
-- Competing explanation: No promotion scheduled.
-- Discriminating check: Distinguish missing plan partition from explicit no-promotion record.
-- Interpretation: a mismatch supports investigation but does not by itself establish causation.
-- Containment: Hold or flag affected forecasts instead of silently treating as no promotion; preserve the original output and decision audit trail.
-- Prevention: Monitor plan completeness and use a tri-state feature; assign the accountable data or operations owner before release.
-- Verification: replay an affected historical key and an unaffected control under the same cutoff.
-- Exit condition: reconciled inputs, valid constraints, and an owner-approved recovery; otherwise keep manual review.
-- Residual risk: a successful replay does not prove future feed completeness or business benefit.
+
+The first mechanism is label censoring. Symptom: excellent accuracy concentrated on frequently empty items, with under-forecasting that grows with stockout frequency. Competing causes are a genuinely declining item and a stale price feed. Discriminating check: compare forecast error against the availability feed's stockout indicator; censoring produces a monotone relationship, decline does not. Correction: exclude stocked-out days from the label and evaluate service on a censoring-corrected denominator.
+
+The second mechanism is promotion leakage through vintage. Symptom: backtest performance far above shadow performance, with the gap concentrated in promoted weeks. Competing causes are a distribution shift in promotion depth and a change in the availability feed. Discriminating check: rebuild the feature snapshot using only records published before each cutoff and re-score; a large drop identifies leakage. Correction: version promotion records and join on publication time, not effective date alone.
+
+The third mechanism is pack-rounding drift. Symptom: inventory rises without a matching service gain, and the effect is proportional to the number of series. Competing causes are over-ordering upstream and a genuine demand shift. Discriminating check: compare the continuous recommended quantity with the released quantity and sum the rounding increments; a systematic positive increment identifies the drift. Correction: choose the best lattice point by cost, not the rounded continuous optimum, and report the rounding increment as a cost line.
+
+The fourth mechanism is spread understatement, typically from fitting on deterministic-lead history. Symptom: service below target despite unbiased point forecasts. Competing causes are a cost parameter that is too low and a real demand shift. Discriminating check: compute the empirical coverage of the stated interval; coverage well below nominal at the same bias identifies spread, not mean. Correction: fit the spread on the lead-time distribution actually in force, and gate release on coverage.
+
+The fifth mechanism is evaluation-window mismatch. Symptom: weekly item-day WAPE improves while cost does not, or vice versa. Competing causes are a genuine cost-parameter change. Discriminating check: recompute both metrics on the same decision rows and inspect the disagreement rows. Correction: evaluate on decisions and keep WAPE as a diagnostic only.
+
+The sixth mechanism is override contamination. Symptom: the system's cost looks good while planners quietly fix the worst recommendations, and the model never learns. Competing causes are planners correcting genuine data errors. Discriminating check: stratify outcomes by override reason code; if the model's wins are concentrated in overridden rows, the credit belongs to the planner. Correction: attribute cost to model-only and human-edited paths separately.
+
+The seventh mechanism is aggregation illusion. Symptom: category service is stable while individual items cycle through empty shelves. Competing causes are a genuine mix shift. Discriminating check: plot the distribution of item-level fill rates within the category; a bimodal shape with a low-mode cluster indicates the illusion. Correction: reconcile to the category total while preserving item-level spread, and report the item-level distribution.
+
+The eighth mechanism is cutoff creep. Symptom: recommendations arrive late and fall back to the rule, and the fallback rate rises without a visible incident. Competing causes are genuine supplier changes. Discriminating check: measure each stage's latency against the cutoff budget and find the stage whose tail is growing. Correction: budget the pipeline explicitly and alarm on tail latency, not on mean.
+
+A ninth mechanism is worth recording because it destroys trust faster than any of the others: explanation drift. Symptom: the feature attributions shown to planners stop matching the model's actual behaviour after a retrain, and planners begin to see explanations that contradict their local knowledge.
+Competing causes are a genuine change in the drivers and a stale explanation artefact computed from the previous model version. The discriminating check is to recompute the attribution for a fixed historic recommendation using the current model and compare with what was displayed; a mismatch identifies the artefact, while a match identifies a real driver change.
+The correction is to compute explanations at scoring time from the same artefact that produced the recommendation, and to include the model version in the explanation payload shown to the planner.
+
+A tenth mechanism is the fallback path that was never exercised. Symptom: the fallback rate spikes during an incident and the fallback itself fails, because the rule depends on a table that the incident has also invalidated or on a code path that has not run since the last release.
+Competing causes are a genuine upstream outage and a configuration error in the fallback. The discriminating check is a scheduled drill: force the scoring path to fail for a single store and verify that a valid rule-based quantity is produced and labelled within the cutoff.
+The correction is the drill itself plus a fallback that depends on a small, stable table rather than on the same feature store the primary path uses.
+
+The narrative's cost is worth stating in the same terms as the results, because a post-incident review that only lists mechanisms is not actionable.
+The first backtest reported a cost improvement that was never measured, only implied by a WAPE improvement of about 4 percentage points. The shadow run produced a cost difference that was real but small, and the reason it was small was the spread understatement of the second mechanism combined with the rounding drift of the third.
+Neither of those two mechanisms was visible in the weekly report, because the report had no spread diagnostic and no rounding line. The fix was therefore not a model change but three reporting changes, which is a common shape for this class of failure.
+
+What went wrong in the constructed narrative is a composite of the first, second, and fifth mechanisms: the first backtest looked excellent, the shadow run looked mediocre, and the weekly WAPE report showed improvement throughout, because none of the three measured the same object.
 
 ## 13. Transferable Lesson
-The evaluation-mismatch pattern separates forecast generation from the physical and economic action it supports.
-The constructed example demonstrates constraint arithmetic, not empirical forecast superiority.
-Use it when a forecast drives recurring decisions with measurable constraints, credible data availability, and an actionable comparator.
-The mechanism is explicit: distribution and position determine a candidate quantity, then the feasible set and operational policy bound it.
-Avoid transferring the result directly to perishables, coupled network optimization, highly unreliable suppliers, or unknown costs.
-A portability test asks whether the new domain can reconstruct what was known at each historical decision and observe the relevant outcomes.
-For power planning, substitute capacity and unserved-energy costs for shelf and shortage costs; do not assume the same lead time or demand distribution.
-For products with severe substitution or uncertain arrivals, model the interacting process and validate it before applying a one-item policy.
+
+The transferable lesson is that a forecasting project fails at the seam between the metric and the decision, and the seam is invisible unless the evaluation is expressed in decision units.
+Three artefacts make the seam visible and are cheap to build: a frozen decision population, a cost function with named parameter owners, and a fallback path that is measured rather than assumed.
+The second lesson is about spread. A decision that consumes a distribution cannot be validated by a metric that scores a point, and a point model plus a fixed allowance is a distribution with an unexamined shape.
+The third lesson is about constraints. Pack multiples, capacity, and cutoffs are not implementation details; they change the optimum, and they consume a measurable share of the improvement.
+The fourth lesson is about honesty in the negative branch. At low cost ratios and low volumes the rule wins, and a project that cannot say so will over-deploy and then quietly lose credibility.
+The fifth lesson generalises beyond retail: any system whose output is a quantity rather than a label needs its evaluation defined on the quantity, with the constraint set applied before scoring.
+A sixth lesson concerns what to build first. The cheapest defensible improvement in this case is a cost-parameter review and a two-line decision step, neither of which requires a model; the model then earns its place by improving the mean and the spread, not by introducing the cost logic.
+A seventh lesson is about the vocabulary of service. Fill rate, cycle service level, stockout probability, and ready rate are four different numbers calculated from the same decision, and in the worked example they diverge in a pattern that surprises most stakeholders: stockout probability at the rounded optimum is 12.4% while fill rate is 98.2%, because a stockout costs about five units against a period demand of 36.
+When a stakeholder says "we need 98% service", the first response must be a question about which denominator they mean, because choosing the wrong one silently changes the target order quantity by several units.
+An eighth lesson is that an override is data. The recorded modification, its direction, its size, and its reason code form a labelled dataset of the cases where the model and the expert disagree, and it is the highest-value training signal available in a retail forecasting system because it is generated continuously and for free.
+Systems that discard overrides as noise lose that signal and then complain that planners are resistant to change. Systems that log overrides with codes can show, within a quarter, that most modifications cluster on three identifiable causes, which then become three fixable data problems.
+A ninth lesson spans domains: the arithmetic of the decision is short and the engineering around it is long. The critical ratio, the lattice, and the identity linking excess to short are a dozen lines; the snapshot discipline, the vintage handling, and the fallback drill are the actual project.
 
 ## 14. Connections & Cross-References
-### 14a. Related Methods and Cases
-The [collection index](INDEX.md) lists planned comparisons including energy load and ride-hailing; neither is represented here as an authored comparison.
-SRC-01 provides rolling-origin evaluation; its time-split principle does not solve stockout censoring or inventory optimization.
-SRC-02 describes leakage prevention; historical publication and ingestion times still need domain-specific enforcement.
-The local [forecasting topic index](../INDEX.md) identifies planned forecast methods and operating themes.
-The [rolling-origin validation sheet](../../../02_data_science_method_playbooks/10_time_series_playbook/Cheat_Sheets/04_Rolling_Origin_Validation_And_Demand_Accuracy.md) develops the replay and metric calculations; it does not validate this proposed deployment.
-### 14b. Open Questions
-| Question | Why unresolved | Evidence needed | Owner |
-|---|---|---|---|
-| How much demand is hidden by stockouts? | Observed sales are censored | Availability instrumentation and validated demand estimation | Analytics lead |
-| Is inventory position reliable at cutoff? | No reconciliation records exist | Timestamped counts and receipt audit | Store operations |
-| Does the candidate reduce economic cost? | No replay or pilot exists | Locked replay and adequately powered controlled pilot | Replenishment lead |
-| Are supplier lead times stable? | No shipment histories exist | Order-to-receipt distribution and disruption analysis | Supplier operations |
-### 14c. Interview Pack
-Each prompt is hypothetical; scores distinguish a complete answer from a plausible but unsafe shortcut.
-#### Q-01 — Framing
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: What is the actual decision, and who owns it?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: Store-SKU order quantity at a daily cutoff, owned by the replenishment lead.
-- Reasoning: Forecasts only matter through a constrained order and later service/cost outcomes.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: A planner may defer if inventory or supplier inputs are unsafe.
-- Follow-up: What if the supplier imposes a minimum order?
-- Follow-up answer: Add the minimum to the feasible set and consider zero or joint ordering.
-- Red flag: Optimizing forecast error alone omits inventory costs and operations.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 1–3; all scenario outcomes remain not measured.
-#### Q-02 — Data leakage
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: A plan becomes effective tomorrow but was ingested after today’s cutoff. Can it be used in today’s replay?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: No; effective date alone is insufficient; it was not available at decision time.
-- Reasoning: Both publication and ingestion must precede the origin, with the correct revision.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Use a prior available version or an explicit unknown indicator.
-- Follow-up: What if the plan was published before but ingested after cutoff?
-- Follow-up answer: It remains unavailable to this actual pipeline; assess a redesigned pipeline separately.
-- Red flag: Joining the latest corrected plan onto historical rows manufactures foresight.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 5a and 5d; all scenario outcomes remain not measured.
-#### Q-03 — Censoring
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: A store sells zero units on a day. Is demand zero?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: Not necessarily: closure, stockout, missing data, or true zero demand are distinct.
-- Reasoning: Check store hours, source completeness, shelf availability, and receipts.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Treat a verified stocked open day as a possible true zero.
-- Follow-up: What if availability is not instrumented?
-- Follow-up answer: Report the unknown; use cautious assumptions and sensitivity rather than pretending demand is observed.
-- Red flag: Filling all missing sales with zero biases demand downward.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 5a and 12; all scenario outcomes remain not measured.
-#### Q-04 — Calculation
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: With H=20, R=8 and C=3 units, what is position?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: 25 units: 20+8-3.
-- Reasoning: Incoming must arrive in time and commitments must not already be removed from on-hand.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: If the inventory feed is net of commitments, omit C to avoid double subtraction.
-- Follow-up: What if incoming stock is late?
-- Follow-up answer: Remove unreliable receipts from position or explicitly model arrival uncertainty.
-- Red flag: Counting late receipts as immediately available hides shortage risk.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Section 6 Q-01; all scenario outcomes remain not measured.
-#### Q-05 — Feasible quantity
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: With target 53, position 25, pack 6 and capacity 30, what is the policy order?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: 30 units, or five packs; four packs only reach 49 units of position.
-- Reasoning: Need 28 units; ceiling to a six-unit multiple gives 30 and fits capacity.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: An expected-cost optimizer may choose a different feasible pack if overshoot is expensive.
-- Follow-up: What if capacity is 24 units?
-- Follow-up answer: Four packs, or 24 units; position 49 falls four units short of target.
-- Red flag: Ordering 28 violates the pack constraint.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Section 6 Q-02; all scenario outcomes remain not measured.
-#### Q-06 — Critical ratio
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Underage costs 4 per unit and overage costs 1 per unit. What target quantile?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: The continuous ideal is 4/(4+1)=0.8, the 80th percentile.
-- Reasoning: The expected marginal overage and avoided shortage costs balance at this quantile.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Direct expected-cost evaluation is preferable for discrete packs or coupled constraints.
-- Follow-up: What if both costs are one?
-- Follow-up answer: The ideal quantile is 0.5; its numeric demand value is not provided.
-- Red flag: Calling the ratio an achieved service rate ignores distribution and assumptions.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Section 6 Q-03; all scenario outcomes remain not measured.
-#### Q-07 — Horizon uncertainty
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Can daily 80th percentiles simply be summed to obtain the 80th percentile of total demand?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: Generally no; the total depends on cross-day dependence.
-- Reasoning: Forecast the cumulative protection-period distribution directly or simulate coherent joint paths.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Under special dependence assumptions a sum may coincide, but it is not a general rule.
-- Follow-up: What if lead time is uncertain?
-- Follow-up answer: Include the arrival-time distribution and its dependence with demand in the protection period.
-- Red flag: Summing marginal quantiles without justification discards dependence.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 6 and 12; all scenario outcomes remain not measured.
-#### Q-08 — Baseline choice
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Why compare to a seasonal-naive order rather than only a mean forecast?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: It reflects the current operational decision, including the same feasible order policy.
-- Reasoning: A simple baseline reveals whether model complexity creates incremental decision value.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Compare moving averages and intermittent baselines when they reflect real alternatives.
-- Follow-up: What if the current rule uses planner overrides?
-- Follow-up answer: Report both the unedited rule and actual current workflow where history permits.
-- Red flag: Comparing candidate decisions to an unbounded baseline produces an unfair result.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 5c and 9; all scenario outcomes remain not measured.
-#### Q-09 — Evaluation
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Why is random row-level splitting inappropriate?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: It leaks future patterns and shares correlated store and temporal context across splits.
-- Reasoning: Use rolling origins and a later untouched test, fitting transforms only inside training folds.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Entity holdouts may supplement time holdouts to assess new-store generalization.
-- Follow-up: What if outcomes overlap across origins?
-- Follow-up answer: Use store/time blocks for uncertainty rather than treating rows as independent.
-- Red flag: An unseen row is not necessarily an unseen future.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 5 and 9; all scenario outcomes remain not measured.
-#### Q-10 — Metric
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Actuals are 10 and 20; forecasts are 12 and 17. Compute WAPE.
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: Absolute errors are 2 and 3, so WAPE is 5/30=16.67%.
-- Reasoning: Sum absolute errors before dividing by total actuals; preserve unit and population.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Report MAE alongside WAPE for sparse or zero-volume slices.
-- Follow-up: What if all actuals are zero?
-- Follow-up answer: WAPE is undefined; report absolute error and count without dividing by zero.
-- Red flag: Averaging per-row percentage errors is not WAPE.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Section 9; all scenario outcomes remain not measured.
-#### Q-11 — Sizing
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: What is the raw payload for two million series, 28 values each, four bytes per value?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: 224,000,000 bytes, approximately 213.6 MiB.
-- Reasoning: Multiply series by horizon and bytes/value; convert using 1,048,576 bytes/MiB.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Compression or sparse representations may change storage, not the raw arithmetic.
-- Follow-up: What happens if the horizon doubles?
-- Follow-up answer: The raw value payload doubles to 448,000,000 bytes, with metadata still excluded.
-- Red flag: Calling this a measured memory footprint ignores indexes and working state.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Section 8d; all scenario outcomes remain not measured.
-#### Q-12 — Reliability
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: The order exporter times out after sending. Is a retry safe?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: Only after checking downstream acceptance or using a shared idempotency contract.
-- Reasoning: An ambiguous timeout can mean the order was accepted but its acknowledgement was lost.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Reconciliation with a stable key and bounded retries is an acceptable design.
-- Follow-up: What if the downstream lacks idempotency?
-- Follow-up answer: Hold automatic retry and reconcile with the supplier or operator before resending.
-- Red flag: Generating a new order key on retry can duplicate purchases.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 8b and 12; all scenario outcomes remain not measured.
-#### Q-13 — Ambiguous diagnosis
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Orders spike after a batch. Is the model necessarily wrong?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: No; stale inventory, duplicated sales, late receipts, promotion changes, and true demand shifts compete.
-- Reasoning: Compare input watermarks, transaction uniqueness, inventory reconciliation and residuals by cohort.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: Quarantine affected keys while investigating rather than globally reverting without evidence.
-- Follow-up: What if only one item pack changed?
-- Follow-up answer: Check master effective dates and unit conversion before retraining.
-- Red flag: Immediately retraining can propagate a data defect.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Section 12; all scenario outcomes remain not measured.
-#### Q-14 — Changed constraint
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: A store has a shared receiving cap across all SKUs. Is per-SKU clipping enough?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: No; individually feasible orders can exceed the combined capacity.
-- Reasoning: Form a joint allocation over SKU pack multiples and total receiving capacity.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: A planner-approved allocation heuristic may be used if it respects all constraints.
-- Follow-up: What if solver time expires at cutoff?
-- Follow-up answer: Use an approved feasible fallback or defer; never export an infeasible partial solution.
-- Red flag: Independent rounding is not proof of joint feasibility.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 3 and 12; all scenario outcomes remain not measured.
-#### Q-15 — Causal evidence
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: Can an offline backtest prove the intervention reduced stockouts?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: No; it estimates historical predictive or simulated decision performance under assumptions.
-- Reasoning: Observed outcomes under the alternative inventory policy are counterfactual and often censored.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: A controlled pilot can estimate incremental impact if interference and measurement are addressed.
-- Follow-up: What if stores share a warehouse?
-- Follow-up answer: Cluster or otherwise design assignment to limit spillovers and explicitly analyze contamination.
-- Red flag: A better backtest score is not a realized causal business gain.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 9 and 11; all scenario outcomes remain not measured.
-#### Q-16 — Governance
-- Level: practitioner; assess both decision reasoning and operational consequences.
-- Candidate prompt: What should happen when a recommendation is stale just before cutoff?
-- Given facts: use only the assumptions and constructed quantities stated in this question or referenced case section.
-- Clarify: identify the decision time, unit, availability, and relevant physical constraint before answering.
-- Strong answer: Do not silently place the stale recommendation; use a freshness-qualified fallback or defer.
-- Reasoning: The planner and on-call owner need the reason, deadline, and safe next action.
-- Check: reconcile the conclusion with the stated grain, timing, units, and evidence status.
-- Acceptable alternative: A recent baseline may be valid only if its inputs and constraints remain valid.
-- Follow-up: What if no safe fallback exists?
-- Follow-up answer: Escalate and hold the order for the approved manual process.
-- Red flag: Assuming stale forecasts are harmless ignores physical inventory and supplier constraints.
-- Scoring: 0 = incorrect or unsafe; 1 = partial without boundary; 2 = correct reasoning and boundary; 3 = also handles follow-up and tradeoff.
-- Answer support: Sections 8 and 10; all scenario outcomes remain not measured.
+
+Sibling case `./02_Ride_Hailing_Demand_Forecasting.md` applies the same point-in-time discipline to a supply-demand matching decision, where the cost asymmetry is driven by driver incentives rather than shelf space.
+Sibling case `./03_Energy_Load_Forecasting.md` shares the critical-ratio idea but operates under a hard physical constraint that dominates the cost trade-off, which is a useful contrast in how constraints change the optimum.
+Sibling case `./04_Financial_Volatility_Forecasting.md` treats spread estimation as the primary object rather than a nuisance parameter, and its loss functions are the right reference for anyone tempted to score a variance forecast with squared error.
+The catalogue in `./INDEX.md` records evidence level and stage for every case and should be updated when this case's status changes.
+The unit-level plan in `../INDEX.md` places this case first in the catalog order because it carries the pattern vocabulary the others reuse.
+The cheat-sheet ladder in `../Cheat_Sheets/INDEX.md` is the intended home for the reusable derivations; until those cards exist, §6 of this case is the reference implementation.
+The evaluation specification in §9 is the reusable artefact: copy it, replace the cost parameters, and it applies to any quantity-decision forecasting problem.
+External reference points that a real implementation would need, and that this document does not supply, are the retailer's own pack and capacity masters, its cost accounting standard, and its supplier terms.
+The pattern vocabulary in this case transfers to any recurring quantity decision: staffing rosters, energy procurement, spare-parts stocking, and cash positioning all reduce to a demand distribution, an asymmetric cost, and a lattice of feasible quantities.
+The contrast with the volatility case is sharp and instructive. Here the spread is a nuisance that must be estimated well enough to set a quantile; there the spread is the target and the mean is nearly irrelevant, so the loss functions, the validation, and the skill of the practitioner all differ.
+The contrast with the energy case is about hard constraints. There, the physical constraint can bind so tightly that the cost optimum is unreachable and the decision becomes a feasibility problem with a cost tiebreak; here the lattice is the only binding structure most of the time.
+
+### Interview pack
+
+**Q1 (recall).** What is the newsvendor critical ratio and which two quantities does it depend on?
+- Answer: It is Cu divided by (Cu + Co), the ratio of underage cost to the sum of underage and overage cost, and it defines the service level at which the marginal cost of ordering one more unit equals the marginal cost of ordering one fewer.
+- Reasoning: Setting the derivative of expected cost to zero yields the CDF value at the optimum, so the optimum depends only on that ratio, not on the demand distribution's shape.
+- Follow-up: What happens to the optimum as Co approaches zero?
+- Red flag: Answering "95% service level" as though it were a universal target.
+- Scoring: Full credit for the ratio and the marginal-cost interpretation; half for the formula alone.
+
+**Q2 (calculation).** With mean 36, standard deviation 10.3923, Cu 3.50 and Co 0.80, what continuous order quantity is optimal?
+- Answer: 45.2758 units, from ratio 0.813953, z 0.892565, safety 9.2758 units.
+- Reasoning: The quantile of the standard normal at 0.813953 is 0.892565, and the safety stock is that multiplier times the protection-period standard deviation.
+- Follow-up: What does the same calculation give if Co is doubled?
+- Red flag: Using a 95% quantile out of habit.
+- Scoring: Full credit only with the intermediate z and safety values shown.
+
+**Q3 (calculation).** The optimum is 45.2758 but packs come in sixes. What is the cost of ordering 48 instead of 54?
+- Answer: 12.3490 versus 15.1555 per period, so 48 is better by 2.8065 currency units.
+- Reasoning: At 48 the expected shortage is 0.6393 units; at 54 it is 0.1757 units, and the excess cost rises faster than the shortage cost falls beyond the optimum.
+- Follow-up: At what order quantity does the cost double relative to the optimum?
+- Red flag: Assuming that more service is always better.
+- Scoring: Full credit for both costs and the direction of the comparison.
+
+**Q4 (diagnosis).** Backtest WAPE is 0.22 but shadow-run cost is worse than the rule. Name the three most likely causes and one check for each.
+- Answer: Promotion vintage leakage, label censoring, and a window or population mismatch; checks are a rebuilt snapshot with publication timestamps, an error-versus-stockout-frequency plot, and a recomputation on decision rows.
+- Reasoning: All three make the offline metric optimistic without touching the model, which is why the model's own diagnostics look healthy.
+- Follow-up: Which of the three can be detected without any new data collection?
+- Red flag: Blaming distribution shift first.
+- Scoring: Full credit for three distinct causes with a discriminating check each.
+
+**Q5 (judgment).** The forecast is unbiased but intervals cover only 80% of outcomes at a nominal 95%. What do you do before releasing?
+- Answer: Do not release; refit the spread on the lead-time distribution actually in force, then verify coverage by category, and only then evaluate the cost.
+- Reasoning: The order quantity is a tail quantity, so an understated spread under-protects precisely on the days that produce the largest shortage cost.
+- Follow-up: How would you distinguish a spread problem from a mean problem using only realised data?
+- Red flag: Widening every interval by a constant factor without diagnosing the cause.
+- Scoring: Full credit for blocking release and diagnosing before patching.
+
+**Q6 (calculation).** Lead time has mean 2 days and variance 2. Daily mean is 12 and daily standard deviation is 6. What is the protection-period standard deviation?
+- Answer: 18.9737 units, from variance 2 × 36 + 144 × 2 = 360.
+- Reasoning: The law of total variance decomposes lead-time uncertainty into the demand variance accumulated over the mean lead time plus the mean-demand-squared term times the lead-time variance.
+- Follow-up: What does the deterministic-lead assumption give, and what is the ratio?
+- Red flag: Using 6 × sqrt(2) and ignoring the lead-time variance term.
+- Scoring: Full credit for 18.9737 and the ratio 2.2361.
+
+**Q7 (diagnosis).** Item fill rates are bimodal within a stable-looking category. What is happening and what is the fix?
+- Answer: The category total is being stabilised by a few high-volume items while many low-volume items cycle through stockouts; the fix is item-level reporting plus reconciliation that preserves item spread.
+- Reasoning: Aggregation hides variance when series are imperfectly correlated, and the correlation is highest within a category, which masks exactly the tail.
+- Follow-up: What does the correlation assumption do to the aggregate standard deviation?
+- Red flag: Concluding that the category is fine because the total is fine.
+- Scoring: Full credit for the mechanism and a fix that preserves item-level spread.
+
+**Q8 (selection).** Why prefer a distributional model over quantile regression at one quantile?
+- Answer: A single quantile is sufficient only if the cost ratio is fixed per category and stable; a distribution supports cost changes without refitting and exposes spread diagnostics.
+- Reasoning: The decision needs one quantile, but the review needs to know whether that quantile moved because the mean moved or because the spread moved.
+- Follow-up: When is single-quantile regression the better engineering choice?
+- Red flag: Claiming a distribution is always superior regardless of cost.
+- Scoring: Full credit for the conditional answer and the diagnostic argument.
+
+**Q9 (calculation).** What does a WAPE of 0.30 imply for the spread of a normal series with mean 36?
+- Answer: 13.5358 units, using the mean absolute deviation identity with the 0.797885 constant.
+- Reasoning: For a normal variable the mean absolute deviation is sigma times sqrt(2/pi), so inverting gives sigma from the percentage error.
+- Follow-up: Why is this conversion invalid for a count distribution?
+- Red flag: Treating WAPE as a coefficient of variation.
+- Scoring: Full credit for the constant and the caveat.
+
+**Q10 (judgment).** The critical ratio is 0.5556 for a category. Should you deploy the model there?
+- Answer: Only if it beats the rule on realised cost; at that ratio the rule's order is close to optimal and the upside is small relative to the change cost.
+- Reasoning: Low critical ratios put the optimum near or below the mean, where a simple rule already sits, so the model's advantage shrinks toward the pack-rounding noise.
+- Follow-up: What would you measure to decide within one month?
+- Red flag: Deploying everywhere because the method worked in the high-margin category.
+- Scoring: Full credit for a conditional answer with a measurement plan.
+
+**Q11 (diagnosis).** Override rate rises from 8% to 30% after a release. What are the competing explanations?
+- Answer: A regression in recommendation quality, a change in what the interface displays, and a demand or supply regime change that the model has not seen.
+- Reasoning: Overrides are a human judgement on model output, so they move with the model, the interface, and the world, in that order of likelihood for a recent release.
+- Follow-up: Which single query separates the interface explanation from the others?
+- Red flag: Treating overrides as noise or as planner resistance.
+- Scoring: Full credit for three causes and a discriminating query.
+
+**Q12 (calculation).** With 104 weekly origins and a four-week horizon, how many independent observations does the evaluation have, and why does it matter?
+- Answer: 104, not 416, because the variance inflation for a four-period overlapping mean is 4.0.
+- Reasoning: Overlapping errors share shocks, so the effective sample is the number of origins, and using 416 inflates every t-statistic by a factor of two.
+- Follow-up: How would a block bootstrap handle this differently from a naive interval?
+- Red flag: Dividing 416 by two and calling it conservative.
+- Scoring: Full credit for 104 and the inflation factor.
+
+**Q13 (judgment).** Finance revises Co upward by 30%. What changes in the system, and what does not?
+- Answer: The critical ratio falls, so the recommended quantity falls; the model, features, and code do not change, but the cost parameters do, and the evaluation must be re-run.
+- Reasoning: The order is a function of the ratio, so parameter changes propagate through the optimisation step rather than through retraining.
+- Follow-up: What happens to the pack-rounding cost as the optimum moves toward a pack boundary?
+- Red flag: Retraining the model to compensate for a parameter change.
+- Scoring: Full credit for the separation of parameter from model.
+
+**Q14 (diagnosis).** A slow mover with mean 1.2 units per day gets a normal-approximation recommendation of 2.18 units. What is wrong and what replaces it?
+- Answer: The normal approximation assigns 13.7% of its mass below zero; replace it with a count distribution, under which an order of 2 covers demand with probability 0.8795 and yields a 0.8843 fill rate.
+- Reasoning: The decision rule needs a valid distribution over non-negative integers, and the continuous approximation violates the support of the quantity being forecast.
+- Follow-up: How do you detect this class of item automatically across two million series?
+- Red flag: Rounding 2.18 to 3 and moving on.
+- Scoring: Full credit for the support violation and the count-model replacement.
+
+**Q15 (recall).** Name four leakage shapes specific to retail forecasting.
+- Answer: Current-record joins on price and promotion, aggregates that include the target day, normalisation statistics fitted on the full history, and post-cutoff supplier confirmations used as features.
+- Reasoning: Each makes a value available in the backtest that was not available at the decision instant, and each is invisible to a metric-only review.
+- Follow-up: Which one survives a point-in-time snapshot rebuild and why?
+- Red flag: Listing only "using future data" without a concrete mechanism.
+- Scoring: Full credit for four mechanisms, half for fewer than three.
+
+**Q16 (calculation).** A pilot covers 200 stores, 300 items, a 4% decision rate, and four weeks. What is the minimum detectable per-decision cost difference at 80% power if the paired difference has standard deviation 8 currency units?
+- Answer: 0.0865 currency units per decision, from 67,200 decisions and the 2.801585 multiplier.
+- Reasoning: The sample is the count of decisions, so the standard error of the mean difference is 8.0 / sqrt(67,200) = 0.0309, and the 80%-power multiplier is 2.80.
+- Follow-up: What happens to that number for a single category holding a fiftieth of the rows?
+- Red flag: Computing power from the number of days rather than the number of decisions.
+- Scoring: Full credit for the decision count and the resulting MDE.
+
+**Q17 (judgment).** Planners modify a quarter of recommendations, mostly upward. What is your diagnosis and your first action?
+- Answer: A governance disagreement, not a model bug: the planners are pricing service above the finance-approved cost ratio; the first action is to reconcile the shortage cost with the planners and the store operations owner, and to log the reason codes that support it.
+- Reasoning: Systematic upward modification concentrated on service means the decision's cost parameters disagree with the people who bear the consequence of an empty shelf.
+- Follow-up: How would you distinguish that from a systematic under-forecast of mean demand?
+- Red flag: Retraining the model to match planner behaviour without examining why.
+- Scoring: Full credit for the governance diagnosis and a discriminating follow-up.
+
+**Q18 (diagnosis).** A category shows a stable fill rate and a rising inventory value. What do you check first?
+- Answer: The rounding increment and the split between released and recommended quantity, because a growing gap between the continuous optimum and the released order is the signature of pack drift rather than a demand change.
+- Reasoning: Fill rate is a shortage-side metric and is nearly flat around the optimum, while inventory is a level metric that moves one-for-one with an upward rounding bias.
+- Follow-up: What single number would confirm it across the estate?
+- Red flag: Checking demand forecasts first when the shortage side is stable.
+- Scoring: Full credit for the rounding hypothesis and a confirming statistic.
 
 ## 15. Quick Reference Card
-| Field | Case-specific answer |
-|---|---|
-| Problem type | Choose a feasible daily store-SKU replenishment quantity from point-in-time information. |
-| Domain | Fictional retail CPG; two million possible series and all values illustrative. |
-| Method | Compare a global probabilistic forecast and a seasonal-naive baseline under the same bounded policy. |
-| Primary result | Illustrative: with target 53, position 25, six-unit packs and capacity 30, the policy orders 30 units; this is not an observed gain. |
-| Action | No action taken; authorize replay and review before any pilot or automatic ordering. |
-| Key lesson | Forecast quality is not the decision: inventory, economics, constraints and feedback determine value. |
-| Evidence and stage | Illustrative computation; outcomes not measured; proposed, not deployed. |
-| Review record | Draft, unreviewed; revisit when cutoff, inventory semantics, source snapshots or supplier lead times change. |
-| Tags | `evaluation-mismatch`; `data-leakage`; `model-monitoring` |
 
-| Supplemental field | Value |
+| Item | Value or rule |
 |---|---|
-| Case ID / version / as-of | CASE-01-10-001 / 1.0 / 2026-11-07 |
-| Evidence level | Illustrative; business outcome not measured |
-| Implementation stage | Proposed; draft unreviewed |
-| Baseline / primary metric | Seasonal-naive forecast and bounded replenishment; decision costs and service to be measured |
-| Key limitation | No actual backtest, pilot or business outcome |
-| Review trigger / owner | Order timing, inventory semantics or historical snapshots change / retail replenishment lead |
+| Decision grain | store, item, local order date, one quantity per decision |
+| Cutoff | 22:00 store-local; only pre-cutoff publications are usable |
+| Objective | expected shortage cost plus expected holding cost per period |
+| Order quantity | invert the demand distribution at Cu/(Cu+Co), then round on the lattice |
+| Worked optimum | 45.2758 continuous, 48 at pack 6, cost 12.3490 versus 14.5152 for the rule |
+| Spread rule | protection-period sigma uses sqrt(P) and adds lead-time variance |
+| Slow-mover boundary | normal approximation fails below roughly one unit per day; use a count model |
+| Evaluation unit | the decision, with the frozen population and the cost function versioned |
+| Fallback | revert to the rule, label the row, and keep it in the denominator |
+| Stop condition | two consecutive guardrail breaches, or a cost difference indistinguishable from zero |

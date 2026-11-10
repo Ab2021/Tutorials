@@ -365,10 +365,10 @@ NUMERICAL EXAMPLE
   RR_hat = 0.312 / 0.268 = 1.16418
   1/a - 1/n1 = 1/312 - 1/1000 = 0.0032051 - 0.0010000 = 0.0022051
   1/b - 1/n0 = 1/268 - 1/1000 = 0.0037313 - 0.0010000 = 0.0027313
-  SE_log = sqrt(0.0049364) = 0.070259
-  ln(RR_hat) = ln(1.16418) = 0.15204
-  CI95(RR) = exp(0.15204 +/- 1.96*0.070259) = exp(0.15204 +/- 0.137707)
-           = exp(0.014333) .. exp(0.289747) = [1.01444, 1.33611]
+  SE_log = sqrt(0.00493647) = 0.0702600
+  ln(RR_hat) = ln(1.164179) = 0.152016
+  CI95(RR) = exp(0.152016 +/- 1.96*0.0702600) = exp(0.152016 +/- 0.1377096)
+           = exp(0.0143064) .. exp(0.2897256) = [1.014410, 1.336056]
 
 INTERPRETATION
   A 16% relative increase with an interval whose lower bound is 1.4%. On the ratio scale the
@@ -444,19 +444,23 @@ NUMERICAL EXAMPLE
   Randomised contrast: RR = 0.312/0.268 = 1.16418
     E_point = 1.16418 + sqrt(1.16418 * 0.16418) = 1.16418 + sqrt(0.191135)
             = 1.16418 + 0.437191 = 1.60137
-  Randomised CI lower bound: 0.2723/0.268 = 1.01604
-    E_ci   = 1.01604 + sqrt(1.01604 * 0.01604) = 1.01604 + sqrt(0.016297)
-            = 1.01604 + 0.127660 = 1.14370
+  Randomised CI lower bound, converted to the ratio scale: 0.268 + 0.004273 = 0.272273
+    RR_ci = 0.272273/0.268 = 1.015944
+    E_ci   = 1.015944 + sqrt(1.015944 * 0.015944) = 1.015944 + sqrt(0.016198)
+            = 1.015944 + 0.127272 = 1.143216
+  The same bound taken from the log-scale interval in 6.3 is 1.014409, giving E = 1.135310.
+  The two differ by 0.008 because one inverts a risk-difference interval and the other a
+  log-risk-ratio interval; the protocol names the log-scale version as primary.
   Historical descriptive contrast (constructed): p_high = 0.41, p_low = 0.19
     RR_obs = 2.15789
     E_obs  = 2.15789 + sqrt(2.15789 * 1.15789) = 2.15789 + sqrt(2.49860)
             = 2.15789 + 1.58070 = 3.73859
 
 INTERPRETATION
-  The randomised point estimate is defeated by an unmeasured confounder that roughly doubles
-  the risk of both selection and response (E = 1.60), which is plausible for relationship
-  history; the interval's lower bound is defeated by something far weaker (E = 1.14). The
-  descriptive association requires a confounder of 3.74, which is implausible and therefore
+  The randomised point estimate is defeated by an unmeasured confounder with a risk ratio of 1.60
+  with both selection and response, which is plausible for relationship history; the interval's
+  lower bound is defeated by something far weaker (E ≈ 1.14 under either interval construction).
+  The descriptive association requires a confounder of 3.74, which is implausible and therefore
   reads as robust — a dangerous conclusion, because the descriptive contrast has already
   absorbed the confounder into the exposure rather than leaving it unmeasured.
 ```
@@ -482,9 +486,9 @@ CONSTRAINT
 
 NUMERICAL EXAMPLE
   C = 140 currency units per assigned contact (ILLUSTRATIVE)
-  delta_hat = 0.044  -> 140 / 0.044 = 3,181.82 per incremental responder
-  delta_lower = 0.004273 -> 140 / 0.004273 = 32,764.8 per incremental responder
-  at the design MDE of 0.0569: 140 / 0.0569 = 2,460.5 per incremental responder
+  delta_hat = 0.044       -> 140 / 0.044       = 3,181.82 per incremental responder
+  delta_lower = 0.0042728 -> 140 / 0.0042728   = 32,765.57 per incremental responder
+  at the design MDE 0.056852: 140 / 0.056852   = 2,462.53 per incremental responder
 
 INTERPRETATION
   The point estimate implies a cost that might be acceptable; the interval's lower bound
@@ -536,9 +540,11 @@ the usual arm 800, and the offer arm contains proportionally more high-volume pr
 pooled difference remains unbiased only if assignment is random; with unequal sizes a chance
 imbalance has a larger effect on the smaller arm's mean. Recomputing: if high-volume HCPs respond at
 0.45 and low-volume at 0.20, and the offer arm is 40% high-volume against 25% in the usual arm, the
-crude difference is 0.10 while the volume-standardised difference is 0.00. The formula in 6.2 does
-not detect this; only the balance table and a prespecified standardisation do. This is Simpson's
-reversal in its ordinary commercial form.
+offer arm mean is 0.4(0.45) + 0.6(0.20) = 0.18 + 0.12 = 0.30 while the usual arm mean is
+0.25(0.45) + 0.75(0.20) = 0.1125 + 0.15 = 0.2625. The crude difference is therefore 0.0375 while the
+volume-standardised difference is exactly 0.00. The formula in 6.2 does not detect this; only the
+balance table and a prespecified standardisation do. This is Simpson's reversal in its ordinary
+commercial form.
 
 **Boundary 2 — zero cells.** If responders0 = 0, the risk-ratio interval is undefined, the
 log-scale standard error is infinite, and software will either drop the stratum or emit a huge
@@ -721,8 +727,8 @@ Dimensional check: risk differences are dimensionless proportions reported in pe
 cost per responder divides currency by a dimensionless proportion and yields currency, which is the
 correct unit.
 Monotonicity check: increasing the sample size must shrink the interval; recomputing 6.2 at 4,000 per
-arm gives SE = sqrt(2*0.2147/4000) ≈ 0.01036 and an interval half-width of 0.0203, roughly half the
-published width, which is the expected square-root scaling.
+arm gives SE = 0.010134 and an interval half-width of 0.019864, which is 0.50000 of the published
+half-width of 0.039727 — the square-root scaling, confirmed to five significant figures.
 Limit check: the E-value formula returns exactly 1 at RR = 1, which it does by construction
 (1 + sqrt(1*0) = 1), confirming the implementation has no offset error.
 
@@ -802,7 +808,7 @@ relationship-history variable of that strength is entirely plausible in this set
 the result was treated as directional rather than confirmatory.
 
 The commercial diagnostic is a cost per incremental responder of 3,181.82 currency units at the point
-estimate and 32,764.8 at the lower bound — a factor of about ten between the optimistic and
+estimate and 32,765.57 at the lower bound — a factor of about ten between the optimistic and
 pessimistic readings of the same data.
 
 The decision outcome was a documented deferral with three conditions and a named trigger. Under the
@@ -1136,7 +1142,7 @@ would prevent drift.
 | Clustering | DEFF 1.35 at m = 8, ρ = 0.05; 5,457 HCPs, 683 practices |
 | Fragility | E-value 1.60 at the point estimate, 1.14 at the interval bound |
 | Timing | Day-120 read covers 64.3% of the window; full read at day 140 |
-| Cost view | 3,181.82 per incremental responder at the point estimate; 32,764.8 at the lower bound |
+| Cost view | 3,181.82 per incremental responder at the point estimate; 32,765.57 at the lower bound |
 | Guardrails | Permission, content approval, independence, disclosure — any breach voids the read |
 
 Decision rule: approve only when the interval's lower bound, converted into cost per incremental

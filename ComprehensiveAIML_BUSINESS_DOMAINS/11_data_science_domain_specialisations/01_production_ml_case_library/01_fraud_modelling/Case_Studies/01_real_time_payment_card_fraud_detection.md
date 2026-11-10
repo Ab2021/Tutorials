@@ -1,1001 +1,1457 @@
 ---
 case_id: CASE-01-01-001
 case_title: Real-time payment-card fraud detection under a friction budget
-case_version: "1.0"
+case_version: "2.0"
 created: 2026-11-07
 last_reviewed: null
 status: proposed
 content_status: draft
-implementation_stage: proposed
 case_type: predictive-ml
 domain: Issuer payment-card fraud
 primary_pattern: evaluation-mismatch
 secondary_patterns: [label-delay, cost-latency-tradeoff]
 evidence_level: not-measured
 source_basis: illustrative
-as_of_date: 2026-11-07
+as_of_date: 2026-11-10
 owner_role: Issuer fraud product owner
 source_index: INDEX.md
-review_trigger: New label source, authorization deadline, network rules, or material change to policy or customer mix
+review_trigger: New label source, authorization deadline, network rule, or material change to policy or customer mix
 ---
+
 # Case study: Real-time payment-card fraud detection under a friction budget
 
+Every quantity in this case is **ILLUSTRATIVE**. No issuer, portfolio, authorization log, model,
+deployment, or measured financial result is described. The arithmetic is constructed to be
+internally consistent and independently re-derivable from the stated inputs, which is a different
+claim from being true of any real book of business. Where a number would in practice require a
+measurement, the case says so and marks the quantity `not-measured`.
+
+The one sourced element is the shape of the decision: a card authorization is a synchronous,
+irreversible three-way choice made under a deadline measured in hundreds of milliseconds, and the
+cost of each branch is asymmetric. NIST SP 800-63B and the EMV 3-D Secure specification describe
+authentication and challenge mechanics that constrain what an issuer may do in flight; nothing in
+those documents supplies the economic inputs used here.
+
 ## 1. The One-Line Framing
-At authorization, an issuer must choose approve, challenge, or decline for each card transaction, using only information available before its response deadline, while protecting legitimate customers and comparing with its existing rules-only policy.
-The proposed model supplies risk estimates to a separately controlled decision policy.
-This is an invented teaching case, not a reconstruction of a named institution or an implemented deployment.
-No production population, model result, experiment, deployment or financial impact has been observed.
+
+At authorization time, choose approve, step-up challenge, or decline for each card-not-present
+purchase using only data that exists before the issuer's response deadline, so that mature
+issuer-borne fraud loss plus monetized customer friction falls per 1,000 eligible attempts at an
+unchanged challenge-rate ceiling, compared with the incumbent rules engine.
+
+The framing matters because it fixes three things that are usually left vague. The unit of decision
+is one authorization attempt, not one card and not one fraud case. The objective is a monetized
+sum, not a classification score. The constraint is a friction budget expressed as a challenge rate
+per 1,000 attempts, which is what a customer-experience owner will actually defend in a steering
+meeting.
+
+The naive framing — "detect fraud" — fails. Truth arrives as a chargeback or a confirmed-fraud
+record weeks after the authorization, and only for the attempts the issuer chose to act on. The
+score can never be evaluated against a clean label at the moment it is used, and the label it is
+trained on was produced by the previous policy. Both facts are consequences of the decision, not
+data-quality accidents.
+
+The incumbent in this case is a versioned rules engine that already performs well enough to have
+survived. Its measured numbers are unknown here; the case constructs a plausible baseline so that
+the replacement argument can be examined on arithmetic rather than assertion. Any real programme
+must measure its own baseline before opening the replacement question.
+
+**Takeaway:** the deliverable is a three-way action policy under a hard deadline, and its value is
+a monetized portfolio quantity, not an AUC.
 
 ## 2. Context & Background
-The issuer receives an authorization request from a network after the merchant initiates a card transaction.
-The issuer can approve, decline, or invoke an available authentication flow, depending on channel and network capabilities.
-The customer expects a prompt response; an asynchronous analyst cannot generally decide an in-flight authorization.
-An approved fraudulent purchase may lead to a dispute and financial loss.
-A false decline may block a legitimate purchase and cause customer and merchant friction.
-A challenge may deter fraud but may also fail, expire, or frustrate a legitimate customer.
-The illustrative issuer owns the authorization policy, not the merchant's checkout or the network's protocols.
-The fraud product owner is accountable for the decision, and an operations owner handles downstream investigations.
-The model risk owner independently approves evidence and thresholds.
-The security owner controls card-data access and incident response.
-The existing comparator is a versioned rules-only authorization policy with its actual fallback and challenge behavior preserved.
-No baseline performance is assumed or measured.
-The analytical scope is card-present and card-not-present purchase authorizations in a single illustrative issuer portfolio.
-Cash withdrawals, refunds, AML surveillance, account opening, and claims adjudication are out of scope.
-Different payment rails or jurisdictions require separate review of available actions, privacy, and legal requirements.
+
+A card-not-present purchase begins when a cardholder enters credentials at a merchant checkout. The
+merchant's acquirer submits an authorization request through the card network to the issuing bank.
+The issuer has a fixed window — commonly under two seconds, and often closer to one — to return an
+approval, a decline, or (where the merchant and channel support it) a request for additional
+authentication. If the issuer does not answer inside the network's window, the attempt times out,
+and a timeout is operationally worse than a considered decision because it degrades both merchant
+relations and customer trust while providing no fraud control at all.
+
+Four parties hold distinct accountabilities, and conflating them is the most common governance
+defect in this domain.
+
+The **fraud product owner** owns the action policy: which band of risk receives which action, and
+what the friction ceiling is. This role is accountable for the loss number and for the customer
+experience number simultaneously, which is why the objective must be a single monetized quantity.
+
+The **model risk function** independently approves the evidence package, the calibration method,
+the challenger comparison, and the monitoring thresholds. It does not own the threshold; it owns
+the claim that the threshold was chosen on defensible evidence.
+
+The **authorization platform owner** owns latency, availability, idempotency, and the fallback
+path. A model that cannot answer within the deadline is not a component of this system at all,
+regardless of its offline discrimination.
+
+The **customer operations and disputes function** owns the downstream consequences: contact-centre
+volume after a false decline, goodwill credits, complaint handling, and the manual review queue for
+appeals. Their capacity is a hard constraint that the fraud policy can silently violate.
+
+The incumbent policy is a rules engine. Rules in production card fraud typically encode velocity
+counters, merchant-category risk tiers, geography mismatch against the cardholder's recent history,
+repeated-amount patterns, and issuer-specific blocklists. Such an engine is explainable to
+auditors, cheap to evaluate, easy to roll back, and legally well-understood. It is also brittle at
+the edges: a threshold tuned in one season drifts as the merchant mix changes, and rules interact in
+ways that are hard to reason about once there are more than a few dozen.
+
+Scope is one issuer portfolio, card-not-present purchase authorizations, thirty consecutive days.
+Excluded: cash advances, refunds and reversals, ATM transactions, card-present contactless
+authorizations, account-opening fraud, and merchant-side fraud. Each of those has a different
+action set, a different loss bearer, and a different label process; folding them in would make the
+ledger uninterpretable.
+
+A crucial structural fact: an approved fraudulent purchase does not always cost the issuer. Under
+liability-shift arrangements and depending on whether the merchant performed authentication, part
+of the loss may fall on the merchant or acquirer. The case models only the issuer-borne share and
+says so explicitly, because a programme that reduces total ecosystem fraud while increasing
+issuer-borne loss is a failure from the issuer's chair.
+
+**Takeaway:** the authorization platform, not the modelling team, defines the deadline; the
+disputes function, not the model, pays for false declines.
 
 ## 3. The Business Question
-Illustrative stakeholder question: Which purchase authorizations should we approve, challenge, or decline to reduce fraud loss without exceeding a defined customer-friction budget or the response deadline?
-The unit of action is one authorization attempt; linked attempts remain distinct decisions.
-The decision is whether to replace the rules-only policy with a calibrated model-assisted policy, not whether to optimize classification accuracy.
-The primary proposed business estimand is net portfolio loss per 1,000 eligible authorization attempts over a mature cohort.
-It includes issuer-borne fraud loss and explicitly monetized customer-friction and authentication costs, with the components reported separately.
-The numerator is total adjudicated issuer loss plus pre-agreed friction and challenge costs, in currency units.
-The denominator is all eligible randomized attempts, including declined attempts, not only approved transactions.
-A transaction-level amount is not automatically the issuer's ultimate fraud loss.
-Guardrails include legitimate decline rate, challenge rate, challenge abandonment, customer complaints, subgroup outcomes, timeout rate, and authorization availability.
-A target such as 1% challenge rate is a planning assumption, not a service commitment.
-Baseline and treatment must face the same eligibility definition, calendar period, and attribution window.
-Because a challenge changes the subsequent path, a score trained on historical outcomes alone does not identify each action's causal effect.
-The product owner must approve the cost schedule and risk tolerance before threshold selection.
+
+| Decision-contract field | Illustrative contract |
+|---|---|
+| Question | For each eligible authorization attempt, which of approve, challenge, or decline minimizes expected issuer cost inside a fixed friction ceiling? |
+| Decision owner | Fraud product owner, with model risk approval of the evidence and platform approval of the latency envelope. |
+| Trigger | Authorization request arrival; response due within the network deadline. |
+| Deadline | End-to-end scoring and policy must complete inside the stated window with margin for retries. |
+| Available actions | Approve; challenge where the channel supports it; decline; fall back to the incumbent rules engine. |
+| Value | Mature issuer-borne fraud loss plus monetized false-decline and challenge friction, per 1,000 eligible attempts. |
+| Denominator | All eligible authorization attempts assigned to the policy, including ones that were challenged or declined. |
+| Hard constraints | Challenge rate ceiling; no decline without a documented reason code; approved data only; deadline compliance. |
+| Guardrail metrics | False-decline rate, challenge abandonment, complaint rate, timeout rate, subgroup decline parity. |
+| Comparator | The versioned incumbent rules engine evaluated on the same attempts in the same window. |
+| Out of scope | Criminal attribution, merchant compliance judgement, credit-limit policy, collection of losses. |
+
+Three denominators get confused in practice and each answers a different question. The
+**attempt denominator** — all eligible attempts — is the one the business metric uses, because it
+is the only one unaffected by the policy's own selection. The **actioned denominator** — attempts
+that were challenged or declined — is the one precision uses, and it is a selected subset whose
+base rate is far above the population's. The **confirmed-fraud denominator** — mature positives —
+is the one recall uses, and it is incomplete for the most recent weeks because outcomes have not
+landed.
+
+A policy can look excellent on the actioned denominator while losing money on the attempt
+denominator, because the actioned set is chosen precisely where the model is confident. This case
+demonstrates exactly that failure shape in section 12, and the fix is not a better metric but a
+correct one.
+
+The estimand is stated as a difference, not a level: the change in mature cost per 1,000 eligible
+attempts relative to the incumbent, computed on a common cohort with a common attribution window.
+Levels are not comparable across issuers because ticket sizes, margin rates, and liability
+arrangements differ; differences on a common cohort are.
+
+One more contract detail that is often omitted and always regretted later: the decision must be
+logged with the policy version, the score, the calibrated probability, the chosen action, the
+reason code, and the availability timestamp of every feature used. Without that record the
+evaluation in section 9 cannot be executed at all, because the replay cannot reconstruct what the
+policy knew.
+
+**Takeaway:** write the estimand as a paired difference on a common cohort, and make the decision
+log a deliverable of the first sprint rather than a later refinement.
 
 ## 4. Assumptions & Constraints
-| Assumption | Type | Impact if wrong / action |
-|---|---|---|
-| Issuer receives a stable request identifier | Infrastructure | If absent, establish a network-supported idempotency key before retry-safe action. |
-| A subset of channels supports challenge | Business | Restrict challenge to eligible requests and measure coverage; never silently promise it everywhere. |
-| Fraud and dispute feeds can be joined to attempts | Data | Estimate unmatched rate and audit before using labels for selection. |
-| An agreed maturity period captures most relevant labels | Data | Plot reporting delay by cohort and extend follow-up if needed. |
-| Tokenization and retention are approved | Regulatory/security | Stop processing until security and legal approve a jurisdiction-specific design. |
-| Analyst audits can sample low-score attempts | Operations | If not, selective-label bias remains and decision claims are limited. |
-| Model inference and features fit a bounded deadline | Infrastructure | Use tested fallback; do not call external enrichment synchronously without a budget. |
-| Issuer can randomize eligible traffic ethically | Business | If not, use shadow evaluation and a justified quasi-experiment without causal overclaim. |
-These are hypotheses, not observed conditions or universal regulatory requirements.
-The illustrative end-to-end internal risk-decision budget is 100 ms at p99, measured at the issuer decision boundary.
-That number is a design target, not a network-wide deadline and not an observed percentile.
-Available time must be negotiated against the real network timeout and all downstream processing.
-Mandatory legal, network, sanctions, security, and customer protections override model policy when actually applicable.
-No universal fail-open or fail-closed decision is safe; the owner must approve a bounded rules-only fallback for each channel.
+
+| ID | Assumption | How it would be tested | Consequence if false |
+|---|---|---|---|
+| A-01 | Attempt, decision, and settlement timestamps are retained with millisecond resolution. | Replay a week of authorizations against stored logs. | Policy cannot be replayed; evaluation reverts to aggregate totals. |
+| A-02 | A mature confirmed-fraud outcome exists for approved attempts and matures within 90 days. | Age the label table and plot maturity by cohort week. | Labels are biased toward early-reporting cardholders; recall is overstated. |
+| A-03 | The challenge flow is available on the measured share of channels. | Channel capability matrix from the gateway. | Challenge arm cannot be priced; policy collapses to approve/decline. |
+| A-04 | Challenge effectiveness can be estimated, even if only from a controlled experiment. | Randomize challenge on a small eligible band. | Prevention is unidentifiable; treat `e` as a sensitivity axis, not a number. |
+| A-05 | Issuer-borne loss per caught attempt is approximately constant within a ticket band. | Stratify realized loss by ticket size decile. | The scalar `V` misprices small and large tickets; ledger must be per-band. |
+| A-06 | Friction costs are agreed with the business before threshold selection. | Signed cost schedule in the decision record. | Threshold becomes a political negotiation after the fact. |
+| C-01 | Scoring completes inside the deadline at p99, not just p50. | Load test with production replay at peak. | Timeouts create an unmodelled fourth action with its own cost. |
+| C-02 | The same attempt retried returns the same action. | Inject duplicate authorization requests. | Retries produce contradictory decisions and double decline friction. |
+| C-03 | No feature is used whose availability timestamp is later than the decision cutoff. | Point-in-time feature audit per column. | Offline evaluation is optimistic and the deployment underperforms. |
+
+Two constraints deserve separate emphasis because they are usually stated too softly to be
+enforceable. The first is the **deadline**, which is a property of the whole path: feature fetch,
+model inference, policy evaluation, serialization, and network. A 12 ms model inside a 900 ms p99
+budget is fine; the same model inside a 40 ms budget with a 30 ms feature fetch is not, and the
+failure shows up as timeouts rather than as a bad score. The second is the **friction ceiling**,
+which must be expressed as a rate over eligible attempts, not as a count per day, because the count
+moves with volume and the rate does not.
+
+The cost schedule is an assumption, not a fact, and it is the assumption that drives the answer
+most strongly. Section 6 shows the decline break-even threshold moving from roughly 16% to roughly
+37% when the monetized cost of a false decline rises by a factor of four. A programme that fixes
+the threshold and then renegotiates the cost schedule has the causality backwards.
+
+**Takeaway:** the two constraints that most often invalidate a finished model are the p99 latency
+budget and a cost schedule that nobody signed.
 
 ## 5. Data, Tools & Method
+
 ### 5a. Data Specification
-The request grain is one authorization attempt keyed by issuer and stable attempt ID.
-Repeat attempts, reversals, and incremental authorizations are related events rather than automatic duplicates.
-Data fields include event time, issuer receipt time, action time, availability time, tokenized card key, merchant key, amount, currency, channel, and decision.
-A tokenized account linkage enables customer-level evaluation without placing a primary account number in model logs.
-Labels are confirmed fraud, confirmed legitimate where evidence exists, or unresolved; unresolved is not automatically legitimate.
-A dispute is an evidence source, not an unconditional truth label.
-Record label source, adjudication state, event time, ingestion time, confidence, reversal, and version.
-Fraud loss is a separately reconciled monetary measure; a fraud flag does not establish net loss.
-The illustrative training period would precede validation and a final untouched forward test.
-The split dates, time zone, source volumes, cohort counts, and sampled coverage are not available and must be fixed before a real run.
-The outcome-maturity window is proposed as 90 days after authorization, contingent on measured delay distributions and legal retention.
-An event whose outcome matures later remains censored at the snapshot, not a negative label.
-Use availability-time point-in-time joins, not a retrospective join to the latest entity record.
-Link one request to zero or one canonical decision, and retain multiple associated evidence events with explicit aggregation rules.
-Report unmatched, ambiguous, duplicate, and late-arriving records by channel and decision.
-A sampling audit must not force approval of risky transactions merely to obtain labels.
 
-#### Illustrative feature contract and boundary checks
-The entries below describe candidates, not features known to exist or approved for use.
-All historical values require both a prior event and prior system availability.
-Any feature whose source cannot provide reliable availability time is excluded until its lineage is established.
-Each feature's default and stale handling must be represented in training and serving.
+Grain: one row per authorization attempt. The primary key is the network authorization identifier
+combined with the issuer's internal attempt sequence, because retries carry the same network
+identifier and must be distinguishable. Cut-off: the decision timestamp recorded by the
+authorization switch. Population: eligible card-not-present purchase attempts in the portfolio for
+the thirty-day cohort.
 
-**Request amount.**
-The value is the nonnegative purchase amount in the original currency's smallest unit.
-The request is the source; the issuer receipt time establishes availability.
-Treat a missing amount differently from a genuine zero amount.
-Amounts do not directly encode issuer-borne loss because recovery and liability vary.
-Verify decimal scale separately for each supported currency.
-Reject or explicitly route malformed values before inference.
+Units: all monetary amounts in one currency, stated at authorization, not at settlement, because
+settlement amounts can differ after tips, partial captures, and currency conversion. Rates are
+expressed per 1,000 eligible attempts so that they remain comparable when volume changes.
 
-**Original currency.**
-The category is the transaction's currency code, not its country.
-It is available in the incoming authorization request when supplied.
-An unknown currency uses an explicit unknown category rather than the most frequent currency.
-Changes in a merchant's settlement currency must not silently rewrite old requests.
-Monitoring should distinguish an unknown code from a missing field.
-Validate mappings against an approved, versioned currency reference.
+Fields available at decision time, all candidate only:
 
-**Converted amount.**
-This derived feature converts the request amount to a common comparison currency.
-Its exchange-rate snapshot must have been available before the decision.
-Historical reconstruction must not use the final rate for the end of the day.
-An absent exchange rate produces a missing indicator and approved fallback.
-Rounding must preserve the source amount and the rate version for audit.
-It is not a substitute for settlement accounting.
+| Field group | Examples | Availability caveat |
+|---|---|---|
+| Attempt attributes | amount, currency, merchant category, entry mode | Present, but merchant category is coarse and sometimes stale. |
+| Card state | tenure band, prior attempt count in window, prior decline count | Velocity counters must be computed before the decision, not after. |
+| Counterparty history | merchant's prior fraud rate band | Merchant-level aggregates are lagged by days and must carry their lag. |
+| Device and channel | device token presence, channel, client type | Token absence is not evidence of a new device. |
+| Geography | coarse network region, billing-country agreement | IP geolocation is unreliable on mobile networks and must not be treated as identity. |
+| Policy state | incumbent rules hit flags, blocklist membership | These encode the incumbent's own history and can leak its conclusions. |
 
-**Merchant identity.**
-The merchant key combines the issuer-visible identifier with its namespace.
-The incoming identifier can be reused across acquirers unless the contract forbids it.
-An entity-resolution change may combine previously distinct histories.
-The current decision must use only the mapping known at receipt.
-An unknown merchant is not itself evidence of fraud.
-Measure identifier collisions and mapping coverage separately.
+Fields **not** available at decision time and therefore excluded from any claimed feature set:
+chargeback outcome, confirmed-fraud case identifier, dispute reason code, recovery amount, the
+merchant's later refund, the customer's later complaint, and the analyst's review disposition. Each
+of these is a downstream consequence. Including any of them produces an offline model whose
+performance cannot survive deployment, and the failure mode is silent in cross-validation because
+the leak is present in every fold.
 
-**Merchant category.**
-This is the category supplied on the authorization message.
-It is a merchant classification, not a diagnosis of criminal activity.
-Codes can change over time or differ across transaction paths.
-Preserve the message value alongside any approved mapping version.
-Evaluate whether sparse categories need a pooled representation.
-Monitor unknown and changed codes after producer releases.
+The label is `confirmed_fraud` under a controlled definition: an attempt for which a chargeback was
+raised and the issuer's recovery process concluded fraud, or an attempt the fraud operations team
+independently classified as fraud. The definition excludes "customer claims they did not
+authorize" without further evidence, because friendly-fraud and genuine third-party fraud require
+different responses and a policy that treats them identically will over-decline repeat customers.
 
-**Channel.**
-The input distinguishes supported card-present and card-not-present pathways.
-Challenge eligibility is a policy capability, not a synonym for channel.
-Message defaults must not silently relabel an unknown channel.
-The field affects both model calibration and the permissible action set.
-Report coverage and false declines separately by eligible channel.
-Use the versioned authorization protocol mapping for this field.
+Negative labels are the harder problem. An approved attempt with no chargeback within the maturity
+window is treated as legitimate, which is an assumption rather than a fact: some fraud is never
+disputed (small amounts, cardholder inattention, issuer write-off below the dispute threshold).
+Section 9 prices that assumption instead of hiding it.
 
-**Authorization entry mode.**
-This indicates how payment credentials were presented when the network supplies it.
-Its encoding depends on the protocol version.
-An unrecognized entry mode must remain identifiable as unknown.
-Treat merchant or terminal configuration errors as a competing explanation.
-Test changes in encoded values before deploying an upstream parser.
-Avoid extrapolating from one entry mode to unsupported channels.
-
-**Device identifier.**
-Only an approved pseudonymous identifier may enter the feature contract.
-Its existence and quality depend on channel and customer consent or other permitted basis.
-A shared device can legitimately serve multiple cardholders.
-Device absence is not equivalent to a new device.
-Rotation, reset, and access restrictions affect longitudinal comparisons.
-Evaluate privacy, false-link, and exclusion risk before use.
-
-**Card token.**
-The token is a protected join key, not a meaningful numeric feature.
-The model should not interpret arbitrary token ordering as ordinal risk.
-Key rotation can reset history unless an approved stable linkage is available.
-Do not infer that two tokens belong to one person without verified linkage.
-Keep the mapping behind separate access controls.
-Measure history coverage across token age and rotation events.
-
-**Card age.**
-This is elapsed time between card activation and authorization receipt.
-The activation record must have been ingested before the decision.
-A replacement card may be new while the underlying account is established.
-Use a separate missing indicator where activation is unavailable.
-Do not assume young cards are fraudulent.
-Check negative durations caused by clock or event-order errors.
-
-**Account tenure.**
-The measure is elapsed time since an approved account-opening event.
-It differs from card age when cards are replaced or reissued.
-An account that predates available records may be left-censored.
-Avoid substituting the data warehouse's earliest record as the true opening date.
-Clock skew and migrations can produce impossible negative values.
-Apply an explicit cap only if the training and serving definitions match.
-
-**One-minute attempt count.**
-Count eligible prior attempts linked to the token in a defined trailing minute.
-Exclude the current attempt if the model is trained on prior-only histories.
-The lower bound and treatment of ties must be fixed in the feature specification.
-Late records may update future windows but must not change a past online decision.
-Duplicate source events must not increment the count twice.
-Track watermark lag because a low stale count can look like normal activity.
-
-**One-hour attempt count.**
-This uses a longer trailing interval and the same token identity.
-It captures a different burst scale from the one-minute count.
-The count is an attempt count, not a count of approved purchases.
-Specify whether prior declines and reversals contribute.
-Use an independently tested reference implementation for boundary events.
-Compare online and reconstructed counts for sampled requests.
-
-**Daily spend.**
-Sum prior eligible purchase amounts within a specified trailing 24-hour interval.
-Convert currencies only with historical rates that were then available.
-Define whether reversed authorizations reduce this sum and when.
-A missing conversion must not silently contribute zero.
-A calendar-day total is a different feature from a trailing-day total.
-Reconcile totals against canonical source events after replay.
-
-**Merchant novelty.**
-The flag indicates that no prior eligible interaction with the merchant is visible.
-It must also carry a history-coverage indicator.
-A genuinely new merchant and an account with missing history are different cases.
-Restrict the history to records available before the current request.
-Entity remapping can change novelty unless versions are preserved.
-Validate behavior at account opening and data migration boundaries.
-
-**Device novelty.**
-This records whether the pseudonymous device appears in prior eligible history.
-Absence of a device identifier makes novelty unknown, not automatically true.
-Normal device upgrades can yield legitimate new-device events.
-Measure the field's missingness by channel and customer segment.
-A future customer-device association cannot be backdated.
-Test shared devices, rotations, and simultaneous first use.
-
-**Prior decline count.**
-Count earlier issuer declines over a stated window, irrespective of their eventual fraud label.
-The value is available from the decision log rather than a future investigation.
-Changing the issuer policy changes this feature's distribution.
-Repeated declines can represent a compromised card or legitimate retry frustration.
-Preserve policy version to investigate feedback effects.
-Exclude the current decision from its own prior count.
-
-**Prior challenge completion.**
-Use only completed challenge events that have already arrived.
-An abandoned or timed-out challenge is a separate state from failure.
-Channel support determines whether the field can exist.
-An authentication success does not prove that a subsequent transaction is legitimate.
-Completion events arriving after the current authorization are not eligible.
-Keep challenge identifiers to prevent duplicate completion updates.
-
-**Time since last attempt.**
-Calculate elapsed receipt time since the most recent available eligible attempt.
-The value has units of seconds and must be nonnegative.
-An account without visible prior events has missing history, not infinite tenure.
-Concurrent attempts require a deterministic tie-handling rule.
-Arrival ordering and the underlying event timestamp serve different purposes.
-Test same-millisecond attempts and late delivery explicitly.
-
-**Merchant velocity.**
-Count eligible prior requests at the merchant within a fixed window.
-Large merchants naturally have high volume, so raw count alone is not proof of abuse.
-The aggregate may require careful key partitioning to avoid hot spots.
-Record merchant mapping version and aggregation freshness.
-Avoid using aggregate updates that include the current request twice.
-Compare rates with an appropriately scaled historical reference.
-
-**Card-to-merchant diversity.**
-Count distinct merchants encountered by a card during a stated prior window.
-An approximate distinct counter introduces quantifiable error and version dependencies.
-Its error must be evaluated near any operating decision boundary.
-Merchant identity collisions can decrease or inflate the count.
-Retention and reset policies define the maximum supported lookback.
-Do not compare values generated by incompatible counter implementations.
-
-**Merchant-to-card diversity.**
-Count distinct card tokens seen at a merchant during a prior window.
-It can reflect normal merchant popularity as well as a fraud burst.
-Rotating tokens can inflate distinct counts if linkage is not stable.
-An upstream delay may produce an artificially low diversity value.
-Maintain strict source-time and availability-time cutoffs.
-Do not treat this aggregate as evidence that individual customers are linked.
-
-**Country consistency.**
-This feature compares approved request geography with a separately supplied account reference.
-Country of merchant registration, device location, and customer residence are distinct concepts.
-Missing or low-confidence geography must remain explicit.
-Travel, virtual merchants, and cross-border commerce can make mismatch legitimate.
-Do not infer a person's nationality or protected status from a payment location.
-Assess channel coverage and customer impacts before policy use.
-
-**Historical amount deviation.**
-Compare the request amount with a prior-only distribution for the same eligible account.
-The reference distribution must exclude the current transaction.
-Sparse histories require a documented fallback, not a fabricated personal average.
-Changing currencies or conversion conventions can create false deviations.
-Large purchases may be legitimate and deserve proportionate treatment.
-Validate the feature with known histories and cold-start examples.
-
-**Feature freshness.**
-This measures the age of the latest accepted source update at decision time.
-It is an operational signal, not a customer risk characteristic by itself.
-Age must be computed using documented clocks and source semantics.
-Negative ages can indicate clock skew or inconsistent timestamps.
-A feature may be fresh yet incorrect, duplicated, or incomplete.
-Monitor age distributions alongside source lag and reconciliation failures.
+Exclusions: test cards, internal merchant test traffic, attempts from blocked countries where the
+block is legal rather than fraud-driven, and attempts that failed for technical reasons before any
+risk decision. Excluding technical failures is legitimate; excluding declined attempts is not,
+because declined attempts are precisely where the policy's false positives live.
 
 ### 5b. Tools & Stack
-All components are proposals; no product, version, environment, or implementation is claimed.
-An authorization gateway validates and tokenizes requests, then calls an issuer-owned policy service.
-A keyed stream processor maintains short-lived velocity aggregates and publishes auditable events.
-An online store serves timestamped feature snapshots with explicit freshness and default indicators.
-A model server returns a versioned score and input contract, and a policy engine applies rules and action thresholds.
-An immutable decision log records tokenized request, feature version, action, reason, fallback state, and timings.
-An offline warehouse joins as-of features with mature labels and supports rolling temporal evaluation.
-A registry stores model artifacts, preprocessing, calibrator, training snapshot, threshold configuration, approvals, and rollback target.
-The particular database, streaming engine, model package, and serving language remain unselected pending procurement and compatibility review.
-No system is inferred from the source filename.
+
+Proposed components, described by function rather than by product because no environment was
+inspected: an authorization switch that emits an immutable attempt record; a point-in-time feature
+service that serves precomputed aggregates keyed by card and merchant with explicit freshness
+stamps; a gradient-boosted tree scorer for tabular signals; an isotonic or Platt calibration layer;
+a versioned policy table mapping calibrated probability bands to actions; a durable decision store
+written before the response is emitted; a network adapter for step-up authentication; and a replay
+harness that can reconstruct any historical decision from stored snapshots.
+
+Why a tree ensemble rather than a neural network is a decision that should be argued rather than
+assumed. The table below records the argument so that a reviewer can attack it.
+
+| Option | Strength | Weakness | Status here |
+|---|---|---|---|
+| Incumbent rules only | Explainable, auditable, instant rollback, no training dependence | Brittle thresholds, poor at interactions, manual retuning | Comparator |
+| Logistic regression on engineered features | Transparent coefficients, stable, fast | Needs manual interactions, misses nonlinearities | Fallback candidate |
+| Gradient-boosted trees | Handles interactions and missingness, strong tabular baseline | Opaque without attribution tooling, calibration needs work | Proposed scorer |
+| Sequence model over card history | Can exploit ordering and velocity patterns | Latency budget, feature-serving complexity, harder audit | Considered, deferred |
+| Graph model over shared entities | Strong on organized rings | Labelling and latency burden, cold-start on new entities | Out of scope |
+
+The scorer is a *component*; the policy is the *decision*. That separation is what allows the
+evaluation in section 9 to compare policies while holding the scorer fixed, which is the only way
+to attribute a change in cost to a change in thresholds rather than to a change in model.
 
 ### 5c. Method Summary
-Canonicalize eligible authorization fields and read point-in-time aggregates.
-Apply mandatory rules, obtain a score when the model path is healthy, calibrate against a representative maturity-adjusted population, and apply a versioned action policy.
-Return one terminal authorization decision; write the decision and outcome lineage asynchronously.
-A practical candidate is a gradient-boosted tree trained with a binary log-loss objective on adjudicated, mature training labels.
-The class score estimates the risk of the specified observed label under historical selection, not automatically untreated fraud probability.
-Tree complexity and regularization are selected on earlier temporal validation folds; preprocessing and calibration are fitted within each fold.
-The final test is untouched until model, calibration, feature contract, and thresholds are frozen.
-Missing features have explicit indicators and an approved bounded fallback; no silent zeros masquerade as observed values.
-| Candidate | Evidence | Strength | Limitation | Status / revisit |
-|---|---|---|---|---|
-| Existing rules | No measured baseline supplied | Auditable and already the relevant comparator | Manual rule coverage may decay | Proposed comparator; characterize its traffic first |
-| Regularized logistic model | No experiments | Transparent, cheap inference | Nonlinear interactions require feature work | Considered; choose if validation and cost support it |
-| Boosted trees plus calibration | No experiments | Captures nonlinear tabular interactions | Calibration and temporal stability require evidence | Proposed candidate, not selected by observed results |
-| Deep sequential model | No experiments | Could model histories | Higher complexity, latency and sparse-history risks | Not tested; revisit only if incremental evidence justifies it |
-| Thresholded risk score alone | No experiments | Simple | Ignores action-specific effects and friction | Not sufficient as a decision policy |
-No optimizer, hyperparameters, run ID, selected model, or stopping iteration exists yet.
-The proposed stopping rule is early stopping on temporal validation loss, with a fixed candidate grid and no test-set tuning.
-After selecting a candidate, freeze a policy only after checking operational and customer constraints on validation.
 
-### 5d. Data provenance, quality, exclusions and leakage controls
-The sole source-specific scope is the visible source-tree entry, not the inaccessible contents of an original case.
-Authorization, disputes, challenge outcomes, customer support, and fraud investigation feeds are proposed internal sources, not accessed datasets.
-Assign a source owner, permitted use, extraction watermark, schema version, and retention schedule before acquisition.
-Exclude unjoinable or invalid events only with reason codes and denominator accounting.
-Never use a chargeback, final dispute status, or future device association as an authorization-time feature.
-For each aggregate require both event timestamp strictly before the decision and source availability timestamp no later than the decision.
-A timestamp alone cannot prove that the serving system actually had the value.
-Offline reconstruction must replay ingestion delays, late corrections, and online default behavior.
-Fit imputers, encoders, and calibrators within training folds, and freeze their artifacts before validation or test.
-Use distinct missing, stale, and actual-zero states.
-Investigated, challenged, and approved populations can have different probabilities of label observation.
-Track these selection mechanisms; audit samples and weighting require known nonzero inclusion probabilities and measured outcomes.
-If unknown outcomes remain, state bounds or sensitivity, not false certainty.
-Apply least privilege, encrypted transport and storage, tokenization, retention enforcement, and access audit.
-Do not log raw card numbers, security codes, or authentication secrets in model features or observability systems.
-Incident logs contain reason codes and versions, not cardholder secrets.
+The pipeline is: receive attempt; validate eligibility; fetch features with freshness checks; score;
+calibrate; apply the versioned policy band; emit action with reason code; persist the decision
+before responding; asynchronously join the mature outcome when it lands.
 
-### 5e. Reproducibility and method-selection ledger
-| ID | Source / artifact | Version and accessibility | Role and limitation |
+| Stage | Input | Output | Failure behaviour |
 |---|---|---|---|
-| SRC-01 | [Course source coverage](../../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-01) | Current course plan, accessible | Establishes topic and separate-case scope; not production evidence. |
-| SRC-02 | [Source directory inventory](../../../../../Templates/directory.txt) | Repository inventory, accessible | Names the original case; does not reproduce its contents. |
-| SRC-03 | [Fraud evaluation reference](../../../02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) | Local draft | Method companion, not proof of performance here. |
-| RUN-01 | No run exists | Unavailable | No training, replay, measurement, or reproducible runtime. |
-| DATA-01 | No transaction extract exists | Unavailable | Cohort composition and label quality are unknown. |
-Future runs need immutable data snapshot hashes, code commit, container digest, package and hardware versions, random seeds, training and policy configs, threshold and calibrator versions, and access-controlled artifact paths.
-A seed alone cannot ensure deterministic distributed training or reproduce an inaccessible snapshot.
-Method choice is a proposal; no candidate has been fitted or compared.
+| Eligibility filter | Attempt record | Eligible / not eligible | Not eligible bypasses scoring and uses incumbent rules. |
+| Feature fetch | Card and merchant keys | Feature vector plus freshness | Stale beyond tolerance triggers fallback, not zero-fill. |
+| Scoring | Feature vector | Raw score | Scorer error triggers fallback to incumbent rules with a logged flag. |
+| Calibration | Raw score | Probability of confirmed fraud | Calibration table version pinned per day. |
+| Policy | Probability plus context | Action plus reason code | Unknown band is a hard error, never a default approve. |
+| Persistence | Decision record | Durable row | Persistence failure blocks the response; no silent approve. |
+
+The choice to make persistence synchronous is deliberate and expensive. An asynchronous write would
+buy a few milliseconds and lose the guarantee that every action can be reconstructed, which would
+make the evaluation in section 9 impossible. The cost is roughly 3 ms at p99 in a co-located store,
+which fits the budget; in a cross-region store it would not, and the design would have to change.
+
+### 5d. Provenance, quality, exclusions and leakage controls
+
+Each column carries an owner, a source system, a version, a timestamp semantic (event time versus
+processing time), and a permitted-use note. The distinction between event time and processing time
+is the single most common source of silent leakage in payment data: a velocity counter updated at
+settlement looks like it belongs to the attempt, but its value at decision time was different.
+
+Leakage controls, in the order they are applied:
+
+1. Every feature is rebuilt from a snapshot taken strictly before the decision timestamp.
+2. Incumbent rule flags are retained only as *context*, never as features, because they encode the
+   incumbent's own conclusions and would let the challenger inherit its errors.
+3. Merchant aggregates are joined with their documented lag; a same-day merchant fraud rate is not
+   available at authorization.
+4. Calibration and band selection are fitted on development folds only, by time.
+5. Any feature whose univariate relationship with the label exceeds a plausibility bound is
+   quarantined and re-audited before use, because implausible strength is the signature of leakage.
+
+Quality checks that are actually run before the model is trusted: duplicate attempt keys within a
+day; attempts with decision timestamps before their event timestamps; cards with more than a
+threshold of attempts in a minute; amount distributions with impossible values; and label joins
+that map more than one outcome to one attempt.
+
+### 5e. Reproducibility & Method-Selection Ledger
+
+| ID | Artifact | Purpose | Evidence boundary |
+|---|---|---|---|
+| RUN-01 | Constructed thirty-day cohort | Arithmetic demonstration | No dataset exists; all values constructed. |
+| POL-01 | Three-action band table | Action selection | Illustrative; requires signed cost schedule. |
+| SRC-01 | EMV 3-D Secure specification | Challenge mechanics context | Does not supply any economic input. |
+| SRC-02 | NIST SP 800-63B | Authentication assurance vocabulary | Not a claim about this portfolio. |
+| CHK-01 | Independent arithmetic re-check | Verifies every printed product | Executed by hand and by script; see below. |
+
+Reproducibility means that a reviewer with the same inputs can regenerate every number in section
+6 without reading the code. To make that possible, each derivation states its formula, its symbol
+meanings and units, its validity condition, one numerical substitution, and the resulting figure.
+Where a figure is rounded, the rounding rule is stated once: monetary values are carried at full
+precision and displayed to two decimals; probabilities are displayed to two decimals as
+percentages; counts are integers, and any fractional count is rounded with the rule stated at that
+point.
+
+**Takeaway:** the ledger is a list of what would have to exist for this case to be evidence, and
+none of it does.
 
 ## 6. Analysis Walkthrough
-**Evidence declaration:** every count, probability, cost and capacity below is constructed for teaching. It is neither an observed portfolio nor a claim about the issuer's loss allocation, customer behaviour, challenge effectiveness, or model calibration.
 
-### 6a. Point-in-time decision record
-For decision `D`, freeze the request at issuer receipt time `t_D`. A feature `x` is eligible only when its underlying event occurred before `t_D` and its source made that value available by `t_D`. The score is therefore a function of the request and the eligible feature snapshot, not of a later dispute, investigation, final merchant mapping, or retry outcome.
+The walkthrough builds the answer in seven steps. Each step either produces a decision input or
+invalidates one. Nothing here was executed against real data; the cohort is constructed so the
+arithmetic closes exactly, which is what allows a reader to check the reasoning rather than the
+data.
 
-```text
-INVARIANT [PT-01]
-INPUT: request r_D, feature candidates (value, event_time, availability_time).
-STATE TRANSITION: retain a candidate iff event_time < t_D AND availability_time <= t_D;
-                  otherwise mark the feature unavailable and apply its documented default.
-OUTPUT: feature_snapshot_id, missing/stale indicators, score version, policy action.
-RECOVERY: a late event may affect a later decision, never recompute D's original action.
-```
+### Step 1 — Fix the cohort, the base rate, and the cost scalars
 
-The distinction matters for identity. `card_token`, `merchant_namespace + merchant_id`, device pseudonym, and account linkage are distinct keys with different collision and consent boundaries. A new token is not necessarily a new customer; a shared device is not evidence of common control; and a merchant identifier without its namespace is not a merchant entity. The feature contract retains each key's version and linkage confidence. It uses an explicit “unlinked” state rather than merging identities optimistically.
-
-### 6b. Illustrative action-cost ledger
-Let `p_a` be a **constructed policy scenario** probability that an attempt is fraud if approved; it is not an observed label and must not be backfilled onto a declined attempt. Let `L` be issuer-borne loss if an approved fraud materializes. It is not purchase amount: recovery, network allocation, and liability can make either value higher or lower. Let `q` be challenge completion, `e` the assumed conditional prevention effect after completion, `c_c` the challenge operating cost, `b` challenge abandonment probability, `c_b` its friction valuation, `c_d` the expected legitimate-decline friction valuation, and `c_o` the decline operating cost.
+The constructed cohort is thirty days of eligible attempts in one portfolio.
 
 ```text
-FORMULA [AC-01]: C_approve = n * p_a * L
-FORMULA [AC-02]: C_challenge = n * [p_a * (1 - q*e) * L + c_c + (1-p_a)*b*c_b]
-FORMULA [AC-03]: C_decline = n * [(1-p_a)*c_d + c_o]
-WHERE: n [attempts]; p_a, q, e, b [probabilities in 0..1];
-       L, c_c, c_b, c_d, c_o [currency per applicable attempt].
-CONSTRAINT: AC-02 is a scenario model, not a causal estimate; AC-03 counts immediate
-            modeled friction and operations only. It assigns no invented fraud label or
-            prevented-loss counterfactual to a declined attempt.
+Cohort size            N  = 5,000,000 attempts
+Confirmed fraud        P  = 10,000 attempts
+Base rate              pi = P / N = 10,000 / 5,000,000 = 0.0020 = 0.20%
+Average ticket         T  = $62.00
+Issuer margin rate     m  = 18%
+Recovery share         r  = 85%   (share of a fraudulent approved amount the issuer ultimately bears)
 ```
 
-Use one constructed portfolio of 100,000 eligible attempts. The policy sends 95,000 to approve, 4,000 to a supported challenge, and 1,000 to decline. Assume `L=$120`, `q=0.80`, `e=0.70`, `c_c=$0.45`, `b=0.12`, `c_b=$4`, `c_d=$6`, and `c_o=$0.20`. The scenario probabilities are 0.0025, 0.0400, and 0.1200 respectively. They are inputs for arithmetic, not labels, scores, or observed calibration.
+`V`, the issuer-borne loss when a fraudulent attempt is approved, is the quantity the whole ledger
+is denominated in. It is not the ticket size and it is not the ticket size times the margin. It has
+two components that behave differently and must be added rather than multiplied.
 
-| Action | Attempts `n` | Scenario `p_a` | Formula substitution | Scenario cost | What it does **not** establish |
-|---|---:|---:|---|---:|---|
-| Approve | 95,000 | 0.0025 | `95,000*0.0025*$120` | $28,500.00 | Actual fraud count or issuer loss |
-| Challenge | 4,000 | 0.0400 | `4,000*[.04*(1-.80*.70)*120+.45+.96*.12*$4]` | $12,091.20 | Completion, prevention, or abandonment effect |
-| Decline | 1,000 | 0.1200 | `1,000*[.88*$6+$.20]` | $5,480.00 | Fraud among declined attempts or fraud displaced later |
-| **Total** | **100,000** | — | Sum of constructed rows | **$46,071.20** | Net causal portfolio value |
-
-Independent arithmetic: challenge residual loss is `4,000*.04*.44*$120 = $8,448`; operating cost is `$1,800`; modeled legitimate abandonment friction is `4,000*.96*.12*$4 = $1,843.20`; their sum is `$12,091.20`. Total cost per 1,000 eligible attempts is `$46,071.20 / 100 = $460.712`, or `$460.71` rounded to cents. The action counts sum to 100,000. This ledger supports a requirement for a cost schedule before threshold selection; it does not prove that this policy beats rules-only.
-
-### 6c. Friction and capacity sensitivity
-The proposed friction budget is at most 5% challenged attempts and at most 500 challenge abandonments per 100,000 eligible attempts. At 4,000 challenges, the challenge rate is `4,000/100,000 = 4%`. With the scenario abandonment rate of 12%, expected abandoned challenges are `4,000*.12 = 480`, leaving only 20 events of budget headroom. That narrow headroom is a policy-calibration constraint, not a claim that 480 customers will abandon.
-
-| Scenario | Challenge count | Challenge rate | Abandonment assumption | Expected abandonments | Contact rate / contacts | Capacity consequence at 120 contacts/day |
-|---|---:|---:|---:|---:|---:|---|
-| Base | 4,000 | 4.0% | 12% | 480 | 4% / 160 | 1.33 days of one-day intake |
-| Lower friction | 4,000 | 4.0% | 8% | 320 | 2% / 80 | 0.67 day |
-| Higher friction | 4,000 | 4.0% | 16% | 640 | 6% / 240 | 2.00 days; breaches abandonment budget |
-| Higher volume | 5,000 | 5.0% | 12% | 600 | 4% / 200 | Budget breach; do not expand without a changed guardrail |
-
-The support calculation is `contacts / 120 contacts per day`; it assumes all contacts arrive at once, equal handling effort, and available staff. It is a deliberately crude capacity boundary, not an operations forecast. “Challenge succeeds” and “customer does not contact support” are different outcomes. A completed challenge can still be fraudulent; an abandoned challenge can be legitimate or fraudulent; neither can be converted into a fraud label.
-
-### 6d. Calibration and causal boundary
-For score band `k`, calibration is assessed only on a fixed mature, action-defined population:
+The first is the amount the issuer ultimately bears on the transaction after representment and
+write-offs. The constructed convention assigns 85% to the issuer, the remainder falling on merchants
+or acquirers under the applicable liability arrangement:
 
 ```text
-FORMULA [CAL-01]: observed_rate_k = mature_confirmed_fraud_k / eligible_attempts_with_mature_outcome_k
-WHERE: numerator [attempts]; denominator [attempts]; k is a frozen score band.
-CONSTRAINT: report unresolved outcomes separately; do not substitute approved-only labels for
-            all attempted authorizations, and do not interpret this association as action effect.
-NUMERICAL EXAMPLE: illustrative only; no mature cohort or calibration measurement exists.
-INTERPRETATION: a well-calibrated approval-risk estimate still does not tell us whether
-                challenge or decline changes loss more favorably than approval.
+Amount borne = T * r = 62.00 * 0.85 = 52.70
 ```
 
-Approved-only outcomes select on the historic action: approved attempts may generate disputes and issuer-loss records, while declined attempts lack the unobserved “would have been approved” outcome. Challenges select on capability and policy as well as score. Investigation confirms a subset chosen for work; it is a downstream evidence process, not the authorization decision and not a synchronous substitute for it. Therefore the approved-only fraud rate, investigator precision, and challenge completion rate are each insufficient to estimate `e` or prevented loss.
-
-The safe experimental estimand is the difference in mature net cost per eligible **assigned** attempt between preapproved policies, using account-level random assignment where linked retries could interfere. Include score failures, fallbacks, unsupported challenge channels, and all terminal action paths in the assigned denominator. Exclude only predeclared ineligible requests before assignment. Never randomize mandatory controls away, never use an unbounded exploration policy, and stop/roll back on pre-agreed customer-harm, security, availability, or friction triggers. If randomization is unavailable, an observational comparison can prioritize questions but cannot identify the action-specific effect without additional defensible assumptions.
-
-### 6e. Mature-cohort measurement protocol
-The proposed comparison begins with one immutable assignment record per eligible attempt: assignment cohort, account randomization key, authorization attempt ID, policy version, challenge-eligibility flag, chosen action, fallback reason, and decision time. It is then linked to outcomes without changing the original population. A reversal, retry, dispute, customer contact, recovery, or investigation outcome is an event attached to that record, not a replacement decision.
-
-For reporting date `T`, define an attempt as mature only when `T - authorization_time >= 90 days` in the declared reporting time zone. This is a proposed administrative window. The dashboard must show three mutually exclusive states for every assigned attempt: mature with reconciled outcome, mature but unresolved, and not yet mature. A metric that drops the latter two without reporting them creates an artificial denominator improvement.
+The second is the fixed handling cost per confirmed fraud: case investigation, chargeback filing,
+and the representment work that is incurred whether or not the amount is recovered. This is a
+per-event cost, not a fraction of the ticket, and it is where most derivations of `V` go wrong by
+omitting it, because it does not appear in the transaction record at all.
 
 ```text
-FORMULA [MC-01]: mature_coverage = reconciled_mature_attempts / assigned_attempts_old_enough
-FORMULA [MC-02]: ITT_net_cost = sum(reconciled issuer loss + pre-agreed action costs)
-                              / all eligible assigned attempts
-WHERE: all terms are grouped by assigned policy; costs [currency]; denominator [attempts].
-CONSTRAINT: report unresolved mature records and not-yet-mature records separately;
-            no individual declined attempt receives an unobserved fraud label.
-NUMERICAL EXAMPLE: illustrative reporting shape only; no cohort has been measured.
-INTERPRETATION: coverage qualifies evidence completeness, while ITT retains every assignment.
+Dispute and investigation handling, per confirmed fraud = 20.40
+V = 52.70 + 20.40 = 73.10
 ```
 
-Mature coverage should be reported by action, channel, fallback reason, and assignment cohort because a high aggregate rate can conceal one poorly observed pathway. For example, a decline path may have very sparse downstream loss evidence precisely because it stopped the initial purchase. That sparsity is a reason not to claim individual prevented loss, not a reason to remove declines from the policy denominator.
+Adding a per-event cost to a per-ticket amount is legitimate only because the two are both
+*expected values per approved fraud* and the cohort's ticket distribution is stationary within the
+window. If ticket sizes were bimodal, the sum would still be correct in expectation but the variance
+would be large enough that a single `V` would misprice both modes; section 4's assumption A-05 exists
+to force that check.
 
-The cost schedule is calibrated before a trial by the accountable owner, with finance or loss-accounting review for `L` and customer-operation review for friction valuations. Calibration means selecting and versioning assumptions that map outcomes to a decision objective; it does not mean that the risk score has been proved correct. Each schedule needs an effective date, currency, channel scope, loss-recovery convention, and explicit treatment of disputes still pending. Changing any of these produces a new policy analysis.
+The honest structure of this figure is that `V` is an input calibrated from loss experience, and the
+decomposition above is a plausibility check on it rather than its derivation. A programme that
+derives `V` from a formula instead of measuring it will misprice the threshold by however wrong the
+formula is, and it will never find out, because no experiment tests `V` directly.
 
-Threshold selection proceeds in this order:
+Friction scalars, each of which must be signed off by the business:
 
-1. Freeze point-in-time feature and label definitions on historical temporal folds.
-2. Select candidate model and calibration procedure without the final forward period.
-3. Enumerate policy thresholds subject to hard challenge, abandonment, decline, latency, and investigation-capacity constraints.
-4. Present surviving policies with cost components, action counts, channel eligibility, and uncertainty rather than a single “best” score cutoff.
-5. Freeze the rules-only comparator and proposed policy before the guarded prospective comparison.
+```text
+Margin at risk on a declined legitimate attempt  mgn  = 62.00 * 0.18 = 11.16
+Service cost per decline (contact, goodwill)      svc  = 2.40
+c_dec = mgn + svc = 13.56
+Challenge send cost (SMS or push)                 c_sms = 0.43
+Challenge abandonment rate                        ab    = 4.5%
+Support cost per abandoned challenge              c_ab  = mgn + 3.20 = 14.36
+c_chal = c_sms + ab * c_ab = 0.43 + 0.045 * 14.36 = 0.43 + 0.6462 = 1.0762
+Challenge effectiveness                           e     = 0.65
+```
 
-The historical stage may eliminate a policy that cannot meet friction or latency constraints. It cannot validate `e`, the action-specific prevention effect, when historic actions determined which outcomes were observable. A prospective experiment estimates an average policy effect for its eligible population; it does not license a claim that any particular decline “would have prevented” a known amount.
+`e` is the probability that a fraudulent attempt routed to challenge does not complete as fraud.
+It is the weakest number in the ledger, and section 9 explains why it cannot be estimated from
+observational data alone.
 
-### 6f. Fallback boundary trace
-Consider one illustrative request that reaches the gateway with 100 ms remaining. Gateway validation uses 8 ms, feature read waits 55 ms and reports a stale critical velocity feature, leaving 37 ms. The configured boundary says the model path requires at least 30 ms inference plus 10 ms policy/response reserve. Because 37 is less than 40 ms, the service must skip model inference and return the signed channel fallback; waiting for a perhaps-fast inference violates the reserve.
+```text
+FORMULA [D-01]: c_chal = c_sms + ab * c_ab
+WHERE: c_sms [currency/attempt] is the per-challenge delivery cost; ab [fraction] is the share of
+       challenges that legitimate customers abandon; c_ab [currency/abandonment] is margin plus
+       support cost triggered by an abandonment.
+CONSTRAINT: ab measured on legitimate challenged attempts only; if ab is measured on all challenged
+       attempts it is inflated by fraudsters abandoning, and c_chal is overstated.
+NUMERICAL EXAMPLE: 0.43 + 0.045 * 14.36 = 0.43 + 0.6462 = 1.0762.
+INTERPRETATION: a challenge costs about one thirteenth of a decline (1.08 versus 13.56), which is
+       why the incumbent can afford to challenge 4.2% of volume while declining only 0.22%.
+```
 
-The trace is: `REQUEST_RECEIVED -> VALIDATED -> FEATURE_STALE -> FALLBACK_SELECTED -> DECISION_PERSISTED -> RESPONSE_SENT -> ASYNC_AUDIT`. The audit record includes remaining budget, feature age, fallback reason, policy version, and terminal action. It must not invent a model score. On a valid retry with the same attempt key and request digest, the persisted action is returned even if the feature store has since recovered.
+Independent re-check: 0.045 * 14.36 = 0.6462 exactly; 0.43 + 0.6462 = 1.0762. Scaling check: if
+ab doubles to 9%, c_chal rises to 0.43 + 1.2924 = 1.7224, a 60% increase in challenge cost even
+though the challenge send cost is unchanged. This is why abandonment, not SMS price, is the
+commercial sensitivity in the challenge arm.
 
-This trace is a design oracle, not evidence of measured latency. Its boundary is intentional: if the fallback itself cannot be returned before the real contracted deadline, the design is not safe enough to operate; adding a faster model does not repair a failing authorization path.
+### Step 2 — Derive the break-even probability for each action
+
+For a single attempt with calibrated fraud probability `p`, compare expected cost under each
+action. Approving costs `p * V`: with probability `p` the attempt is fraud and the issuer bears
+`V`.
+
+Declining costs `(1 - p) * c_dec`: with probability `1 - p` the attempt is legitimate and the issuer
+pays the friction cost. A decline prevents the fraud loss entirely, which is an assumption examined
+at the end of this step.
+
+Challenging costs `c_chal + p * (1 - e) * V`: the challenge is paid for regardless of outcome, and
+the fraud loss is borne only when the attempt was fraud and the challenge failed.
+
+```text
+FORMULA [D-02]: decline break-even
+q_dec = c_dec / (c_dec + V)
+WHERE: q_dec [probability] is the fraud probability at which declining and approving cost the same;
+       c_dec [currency] is the friction cost of a false decline; V [currency] is issuer loss per
+       approved fraud.
+CONSTRAINT: requires V and c_dec constant across the band and requires that a decline actually
+       prevents the loss (no attacker substitution, no re-attempt at another merchant).
+NUMERICAL EXAMPLE: 13.56 / (13.56 + 73.10) = 13.56 / 86.66 = 0.15648 = 15.65%.
+INTERPRETATION: below 15.65% fraud probability, declining costs the issuer more than approving.
+```
+
+Derivation, so the formula is not taken on trust. Set approve equal to decline:
+
+```text
+p * V = (1 - p) * c_dec
+p * V = c_dec - p * c_dec
+p * (V + c_dec) = c_dec
+p = c_dec / (V + c_dec)
+```
+
+The same construction for the challenge arm, against approving:
+
+```text
+c_chal + p * (1 - e) * V = p * V
+c_chal = p * V - p * V + p * e * V = p * e * V
+q_chal = c_chal / (e * V)
+```
+
+```text
+FORMULA [D-03]: challenge break-even against approving
+q_chal = c_chal / (e * V)
+WHERE: e [fraction] is challenge effectiveness; all other symbols as above.
+CONSTRAINT: e > 0 strictly. If e = 0 the denominator vanishes and q_chal is undefined, which is the
+       boundary case: a challenge that never prevents anything is pure cost and must be removed
+       from the action set rather than given a threshold.
+NUMERICAL EXAMPLE: 1.0762 / (0.65 * 73.10) = 1.0762 / 47.515 = 0.022649 = 2.26%.
+INTERPRETATION: challenging becomes worthwhile at a fraud probability of 2.26%, eight times lower
+       than the decline threshold, because challenge is cheap and partially effective.
+```
+
+The third comparison is the one most often skipped, and it decides the shape of the whole policy:
+when does declining beat challenging?
+
+```text
+Decline cost   = (1 - p) * c_dec
+Challenge cost = c_chal + p * (1 - e) * V
+Set equal:
+(1 - p) * c_dec = c_chal + p * (1 - e) * V
+c_dec - p * c_dec = c_chal + p * V - p * e * V
+c_dec - c_chal = p * (c_dec + V - e * V)
+p = (c_dec - c_chal) / (c_dec + (1 - e) * V)
+```
+
+```text
+FORMULA [D-04]: decline-versus-challenge crossover
+q_dc = (c_dec - c_chal) / (c_dec + (1 - e) * V)
+WHERE: numerator [currency] is the cost saved by declining instead of challenging a legitimate
+       attempt; denominator [currency] is the extra cost of declining when the attempt is fraud.
+CONSTRAINT: valid only while c_dec > c_chal. If declining were cheaper than challenging the
+       crossover would be negative and decline would weakly dominate.
+NUMERICAL EXAMPLE: (13.56 - 1.0762) / (13.56 + 0.35 * 73.10) = 12.4838 / (13.56 + 25.585)
+       = 12.4838 / 39.145 = 0.31892 = 31.89%.
+INTERPRETATION: above 31.89% fraud probability, a hard decline beats a step-up challenge.
+```
+
+The three thresholds together define the action regions, and this is the entire policy:
+
+```text
+p < 2.26%            -> approve
+2.26% <= p < 31.89%  -> challenge
+p >= 31.89%          -> decline
+```
+
+Check the regions against direct cost evaluation at three probabilities, computing all three costs
+and taking the minimum:
+
+```text
+p = 2.00%: approve 1.46 | challenge 1.59 | decline 13.29  -> approve wins
+p = 10.00%: approve 7.31 | challenge 3.63 | decline 12.20 -> challenge wins
+p = 50.00%: approve 36.55 | challenge 13.87 | decline 6.78 -> decline wins
+```
+
+Both closed forms above are first-order approximations, and it is worth knowing how good they are
+rather than treating 2.26% and 31.89% as exact. The approximation drops one term: the abandonment
+cost `ab * c_ab` is incurred on legitimate attempts only, so as `p` rises it is paid on a shrinking
+share of the band, and the approximate form treats it as a fixed charge. Carrying the term through:
+
+```text
+Challenge minus approve = ab*(1 - p)*c_ab + c_sms - p*e*V
+Set to zero and solve:
+p*e*V + p*ab*c_ab = c_sms + ab*c_ab
+p = (c_sms + ab*c_ab) / (e*V + ab*c_ab)
+  = 1.0762 / (47.515 + 0.6462) = 1.0762 / 48.1612 = 0.022347 = 2.235%
+
+Decline minus challenge, with the same term:
+(1 - p)*c_dec - ab*(1 - p)*c_ab - c_sms - p*(1 - e)*V = 0
+p = (c_dec - ab*c_ab - c_sms) / ((c_dec - ab*c_ab) + (1 - e)*V)
+  = (13.56 - 0.6462 - 0.43) / (12.9138 + 25.585)
+  = 12.4838 / 38.4988 = 0.324264 = 32.43%
+```
+
+So the exact crossover sits at 2.235% against the approximate 2.265%, and at 32.43% against 31.89%.
+The gaps are 0.03 and 0.54 percentage points. Both are small enough that the action regions are
+unaffected in this cohort, where band volumes are set by the score distribution rather than by the
+edges, but the direction of the error is systematic and worth recording: the approximation
+*understates* the decline crossover, so a policy built on it will decline slightly earlier than the
+cost schedule justifies. On a band with dense mass near 32% that bias would be material. The regions
+below use the approximate forms, because they are what the band solver implements, and the exact
+forms are recorded here as the check on the solver.
+
+Boundary where the linear model breaks. The formula assumes a decline prevents the loss with
+certainty. In card-not-present fraud that is false in two directions. A fraudster whose attempt is
+declined typically re-attempts with another card, another merchant, or the same card at a different
+acquirer; the loss may be displaced rather than prevented, so the true benefit of a decline is less
+than `V` and the crossover moves down. Conversely, under some liability arrangements the issuer is
+not the party bearing the loss on an approved fraudulent transaction, in which case `V` is smaller
+for that merchant band and the whole band should be approved. A single global `V` is therefore a
+convenience, and the case flags it rather than hiding it.
+
+### Step 3 — Convert the action policy into a band volume
+
+A threshold is not a volume. To price the policy the case must know how many attempts fall in each
+band, which requires the score distribution. The constructed distribution below is stated directly
+as counts rather than as a density, because counts are what the ledger consumes and they can be
+checked by addition.
+
+Baseline, the incumbent rules engine over the thirty-day cohort:
+
+```text
+Attempts                  5,000,000
+Declined                  11,000    (0.220% of attempts)   of which confirmed fraud 5,200
+Challenged                210,000   (4.200% of attempts)   of which confirmed fraud 1,600
+Approved without action   4,779,000                        of which confirmed fraud 3,200
+Sum check: 11,000 + 210,000 + 4,779,000 = 5,000,000
+Fraud check: 5,200 + 1,600 + 3,200 = 10,000
+```
+
+Candidate policy, same cohort, same scorer, different bands:
+
+```text
+Attempts                  5,000,000
+Declined                  9,500     (0.190% of attempts)   of which confirmed fraud 4,900
+Challenged                46,000    (0.920% of attempts)   of which confirmed fraud 2,600
+Approved without action   4,944,500                        of which confirmed fraud 2,500
+Sum check: 9,500 + 46,000 + 4,944,500 = 5,000,000
+Fraud check: 4,900 + 2,600 + 2,500 = 10,000
+```
+
+Two features of this table carry the case's main finding. The candidate challenges 164,000 fewer
+attempts, which is where most of the saving comes from, and it declines 1,500 fewer. Neither of
+those is a modelling achievement; both are the result of a policy that prices actions instead of
+using fixed rules. The scorer merely makes the priced band actionable at the required latency.
+
+Precision in each action band, which is the metric that will be quoted in the review and which is
+not the business metric:
+
+```text
+Baseline decline precision    = 5,200 / 11,000  = 47.27%
+Baseline challenge precision  = 1,600 / 210,000 = 0.762%
+Candidate decline precision   = 4,900 / 9,500   = 51.58%
+Candidate challenge precision = 2,600 / 46,000  = 5.652%
+```
+
+A reviewer will read "0.762% challenge precision" and conclude the baseline is broken. It is not.
+At a 0.20% base rate, challenging 4.2% of volume yields 210,000 challenges and can only find a
+fraud if the challenge band contains fraud; 1,600 of 210,000 is a lift of 3.8x over the base rate.
+Low precision in a high-volume, low-cost action band is normal and is the reason precision must be
+paired with the cost of the action in the same sentence.
+
+```text
+FORMULA [D-05]: precision and lift in an action band
+precision_band = TP_band / K_band
+lift_band      = precision_band / pi
+WHERE: TP_band [attempts] are confirmed frauds inside the band; K_band [attempts] is the band
+       volume; pi [fraction] is the population base rate.
+CONSTRAINT: both use the same window and the same label definition; lift is not comparable across
+       base rates, so it must never be quoted without pi.
+NUMERICAL EXAMPLE: baseline challenge band: 1,600 / 210,000 = 0.007619; lift = 0.007619 / 0.0020
+       = 3.81x. Candidate challenge band: 2,600 / 46,000 = 0.056522; lift = 28.3x.
+INTERPRETATION: the candidate concentrates the same control into one fifth of the volume at 7.4
+       times the precision, which is the mechanical source of the cost reduction.
+```
+
+### Step 4 — Build the total cost ledger for both policies
+
+Now the ledger. Four terms: uncaught fraud loss, false-decline friction, challenge delivery cost,
+and abandonment cost. Every term is computed on the attempt denominator.
+
+```text
+FORMULA [D-06]: total policy cost over a cohort
+C = (P - D_pos - e * K_pos) * V + (D - D_pos) * c_dec + K * c_sms + ab * (K - K_pos) * c_ab
+WHERE: P [attempts] confirmed fraud in cohort; D [attempts] declined; D_pos [attempts] declined and
+       confirmed fraud; K [attempts] challenged; K_pos [attempts] challenged and confirmed fraud;
+       e [fraction] challenge effectiveness; ab [fraction] abandonment rate on legitimate
+       challenges; V, c_dec, c_sms, c_ab [currency] as defined in step 1.
+CONSTRAINT: K_pos * e and the abandonment count are rounded to whole attempts; the rounding is
+       applied once, before multiplication, so the printed components add exactly to the total.
+NUMERICAL EXAMPLE: baseline substitution below; candidate substitution below.
+INTERPRETATION: the first term dominates by construction in any real portfolio, which is why a
+       policy that trades fraud loss for friction must be checked, not assumed.
+```
+
+Baseline substitution:
+
+```text
+Prevented by challenge   = round(1,600 * 0.65) = round(1,040.0) = 1,040
+Uncaught fraud           = 10,000 - 5,200 - 1,040 = 3,760
+Fraud loss               = 3,760 * 73.10     = 274,856.00
+False declines           = 11,000 - 5,200 = 5,800
+False-decline friction   = 5,800 * 13.56     =  78,648.00
+Challenge delivery       = 210,000 * 0.43    =  90,300.00
+Abandonments             = round((210,000 - 1,600) * 0.045) = round(9,378.0) = 9,378
+Abandonment cost         = 9,378 * 14.36     = 134,668.08
+Total C_base             = 274,856.00 + 78,648.00 + 90,300.00 + 134,668.08 = 578,472.08
+```
+
+Note the abandonment base: legitimate challenges only, `K - K_pos = 208,400`, not all 210,000.
+Including the fraud attempts would count abandonment of an attack as a customer cost, which
+inflates the friction term and biases the policy toward fewer challenges for the wrong reason.
+
+Candidate substitution:
+
+```text
+Prevented by challenge   = round(2,600 * 0.65) = round(1,690.0) = 1,690
+Uncaught fraud           = 10,000 - 4,900 - 1,690 = 3,410
+Fraud loss               = 3,410 * 73.10     = 249,271.00
+False declines           = 9,500 - 4,900 = 4,600
+False-decline friction   = 4,600 * 13.56     =  62,376.00
+Challenge delivery       = 46,000 * 0.43     =  19,780.00
+Abandonments             = round((46,000 - 2,600) * 0.045) = round(1,953.0) = 1,953
+Abandonment cost         = 1,953 * 14.36     =  28,045.08
+Total C_cand             = 249,271.00 + 62,376.00 + 19,780.00 + 28,045.08 = 359,472.08
+```
+
+The paired difference and its decomposition:
+
+```text
+Fraud loss     274,856.00 - 249,271.00 =  25,585.00   (11.7% of saving)
+False declines  78,648.00 -  62,376.00 =  16,272.00   ( 7.4% of saving)
+Challenge send  90,300.00 -  19,780.00 =  70,520.00   (32.2% of saving)
+Abandonment    134,668.08 -  28,045.08 = 106,623.00   (48.7% of saving)
+Total                                   = 219,000.00
+```
+
+Check the sum: 25,585 + 16,272 = 41,857; 41,857 + 70,520 = 112,377; 112,377 + 106,623 = 219,000.
+Exact, because the inputs were chosen to make it exact; a real ledger would not close to the unit
+and would require a residual line.
+
+Expressed on the business denominator:
+
+```text
+Baseline  = 578,472.08 / 5,000 = 115.69 per 1,000 eligible attempts
+Candidate = 359,472.08 / 5,000 =  71.89 per 1,000 eligible attempts
+Improvement = (578,472.08 - 359,472.08) / 578,472.08 = 219,000 / 578,472.08 = 37.86%
+```
+
+The decomposition is the finding, not the headline. Roughly 81% of the saving comes from
+challenging fewer attempts — 32.2% from delivery cost and 48.7% from abandonment. Only 11.7% comes
+from catching more fraud. If the business case is written as "the model catches more fraud", it
+mis-describes its own arithmetic and will be evaluated on the wrong quantity. The honest statement
+is that the incumbent over-challenged because it had no way to price the challenge, and the
+candidate's contribution is a calibrated probability that makes pricing possible.
+
+### Step 5 — Test whether the improvement survives the cost assumptions
+
+A single-point ledger is not evidence. The table perturbs one input at a time and recomputes both
+policies through the same formula, holding everything else fixed. Baseline is recomputed under the
+perturbed assumption too, because a sensitivity study that only perturbs the candidate answers a
+different question.
+
+| Perturbation | Baseline cost | Candidate cost | Saving | Saving % |
+|---|---|---|---|---|
+| Base case | 578,472 | 359,472 | 219,000 | 37.9% |
+| `V` reduced 20% (to 58.48) | 523,501 | 309,618 | 213,883 | 40.9% |
+| `V` increased 20% (to 87.72) | 633,443 | 409,326 | 224,117 | 35.4% |
+| `e` reduced to 0.50 | 596,016 | 387,981 | 208,035 | 34.9% |
+| `e` increased to 0.80 | 560,928 | 330,963 | 229,965 | 41.0% |
+| Abandonment 2% | 503,656 | 343,891 | 159,765 | 31.7% |
+| Abandonment 8% | 683,214 | 381,285 | 301,929 | 44.2% |
+
+The savings are not stable in absolute terms — they range from 159,765 to 301,929 — but the sign
+and rough magnitude are stable, and that is the claim a decision needs. Note the direction of the
+abandonment sensitivity: a *higher* abandonment rate makes the candidate look better, because the
+saving is dominated by avoided challenge volume. That is a warning sign as much as a comfort: the
+improvement is largest exactly when the incumbent's behaviour is most expensive, so a baseline that
+had already learned to challenge less would shrink this case's headline substantially.
+
+The perturbation most likely to be wrong is `e`, and it moves the answer least, in relative terms.
+That is a useful robustness property and it is worth stating why: the fraud-loss term is only 11.7%
+of the total saving, so `e` cannot move the headline much. A reviewer who attacks `e` and ignores
+the abandonment rate is attacking the load-bearing wall's wallpaper.
+
+### Step 6 — Price the identification problem for `e`
+
+`e = 0.65` is an assumption and it is not identified from observational data. The reason is
+selection: challenge outcomes are observed only for challenged attempts, and an attempt that a
+fraudster abandons at the challenge never becomes a confirmed fraud. So the observed "challenged
+and confirmed fraud" count is a *subset* of the attempts that would have been fraud absent the
+challenge, and the complement is unobservable.
+
+```text
+FORMULA [D-07]: apparent effectiveness and its bias
+Let A = attempts challenged that would have been fraud had no challenge occurred.
+Let O = attempts challenged that mature as confirmed fraud.
+Then O = A * (1 - e), and the naive estimator is 1 - O/A.
+WHERE: A [attempts] is counterfactual and unobservable in an observational design; O [attempts] is
+       observed.
+CONSTRAINT: the estimator is unbiased only if A is known, which requires randomization or a
+       holdout band. Without it, A is replaced by the observed challenged fraud count K_pos, which
+       already excludes the prevented cases. Since K_pos = O by construction, the naive estimator
+       becomes 1 - O/K_pos = 1 - 1 = 0, so effectiveness is estimated as zero.
+NUMERICAL EXAMPLE: suppose the band truly contains A = 4,000 would-be frauds and e = 0.65; then
+       O = 4,000 * 0.35 = 1,400 and 2,600 frauds were prevented but never observed. A practitioner
+       substitutes K_pos = 1,400 for A and computes 1 - 1,400/1,400 = 0, concluding that the
+       challenge prevents nothing.
+INTERPRETATION: the observational estimate is biased to zero effectiveness, and zero effectiveness
+       sends q_chal = c_chal/(e*V) to infinity, which removes the challenge action and pushes the
+       policy toward declining. That is the direction that harms customers rather than the issuer.
+```
+
+The practical consequence is that `e` must come from a randomized challenge on a band where it is
+affordable to withhold the intervention, or from a prior with wide uncertainty carried through the
+sensitivity table. It cannot come from the production ledger no matter how large that ledger is.
+
+A second, subtler bias runs the other way. `K_pos` counts only frauds that were *later* recognized.
+A fraudster who aborts at a challenge and re-attempts elsewhere may generate a confirmed fraud on a
+different attempt, so the same underlying criminal event appears once as an aborted challenge and
+once as a positive elsewhere. This inflates the apparent `K_pos` in other bands and deflates the
+apparent effectiveness. Both biases are real and they do not cancel.
+
+### Step 7 — Check the decision-time budget, not just the offline metric
+
+The policy is only deployable if it fits the deadline. The constructed budget:
+
+```text
+Network and switch overhead          35 ms
+Feature fetch at p99                 12 ms
+Scoring at p99                        5 ms
+Policy and reason-code assembly       3 ms
+Serialization and return             22 ms
+Total at p99                         77 ms
+```
+
+Against a 900 ms p99 allowance this leaves 823 ms of headroom, which is comfortable. Against a
+40 ms allowance on a different rail it fails at every component and the design must move to
+precomputed bands or in-switch rules. The budget must be expressed at p99 because the tail is what
+produces timeouts, and a timeout is not a benign degradation: the authorization returns without a
+decision and the issuer loses the opportunity to act on a potentially fraudulent attempt while
+still paying the customer-relations cost of a failed purchase.
+
+The queueing analogue matters for the asynchronous review path rather than the synchronous one. If
+the policy generates 9,500 declines per thirty days and the disputes function reviews a sample of
+them, the review queue is a `lambda * W` calculation: arrivals times handling time equals the number
+of files in the system at steady state. At 25% sampling that is 2,375 files per month, and at
+3.1 minutes per file with 6,300 staffed minutes per day, the implied utilization is
+2,375 * 3.1 / (30 * 6,300) = 7,362.5 / 189,000 = 3.9%. Comfortable; the point is that it must be
+computed rather than assumed, because a policy that triples declines triples this load.
+
+**Takeaway:** the ledger closes to the unit and the improvement is 37.9%, but 81% of it comes from
+challenging less, not from detecting more.
 
 ## 7. The Finding
-The constructed ledger demonstrates a design requirement, not a winning policy: issuer loss, purchase amount, challenge operating cost, abandonment friction, and decline friction must be separate terms with declared denominators.
-The decline row intentionally has no claimed prevented-fraud benefit because that counterfactual is unobserved.
-At the base scenario, the 4% challenge rate fits the 5% rate budget but its 480 expected abandonments leave only 20 events below the illustrative limit of 500; the 16% sensitivity breaches it.
-The appropriate next decision is to approve a measurable cost specification, mature-cohort definition, feature/identity audit, and guarded comparison against the actual rules-only policy.
-No performance, calibration, fairness, causal effect, or production benefit has been observed.
+
+The constructed candidate policy reduces mature cost from 115.69 to 71.89 per 1,000 eligible
+attempts, a 37.86% paired reduction, driven mainly by removing 164,000 challenges that the
+incumbent could not price. The fraud-loss term falls by 25,585, or 9.3%, which is the part
+attributable to better ranking. The remaining 88.3% of the improvement is a policy and cost
+artefact, available to any team willing to price the actions.
+
+Three conclusions follow, and the third is the one that constrains the programme.
+
+First, the decision object is the band table, not the model. Two teams with the same scorer and
+different band tables will produce different cost outcomes, and the spread between band tables can
+exceed the spread between competing models. Evaluation must therefore hold the score fixed and
+vary the bands, then hold the bands fixed and vary the scores, and report both.
+
+Second, the incumbent's weakness was not discrimination but unpriced action. A rules engine that
+challenges 4.2% of volume because a rule fires is not optimising anything; it is executing a policy
+whose costs were never written down. This is typical and it means the challenger's first deliverable
+should be the cost schedule and the action pricing, which requires no model at all.
+
+Third, the finding rests on `V`, `c_dec`, `ab`, and `e`, none of which is measured in this case.
+Ranked by leverage on the answer: `V` first (it sets the entire loss term and the decline
+threshold), `c_dec` second (it sets how much friction the policy may impose), `ab` third (it is the
+largest single saving component and is also the most volatile cost), and `e` last (the fraud-loss
+term is small). A programme that spends its measurement budget on `e` and estimates the other three
+by assertion has inverted its own sensitivity table.
+
+The honest status of this finding is `not-measured`. It is a constructed demonstration that the
+arithmetic of the decision works and that the dominant term is not the one the business case will
+lead with. It is not evidence that any portfolio would realize a 37.86% reduction.
+
+**Takeaway:** price the actions before building the model; the pricing alone is worth more than the
+ranking, and it is auditable by arithmetic rather than by experiment.
 
 ## 8. System/Solution Design
-### Offline and online architecture
-```text
-OFFLINE: authorization + timestamped feature history + outcomes
-  -> audited as-of joins -> matured temporal splits -> train/calibrate
-  -> frozen evaluation -> registry + policy approval -> signed release
-ONLINE: network request -> gateway/tokenize -> mandatory rules
-  -> bounded feature read -> model/calibrator -> action policy
-  -> approve / eligible challenge / decline -> network response
-  -> durable decision audit -> outcomes and monitoring (asynchronous)
-```
-The feature store is populated asynchronously from canonical events, with availability timestamps and versioned definitions.
-The gateway validates schema and checks a stable attempt ID before invoking the decision service.
-The request carries an absolute deadline and a trace ID, not a raw-card log payload.
-The policy response contains action, reason category, decision ID, policy version, model version if used, and fallback indicator.
-The model cannot itself send a payment response or override mandatory controls.
-The policy engine takes a channel eligibility flag and must not emit challenge where no supported challenge path exists.
-Challenge completion is a separate event and may lead to a new authorized action according to the network contract.
-A customer abandonment is not proof of fraud.
-The same request retry receives the persisted original decision, not a second independent action.
-Any failure to persist an idempotency record must have an explicitly approved safe response; do not claim exactly-once behavior merely from message delivery settings.
-A reversal is tied to its original authorization but does not erase the original decision.
-On an expired decision deadline, return the channel-specific approved fallback rather than waiting for inference.
-The fallback rules are versioned and separately monitored, and their error budget is not hidden inside model availability.
-A stale or missing critical feature causes a preconfigured bounded fallback or missing-aware model path, not fabricated data.
-The exact selection must be approved per feature and channel before deployment.
-Durable logs can arrive after the response, but the business action and idempotency record need a coherent failure contract.
-The platform owner must test partial failures between action persistence, response, and logging.
-A fallback decision records the failure reason and version to enable later reconstruction.
 
-### Sizing and deadline budget
-The following workload is illustrative and not a benchmark.
-Assume 1,000 requests/s average and a 3,000 requests/s peak lasting 10 minutes.
-At a 4,000 requests/s steady tested service capacity, the peak uses 75% of nominal capacity; tail latency still needs measurement.
-Suppose a single feature partition can process 2,000 updates/s during the peak while arrivals are 3,000/s for 600 s.
-By queue conservation, 1,000 updates/s × 600 s = 600,000 queued updates, assuming constant rates and no losses.
-If arrivals then fall to 1,000/s and service remains 2,000/s, net drain is 1,000 updates/s and drain time is 600 s.
-If arrivals remain at or above service capacity, the backlog does not drain; the arithmetic is not a tail-latency guarantee.
-A backlog can make velocity features stale even while the scoring endpoint is healthy.
-Proposed internal budget allocation: 10 ms gateway, 20 ms feature read, 20 ms inference, 10 ms policy, and 40 ms remaining for transport and variance.
-These allocations sum to 100 ms, but component p99 values cannot generally be added to obtain an end-to-end p99.
-Measure the end-to-end distribution under peak and failure conditions; tune or shed work when the deadline is threatened.
-The operating team needs separate dashboards for total request rate, fallback rate, deadline misses, feature age, queue lag, and action distribution.
+### 8a. Offline / Training / Batch Path
+
+The offline path has four jobs, each with a different cadence and a different failure consequence.
+
+The **label assembly job** joins mature outcomes to attempt records. It runs daily, writes an
+immutable snapshot per cohort day, and never mutates a historical label in place — corrections
+arrive as new versions with a reason. Maturity is tracked explicitly: for each cohort week, the
+fraction of attempts whose outcome has landed is plotted as a curve, and no week below 95% maturity
+enters training.
+
+The **snapshot builder** replays the point-in-time feature definitions against historical raw data
+to produce training features. This is the only correct way to build features, because it applies
+the availability rule mechanically instead of relying on an engineer's memory of which join is
+safe. A feature that cannot be rebuilt from the snapshot is removed, not approximated.
+
+The **training job** fits the scorer and the calibration layer on time-ordered folds, never random
+folds. Random folds leak future information through card-level aggregates and through the fact that
+the policy's own action history is stable across a random split but changing across a temporal one.
+
+The **band calibration job** takes the calibrated probabilities and a signed cost schedule and
+solves for the bands that minimize expected cost subject to the friction ceiling. This job is where
+the policy version is produced, and it is deliberately separate from training so that a cost-schedule
+change does not require a model retrain.
+
+### 8b. Online / Serving / Real-Time Path
+
+```text
+[Authorization request]
+        |
+        v
+[eligibility + schema validation] --ineligible--> [incumbent rules, logged]
+        |
+        v
+[point-in-time feature fetch] --stale/error--> [incumbent rules, logged flag]
+        |
+        v
+[scorer] -> [calibration] -> [band table] -> [action + reason code]
+        |
+        v
+[durable decision write] --failure--> [return approved-with-review? no: block and log]
+        |
+        v
+[respond: approve | challenge | decline]
+        |
+        +--> [async: outcome join when label lands]
+```
+
+Four design decisions in that path are worth defending explicitly, because each is a place where a
+cheaper implementation would be silently wrong.
+
+**Persistence before response.** The decision row is written before the action is returned. The
+cost is latency; the benefit is that every action is reconstructable for the evaluation in section
+9 and for dispute defence. An asynchronous write would allow a small window in which the issuer
+acted but cannot prove what it acted on.
+
+**Fallback is an action, not an exception.** When features are stale or the scorer errors, the
+policy executes the incumbent rules and logs `fallback_reason`. A fallback is therefore a fourth
+action with its own count and its own cost, and it must appear in the monitoring dashboard. A
+policy that reports only approve/challenge/decline understates its own complexity.
+
+**Unknown band is a hard error.** If a calibrated probability falls outside the band table — for
+example because the calibration version changed mid-flight — the policy must fail rather than
+default to approve. Defaulting to approve on a table error converts a configuration bug into
+uncontrolled fraud exposure, and it will not be detected because approvals are not logged as
+anomalies.
+
+**Idempotency keyed on the attempt.** A retried authorization with the same network identifier and
+the same attempt sequence returns the stored decision, not a fresh score. Without this, a merchant
+retry after a slow response can receive approve then decline, which produces a customer-visible
+contradiction and a dispute the issuer will lose.
+
+### 8c. Key Design Decisions
+
+| Decision | Alternative rejected | Reason | Residual risk |
+|---|---|---|---|
+| Three priced bands | Single fraud/no-fraud threshold | A challenge and a decline have different costs and different effectiveness | Band edges are unstable when the cost schedule changes |
+| Calibrated probability, not raw score | Rank-only model | The bands are defined on probability, so scale must be meaningful | Calibration drifts with base rate |
+| Synchronous decision persistence | Async write | Auditability and replay | Adds ~3 ms at p99 |
+| Fail-closed on unknown band | Default approve | Prevents silent exposure | Availability risk during a bad deploy |
+| Fallback to incumbent rules | Fallback to allow | Preserves fraud control | Inherits incumbent's weaknesses |
+| Per-band `V` where measurable | Single global `V` | Ticket-size and liability heterogeneity | Requires more measurement |
+
+### 8d. Architecture artifacts and operational readiness
+
+The artifact set that must exist before a production cutover, stated as a checklist a reviewer can
+audit: the signed cost schedule with an owner and date; the band table with a version identifier and
+a change history; the feature register with availability semantics per column; the point-in-time
+snapshot builder and its test suite; the replay harness and one successful full replay; the fallback
+runbook with a named on-call owner; the rollback procedure and the time to execute it; the
+monitoring dashboard with alert thresholds; and the model risk approval with its conditions listed
+as testable statements rather than as prose.
+
+The rollback procedure deserves a specific note. In an authorization path the fastest rollback is
+not a model redeploy; it is a band-table swap or a switch-level flag that routes traffic to the
+incumbent rules. The rollback must be rehearsed, and the rehearsal must include the case where the
+new band table is corrupt, because that is the failure that a flag swap actually fixes.
+
+**Takeaway:** the architecture is boring on purpose; every interesting choice in it is a place where
+a cheap shortcut produces a silent, unlogged error.
 
 ## 9. Evaluation & Validation
-No evaluation has been executed.
-First reproduce the baseline and candidate on point-in-time historical data; this tests implementation consistency, not causal benefit.
-Use rolling temporal folds with frozen feature availability, label maturity, and channel inclusion rules.
-Keep the final forward test unmodified by feature selection, calibration, and threshold tuning.
-Report precision, recall, false-positive rate, calibration, score coverage, and loss components with cohort counts and uncertainty.
-AUC alone cannot establish net value at an operating threshold.
-Evaluate calibration by score band and salient channel and customer slices, including counts and uncertainty for sparse groups.
-Measure total challenge rate, legitimate-decline rate, successful authentication, abandonment, and complaints per eligible request or customer as appropriate.
-For timely loss, compare mature cohorts after the same 90-day observation window; report unresolved and late-label rates.
-Study label-delay curves and run sensitivity analyses for unresolved and selectively observed outcomes.
-Shadow mode checks features, availability, and latency but cannot observe counterfactual decisions or their financial effect.
-Before live testing, agree assignment unit, risk exclusions, capacity, stop rules, effect estimator, and sample size with governance.
-A randomized eligible-account assignment avoids splitting related attempts across policies when interference within account is plausible.
-Retain treatment assignment across retries and report exclusions, noncompliance, and assignment imbalance.
-Compare intent-to-treat outcomes over all assigned eligible attempts, including fallback and missing-score requests.
-Account-level clustering and calendar effects require appropriate uncertainty intervals rather than independent-attempt assumptions.
-An independent audit of declined and low-score cases can inform missing labels, but no audit can reveal every unobserved counterfactual.
-No model is authorized to override mandatory protections for experimentation.
-Prospective stop criteria include critical service failure, customer harm, statistically and practically material guardrail deterioration, or security exposure.
-The thresholds and statistical procedure are deliberately not invented; governance must set them before launch.
-Progress from offline replay to shadow, then a small guarded trial, then staged expansion only after each gate is met.
-Pre-register rollback ownership and criteria; preserve the comparator policy and its data path.
+
+The evaluation contract, stated so that it can be falsified:
+
+| Element | Definition |
+|---|---|
+| Numerator | Sum of mature issuer-borne fraud loss, false-decline friction, challenge delivery, and abandonment cost |
+| Denominator | All eligible authorization attempts assigned to the policy in the cohort |
+| Population | Card-not-present purchase authorizations, one portfolio, one currency |
+| Window | Thirty-day cohort, ninety-day outcome attribution |
+| Comparator | Incumbent rules engine on the same attempts in the same window |
+| Guardrails | False-decline rate, challenge rate, abandonment, complaint rate, timeout rate, subgroup decline parity |
+| Uncertainty | Paired difference with a bootstrap interval over card-level clusters |
+| Status | **Not executed.** No data, no model, no deployment. |
+
+Guardrails are not reported as secondary metrics; each has a stop condition agreed in advance. The
+challenge-rate ceiling is the clearest: if the candidate exceeds the signed ceiling it is rejected
+regardless of its cost saving, because the ceiling encodes a customer-experience commitment that
+the fraud programme does not own. The constructed candidate runs at 0.92% against a 4.26% baseline,
+so the ceiling is not binding here, which is itself informative — the incumbent was far from the
+ceiling, so the constraint that bound it was something else, probably rule authoring capacity.
+
+Uncertainty on the primary comparison. Fraud counts are Poisson-like at the band level, so the
+precision estimates carry binomial error:
+
+```text
+Candidate challenge precision p = 2,600 / 46,000 = 0.056522
+Standard error  = sqrt(p * (1 - p) / n) = sqrt(0.056522 * 0.943478 / 46,000)
+                = sqrt(0.0000011593) = 0.0010768
+95% interval    = 0.056522 +/- 1.96 * 0.0010768 = [0.05441, 0.05863] i.e. [5.44%, 5.86%]
+```
+
+```text
+Candidate decline precision p = 4,900 / 9,500 = 0.515789
+Standard error = sqrt(0.515789 * 0.484211 / 9,500) = sqrt(0.000026295) = 0.005128
+95% interval   = [0.50574, 0.52584] i.e. [50.57%, 52.58%]
+```
+
+These intervals describe sampling error in the constructed cohort and would exist in a real one.
+They do not describe the error that matters most, which is model and label bias, and that error is
+not quantifiable from this design.
+
+Sample size for a prospective test. To detect a one-percentage-point difference in challenge-band
+precision from a baseline of 5.65%, at 95% confidence and 80% power, the standard normal
+approximation gives:
+
+```text
+n = 7.849 * p * (1 - p) / d^2 = 7.849 * 0.056522 * 0.943478 / 0.01^2
+  = 7.849 * 0.053328 / 0.0001
+  = 0.41857 / 0.0001 = 4,186 challenged attempts per arm
+```
+
+At the candidate's 46,000 challenges per thirty days, that is roughly 5.5 days per arm, which is
+comfortable. But the test that matters is not precision; it is the paired cost difference, which
+requires the full cohort and a mature outcome window, so the binding duration is the ninety-day
+attribution, not the sample size.
+
+Executed versus not executed, stated plainly:
+
+| Check | Status | Consequence |
+|---|---|---|
+| Arithmetic closure of the ledger | Executed by hand and by script | Components add to the total exactly |
+| Threshold derivation at three probabilities | Executed | Regions match direct cost minimization |
+| Sensitivity to `V`, `e`, `ab` | Executed | Sign stable, magnitude varies 31.7% to 44.2% |
+| Baseline measurement | Not executed | The 578,472 baseline is constructed, not observed |
+| `e` estimation | Not executed | Identified only by randomization; assumption here |
+| Latency at p99 | Not executed | Budget is arithmetic, not a load test |
+| Subgroup decline parity | Not executed | Guardrail undefined without a protected-attribute policy |
+| Causal effect of the policy | Not executed | Requires a holdout; observational ledger cannot supply it |
+
+The last row is the one that a reviewer should press on. The ledger computes the cost of two
+policies on the same cohort, which is a *counterfactual comparison*, not an experiment. The
+candidate's band volumes were assigned by assumption; in a real test they would be realized only if
+the policy were live, and the attempts it acted on would then behave differently from the attempts
+the baseline acted on. That is why a shadow deployment establishes latency and data integrity but
+never the cost difference, and why the only clean evidence is a randomized holdout with a
+pre-registered analysis.
+
+**Takeaway:** the arithmetic is verified, the evidence is absent, and the difference between those
+two statements is the entire content of the evaluation section.
 
 ## 10. Action Taken
-No organizational action, deployment, approval, training, experiment, or customer intervention is evidenced.
-This case recommends documenting the existing rules and data contracts before approving the proposed design.
-The proposed owner is the issuer fraud product owner, supported by security, model risk, platform, and customer operations.
-The first deliverable would be a jointly approved decision and cost specification, not an unreviewed production threshold.
-A deployment decision remains conditional on audited data, tested fallback, legal review, and prospective results.
+
+No action was taken. No model was trained, no policy was deployed, no customer was affected.
+
+The proposed sequence, in an order chosen so that each step can kill the programme cheaply:
+
+1. Write and sign the cost schedule: `V`, `c_dec`, `c_sms`, `c_ab`, `ab`, and the friction ceiling.
+   This requires no model and it is the step most likely to reveal that the programme's assumed
+   value is wrong.
+2. Measure the incumbent: band volumes, band precisions, fallback rate, timeout rate, and complaint
+   rate over the same thirty days. Without this there is no comparator and no baseline.
+3. Measure `ab` on legitimate challenged attempts, segmented by channel, because abandonment is the
+   largest single cost component and the one most likely to have changed.
+4. Build the point-in-time snapshot builder and pass the availability audit for every candidate
+   feature.
+5. Run the offline band search against the signed schedule and compare candidate bands at *equal
+   volume* as well as at equal cost, so that the volume effect and the ranking effect are separated.
+6. Shadow the scorer to establish latency at p99 and data integrity. Do not interpret shadow results
+   as a cost estimate.
+7. If and only if steps 1–6 pass, run a randomized holdout on an eligible band with a
+   pre-registered primary metric and a stop rule.
+
+Step 5 contains the discipline that most programmes skip. Comparing bands at equal cost conflates
+two effects; comparing at equal volume isolates ranking quality and shows whether the scorer earns
+its place at all. In the constructed case the equal-volume comparison is uncomfortable: if the
+candidate is forced to challenge 210,000 attempts, its precision advantage shrinks because it must
+reach deep into the score distribution, and the incremental fraud caught is small relative to the
+added delivery cost. The case does not compute that variant, and it should be computed before any
+deployment decision.
+
+**Takeaway:** the first three actions are measurement and paperwork; the model is step four.
 
 ## 11. Outcome & Results
-| Result type | Status | Evidence |
-|---|---|---|
-| Constructed action-cost and friction ledger | Arithmetic checked | Section 6 constructed inputs; not sampled transactions |
-| Mature-cohort measurement | Not executed | No authorization, outcome, or assignment extract |
-| Offline comparison | Not executed | No data or model artifacts |
-| Pilot or prospective experiment | Not executed | No trial record |
-| Production/customer impact | Not measured | No deployment, complaints, or reconciled loss feed |
-| System latency, fallback, and throughput | Not measured | Deadline trace and sizing inputs are illustrative design checks |
-| Return on investment | Not measured | No attributable costs or benefits |
 
-The `$46,071.20` ledger total is a conditional sum of constructed assumptions, not realized savings and not a comparison with rules-only. The base scenario's 480 abandoned challenges and the fallback trace are likewise arithmetic/design consequences, not observed customer behaviour or availability. No action-specific effectiveness has been measured: declined attempts lack their unobserved approval outcome, and challenge outcomes mix capability, customer choice, and risk. A valid business result needs the mature, assigned-policy comparison described in Sections 6e and 9.
+`not-measured`. No production outcome exists. The constructed ledger's results are restated here as
+arithmetic, not as findings about a business:
+
+| Quantity | Baseline | Candidate | Difference |
+|---|---|---|---|
+| Total cost, cohort | 578,472.08 | 359,472.08 | -219,000.00 |
+| Cost per 1,000 attempts | 115.69 | 71.89 | -43.80 |
+| Uncaught fraud attempts | 3,760 | 3,410 | -350 |
+| Prevented share of fraud | 62.4% | 65.9% | +3.5 pp |
+| Declines | 11,000 | 9,500 | -1,500 |
+| Challenges | 210,000 | 46,000 | -164,000 |
+| Decline precision | 47.27% | 51.58% | +4.31 pp |
+| Challenge precision | 0.762% | 5.652% | +4.89 pp |
+| Challenge rate | 4.20% | 0.92% | -3.28 pp |
+
+The prevented-share row is the only one that speaks to fraud control directly, and it moves by 3.5
+percentage points while the cost moves by 37.9%. Those two numbers must be reported together.
+Reporting only the cost improvement would imply the programme is a fraud-control success; reporting
+only the 3.5 point gain would imply it is marginal. The truth is that most of the value is in
+stopping an expensive habit, and habit changes are cheap to make and hard to justify.
+
+A second honest limitation: the cohort is a single thirty days. Fraud is seasonal, and a policy
+tuned on a peak season will over-challenge in a trough. Any real result must be shown on at least
+four consecutive cohorts with the band table frozen, which is the cheapest possible out-of-time test
+and the one most often omitted.
+
+**Takeaway:** the cost improvement is real arithmetic and unreal evidence; the fraud-control
+improvement is small and is the number that would actually be audited.
 
 ## 12. Failure Modes & What Went Wrong
-No incident or failed deployment is reported. These are proposed fault-injection and review diagnostics; each is a distinct mechanism, not evidence that it occurred.
 
-### Diagnostic 01 — Late velocity state
-**Symptom:** burst attempts receive unexpectedly low velocity values.
-**Competing causes:** stream lag, hot-key skew, or a genuinely quiet history.
-**Discriminator:** compare source event time, availability watermark, partition lag, and the retained decision snapshot.
-**Bounded response:** mark state stale, use the approved channel fallback, and retain the stale reason.
-**Recovery:** repair/replay state only for future decisions; never overwrite the original decision snapshot.
-**Verification:** inject late events and confirm that only later requests see the repaired aggregate.
-**Owner:** platform owner; fraud product owner owns the friction consequence.
-**Boundary:** a fresh timestamp does not prove correct or complete state.
+Each failure below is stated as a mechanism with a discriminating check, because "monitor the model"
+is not a control.
 
-### Diagnostic 02 — Future-information leakage
-**Symptom:** offline ranking or calibration is implausibly strong.
-**Competing causes:** a later dispute/mapping entered the feature join, or there is a real predictive signal.
-**Discriminator:** replay source arrivals and compare each serving feature vector with its offline equivalent.
-**Bounded response:** exclude values unavailable at decision time and refit preprocessing inside temporal folds.
-**Recovery:** invalidate affected offline reports and repeat selection before any policy change.
-**Verification:** a deliberately delayed source field must be absent from earlier reconstructed decisions.
-**Owner:** model risk owner.
-**Boundary:** event time without availability time is not sufficient proof against leakage.
+### F-01 — Post-decision outcome leakage through the label join
 
-### Diagnostic 03 — Immature labels mistaken for improvement
-**Symptom:** a recent cohort shows lower confirmed fraud after a policy change.
-**Competing causes:** reporting delay, failed label ingestion, or a real change.
-**Discriminator:** plot label source and adjudication status by cohort age and assignment, including unresolved counts.
-**Bounded response:** censor immature cohorts from comparative conclusions and retain their denominator.
-**Recovery:** rerun the report only after its predeclared maturity window or an approved survival adjustment.
-**Verification:** later snapshots reconcile earlier unresolved rows rather than silently changing denominators.
-**Owner:** risk analytics owner.
-**Boundary:** a 90-day window is proposed, not proven adequate for this issuer.
+**Mechanism.** The label table is joined on card and date rather than on attempt identifier. A single
+chargeback on a card then labels every attempt on that card in the window, including attempts made
+after the chargeback was raised. The offline model learns "this card has a dispute in its future",
+which is a real and available pattern in the training set and impossible at serving time.
 
-### Diagnostic 04 — Approved-only selection
-**Symptom:** approved transactions appear to have a different fraud rate than declines.
-**Competing causes:** policy selection, true risk separation, or different label ascertainment.
-**Discriminator:** tabulate action, label-source coverage, maturity, audit sampling probability, and missing outcomes together.
-**Bounded response:** report action-specific observed outcomes; do not label a decline as fraud/nonfraud from its score.
-**Recovery:** use an approved independent audit where safe, with its selection mechanism documented.
-**Verification:** every reported rate names its action-defined denominator.
-**Owner:** model risk owner.
-**Boundary:** an audit informs label gaps; it cannot reveal every declined counterfactual.
+**Symptom.** Offline AUC that does not reproduce in shadow; feature importance concentrated on
+card-level dispute aggregates.
 
-### Diagnostic 05 — Challenge abandonment treated as fraud
-**Symptom:** challenge completion falls while apparent fraud falls.
-**Competing causes:** attack deterrence, checkout/customer abandonment, capability outage, or label delay.
-**Discriminator:** compare assigned cohorts' completion, abandonment, contact, mature loss, and capability rates.
-**Bounded response:** count abandonment as friction until independently adjudicated; do not relabel it as fraud.
-**Recovery:** freeze threshold expansion if the abandonment guardrail is breached.
-**Verification:** terminal challenge states reconcile to one eligible-assignment record.
-**Owner:** fraud product owner with customer operations.
-**Boundary:** an authentication success also does not prove legitimacy.
+**Competing causes.** Genuine strong signal from card history; a serving-time bug producing different
+features; a genuine population shift between training and shadow.
 
-### Diagnostic 06 — Identity collision or overlinking
-**Symptom:** a merchant or device feature becomes a concentrated risk hotspot.
-**Competing causes:** namespace collision, token rotation, shared device, or a real concentration.
-**Discriminator:** inspect identifier namespace, mapping version, linkage confidence, and collision samples.
-**Bounded response:** separate ambiguous identities and route them to explicit unknown/unlinked states.
-**Recovery:** rebuild only future aggregates under the corrected mapping; preserve historical mapping versions.
-**Verification:** fixtures cover equal local IDs across acquirers, shared devices, and rotated tokens.
-**Owner:** data owner with privacy review.
-**Boundary:** joining more identifiers can increase both signal and unjustified linkage harm.
+**Discriminating check.** Rebuild the label join keyed on attempt identifier only, and re-score. If
+performance collapses, the leak was the join. Separately, for a sample of positive attempts, print
+the decision timestamp next to the dispute-open timestamp; any positive whose dispute predates the
+attempt is a labelling defect, not a signal.
 
-### Diagnostic 07 — Model/policy calibration mismatch
-**Symptom:** mature observed rates differ materially by score band or channel.
-**Competing causes:** population shift, delayed labels, action selection, or an artifact mismatch.
-**Discriminator:** use frozen mature cohorts, coverage counts, and model/calibrator/schema digests.
-**Bounded response:** hold threshold changes until the source of mismatch is isolated.
-**Recovery:** recalibrate only on approved representative historical data and revalidate forward.
-**Verification:** reliability reporting carries unresolved outcome rate and confidence intervals.
-**Owner:** model risk owner.
-**Boundary:** probability calibration does not estimate the benefit of challenge or decline.
+**Correction.** Label at attempt grain; treat a card-level dispute as a property of the card's
+history up to the decision time, not of the whole window.
 
-### Diagnostic 08 — Deadline breach and unsafe fallback
-**Symptom:** missing scores or issuer-boundary deadline expirations rise.
-**Competing causes:** model saturation, feature latency, transport delay, or queueing.
-**Discriminator:** trace absolute deadline remaining at gateway, feature, inference, policy, and response.
-**Bounded response:** return the preapproved per-channel rules fallback before expiry and record the reason.
-**Recovery:** shed optional enrichment, restore capacity, and separately evaluate fallback action distribution.
-**Verification:** end-to-end load fault injection proves fallback is returned within the contracted boundary.
-**Owner:** platform owner.
-**Boundary:** component p99 sums do not prove end-to-end p99.
+**Verification.** A held-out cohort scored with the fixed join shows performance within the shadow
+band, and no positive attempt has a dispute timestamp earlier than its authorization.
 
-### Diagnostic 09 — Retry produces a second action
-**Symptom:** one network attempt has conflicting approve/challenge/decline records.
-**Competing causes:** missing idempotency persistence or two genuine attempts.
-**Discriminator:** compare stable attempt key, request digest, retry metadata, and durable decision ID.
-**Bounded response:** return the stored terminal response for a valid retry; reject digest conflict by contract.
-**Recovery:** reconcile action and response logs without retrospectively changing the authorization action.
-**Verification:** inject response loss after commit and assert one action across retries.
-**Owner:** authorization platform owner.
-**Boundary:** broker delivery semantics alone do not provide end-to-end exactly-once action.
+### F-02 — Challenge effectiveness estimated from the challenged set
 
-### Diagnostic 10 — Unsupported challenge emitted
-**Symptom:** policy selects challenge on a channel without a usable authentication route.
-**Competing causes:** stale capability map, parser regression, or policy configuration error.
-**Discriminator:** inspect channel capability version and network response code for each action.
-**Bounded response:** use that channel's approved non-challenge policy and alert on any forbidden action.
-**Recovery:** pin the last valid capability mapping and retest contracts before restoration.
-**Verification:** exhaustive capability fixtures reject challenge where eligibility is false.
-**Owner:** payment integration owner.
-**Boundary:** channel labels and challenge eligibility are related but not interchangeable.
+**Mechanism.** `e` is estimated as one minus the fraction of challenged frauds that completed. But
+frauds prevented by the challenge never appear as completed frauds, so they are missing from the
+numerator by construction. The estimator is biased toward zero, which understates challenge value
+and pushes the policy toward declining.
 
-### Diagnostic 11 — Cost schedule is silently changed
-**Symptom:** an apparently optimal threshold moves without score-distribution change.
-**Competing causes:** altered loss allocation, friction valuation, or accidental configuration drift.
-**Discriminator:** compare signed cost schedule and policy hash alongside action counts.
-**Bounded response:** block unapproved cost changes; treat an approved schedule change as a new policy.
-**Recovery:** restore the last approved bundle while governance reviews the economic assumption.
-**Verification:** replay fixed requests against versioned schedules and explain each action difference.
-**Owner:** fraud product owner.
-**Boundary:** a purchase amount cannot substitute for reconciled issuer loss.
+**Symptom.** The fitted band table places the challenge/decline crossover far lower than the cost
+schedule implies, so the policy declines more than the arithmetic supports.
 
-### Diagnostic 12 — Decline friction exceeds budget
-**Symptom:** legitimate-decline complaints or appeals rise after a release.
-**Competing causes:** threshold change, traffic mix change, fallback expansion, or complaint-ingestion change.
-**Discriminator:** compare eligible denominators, policy/fallback reasons, mature outcomes, and complaint coverage.
-**Bounded response:** roll back the policy independently of the score artifact if a pre-agreed guardrail trips.
-**Recovery:** preserve the affected cohort and decision logs for review rather than deleting “bad” events.
-**Verification:** canary reporting separates primary-policy and fallback friction.
-**Owner:** fraud product owner with customer operations.
-**Boundary:** complaints are a guardrail signal, not a complete legitimate-decline label.
+**Competing causes.** A genuinely low challenge effectiveness on this channel; a cost schedule that
+mis-states `c_dec`; a channel where the challenge is often unavailable and silently degraded.
 
-### Diagnostic 13 — Investigation is confused with authorization
-**Symptom:** a proposal promises analysts will decide an in-flight authorization.
-**Competing causes:** unclear workflow ownership or an attempt to avoid policy calibration.
-**Discriminator:** measure the authorization deadline against actual investigation queue and handling times.
-**Bounded response:** keep authorization terminal; send post-decision investigation only where its separate objective permits.
-**Recovery:** define investigation referral, evidence, capacity, and feedback as a downstream workflow.
-**Verification:** process trace shows no analyst dependency on the synchronous response path.
-**Owner:** operations owner.
-**Boundary:** investigator confirmation is selected evidence, not a real-time action or universal truth label.
+**Discriminating check.** Compare the estimated `e` against a randomized slice where challenge was
+withheld. If the randomized slice shows materially higher completed-fraud rates for the same score
+band, the observational estimate is biased low and the size of the gap is the bias.
 
-### Diagnostic 14 — Investigation capacity overload
-**Symptom:** referral backlog grows despite high alert precision.
-**Competing causes:** high arrivals, reduced completions, duplicate referrals, or changed referral eligibility.
-**Discriminator:** measure queue arrivals, completions, age, staffing, and unique decision IDs separately.
-**Bounded response:** throttle discretionary referrals under a published capacity rule; do not alter authorization retrospectively.
-**Recovery:** prioritize by a separately validated investigation value policy and preserve deferred rows.
-**Verification:** surge exercise reconciles backlog conservation and escalation counts.
-**Owner:** operations owner.
-**Boundary:** referral capacity cannot be used to justify slower synchronous authorization.
+**Correction.** Estimate `e` from the randomized slice, or carry it as a wide prior and report the
+decision under the whole range rather than at a point.
 
-### Diagnostic 15 — Feature default changes meaning
-**Symptom:** a producer release raises unknown or zero-valued feature rates.
-**Competing causes:** schema drift, missing source, or genuine change in customer history.
-**Discriminator:** inspect producer schema version, field presence, stale flag, and default reason.
-**Bounded response:** route unknown, absent, stale, and genuine zero through distinct contract states.
-**Recovery:** pin or translate the schema only after replay against known fixtures.
-**Verification:** contract tests distinguish null, absent, zero, and expired values.
-**Owner:** data platform owner.
-**Boundary:** a silent zero can fabricate low velocity or a free purchase.
+**Verification.** The band table is stable across the plausible range of `e`; if it is not, the
+decision is not identified and must not ship.
 
-### Diagnostic 16 — Currency conversion leakage or scale error
-**Symptom:** foreign-currency traffic dominates risk actions.
-**Competing causes:** decimal-scale defect, end-of-day rate leakage, or a real attack concentration.
-**Discriminator:** reconcile original minor units, currency reference version, as-of rate time, and converted value.
-**Bounded response:** retain original amount, make conversion missing explicitly, and route malformed values safely.
-**Recovery:** correct the feature definition and rerun point-in-time reconstruction before threshold review.
-**Verification:** boundary fixtures cover currencies, rate changes, zero, and malformed scale.
-**Owner:** data owner.
-**Boundary:** converted authorization amount is still not issuer-borne loss.
+### F-03 — Attacker substitution makes the saved loss fictional
 
-### Diagnostic 17 — Hot key makes features stale
-**Symptom:** fleet throughput looks healthy while one token or merchant partition lags.
-**Competing causes:** concentrated fraud, normal merchant popularity, or poor partitioning.
-**Discriminator:** compare per-partition arrival/service rates and key concentration with freshness flags.
-**Bounded response:** redesign state partitioning without double-counting cross-shard history.
-**Recovery:** reserve recovery capacity for live requests and pace replay under the stale-feature policy.
-**Verification:** hot-key simulation checks count conservation before, during, and after recovery.
-**Owner:** platform owner.
-**Boundary:** adding buffer cannot drain a queue when arrival remains at service capacity.
+**Mechanism.** A decline on a fraudulent attempt is credited with `V` of prevented loss. The
+fraudster re-attempts with a different card or merchant and succeeds. The ledger counts the saving
+and the loss both, in different rows, and the net is zero or negative.
 
-### Diagnostic 18 — Unsafe experimentation
-**Symptom:** proposed exploration would vary mandatory controls or expose high-risk requests without a stop rule.
-**Competing causes:** causal ambition outruns governance, or eligibility has not been bounded.
-**Discriminator:** inspect preregistration for exclusions, assignment unit, owner, guardrails, stop/rollback rules, and mature estimand.
-**Bounded response:** restrict randomization to approved eligible policies; retain mandatory protections and rules fallback.
-**Recovery:** pause assignment on a trigger and analyze intent-to-treat including fallback paths.
-**Verification:** dry-run assignment proves stable account assignment across retries and complete denominator logging.
-**Owner:** fraud product owner and model risk owner.
-**Boundary:** shadow mode validates mechanics, not action-specific effectiveness.
+**Symptom.** Declining more does not reduce the portfolio's mature fraud rate; it reduces the
+per-attempt rate and increases the attempt count.
 
-### Diagnostic 19 — Observational effect is overstated
-**Symptom:** post-launch lower fraud is attributed to challenge or decline from before/after charts.
-**Competing causes:** seasonality, attacker adaptation, mix shift, label delay, or a true policy effect.
-**Discriminator:** compare predeclared randomized mature cohorts; if unavailable, expose confounders and no causal claim.
-**Bounded response:** phrase observational output as association and use it to prioritize a safe experiment.
-**Recovery:** retain raw cohorts, assignment, policy versions, and maturity snapshots for reanalysis.
-**Verification:** review checks that every effect claim names a comparator and assigned denominator.
-**Owner:** risk analytics owner.
-**Boundary:** no amount of approved-only adjustment identifies declined counterfactual fraud by itself.
+**Competing causes.** Fraud migrating to a channel outside the policy's scope; a genuine reduction
+hidden by volume growth; a labelling gap where the re-attempt lands after the attribution window.
 
-### Diagnostic 20 — Fallback masks policy availability
-**Symptom:** overall action metrics look stable while model-path availability falls.
-**Competing causes:** successful fallback, dashboard aggregation, or missing fallback telemetry.
-**Discriminator:** split every metric by model-path versus fallback reason, channel, and policy version.
-**Bounded response:** set a separate fallback-rate alert and review whether fallback action mix honors friction budgets.
-**Recovery:** restore healthy dependencies before re-enabling the primary policy; do not quietly reclassify fallback as scored.
-**Verification:** failure drill reconciles gateway requests, response actions, durable decisions, and analytics rows.
-**Owner:** platform owner with fraud product owner.
-**Boundary:** availability of a response is not availability of the intended risk policy.
+**Discriminating check.** Measure at the *entity* level, not the attempt level: cluster attempts by
+device, by merchant, and by known fraud-ring linkage, then compute mature fraud per entity. If
+attempt-level loss falls while entity-level loss is flat, substitution is occurring.
+
+**Correction.** Price the decline benefit at less than `V` where substitution is plausible, and
+scope the policy to include the substitution channel or accept the reduced benefit honestly.
+
+**Verification.** Entity-level mature loss shows a reduction consistent with the claimed saving.
+
+### F-04 — Challenge band drifts as the base rate moves
+
+**Mechanism.** Bands are defined on calibrated probability. Calibration is fitted on a cohort with a
+0.20% base rate; a seasonal shift to 0.30% leaves the probabilities miscalibrated, so the same band
+admits a different mix, and the challenge volume silently exceeds the friction ceiling.
+
+**Symptom.** Challenge rate creeps above the signed ceiling while every individual score looks
+normal.
+
+**Competing causes.** A merchant-mix change; a new attack pattern the scorer has never seen; a
+calibration-table deployment error; a change in the incumbent rules that altered the population.
+
+**Discriminating check.** Plot observed fraud rate against predicted probability by score decile,
+weekly. A calibration curve that tilts indicates base-rate drift and separates it from a ranking
+failure, which would show as a flat or inverted decile ordering.
+
+**Correction.** Recalibrate on the most recent mature cohort and re-derive the bands from the signed
+schedule; do not hand-tune the band edges.
+
+**Verification.** The weekly calibration curve returns inside its tolerance and the challenge rate
+returns under the ceiling without a band change.
+
+### F-05 — Fallback traffic becomes invisible
+
+**Mechanism.** Feature staleness triggers the incumbent rules path. The dashboard reports only the
+score-driven actions, so fallback volume is undercounted and the measured precision of the policy is
+computed on a biased subset that excludes exactly the attempts where features were missing — which
+correlate with new devices, new merchants, and unusual behaviour.
+
+**Symptom.** Reported policy precision higher than the ledger implies; a persistent gap between the
+number of authorizations and the number of scored decisions.
+
+**Competing causes.** A genuine decline in fallback rate; a logging gap in the switch; duplicate
+attempt records inflating the authorization count.
+
+**Discriminating check.** Reconcile switch attempt count against decision-store row count by hour.
+Any residual is fallback plus loss. Then compute precision separately for the fallback subset; if it
+differs materially, the headline metric is mis-scoped.
+
+**Correction.** Make fallback a first-class action in the reporting schema with its own reason code
+and its own precision, and include it in the denominator.
+
+**Verification.** Decision-store rows equal switch attempts for every hour, with fallback explicitly
+counted rather than inferred.
+
+### F-06 — Reason codes drift until the audit trail is unreadable
+
+**Mechanism.** Reason codes are added by engineers as new rules appear, never retired when the
+underlying rule is removed. Within a year the mapping from code to mechanism is undocumented, so a
+dispute or a regulator cannot reconstruct why an attempt was declined.
+
+**Symptom.** Growing number of codes, many with zero or near-zero volume, and a support team that
+asks the model team what a code means.
+
+**Competing causes.** A deliberate taxonomy expansion; a logging defect that mislabels codes; a
+policy change that legitimately retired a mechanism.
+
+**Discriminating check.** Produce a code-frequency table by month and a code-to-mechanism mapping.
+A code that is retired but still appearing indicates a stale writer; a code with volume but no
+documented mechanism is the audit failure itself.
+
+**Correction.** Version the code taxonomy with the policy version, require a documented mechanism and
+a retirement date for each code, and refuse a decline whose code has no mapping.
+
+**Verification.** Every emitted code in a sampled day resolves to a documented mechanism and an
+active policy version.
+
+### F-07 — Latency tail produces an unmodelled fourth action
+
+**Mechanism.** At p99 the feature fetch exceeds the budget. The switch returns without a decision,
+the merchant sees a timeout, and the issuer both fails to apply fraud control and records the event
+as a technical error rather than as an action. The cost of timeouts never enters the ledger.
+
+**Symptom.** Timeout rate correlated with peak volume; fraud rate on timed-out attempts higher than
+on approved attempts.
+
+**Competing causes.** A network issue at the switch; a genuine traffic spike; a downstream dependency
+that degraded without failing.
+
+**Discriminating check.** Compute the realized fraud rate on timed-out attempts. If it exceeds the
+population base rate materially, the timeout is a fraud channel, not a technical nuisance, and must
+be priced as an approve.
+
+**Correction.** Add a hard deadline inside the scoring path with a pre-warmed fallback, so that the
+p99 path returns the incumbent rules decision instead of nothing.
+
+**Verification.** Timeout rate below the agreed bound at peak load, and the fraud rate on any
+remaining timeouts indistinguishable from the population.
+
+**Takeaway:** every one of these failures is silent in the primary metric and visible only in a
+deliberately constructed secondary check.
 
 ## 13. Transferable Lesson
-A real-time risk score is an input to a constrained action policy, not the policy itself. Transfer the decision contract: name the unit, owner, baseline, allowed actions, deadline, hard friction/capacity boundaries, evidence state, and outcome denominator before choosing a model.
 
-Transfer point-in-time discipline as well. A feature must be available at the decision, identity joins must preserve namespace and uncertainty, and later investigations must not rewrite the facts used for an authorization. Use mature cohorts to separate “not yet known” from negative evidence. Keep approved-only selection visible rather than solving it by inventing declined labels.
+The transferable structure is: a synchronous, irreversible, multi-way action under asymmetric costs,
+where the label arrives late and only for the branch that was taken. That structure recurs
+wherever a system must act before it can know.
 
-Transfer action accounting, but not its values. Purchase amount, realized issuer loss, operating cost, abandoned challenge friction, and false-decline harm have different owners and denominators. An action table is useful for exposing assumptions; it is not evidence of action effectiveness until a safeguarded comparison with mature outcomes tests those assumptions.
+Five claims transfer, and each is stated with its boundary.
 
-Transfer the fallback as a first-class policy. A response returned on time may still be a different risk policy if it used stale features or rules-only routing. Measure fallback separately, preserve idempotent decisions, and test recovery under load.
+**Price the actions before choosing the model.** The band table, not the scorer, determines most of
+the cost. Boundary: this holds when the cost ratio between actions is large, which it is here (a
+challenge costs about one thirteenth of a decline). Where two actions have similar costs, ranking
+quality dominates and the band table is nearly irrelevant.
 
-Do not transfer the constructed `$120` loss, `$6` friction value, 90-day maturity, 100-ms budget, challenge capability, 5% challenge budget, or 500-abandonment guardrail as facts. A rail without challenge needs a different action set; a delayed manual workflow needs a separate capacity and causal design. This case does not verify that any trained ranker or intervention improves production outcomes.
+**Report the paired difference on a common cohort.** Levels are not comparable across portfolios;
+differences are. Boundary: a paired difference computed on two different assignment mechanisms is a
+counterfactual, not an experiment, and must be labelled as such.
+
+**Precision in a low-cost, high-volume band will look terrible and is not a defect.** Boundary: it is
+a defect when the action is expensive or irreversible, which is why decline precision is the one to
+watch.
+
+**Effectiveness of an intervention is not identifiable observationally.** Boundary: it is identifiable
+where a holdout is cheap, which is true for a challenge and false for a decline.
+
+**Fallback is an action.** Boundary: a fallback that is rare enough to be operationally irrelevant
+still matters for the denominator, because its presence changes the population the metric describes.
+
+The lesson does not transfer to batch decisions where the action can be revisited, because there the
+irreversibility assumption — the one that drives the whole cost asymmetry — is absent. It also does
+not transfer to a context where the loss bearer is not the decision maker, because then `V` is not
+the decision maker's `V` and the pricing is wrong regardless of the model.
+
+**Takeaway:** the reusable artefact is the cost-priced three-action policy, not the fraud model.
 
 ## 14. Connections & Cross-References
-### 14a. Methods and contrasting cases
-The [fraud evaluation sheet](../../../02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) explains calibration and constrained selection; it is a method reference, not a result for this case.
-The [collection index](INDEX.md) lists planned claims and account-takeover cases; neither is represented here as an authored comparison.
-The [source coverage brief](../../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-cases-01) maps the separate source topics and marks the wider collection as planned.
-The visible source identifier is DS_Domain/Case_Studies_Production_ML_Systems/Fraud_Modelling/01_Real_Time_Payment_Card_Fraud_Detection.md.
-Its original contents were not available in the course source inventory; this is an independently constructed illustrative case, not a summary of that file.
-### 14b. Open questions
-| Question | Why unknown | Evidence to obtain | Priority / owner |
-|---|---|---|---|
-| Does the policy improve net outcomes? | No policy trial or actual costs | Pre-registered randomized comparison with mature outcomes | High / fraud product |
-| How biased are the labels? | No independent audit or maturity curves | Stratified audit, source reconciliation and delay analysis | High / model risk |
-| Can the platform meet the deadline during recovery? | No traces, capacity tests or deployment | End-to-end load and failure exercise including hot keys | High / platform |
-| Does intervention displace fraud or harm customers later? | No account-level follow-up | Longer-window linked randomized analysis with privacy approval | Medium / risk analytics |
-### 14c. Interview pack
-Candidate prompts precede interviewer notes; all values are illustrative and none describes a real deployment.
-#### Q01 — Framing
-Candidate prompt: What is the action, unit, comparator and owner?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: An authorization attempt is assigned approve, eligible challenge or decline by the issuer fraud policy; compare with the existing rules-only policy.
-Reasoning: The owner must jointly constrain fraud loss, friction and the issuer response deadline.
-Acceptable alternative: A separate analyst review is acceptable after the synchronous decision, not as an assumed instant response.
-Follow-up and answer: What changes for an unsupported challenge channel? Use its approved non-challenge policy.
-Red flag: Optimizing accuracy alone ignores both action cost and the rare-fraud base rate.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Sections 1–4.
-#### Q02 — Label design
-Candidate prompt: Is every transaction without a chargeback a negative?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: No; use confirmed fraud, confirmed legitimate when evidence exists, and unresolved, with label maturity and source version.
-Reasoning: Chargebacks are delayed and selectively observed, especially for declined transactions.
-Acceptable alternative: A probabilistic label model may be considered only with identified assumptions and validation.
-Follow-up and answer: What if reporting takes longer than 90 days? Extend or censor and report maturity curves.
-Red flag: Calling all unresolved attempts legitimate biases both training and metrics.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 5a.
-#### Q03 — Point-in-time join
-Candidate prompt: Can the latest merchant risk value be joined to past transactions?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: No; use the value both event-time eligible and actually available by the decision.
-Reasoning: A later investigation may otherwise enter the feature set before the decision in offline replay.
-Acceptable alternative: A versioned snapshot is acceptable if it preserves availability and historical correction semantics.
-Follow-up and answer: What if updates arrive late? Later decisions may use them; earlier ones cannot.
-Red flag: Using final fraud status as a feature creates direct leakage.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Sections 5d and 12.
-#### Q04 — Action-cost arithmetic
-Candidate prompt: Recompute the challenge row in the constructed ledger.
-Clarify: the inputs are scenario assumptions, not observed labels or a measured policy result.
-Strong answer: Residual issuer loss is `4,000*.04*(1-.80*.70)*$120=$8,448`; operating cost is `$1,800`; modeled abandonment friction is `4,000*.96*.12*$4=$1,843.20`; total is `$12,091.20`.
-Reasoning: the challenge action has completion, conditional-effect, operating, and friction terms, unlike a purchase amount shortcut.
-Acceptable alternative: An equivalent expansion of `AC-02` is correct if units and the legitimate fraction are explicit.
-Follow-up and answer: What does this prove? Only arithmetic under constructed assumptions, not prevention effectiveness.
-Red flag: Calling 160 scenario fraud attempts an observed challenge label count.
-Score 0: incorrect arithmetic or causal claim.
-Score 1: correct total without assumptions.
-Score 2: correct components, units, and constructed-evidence boundary.
-Score 3: also distinguishes issuer loss from purchase amount and action effect.
-Answer support: Section 6b AC-02.
 
-#### Q05 — Declined-attempt label boundary
-Candidate prompt: Why does the decline row omit a prevented-fraud benefit?
-Clarify: a decline prevents the modeled authorization path, but its approval counterfactual is not observed.
-Strong answer: The row counts immediate modeled friction and operating cost only. It must not assign fraud/nonfraud or a dollar prevented loss to an individual decline from its score.
-Reasoning: approved-only data are selected by the historic action, and declines lack the outcome under approval.
-Acceptable alternative: Estimate an average policy effect in a safeguarded randomized comparison with mature outcomes.
-Follow-up and answer: Can an investigator confirmation solve this? No; it is selected downstream evidence, not every declined counterfactual.
-Red flag: Filling declined labels with model probability and treating them as truth.
-Score 0: invents decline labels or claims realized savings.
-Score 1: notes missing labels but gives no decision consequence.
-Score 2: states the counterfactual boundary and the assigned-policy alternative.
-Score 3: additionally names approved-only selection and mature denominators.
-Answer support: Sections 5a, 6b, 6d, and 6e.
+- [Claims investigation triage under delayed adjudication](./02_insurance_claims_fraud_detection.md)
+  shares the evaluation-mismatch pattern under a much longer label delay and a human review
+  capacity constraint rather than a millisecond deadline.
+- [Account takeover challenge policy with incomplete identity signals](./03_account_takeover_application_fraud.md)
+  shares the challenge-versus-decline structure but replaces the network deadline with an
+  incomplete-signal problem and a recovery-path dependency.
+- [AML alert prioritization at fixed investigator capacity](./04_aml_transaction_monitoring_system.md)
+  is the capacity-bound variant: the binding constraint is analyst hours, not latency or friction.
+- The unit cheat sheets define the fraud taxonomy and the decision-grain vocabulary this case
+  assumes, and the cutoff-and-losses sheet carries the break-even derivations in general form.
+- The local collection index records this case's stage and review trigger; the case does not assert
+  any status beyond `proposed`.
 
-#### Q06 — Friction/capacity sensitivity
-Candidate prompt: Does the base challenge policy meet the constructed friction budget?
-Clarify: use 4,000 challenges, a 5% rate cap, 12% abandonment, and 500-abandonment limit per 100,000 eligible attempts.
-Strong answer: The 4% challenge rate is under the 5% cap. Expected abandonment is `4,000*.12=480`, so it is under the limit by 20; at 16%, it becomes 640 and breaches the limit.
-Reasoning: rate and abandonment are separate constraints, and a near-boundary plan deserves no automatic expansion.
-Acceptable alternative: also compute support contacts: 160 at 4%, requiring `160/120=1.33` intake-days under the stated simplification.
-Follow-up and answer: What should happen at 640? Hold or reduce the policy until the owner changes the guardrail with evidence.
-Red flag: Treating an abandonment limit as proof that abandonments are fraud.
-Score 0: conflates percentages with counts.
-Score 1: computes one constraint only.
-Score 2: computes both and identifies the breach.
-Score 3: explains the capacity implication and evidence limitation.
-Answer support: Section 6c.
-#### Q07 — Serving and retries
-Candidate prompt: How do you avoid two distinct actions on a retried request?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Persist one decision under a stable attempt key and return it for a valid retry.
-Reasoning: The failure boundary between persistence, network response and logging must be designed explicitly.
-Acceptable alternative: A transactional store or another equivalent durable protocol can work if tested.
-Follow-up and answer: What about a new purchase with the same card? It needs a distinct attempt key.
-Red flag: Claiming broker exactly-once alone guarantees end-to-end exactly-once is wrong.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 8.
-#### Q08 — Capacity
-Candidate prompt: A partition receives 3,000 updates/s and processes 2,000/s for 600 s; how large is its backlog?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Under constant rates and no loss, backlog is (3000−2000)×600 = 600,000 updates.
-Reasoning: If arrival falls to 1,000/s with 2,000/s service, draining takes 600 seconds.
-Acceptable alternative: A queueing simulation may be used when rates or service times vary.
-Follow-up and answer: What if arrival remains 2,000/s? There is no positive net drain.
-Red flag: Calling nominal capacity a measured p99 latency is unjustified.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 8 sizing.
-#### Q09 — Ambiguous diagnosis
-Candidate prompt: A recent fraud rate falls while challenge rate rises; what happened?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: It may reflect deterrence, immature labels, selective observation, or legitimate abandonment.
-Reasoning: Compare mature randomized cohorts, label-delay curves, completion and abandonment.
-Acceptable alternative: A carefully bounded observational analysis can generate hypotheses but not automatically causal effects.
-Follow-up and answer: What if challenge eligibility changed? Stratify by the eligibility definition and assignment.
-Red flag: Declaring success from the recent rate alone overlooks selection and customer harm.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Sections 9 and 12.
-#### Q10 — Wrong method
-Candidate prompt: Why not tune a threshold until the final test shows the highest savings?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Repeated test tuning leaks selection information and invalidates the final holdout as an independent check.
-Reasoning: Choose model and threshold on earlier temporal folds, freeze them, then evaluate once on the forward test.
-Acceptable alternative: Nested temporal selection is acceptable with a separate untouched final period.
-Follow-up and answer: What if the threshold is changed after release? Treat it as a new policy with new evaluation.
-Red flag: Calling the same repeatedly inspected dataset a final test is not protection.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Sections 5c and 9.
-#### Q11 — Changed constraint
-Candidate prompt: What if the 100 ms target becomes 50 ms?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Reallocate the budget using measured end-to-end traces; remove or precompute optional work and use the approved fallback on deadline.
-Reasoning: A faster model is insufficient if the feature read or network path dominates.
-Acceptable alternative: A simpler model or local cache is acceptable if availability, freshness and accuracy are validated.
-Follow-up and answer: What if no safe model path fits? Continue the validated rules-only policy.
-Red flag: Adding component p99s is not a proof of the combined end-to-end p99.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 8.
-#### Q12 — Causal validation
-Candidate prompt: Why is shadow mode insufficient to establish savings?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Shadow scores do not change decisions, so outcomes under its alternative actions are not observed.
-Reasoning: Randomize eligible accounts to policies with guardrails and compare intent-to-treat mature outcomes.
-Acceptable alternative: A justified quasi-experiment may be used where randomization is impossible, with explicit confounding limits.
-Follow-up and answer: Why account-level assignment? Related retries can otherwise contaminate comparison.
-Red flag: Ignoring fallback traffic or analyzing only scored attempts breaks the assigned-population comparison.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 9.
-#### Q13 — Operational recovery
-Candidate prompt: What should happen when critical features are stale?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Apply the approved per-channel fallback or explicitly validated missing-aware path before the deadline.
-Reasoning: Log stale reason, feature age, policy version and the action, then inspect stream lag and partitions.
-Acceptable alternative: A cached feature is acceptable only within its validated freshness window.
-Follow-up and answer: What if the backlog cannot drain? Add sustained capacity or reduce arrivals; a buffer alone cannot solve it.
-Red flag: Replacing missing values with zero without an indicator changes their meaning.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Sections 8 and 12.
-#### Q14 — Fairness and uncertainty
-Candidate prompt: How should a subgroup friction difference be evaluated?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Use eligible subgroup denominators, mature labels, action outcomes, counts, confidence intervals and an approved comparison.
-Reasoning: Investigate proxies and different channel mix without assuming that a difference alone proves a cause.
-Acceptable alternative: A privacy-preserving aggregate analysis is acceptable when individual data access is restricted.
-Follow-up and answer: What if sample size is small? Report uncertainty and seek additional evidence rather than declaring parity.
-Red flag: Suppressing all small groups or removing one proxy does not establish fairness.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Sections 3, 9 and 12.
+The contrast that a reader should hold onto: this case's binding constraint is a *deadline*, the
+claims case's is an *investigator hour*, the account-takeover case's is a *recovery path*, and the
+AML case's is an *alert queue*. All four are the same arithmetic with a different scarce resource,
+and the arithmetic transfers while the thresholds do not.
+
+### 14a. Interview pack
+
+**Q01. In one sentence, what decision does this case make, and what does it refuse to decide?**
+Answer: it chooses approve, challenge, or decline per authorization attempt inside a friction
+ceiling, and it refuses to decide whether a cardholder is a fraudster or whether a transaction is
+criminal.
+Reasoning: the action set is what the switch can execute within the deadline; anything outside that
+set is not a decision this system can make, whatever the model outputs.
+Follow-up: name the fourth action that exists in production but is missing from the action set.
+Red flag: describing the output as a fraud probability to be thresholded at 0.5.
+Score: 0 treats the task as classification; 1 names three actions; 2 adds the deadline and the
+ceiling as constraints; 3 also identifies fallback as a fourth action.
+
+**Q02. Derive the decline break-even probability and evaluate it at `c_dec = 13.56`, `V = 73.10`.**
+Answer: 15.65%. Set `pV = (1-p)c_dec`, giving `p = c_dec/(c_dec + V) = 13.56/86.66`.
+Reasoning: declining is certain friction against probabilistic loss, so it needs enough probability
+to justify certain cost.
+Follow-up: what happens to the threshold if `c_dec` quadruples? Answer: to 42.6%.
+Red flag: computing `c_dec / V` = 18.6%, which ignores the friction incurred on the legitimate case.
+Score: 0 wrong; 1 quotes 15.65% without derivation; 2 derives it; 3 also states the constant-`V`
+validity condition.
+
+**Q03. Why is the challenge threshold so much lower than the decline threshold?**
+Answer: because a challenge costs 1.08 against a decline's 13.56 and still prevents 65% of the loss,
+so it pays at 2.26% instead of 15.65%.
+Reasoning: the break-even is cost divided by expected benefit, and the challenge has both a smaller
+cost and a positive expected benefit.
+Follow-up: what if `e` were 0.05 instead of 0.65? The threshold rises to 29.4%, above the decline
+threshold, so challenge would be dominated and should be removed.
+Red flag: saying the challenge is lower because "it is less disruptive" without the arithmetic.
+Score: 0 qualitative only; 1 quotes 2.26%; 2 derives from `c_chal/(eV)`; 3 also finds the `e` at
+which challenge becomes dominated.
+
+**Q04. The baseline shows 0.762% challenge precision. Is the baseline broken?**
+Answer: no. At a 0.20% base rate, challenging 4.2% of volume can only achieve low precision; the
+band still carries a 3.8x lift over the population.
+Reasoning: precision is bounded by base rate times lift; with a low base rate and a high-volume
+cheap action, low precision is arithmetically unavoidable.
+Follow-up: compute the precision you would need for the challenge band to break even on its own
+cost using `c_chal/(e·V)`.
+Red flag: concluding the incumbent is useless and skipping the lift computation.
+Score: 0 declares it broken; 1 notes the base rate; 2 computes the lift; 3 also explains why
+precision must be quoted with the action's cost.
+
+**Q05. Decompose the 219,000 saving. Which component is the finding?**
+Answer: 25,585 fraud loss (11.7%), 16,272 false declines (7.4%), 70,520 challenge delivery (32.2%),
+106,623 abandonment (48.7%). The finding is that 81% comes from challenging less, not detecting
+more.
+Reasoning: the candidate's volume change dominates its ranking change.
+Follow-up: what would the ranking effect be worth at equal challenge volume? Much less — the
+fraud-loss term is the only one that reflects it.
+Red flag: quoting 37.9% as evidence of model quality.
+Score: 0 quotes the headline only; 1 gives the total; 2 decomposes; 3 identifies the volume/ranking
+confound.
+
+**Q06. Why can `e` not be estimated from the production ledger?**
+Answer: because attempts prevented by the challenge never mature as fraud, so the observed
+challenged-fraud count is `A(1-e)` and the naive estimator degenerates to zero effectiveness.
+Reasoning: selection on the outcome.
+Follow-up: what design identifies it? A randomized band where challenge is withheld.
+Red flag: proposing to estimate `e` as one minus the observed completion rate.
+Score: 0 accepts the observational estimate; 1 notes selection; 2 explains the algebra; 3 names the
+randomized design and the bias direction.
+
+**Q07. A colleague proposes a single global `V`. What breaks?**
+Answer: ticket-size heterogeneity and liability shift. A small-ticket band has a low `V` and should
+be approved more; a merchant where the issuer does not bear the loss has `V` near zero and should be
+approved almost entirely.
+Reasoning: the threshold is `c_dec/(c_dec+V)`, so `V` enters the denominator directly.
+Follow-up: compute the decline threshold with `V` = 10: 57.6%, which means almost nothing should be
+declined on that band.
+Red flag: accepting the scalar without a stratification check.
+Score: 0 accepts; 1 mentions variation; 2 quantifies the threshold effect; 3 also names liability
+shift and substitution.
+
+**Q08. What does the p99 latency budget actually constrain?**
+Answer: the whole path, not the model. 12 ms of feature fetch inside a 40 ms allowance leaves no
+room for a 5 ms score plus serialization, so the design must change even though the model is fast.
+Reasoning: the deadline is a property of the composed path and the tail governs timeouts.
+Follow-up: what is the fourth action a timeout creates, and how should it be priced?
+Red flag: quoting model inference time alone as the latency answer.
+Score: 0 ignores latency; 1 quotes p50; 2 reasons at p99; 3 prices the timeout as an approve.
+
+**Q09. Why is synchronous decision persistence worth 3 ms?**
+Answer: because without it the evaluation in section 9 cannot be replayed and disputes cannot be
+defended. The 3 ms buys reconstructability.
+Reasoning: the decision record is the only artefact proving what the policy knew and did.
+Follow-up: what would you drop instead to recover the 3 ms?
+Red flag: treating the audit record as a post-launch refinement.
+Score: 0 skips it; 1 mentions logging; 2 connects to replay; 3 identifies a tradeable alternative.
+
+**Q10. Design the falsification test for this case's headline claim.**
+Answer: freeze the band table, run on four consecutive cohorts out of time, and require the paired
+cost difference to hold with the guardrails intact; a single cohort is not a test.
+Reasoning: seasonality and mix shift are the dominant confounders, and freezing the table isolates
+them.
+Follow-up: what would make you conclude the 37.9% is a baseline artefact? A baseline that had already
+priced its actions.
+Red flag: proposing a random cross-validation split.
+Score: 0 no test; 1 one cohort; 2 out-of-time cohorts; 3 pre-registers the metric and the stop rule.
+
+**Q11. The challenge rate must stay under a 1% ceiling. What changes?**
+Answer: the challenge band is capped at 50,000 attempts, which forces the decline band to absorb the
+overflow or accept uncaught fraud; the marginal attempt at the cap is more valuable as a decline than
+as a challenge only above the 31.89% crossover.
+Reasoning: a volume constraint binds the action mix, not the threshold alone.
+Follow-up: compute the cost of capping challenges at 46,000 when the unconstrained optimum is 60,000.
+Red flag: applying the band table and ignoring the ceiling.
+Score: 0 ignores the ceiling; 1 reduces volume; 2 reasons at the margin; 3 computes the cap's cost.
+
+**Q12. What does the ledger omit entirely?**
+Answer: timeouts, appeal outcomes, chargeback representment recoveries, network fees on declines,
+reputational effects, and any cost of the incumbent's manual rule maintenance.
+Reasoning: an omission that is small in one direction and correlated with the decision is worse than
+a large random omission.
+Follow-up: which omission is most likely to reverse the sign? Network fees on declines, because they
+scale with decline volume.
+Red flag: claiming the ledger is complete because it closes arithmetically.
+Score: 0 claims completeness; 1 names one omission; 2 names several; 3 ranks them by leverage.
+
+**Q13. Two models have the same AUC. Can they produce different costs?**
+Answer: yes, substantially, because the action bands consume probability mass in specific regions and
+calibration differences move attempts across band edges without changing the rank ordering.
+Reasoning: AUC is rank-based and threshold-free; the decision is neither.
+Follow-up: name a metric that would capture the difference: cost at the chosen bands.
+Red flag: using AUC to choose between policies.
+Score: 0 no; 1 yes without mechanism; 2 explains calibration; 3 proposes the cost-based comparison.
+
+**Q14. Why is the abandonment base `K - K_pos` rather than `K`?**
+Answer: because a fraudster abandoning a challenge is not a customer-friction event; including those
+attempts would inflate the friction term and bias the policy toward fewer challenges.
+Reasoning: the cost term must be attached to the population that actually experiences the cost.
+Follow-up: what happens to the candidate's abandonment count if the base is wrongly `K`? It rises
+from 1,953 to 2,070 and the friction term rises by 1,680.
+Red flag: using `K` because it is simpler.
+Score: 0 wrong base; 1 right base; 2 explains the bias direction; 3 quantifies the error.
+
+**Q15. A reviewer says the model is unnecessary because the cost schedule drives everything. Reply.**
+Answer: partly right. In the constructed ledger 81% of the saving is volume and 11.7% is fraud loss,
+so the schedule dominates; but the schedule can only be executed if a calibrated probability
+identifies the marginal attempt, and the incumbent's rules cannot do that at this grain.
+Reasoning: the pricing and the ranking are complements, with different leverage.
+Follow-up: what is the cheapest way to test the reviewer's claim? Apply the priced bands to the
+incumbent's own score, with no new model.
+Red flag: either dismissing the reviewer or conceding the model is pointless.
+Score: 0 takes a side without arithmetic; 1 concedes; 2 cites the decomposition; 3 proposes the
+cheapest decisive test.
+
+**Q16. What would you measure first if you had one week and a production dataset?**
+Answer: band volumes, band precisions, and the realized abandonment rate on legitimate challenged
+attempts, because those three turn the constructed ledger into a baseline and cost less than a day
+of engineering.
+Reasoning: the baseline and `ab` are the largest and most volatile inputs, and both are directly
+observable.
+Follow-up: what would you deliberately not measure in that week, and why? `e`, because it needs a
+randomized design and a week cannot supply one.
+Red flag: starting with model experimentation.
+Score: 0 trains a model; 1 names a metric; 2 prioritizes by leverage; 3 justifies the deferral of `e`.
 
 ## 15. Quick Reference Card
+
 | Field | Value |
 |---|---|
-| Domain | Issuer payment-card authorization fraud |
-| Problem type | Approve, challenge, or decline under friction and response-time constraints |
-| Method | Proposed calibrated tabular score plus versioned action policy; existing rules are comparator and fallback |
-| Primary result | Illustrative arithmetic only; production results not measured |
-| Key lesson | Decision cost, label observation and intervention effects matter more than accuracy alone |
-| Tags | evaluation-mismatch; label-delay; cost-latency-tradeoff |
-
-| Supplemental field | Value |
-|---|---|
-| Case ID / version / as-of | CASE-01-01-001 / 1.0 / 2026-11-07 |
-| Evidence level | Not measured; all numerical inputs constructed |
-| Implementation stage | Proposed, not deployed; editorial status draft, not reviewed |
-| Baseline / primary metric | Rules-only; mature net cost per 1,000 eligible attempts, not measured |
-| Key limitation | Selective delayed labels and unobserved action counterfactuals |
-| Review trigger / owner | Material policy, label, deadline, or rule change / issuer fraud product owner |
+| Decision | Approve, challenge, or decline each card-not-present authorization inside a friction ceiling. |
+| Unit | One authorization attempt; retries are distinct attempts with the same decision. |
+| Objective | Mature issuer-borne loss plus monetized friction per 1,000 eligible attempts. |
+| Core thresholds | approve below 2.26%, challenge to 31.89%, decline above. |
+| Ledger | `(P - D_pos - e·K_pos)V + (D - D_pos)c_dec + K·c_sms + ab(K - K_pos)c_ab`. |
+| Constructed result | 578,472 → 359,472, a 37.86% reduction, 81% of it from lower challenge volume. |
+| Weakest input | `e`, unidentified without randomization; least leverage on the answer. |
+| Largest input | `V`, then `c_dec`, then `ab`. |
+| Binding constraint | p99 latency on the path, and the signed friction ceiling. |
+| Never infer | That a prevented challenge is a prevented fraud, or that a decline's saving is realized. |
+| Evidence | Illustrative arithmetic only; `not-measured`; no deployment observed. |

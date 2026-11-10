@@ -20,7 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 TMP = ROOT / ".authoring_state"
 
-MAX_MS_PER_BATCH = 2
+MAX_MS_PER_BATCH = 1
 
 
 def load_queue() -> list[dict]:
