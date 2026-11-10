@@ -1,0 +1,2407 @@
+[
+ {
+  "unit": "01_foundations_computing_and_problem_solving",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Cross_Module_Evidence_to_Operation.md"
+  ],
+  "sheets": [
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "01_foundations_computing_and_problem_solving/01_program_orientation_and_ai_landscape",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Select_AI_Use_Case_Portfolio.md",
+   "02_Evaluate_AI_Vendor_Claim.md"
+  ],
+  "sheets": [
+   "01_AI_Use_Case_Charter.md",
+   "02_AI_Market_Map.md",
+   "03_Technology_Due_Diligence.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Build_Data_Quality_CLI.md",
+   "02_Design_Analytics_API.md"
+  ],
+  "sheets": [
+   "01_Python_Async_and_Concurrency.md",
+   "02_REST_APIs_and_WebSockets.md",
+   "03_LLM_Fundamentals.md",
+   "04_Docker_and_Containers.md",
+   "05_SQL_Analytics_Patterns.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "01_foundations_computing_and_problem_solving/03_dsa_and_computational_thinking",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Design_Rate_Limiter.md",
+   "02_Implement_Top_K_Stream_Processing.md"
+  ],
+  "sheets": [
+   "01_DSA_Patterns_and_Invariants.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "01_foundations_computing_and_problem_solving/04_system_design_distributed_systems_and_cloud",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Design_Notification_Platform.md",
+   "02_Design_Feature_Serving_API.md"
+  ],
+  "sheets": [
+   "01_System_Design_Interview_Flow.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "01_foundations_computing_and_problem_solving/05_math_probability_statistics_and_linear_algebra",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Calibrate_a_Risk_Model.md",
+   "02_Derive_Gradient_Descent_for_Regression.md"
+  ],
+  "sheets": [
+   "01_Matrix_and_Vector_Identities.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "02_data_analytics_and_decision_science",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "02_data_analytics_and_decision_science/06_data_modeling_databases_lakehouse_and_governance",
+  "case_rows": [
+   "repair a broken customer 360 pipeline",
+   "Preserve answer evidence through ingestion and filtered retrieval",
+   "Evolve an authorized near-real-time search index safely",
+   "Load authorized hierarchies with bounded database work",
+   "Preserve answer evidence through ingestion and filtered retrieval.",
+   "Evolve an authorized near-real-time search index safely.",
+   "Load authorized hierarchies with bounded database work.",
+   "[REF-IR012](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Chunking_And_Vector_Index.md)",
+   "[REF-IR021](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_04.md)",
+   "[REF-IR031](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Tree_Queries/policy_hierarchy_n_plus_one.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_model_an_ecommerce_lakehouse.md"
+  ],
+  "sheets": [
+   "01_Data_Contract_Checklist.md",
+   "02_Data_Model_Grain_and_Join_Safety.md",
+   "03_Data_Model_Notation.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "02_data_analytics_and_decision_science/07_analytics_metrics_bi_and_product_sense",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Marketplace_Conversion_Diagnosis.md",
+   "02_Executive_Metric_Tree.md"
+  ],
+  "sheets": [
+   "01_Metric_Trees_and_North_Stars.md",
+   "02_Funnel_Cohort_and_Retention_Analysis.md",
+   "03_Dashboard_Design_and_Operational_Alerts.md",
+   "04_Segmentation_and_Decision_Use.md",
+   "05_Stakeholder_Narratives_and_Decision_Memos.md",
+   "06_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "02_data_analytics_and_decision_science/08_experimentation_causal_inference_and_decision_science",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_evaluate_a_pricing_change.md"
+  ],
+  "sheets": [
+   "01_Experiment_Design_and_Guardrails.md",
+   "02_Causal_Diagrams_and_Adjustment.md",
+   "03_Matching_and_Difference_in_Differences.md",
+   "04_Uplift_and_Treatment_Heterogeneity.md",
+   "05_Decision_Thresholds_and_Value.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "02_data_analytics_and_decision_science/09_data_streaming_event_systems_and_real_time_analytics",
+  "case_rows": [
+   "Separate live rank approximation from exact competition settlement",
+   "[REF-IR035](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Leaderboards/score_bucket_rank_consistency.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_paypal_observability_dataflow.md",
+   "02_Flink_CEP_Streaming_Fraud_Detection.md"
+  ],
+  "sheets": [
+   "01_Kafka_Consumer_Partitions_and_Lag.md",
+   "02_CDC_Ordering_Snapshot_and_Materialization.md",
+   "03_Flink_Event_Time_Session_Windows_and_Stateful_Processing.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "02_data_analytics_and_decision_science/10_time_series_forecasting_and_uncertainty",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_forecast_spare_parts_demand.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval",
+  "case_rows": [
+   "Churn leakage remediation",
+   "Payment anomaly detection",
+   "Campaign segmentation",
+   "Last-mile routing",
+   "Workforce scheduling",
+   "E-commerce recommender",
+   "Search ranking regression",
+   "Fraud-ring investigation",
+   "Enterprise entity-resolution graph",
+   "Cross-hospital risk model",
+   "Private analytics release review"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "Cross_hospital_risk_model.md",
+   "Fraud_ring_investigation.md",
+   "Private_analytics_release_review.md",
+   "Search_ranking_regression.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval/11_supervised_ml_and_feature_engineering",
+  "case_rows": [
+   "Churn model with leakage remediation"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_credit_risk_model_design.md",
+   "02_churn_model_with_leakage_remediation.md"
+  ],
+  "sheets": [
+   "01_Model_Validation_and_Error_Analysis.md",
+   "02_Problem_Formulation_and_Losses.md",
+   "03_Linear_Trees_and_Boosting.md",
+   "04_Feature_Engineering_Patterns.md",
+   "05_Imbalance_and_Calibration.md",
+   "06_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval/12_unsupervised_ml_anomaly_detection_and_segmentation",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_payment_anomaly_detection.md",
+   "02_customer_segmentation_for_campaigns.md"
+  ],
+  "sheets": [
+   "01_Anomaly_Detection_Triage.md",
+   "02_Clustering_and_Embeddings.md",
+   "03_Change_Point_Detection.md",
+   "04_Segmentation_Evaluation.md",
+   "05_Human_Review_Loops.md",
+   "06_25_Common_Issues.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval/13_optimization_operations_research_and_simulation",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_last_mile_routing_optimisation.md",
+   "02_workforce_scheduling_under_uncertainty.md",
+   "03_scheduling_objective_and_constraints.md"
+  ],
+  "sheets": [
+   "01_optimisation_formulation.md",
+   "02_solver_selection.md",
+   "03_simulation_experiment_plan.md",
+   "04_network_and_scheduling_models.md",
+   "05_integer_programming.md",
+   "06_metaheuristics.md",
+   "07_interval_greedy_and_weighted_scheduling.md",
+   "08_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval/14_recommendation_search_ads_and_ranking",
+  "case_rows": [
+   "Specify correctness contracts before choosing production algorithms",
+   "Translate local algorithm guarantees into distributed service contracts",
+   "Evolve an authorized near-real-time search index safely",
+   "Bound phrase-search memory while preserving exact matches",
+   "Return useful graph candidates under explicit traversal budgets",
+   "Balance autocomplete freshness, memory and abuse controls",
+   "[REF-IR018](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_01.md)",
+   "[REF-IR020](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_03.md)",
+   "[REF-IR021](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_04.md)",
+   "[REF-IR024](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Search/phrase_search_postings.md)",
+   "[REF-IR029](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md)",
+   "[REF-IR032](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Autocomplete/frequency_admission_and_freshness.md)"
+  ],
+  "sheet_rows": [
+   "CH and A* assumptions; rolling-window semantics; clock skew; positional postings; BM25 statistics",
+   "Routing production behavior; coordinated rolling counters; distributed positional inverted indexes",
+   "WAL and immutable segments; positional phrase queries; field-weighted BM25; exact top-k; ACLs and tombstones",
+   "Rarest-term anchor; lazy postings; skips; relative positions; repeated terms; matching analyzers",
+   "Enqueue-time deduplication; paged adjacency; independent work budgets; deterministic traversal; explicit partial results",
+   "Trie admission; time-window sketches; bounded candidate stores; immutable snapshots; real-time overlays; CDN versioning"
+  ],
+  "cases": [
+   "01_e_commerce_recommender.md"
+  ],
+  "sheets": [
+   "01_ranking_metrics.md",
+   "02_recsys_architectures.md",
+   "03_online_experimentation_checklist.md",
+   "04_retrieval_index_correctness.md",
+   "05_phrase_and_positional_retrieval.md",
+   "06_autocomplete_admission_and_freshness.md",
+   "07_25_Common_Issues.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval/15_graph_ml_knowledge_graphs_and_network_analytics",
+  "case_rows": [
+   "Return useful graph candidates under explicit traversal budgets",
+   "Evaluate incremental investigator value from graph fraud signals",
+   "[REF-IR029](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md)",
+   "[REF-IR036](../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_graph_fraud_detection.md",
+   "02_graph_data_model_patterns.md",
+   "03_centrality_and_communities.md",
+   "04_gnn_decision_guide.md",
+   "05_knowledge_graphs_and_ontologies.md",
+   "06_graph_evaluation.md",
+   "07_bounded_traversal_and_entity_resolution.md",
+   "09_25_common_issues.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "03_machine_learning_optimisation_and_intelligent_retrieval/16_privacy_preserving_ml_and_federated_learning",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_privacy_method_selection.md",
+   "02_federated_learning_architecture.md",
+   "03_data_minimisation_list.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems/17_deep_learning_computer_vision_and_representation_learning",
+  "case_rows": [
+   "Medical-image triage evaluation"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_visual_quality_inspection.md"
+  ],
+  "sheets": [
+   "01_Vision_Evaluation_and_Error_Taxonomy.md",
+   "02_CNNs_Attention_and_Transfer_Learning.md",
+   "03_Vision_Transformers.md",
+   "04_Detection_and_Segmentation.md",
+   "05_Self_Supervision_and_Contrastive_Learning.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems/18_nlp_speech_and_document_intelligence",
+  "case_rows": [
+   "Repository-aware completion / language adapter (planned shared brief)",
+   "VLM/OCR adjuster assistance (planned shared brief)",
+   "Customer-objection aggregation (planned)",
+   "Domain ASR adaptation (planned shared brief)",
+   "ASR quality can vary by language and route.",
+   "Language-aware systems need independent splits."
+  ],
+  "sheet_rows": [
+   "Fill-in-the-middle; repository/time splits; authorized code retrieval; multilingual sampling; language adapters",
+   "Page and region provenance; thumbnail/tiling tradeoffs; schema validation; claim-level temporal splits",
+   "Channel-aware ASR; VAD; code-switching; speaker roles; redaction; evidence spans; cohort aggregation",
+   "Whisper adaptation; LoRA and general replay; speaker/call/time splits; independent human gold; scoped deployment"
+  ],
+  "cases": [
+   "01_claims_document_extraction.md",
+   "02_call_centre_transcription_quality.md"
+  ],
+  "sheets": [
+   "01_NLP_Task_Contracts_Classification_NER_Embeddings.md",
+   "03_asr-transcription-evaluation.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems/19_transformers_llms_and_foundation_model_internals",
+  "case_rows": [
+   "Interactive inference latency and admitted throughput (planned)",
+   "Domain-training budget and restart headroom (planned shared brief)",
+   "Serving choice changes task latency.",
+   "Quality/cost claims require a complete budget."
+  ],
+  "sheet_rows": [
+   "Continuous batching; chunked prefill; paged KV storage; prefix authorization; speculative-decoding correctness",
+   "Scaling-law proxy sweeps; licensed corpus splits; parallelism; memory accounting; checkpoint recovery"
+  ],
+  "cases": [
+   "01_code_assistance_model_choice.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems/20_rag_context_engineering_and_enterprise_knowledge",
+  "case_rows": [
+   "Applicable-policy answer/abstain decision (planned)",
+   "Chunk and index selection (planned)",
+   "Effective-date source eligibility (planned)",
+   "Chunking changes evidence recall.",
+   "Eligibility precedes ranking."
+  ],
+  "sheet_rows": [
+   "Authorized retrieval; effective policy versions; claim-level citations; embedding migrations",
+   "Structure-aware chunking; actual tokenizer limits; HNSW and exact filtered baselines; CDC; deletion propagation",
+   "Effective intervals; recorded-time history; jurisdiction rules; hybrid retrieval; reranking and claim verification"
+  ],
+  "cases": [],
+  "sheets": [
+   "01_Permission_Aware_Retrieval.md",
+   "02_RAG_Ingestion_Chunking_and_Grounded_Answers.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems/21_finetuning_alignment_and_model_customisation",
+  "case_rows": [
+   "Customize tenant assistants without crossing isolation boundaries",
+   "Allocate a domain-training budget with restart headroom",
+   "Compare specialized models with authorized shared-model baselines",
+   "Adapt domain ASR while preserving supported-domain quality",
+   "[REF-IR004](../../../../INTERVIEW_CASES/Agentic_AI_System/Finetuning_LLM/multi_tenant_adapter_platform.md)",
+   "[REF-IR009](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_TrainingSCALING/legal_pretraining_scaling.md)",
+   "[REF-IR010](../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Code_And_Multilingual_Models.md)",
+   "[REF-IR017](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Whisper_Adaptation_And_Evaluation.md)",
+   "Related adapter lifecycle",
+   "Related comparison with a shared baseline"
+  ],
+  "sheet_rows": [
+   "Tenant-scoped LoRA lifecycle, cache keys, session pinning, authorization and negative tests.",
+   "Licensed corpus splits, scaling proxy sweeps, parallelism, checkpoint recovery and held-out quality.",
+   "Code repository/time splits, authorized retrieval, multilingual sampling and language-specific quality.",
+   "Speech adaptation, speaker/call/time splits, independent human gold and paired WER uncertainty."
+  ],
+  "cases": [
+   "01_support_domain_adaptation.md"
+  ],
+  "sheets": [
+   "01_LoRA_Parameter_Efficient_Finetuning.md",
+   "02_QLoRA_Quantized_Base_Adapter_Finetuning.md",
+   "03_RoPE_and_Position_Interpolation.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "04_deep_learning_generative_ai_and_multimodal_systems/22_multimodal_models_video_voice_and_world_models",
+  "case_rows": [
+   "Document VLM versus OCR for adjuster assistance (planned shared brief)",
+   "Planning only"
+  ],
+  "sheet_rows": [
+   "Planning reference only"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering",
+  "case_rows": [
+   "Size an inference cluster",
+   "Profile memory-bound training",
+   "Train a large model on limited cluster capacity",
+   "Recover from checkpoint failures",
+   "Multi-model inference gateway",
+   "Reduce p99 LLM latency",
+   "Deploy a credit model safely",
+   "Feature freshness incident response",
+   "Broken upstream schema incident",
+   "Silent label corruption investigation",
+   "RAG quality regression",
+   "Agent tool-use failure analysis",
+   "Internal AI platform design",
+   "Cloud-cost anomaly response"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Distributed_Training_Checkpoint_and_Recovery.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/23_gpu_architecture_accelerators_and_ai_hardware",
+  "case_rows": [
+   "Profile memory-bound training",
+   "Balance interactive inference latency and admitted throughput",
+   "profiling and parity validation with distributed-training cases",
+   "batching and KV accounting with Module 25"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Size_an_Inference_Cluster.md",
+   "02_Profile_Memory_Bound_Training.md"
+  ],
+  "sheets": [
+   "01_H100_Architecture_and_Resource_Limits.md",
+   "01_Roofline_Arithmetic_Intensity_and_Kernel_Diagnosis.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/24_distributed_training_data_pipelines_and_ml_compute",
+  "case_rows": [
+   "Train a large model on limited cluster capacity",
+   "Recover from checkpoint failures",
+   "Gate retraining on corpus provenance and long-tail quality",
+   "Allocate a domain-training budget with restart headroom"
+  ],
+  "sheet_rows": [
+   "Dataset lineage; synthetic-data feedback; deduplication limits; language and domain coverage",
+   "Scaling-law proxy sweeps; licensed corpus splits; parallelism; memory accounting; checkpoint recovery"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/25_model_serving_inference_optimisation_and_cost",
+  "case_rows": [
+   "Multi-model inference gateway",
+   "Reduce p99 LLM latency",
+   "Select model routes within hard customer constraints",
+   "Customize tenant assistants without crossing isolation boundaries",
+   "Balance interactive inference latency and admitted throughput",
+   "Separate extraction correctness from routing economics"
+  ],
+  "sheet_rows": [
+   "Eligibility before scoring; capability adapters; health-aware routing; bounded retry budgets",
+   "LoRA lifecycle; tenant-scoped data; adapter cache keys; session pinning; compatible base checkpoints",
+   "Continuous batching; chunked prefill; paged KV storage; prefix authorization; speculative-decoding correctness",
+   "Schema versioning; semantic checks; dead-letter replay; idempotency; quality-constrained tiered RAG routing"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/26_mlops_feature_platforms_and_model_lifecycle",
+  "case_rows": [
+   "Deploy a credit model safely",
+   "Feature freshness incident response",
+   "Release and recover an agent as a compatible bundle"
+  ],
+  "sheet_rows": [
+   "Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment"
+  ],
+  "cases": [],
+  "sheets": [
+   "01_ML_Release_and_Rollback_Checklist.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/27_data_quality_observability_and_reliability_engineering",
+  "case_rows": [
+   "Broken upstream schema incident",
+   "Silent label corruption investigation",
+   "Gate retraining on corpus provenance and long-tail quality",
+   "Rebalance caches without overwhelming the authoritative store"
+  ],
+  "sheet_rows": [
+   "Dataset lineage; synthetic-data feedback; deduplication limits; language and domain coverage",
+   "Single-flight scope; jitter; fill admission; consistent hashing; old/new ring epochs; version fences and tombstones"
+  ],
+  "cases": [],
+  "sheets": [
+   "01_Data_Observability_and_Incident_Triage.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/28_ai_evaluation_monitoring_and_continuous_improvement",
+  "case_rows": [
+   "RAG quality regression",
+   "Agent tool-use failure analysis",
+   "Gate retraining on corpus provenance and long-tail quality",
+   "Block assistant releases on auditable quality and safety gates"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "04_Model_Evaluation_and_Production_Monitoring.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "05_ai_platforms_data_systems_and_production_engineering/29_api_platform_engineering_cloud_native_and_finops",
+  "case_rows": [
+   "Internal AI platform design",
+   "Cloud-cost anomaly response",
+   "Select model routes within hard customer constraints",
+   "Bound global API admission with token leases"
+  ],
+  "sheet_rows": [
+   "reference-informed routing brief",
+   "reference-informed token lease brief"
+  ],
+  "cases": [],
+  "sheets": [
+   "06_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "06_llm_agents_knowledge_systems_and_ai_augmented_development",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "06_llm_agents_knowledge_systems_and_ai_augmented_development/30_agentic_systems_workflows_and_orchestration",
+  "case_rows": [],
+  "sheet_rows": [
+   "Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment",
+   "LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission"
+  ],
+  "cases": [
+   "01_enterprise_agent_approval_gate.md",
+   "02_claims_operations_agent.md"
+  ],
+  "sheets": [
+   "01_agent_boundaries_and_request_ownership.md",
+   "04_agent_sessions_state_isolation_and_lifecycle.md",
+   "05_durable_workflows_and_idempotent_execution.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations",
+  "case_rows": [
+   "Recover procurement workflows without replaying approvals",
+   "Separate extraction correctness from routing economics",
+   "[REF-IR006](../../../../INTERVIEW_CASES/Agentic_AI_System/Langraph/durable_human_approval_graph.md)",
+   "[REF-IR014](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Structured_Extraction_And_Cost_Routing.md)"
+  ],
+  "sheet_rows": [
+   "LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission",
+   "Schema versioning; semantic checks; dead-letter replay; idempotency; quality-constrained tiered RAG routing"
+  ],
+  "cases": [
+   "01_erp_action_agent.md"
+  ],
+  "sheets": [
+   "01_model_context_protocol.md",
+   "02_Tool_Schema_and_Side_Effect_Boundaries.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "06_llm_agents_knowledge_systems_and_ai_augmented_development/32_agent_memory_context_management_and_personalisation",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Memory_Lifecycle_and_Retention.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "06_llm_agents_knowledge_systems_and_ai_augmented_development/33_coding_agents_ai_sdcl_and_developer_productivity",
+  "case_rows": [
+   "Compare specialized models with authorized shared-model baselines",
+   "[REF-IR010](../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Code_And_Multilingual_Models.md)"
+  ],
+  "sheet_rows": [
+   "Fill-in-the-middle; repository/time splits; authorized code retrieval; multilingual sampling; language adapters"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "06_llm_agents_knowledge_systems_and_ai_augmented_development/34_conversational_ai_voice_agents_and_customer_operations",
+  "case_rows": [
+   "Publish reviewed coaching scripts from current product evidence",
+   "Distinguish speech, speaker and extraction errors in call analytics",
+   "Adapt domain ASR while preserving supported-domain quality",
+   "[REF-IR015](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md)",
+   "[REF-IR016](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Multilingual_Call_Objections.md)",
+   "[REF-IR017](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Whisper_Adaptation_And_Evaluation.md)"
+  ],
+  "sheet_rows": [
+   "Product/date eligibility; grounded generation; native-language review; source dependencies; supersession triggers",
+   "Channel-aware ASR; VAD; code-switching; speaker roles; redaction; evidence spans; cohort aggregation",
+   "Whisper adaptation; LoRA and general replay; speaker/call/time splits; independent human gold; scoped deployment"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems",
+  "case_rows": [
+   "Wearable activity classifier",
+   "Industrial vibration monitor",
+   "Quantise an inspection model",
+   "Compare edge runtimes on a Pi-class device",
+   "Warehouse asset tracking",
+   "Multisensor worker-safety system",
+   "Robot arm pick-and-place cell",
+   "Mobile robot fleet control design",
+   "Autonomous inventory robot",
+   "Bin-picking system evaluation",
+   "Synthetic warehouse dataset",
+   "Validate a navigation policy before field trial",
+   "Fleet rollout readiness review",
+   "Robot near-miss incident response"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "Fleet_rollout_readiness_review.md",
+   "Validate_a_navigation_policy_before_field_trial.md"
+  ],
+  "sheets": [
+   "99_35_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/35_edge_ai_embedded_systems_and_tinyml",
+  "case_rows": [
+   "Wearable activity classifier \u2014 original planning row retained",
+   "Industrial vibration monitor"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_wearable_activity_classifier.md",
+   "02_industrial_vibration_monitor.md"
+  ],
+  "sheets": [
+   "01_Embedded_Acquisition_Firmware_and_TinyML.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/36_edge_deployment_compilers_quantisation_and_runtime",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/37_sensor_fusion_iot_and_realtime_perception",
+  "case_rows": [
+   "Warehouse asset tracking",
+   "Multisensor worker-safety system"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "Multisensor_worker_safety_system.md",
+   "Warehouse_asset_tracking.md"
+  ],
+  "sheets": [
+   "01_ecg_sampling_and_aliasing.md",
+   "02_Sensor_Time_Sync_and_Calibration.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/38_robotics_ros2_kinematics_and_control",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/39_robot_perception_navigation_manipulation_and_vla",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/40_robot_simulation_synthetic_data_and_sim_to_real",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "Synthetic_warehouse_dataset.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "07_edge_ai_robotics_and_cyber_physical_systems/41_edge_robotics_safety_fleet_management_and_operations",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/42_healthcare_life_sciences_and_biomedical_ai",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_clinical_documentation_assistant.md",
+   "02_ecg_model_validation_plan.md"
+  ],
+  "sheets": [
+   "01_Clinical_Decision_Support_Evidence_and_Handoff.md",
+   "02_Biomedical_Signal_Pipeline_and_Validation.md",
+   "03_Human_Factors_Alert_Design_and_Recovery.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/43_financial_services_fraud_risk_and_fintech",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_real_time_payments_fraud.md"
+  ],
+  "sheets": [
+   "01_Fraud_Triage_and_Review_Controls.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/44_retail_ecommerce_media_and_personalisation",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Commerce_Metric_Tree_and_Order_Reconciliation.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/45_manufacturing_industrial_iot_and_quality_ai",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/46_supply_chain_logistics_and_autonomous_operations",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/47_cybersecurity_security_operations_and_ai_defense",
+  "case_rows": [
+   "Bound request amplification before expensive parsing and validation",
+   "[REF-IR028](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Algorithmic_DoS/hash_and_regex_resource_exhaustion.md)"
+  ],
+  "sheet_rows": [
+   "Hash collision amplification; catastrophic regex backtracking; pre-parse limits; bounded queues and downstream budgets"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "08_business_domains_and_decision_intelligence/48_energy_climate_public_sector_and_scientific_ai",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "09_trust_security_governance_and_product_leadership",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "99_30_Common_Issues.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "09_trust_security_governance_and_product_leadership/49_ai_security_privacy_safety_and_red_teaming",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Agent_Data_Exfiltration_Simulation.md",
+   "Secure_RAG_design_review.md",
+   "Tenant_adapter_isolation.md"
+  ],
+  "sheets": [
+   "01_AI_Threat_Model_and_Execution_Trust.md",
+   "02_Prompt_Injection_and_Red_Team_Evaluation.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "09_trust_security_governance_and_product_leadership/50_responsible_ai_governance_compliance_and_audits",
+  "case_rows": [
+   "Retrieve regulations applicable to the question date and jurisdiction",
+   "[REF-IR013](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Regulatory_RAG_And_Reranking.md)"
+  ],
+  "sheet_rows": [
+   "Effective intervals; recorded-time history; jurisdiction rules; hybrid retrieval; reranking and claim verification"
+  ],
+  "cases": [],
+  "sheets": [
+   "01_AI_Governance_Operating_Model.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "09_trust_security_governance_and_product_leadership/51_ai_product_management_ux_and_human_ai_collaboration",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "09_trust_security_governance_and_product_leadership/52_ai_economics_strategy_procurement_and_vendor_management",
+  "case_rows": [
+   "Select model routes within hard customer constraints",
+   "[REF-IR002](../../../../INTERVIEW_CASES/Agentic_AI_System/AI_frontier_sys/constrained_provider_routing.md)"
+  ],
+  "sheet_rows": [
+   "Eligibility before scoring; capability adapters; health-aware routing; bounded retry budgets"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "09_trust_security_governance_and_product_leadership/53_communication_leadership_and_ai_transformation",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "10_architecture_practice_and_portfolio_capstones",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "10_architecture_practice_and_portfolio_capstones/54_ml_and_ai_system_design_interviews",
+  "case_rows": [
+   "Design content moderation",
+   "Design enterprise RAG assistant",
+   "Distributed service correctness",
+   "Data-structure operation mix",
+   "Stateful serving consistency"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_content_moderation_enforcement_contract.md"
+  ],
+  "sheets": [
+   "01_Interview_Decision_Framework.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "10_architecture_practice_and_portfolio_capstones/55_incident_response_failure_modes_and_technical_leadership",
+  "case_rows": [
+   "Release and recover an agent as a compatible bundle",
+   "Bound request amplification before expensive parsing and validation",
+   "Return useful graph candidates under explicit traversal budgets",
+   "Diagnose production failures from violated algorithm invariants",
+   "[REF-IR005](../../../../INTERVIEW_CASES/Agentic_AI_System/INDEX/Agent_Release_And_Incident_Operations.md)",
+   "[REF-IR028](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Algorithmic_DoS/hash_and_regex_resource_exhaustion.md)",
+   "[REF-IR029](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md)",
+   "[REF-IR030](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/INTERVIEW_CASE_STUDIES.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_hot_partition_consumer_lag_incident.md",
+   "02_flink_checkpoint_failure_oom_incident.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "10_architecture_practice_and_portfolio_capstones/56_end_to_end_capstones_and_portfolio",
+  "case_rows": [
+   "Choose from six cross-domain capstones",
+   "Complete architecture review"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_local_signal_demo_release_gate.md"
+  ],
+  "sheets": [
+   "01_Capstone_Evidence_Rubric.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/01_fraud_modelling",
+  "case_rows": [
+   "AML transaction monitoring",
+   "Marketplace fraud-ring graph detection",
+   "Evaluate incremental investigator value from graph fraud signals",
+   "[REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md)"
+  ],
+  "sheet_rows": [
+   "Conservative entity resolution; typed claim-actor graphs; motifs and supernodes; point-in-time features; reversible merges"
+  ],
+  "cases": [
+   "01_real_time_payment_card_fraud_detection.md",
+   "02_insurance_claims_fraud_detection.md",
+   "03_account_takeover_application_fraud.md",
+   "04_aml_transaction_monitoring_system.md"
+  ],
+  "sheets": [
+   "01_Fraud_Taxonomy_and_Decision_Grain.md",
+   "02_Decision_Cutoffs_and_Losses.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/02_graph_ml",
+  "case_rows": [
+   "GNN AML ring detection",
+   "Graph recommendation using GraphSAGE or PinSage patterns",
+   "Enterprise knowledge-graph search",
+   "Social link prediction",
+   "Journey attribution graph",
+   "Evaluate incremental investigator value from graph fraud signals",
+   "[REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md)"
+  ],
+  "sheet_rows": [
+   "Conservative entity resolution; typed claim-actor graphs; motifs and supernodes; point-in-time features; reversible merges"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/03_kda_solutions_pharma",
+  "case_rows": [
+   "Patient adherence and persistency",
+   "Brand-performance decomposition",
+   "Payer formulary access drivers",
+   "Omnichannel next-best action attribution"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_HCP_Promotional_Response_Driver_Analysis_Launch_Brand.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/04_marketing_analytics",
+  "case_rows": [
+   "Bayesian MMM for CPG",
+   "Multi-touch e-commerce attribution",
+   "CLV for subscription bidding",
+   "Telecom churn retention",
+   "Geo-lift media measurement"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/05_nlp_llm",
+  "case_rows": [
+   "LLM content moderation at scale",
+   "E-commerce semantic search",
+   "Document entity-extraction pipeline",
+   "Support-ticket summarisation"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Enterprise_RAG_Knowledge_Assistant.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/06_pricing",
+  "case_rows": [
+   "Airline and hotel revenue management",
+   "Insurance rating engine",
+   "Rideshare surge pricing",
+   "SaaS usage-based pricing"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Dynamic_Pricing_Ecommerce_Retail.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/07_product_analytics",
+  "case_rows": [
+   "SaaS onboarding optimisation",
+   "Experimentation platform",
+   "Subscription churn-retention product",
+   "Marketplace search-discovery",
+   "Referral-program analytics"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/08_recommendation_systems",
+  "case_rows": [
+   "Video candidate-generation and ranking",
+   "E-commerce product recommendations",
+   "Music session recommendation",
+   "News-feed ranking",
+   "Ads recommendation ranking"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Netflix_GenRec_Ranking.md",
+   "02_Spotify_Personalization_Experimentation.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/09_search_adtech",
+  "case_rows": [
+   "E-commerce search ranking",
+   "Real-time bidding auction",
+   "CTR prediction",
+   "Query autocomplete",
+   "Ad fraud and brand-safety detection"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting",
+  "case_rows": [
+   "Financial volatility forecast",
+   "Server-metric anomaly detection"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Retail_CPG_Demand_Forecasting_At_Scale.md",
+   "02_Ride_Hailing_Demand_Forecasting.md",
+   "03_Energy_Load_Forecasting.md",
+   "04_Financial_Volatility_Forecasting.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/01_production_ml_case_library/11_us_commercialization_decision_intelligence",
+  "case_rows": [
+   "Pharma next-best-action engine",
+   "Territory alignment",
+   "New-product launch forecasting",
+   "Pharma MMM",
+   "HCP segmentation"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/01_computer_vision_playbook",
+  "case_rows": [
+   "Industrial visual inspection",
+   "Retail shelf availability",
+   "Medical-image triage",
+   "Video safety-event detection",
+   "Edge vision deployment"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "04_Object_Detection.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook",
+  "case_rows": [
+   "Card-fraud alert redesign",
+   "Claims-fraud triage",
+   "Account-takeover response",
+   "AML review queue",
+   "Marketplace seller-risk scoring"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Fraud_Evaluation_Calibration_and_Capacity.md",
+   "02_Calibration_and_Probability_Scoring.md",
+   "03_Imbalanced_Fraud_Learning_and_Thresholds.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/03_kda_pharma_playbook",
+  "case_rows": [
+   "Launch-brand driver analysis",
+   "Mature-brand decomposition",
+   "Adherence programme analysis",
+   "Payer access analysis",
+   "Omnichannel commercial optimisation"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/04_marketing_analytics_playbook",
+  "case_rows": [
+   "Budget reallocation under diminishing returns",
+   "Email lifecycle uplift",
+   "Paid-search incrementality",
+   "Creative experiment",
+   "Retention intervention"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "21_Causal_Inference_Marketing.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/05_nlp_llm_playbook",
+  "case_rows": [
+   "Enterprise Q&A with citations",
+   "Contract extraction",
+   "Support copilot",
+   "Voice-of-customer intelligence",
+   "Safety moderation"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "13_RAG_Retrieval_Augmented_Generation.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/06_pricing_playbook",
+  "case_rows": [
+   "Retail markdown optimisation",
+   "Subscription packaging",
+   "Marketplace fee pricing",
+   "Hotel inventory control",
+   "Real-time offer guardrails"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/07_product_analytics_playbook",
+  "case_rows": [
+   "Activation metric redesign",
+   "Feature adoption experiment",
+   "Marketplace liquidity diagnosis",
+   "Retention cohort analysis",
+   "Pricing-catalogue analytics"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "08_AB_Testing_Product_Experiments.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook",
+  "case_rows": [
+   "Home-page recommender",
+   "Cold-start catalogue",
+   "Streaming continuation ranking",
+   "Diversity regression",
+   "Real-time candidate outage"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Candidate_Generation_Eligibility_and_Ranking.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/09_search_adtech_playbook",
+  "case_rows": [
+   "Retail search zero-result reduction",
+   "Auction pacing failure",
+   "Query rewrite quality test",
+   "Ad-fraud response",
+   "Generative shopping assistant"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "02_BM25_and_Classical_Retrieval.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/02_data_science_method_playbooks/10_time_series_playbook",
+  "case_rows": [
+   "Promo-aware demand forecast",
+   "Intermittent spares",
+   "Energy load uncertainty",
+   "Server anomaly incident",
+   "Forecast reconciliation"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "04_Rolling_Origin_Validation_And_Demand_Accuracy.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/03_practical_ml_design_and_interviews",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/03_practical_ml_design_and_interviews/01_ml_system_design_production",
+  "case_rows": [
+   "Fraud model platform",
+   "Personalisation service",
+   "Forecasting platform",
+   "Content moderation system",
+   "ML incident review",
+   "Select data structures from operation mix and failure semantics",
+   "[REF-IR026](../../../../../INTERVIEW_CASES/DSA/index_basics/INTERVIEW_CASE_STUDIES.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_model_monitoring_drift_incident.md",
+   "02_fraud_platform_capacity_decision.md"
+  ],
+  "sheets": [
+   "01_ML_System_Problem_Framing.md",
+   "03_Feature_Store_Design.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/03_practical_ml_design_and_interviews/02_ml_product_sense",
+  "case_rows": [
+   "Design an AI feature",
+   "Reject an unjustified ML proposal",
+   "Human review workflow",
+   "Metric conflict",
+   "Rollout decision"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/03_practical_ml_design_and_interviews/03_evaluation_reliability_and_incidents",
+  "case_rows": [
+   "RAG regression",
+   "Forecast drift",
+   "Streaming lag",
+   "Edge-model rollback",
+   "Agent action incident",
+   "Release-evaluation gate",
+   "Algorithm-invariant incident replay"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Shelf_Availability_Prediction.md",
+   "02_Labour_Scheduling.md",
+   "03_Shrink_Detection.md",
+   "04_Planogram_Compliance.md",
+   "05_Store_Experiment_Governance.md"
+  ],
+  "sheets": [
+   "01_Store_KPI_Tree.md",
+   "02_Shelf_Availability_Metric_Card.md",
+   "03_Field_Test_Checklist.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment",
+  "case_rows": [],
+  "sheet_rows": [
+   "Authorized retrieval; effective policy versions; claim-level citations; embedding migrations"
+  ],
+  "cases": [
+   "01_BOPIS_Promise_Accuracy.md",
+   "02_Loyalty_Next_Best_Action.md",
+   "03_Returns_Risk_Intervention.md",
+   "04_Cross_Channel_Attribution.md",
+   "05_Omnichannel_Fulfilment_Allocation.md",
+   "06_Authorized_Policy_Retrieval.md"
+  ],
+  "sheets": [
+   "01_Omnichannel_Event_Taxonomy.md",
+   "02_Customer_Identity_Controls.md",
+   "03_Fulfilment_Promise_Metrics.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/03_retail_pricing_promotion_and_media",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [
+   "01_Markdown_Optimisation.md",
+   "02_Promotion_Uplift_Measurement.md",
+   "03_Retail_Media_Incrementality.md",
+   "04_Personalised_Offer_Controls.md",
+   "05_Price_Change_Incident.md"
+  ],
+  "sheets": [
+   "01_Retail_Price_Guardrails.md",
+   "02_Promotion_Experiment_Guide.md",
+   "03_Retail_Media_Measurement.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/05_ecommerce_marketplaces_and_digital_commerce",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/05_ecommerce_marketplaces_and_digital_commerce/01_catalogue_search_discovery_and_conversion",
+  "case_rows": [
+   "Search relevance recovery",
+   "Catalogue enrichment",
+   "Recommendation cold start",
+   "Checkout funnel diagnosis",
+   "Review abuse detection",
+   "Evolve an authorized near-real-time search index safely",
+   "Bound phrase-search memory while preserving exact matches",
+   "Return useful graph candidates under explicit traversal budgets",
+   "Balance autocomplete freshness, memory and abuse controls",
+   "[REF-IR021](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_04.md)",
+   "[REF-IR024](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Search/phrase_search_postings.md)",
+   "[REF-IR029](../../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Graph_Traversal/bounded_bfs_incident.md)",
+   "[REF-IR032](../../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Autocomplete/frequency_admission_and_freshness.md)"
+  ],
+  "sheet_rows": [
+   "WAL and immutable segments; positional phrase queries; field-weighted BM25; exact top-k; ACLs and tombstones",
+   "Rarest-term anchor; lazy postings; skips; relative positions; repeated terms; matching analyzers",
+   "Enqueue-time deduplication; paged adjacency; independent work budgets; deterministic traversal; explicit partial results",
+   "Trie admission; time-window sketches; bounded candidate stores; immutable snapshots; real-time overlays; CDN versioning"
+  ],
+  "cases": [
+   "01_Search_Relevance_Recovery.md",
+   "02_Catalogue_Enrichment.md",
+   "03_Recommendation_Cold_Start.md",
+   "04_Checkout_Funnel_Diagnosis.md",
+   "05_Review_Abuse_Detection.md",
+   "06_Authorized_Near_Real_Time_Index.md",
+   "07_Bounded_Phrase_Search.md",
+   "08_Bounded_Graph_Recommendations.md",
+   "09_Autocomplete_Freshness_Controls.md"
+  ],
+  "sheets": [
+   "01_Ecommerce_Search_Scorecard.md",
+   "02_Catalogue_Quality_and_Discovery_Controls.md",
+   "03_Conversion_Checkout_Fraud_and_Experimentation.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/05_ecommerce_marketplaces_and_digital_commerce/02_marketplace_seller_trust_and_economics",
+  "case_rows": [
+   "Seller-risk scoring",
+   "Dispute automation with human review",
+   "Marketplace fee experiment",
+   "Counterfeit detection",
+   "Supply-demand imbalance"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Seller_Risk_Scoring.md",
+   "02_Dispute_Automation_Review.md",
+   "03_Marketplace_Fee_Experiment.md",
+   "04_Counterfeit_Detection.md",
+   "05_Supply_Demand_Imbalance.md"
+  ],
+  "sheets": [
+   "01_Marketplace_Health_and_Liquidity.md",
+   "02_Seller_Quality_Trust_and_Disputes.md",
+   "03_Trust_Safety_Pricing_and_Cross_Border.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/05_ecommerce_marketplaces_and_digital_commerce/03_digital_commerce_data_platform_and_operations",
+  "case_rows": [
+   "Inventory freshness incident",
+   "Experiment-assignment failure",
+   "Checkout latency regression",
+   "Order-status agent",
+   "Data-contract rollout",
+   "Rebalance caches without overwhelming the authoritative store",
+   "[REF-IR033](../../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Cache_Resilience/cold_cache_and_ring_migration.md)"
+  ],
+  "sheet_rows": [
+   "Single-flight scope; jitter; fill admission; consistent hashing; old/new ring epochs; version fences and tombstones"
+  ],
+  "cases": [
+   "01_Inventory_Freshness_Incident.md",
+   "02_Experiment_Assignment_Failure.md",
+   "03_Checkout_Latency_Regression.md",
+   "04_Order_Status_Agent.md",
+   "05_Data_Contract_Rollout.md",
+   "06_Cache_Ring_Migration.md"
+  ],
+  "sheets": [
+   "01_Commerce_Event_Schema_and_Identity.md",
+   "02_Inventory_Order_and_Analytics_Reliability.md",
+   "03_FinOps_Observability_Incidents.md",
+   "04_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/06_quick_commerce_food_delivery_and_on_demand",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/06_quick_commerce_food_delivery_and_on_demand/01_quick_commerce_inventory_and_assortment",
+  "case_rows": [
+   "Substitution recommendation",
+   "Local assortment optimisation",
+   "Perishable waste forecast",
+   "Availability-promise accuracy",
+   "Stockout root-cause analysis",
+   "Exact inventory range totals"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Substitution_Recommendation.md"
+  ],
+  "sheets": [
+   "01_Quick_Commerce_Availability_KPI_Tree.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/06_quick_commerce_food_delivery_and_on_demand/02_dispatch_eta_and_delivery_operations",
+  "case_rows": [
+   "ETA calibration",
+   "Rider supply forecast",
+   "Batching policy experiment",
+   "Dispatch outage incident",
+   "Late-order recovery",
+   "Routing correctness and ETA quality",
+   "Closure-aware exact route fallback"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/06_quick_commerce_food_delivery_and_on_demand/03_quick_commerce_growth_pricing_and_unit_economics",
+  "case_rows": [
+   "Free-delivery threshold test",
+   "Membership retention model",
+   "Promotion abuse control",
+   "Zone-level profitability",
+   "Price-fairness review"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/07_supply_chain_logistics_warehousing_and_fulfillment",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/07_supply_chain_logistics_warehousing_and_fulfillment/01_planning_forecasting_inventory_and_sourcing",
+  "case_rows": [
+   "Multi-echelon safety-stock design",
+   "Promotion demand forecast",
+   "Supplier disruption scenario",
+   "NPI planning",
+   "Inventory bias investigation",
+   "Maintain exact inventory range totals under point updates",
+   "[REF-IR027](../../../../../INTERVIEW_CASES/DSA/index_basics/Range_Queries/fenwick_inventory_totals.md)"
+  ],
+  "sheet_rows": [
+   "Fenwick tree lowbit traversal; inclusive ranges; point deltas; wide arithmetic; atomic visibility"
+  ],
+  "cases": [],
+  "sheets": [
+   "01_fenwick_inventory_range_totals.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/07_supply_chain_logistics_warehousing_and_fulfillment/02_transport_network_warehouse_and_last_mile",
+  "case_rows": [
+   "Route optimisation",
+   "Warehouse slotting",
+   "Carrier performance",
+   "Last-mile capacity plan",
+   "Returns-network design",
+   "Keep routing correctness separate from ETA quality",
+   "Reject stale shortcuts without losing a shortest-path guarantee",
+   "[REF-IR019](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_02.md)",
+   "[REF-IR023](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Routing/closure_aware_shortest_paths.md)"
+  ],
+  "sheet_rows": [
+   "Coherent traffic snapshots; CH compatibility; fallback Dijkstra; map matching; route versus ETA objectives",
+   "Shortcut expansion; closure snapshots; CH compatibility; directed nonnegative Dijkstra fallback"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/07_supply_chain_logistics_warehousing_and_fulfillment/03_control_towers_events_and_autonomous_operations",
+  "case_rows": [
+   "Shipment exception agent",
+   "Port disruption control tower",
+   "Warehouse robot fleet",
+   "Digital-twin scenario",
+   "Event-stream backpressure incident",
+   "Recover procurement workflows without replaying approvals",
+   "[REF-IR006](../../../../../INTERVIEW_CASES/Agentic_AI_System/Langraph/durable_human_approval_graph.md)"
+  ],
+  "sheet_rows": [
+   "LangGraph checkpoints and interrupts; authenticated resume; approval binding and expiry; idempotent submission"
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/01_content_catalogue_rights_and_lifecycle",
+  "case_rows": [
+   "Title-metadata enrichment",
+   "Rights-window conflict detection",
+   "Catalogue decay model",
+   "Artwork experiment",
+   "Slate demand forecast"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Title_Metadata_Enrichment.md",
+   "02_Rights_Window_Conflict_Detection.md",
+   "03_Catalogue_Decay_Model.md",
+   "04_Artwork_Experiment.md",
+   "05_Slate_Demand_Forecast.md"
+  ],
+  "sheets": [
+   "01_Content_Metadata_Schema_and_Lineage.md",
+   "02_Rights_Window_Decision_Checklist.md",
+   "03_Catalogue_Health_Metrics_and_Lifecycle.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/02_audience_personalisation_and_engagement",
+  "case_rows": [
+   "Homepage ranking",
+   "Continue-watching quality",
+   "Churn prevention",
+   "Kids-profile safety",
+   "Notification fatigue experiment"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Homepage_Ranking.md",
+   "02_Continue_Watching_Quality.md",
+   "03_Churn_Prevention.md",
+   "04_Kids_Profile_Safety.md",
+   "05_Notification_Fatigue_Experiment.md"
+  ],
+  "sheets": [
+   "01_Streaming_Recommender_Metrics_and_Guardrails.md",
+   "02_Engagement_and_Churn_Scorecard.md",
+   "03_Audience_Safety_and_Profile_Guide.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/03_advertising_live_events_and_playback_quality",
+  "case_rows": [
+   "Live-event capacity forecast",
+   "Playback-start regression",
+   "Ad-load experiment",
+   "QoE anomaly detection",
+   "Brand-safety incident"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Live_Event_Capacity_Forecast.md",
+   "02_Playback_Start_Regression.md",
+   "03_Ad_Load_Experiment.md",
+   "04_QoE_Anomaly_Detection.md",
+   "05_Brand_Safety_Incident.md"
+  ],
+  "sheets": [
+   "01_Streaming_QoE_Metrics_and_Instrumentation.md",
+   "02_Live_Event_Readiness_and_Capacity.md",
+   "03_CTV_Measurement_and_Brand_Safety.md",
+   "99_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/09_pharma_healthcare_and_life_sciences",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Evidence_to_Action_Controls.md"
+  ],
+  "case_index_sections": 0,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/09_pharma_healthcare_and_life_sciences/01_commercial_kda_and_omnichannel",
+  "case_rows": [
+   "HCP NBA",
+   "Market-access driver analysis",
+   "Territory redesign",
+   "Launch forecast",
+   "Adherence intervention"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_HCP_Next_Best_Action_Capacity_Constrained.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/09_pharma_healthcare_and_life_sciences/02_clinical_rwe_safety_and_document_intelligence",
+  "case_rows": [
+   "Clinical document copilot",
+   "RWE cohort definition",
+   "Safety-case triage",
+   "ECG signal model",
+   "Medical-image evaluation"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/09_pharma_healthcare_and_life_sciences/03_manufacturing_quality_and_supply_chain",
+  "case_rows": [
+   "Deviation-investigation assistant",
+   "Cold-chain excursion detection",
+   "Batch-release document intelligence",
+   "Quality visual inspection",
+   "Demand-supply scenario"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/10_insurance_actuarial_and_claims",
+  "case_rows": [
+   "Release a delayed-outcome claim model",
+   "Reconcile pricing indication with claims emergence",
+   "[Model risk and change control](../Cheat_Sheets/01_Insurance_Model_Risk_and_Change_Control.md), planned MLOps sheets",
+   "[Non-life pricing](../01_pricing_underwriting_and_reserving/Cheat_Sheets/03_NonLife_Pricing_Ratemaking.md), [reserving](../01_pricing_underwriting_and_reserving/Cheat_Sheets/05_Claims_Reserving_Methods.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Insurance_Model_Risk_and_Change_Control.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/01_pricing_underwriting_and_reserving",
+  "case_rows": [
+   "Motor pricing review",
+   "Underwriting risk model",
+   "Claims reserving forecast",
+   "Cat exposure scenario",
+   "Reinsurance optimisation"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "03_NonLife_Pricing_Ratemaking.md",
+   "05_Claims_Reserving_Methods.md"
+  ],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/02_claims_fraud_customer_and_operations",
+  "case_rows": [
+   "FNOL triage",
+   "Claims-fraud detection",
+   "Damage-image estimate",
+   "Customer communications",
+   "Claims backlog optimisation",
+   "Release and recover an agent as a compatible bundle",
+   "Compare document VLMs with OCR for adjuster assistance",
+   "Separate extraction correctness from routing economics",
+   "Publish reviewed coaching scripts from current product evidence",
+   "Distinguish speech, speaker and extraction errors in call analytics",
+   "Load authorized hierarchies with bounded database work",
+   "Evaluate incremental investigator value from graph fraud signals",
+   "[REF-IR005](../../../../../INTERVIEW_CASES/Agentic_AI_System/INDEX/Agent_Release_And_Incident_Operations.md)",
+   "[REF-IR011](../../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Insurance_Document_VLM.md)",
+   "[REF-IR014](../../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Structured_Extraction_And_Cost_Routing.md)",
+   "[REF-IR015](../../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md)",
+   "[REF-IR016](../../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Multilingual_Call_Objections.md)",
+   "[REF-IR031](../../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Tree_Queries/policy_hierarchy_n_plus_one.md)",
+   "[REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "Medical_Claims_Document_Extraction_MediConCen.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/10_insurance_actuarial_and_claims/03_insurance_mlops_model_risk_and_climate",
+  "case_rows": [
+   "Pricing model drift",
+   "Regulatory model audit",
+   "Climate-risk data change",
+   "Claims model rollback",
+   "Bias investigation",
+   "Retrieve regulations applicable to the question date and jurisdiction",
+   "[REF-IR013](../../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Regulatory_RAG_And_Reranking.md)"
+  ],
+  "sheet_rows": [
+   "Reference-informed design brief; no legal guidance or tested system claim."
+  ],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk/01_payments_aml_and_financial_crime",
+  "case_rows": [
+   "Card-fraud streaming",
+   "AML ring detection",
+   "Sanctions false-positive reduction",
+   "Investigation prioritisation",
+   "Payment outage fraud controls",
+   "Evaluate incremental investigator value from graph fraud signals",
+   "[REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md)"
+  ],
+  "sheet_rows": [
+   "Conservative entity resolution; typed claim-actor graphs; motifs and supernodes; point-in-time features; reversible merges"
+  ],
+  "cases": [
+   "01_Card_Fraud_Streaming_Decision.md",
+   "02_AML_Ring_Detection.md",
+   "03_Sanctions_False_Positive_Reduction.md",
+   "04_Investigation_Prioritisation.md",
+   "05_Payment_Outage_Fraud_Controls.md"
+  ],
+  "sheets": [
+   "01_Payment_Flow_Decisioning.md",
+   "02_Fraud_Detection_and_Thresholds.md",
+   "03_AML_Transaction_Monitoring.md",
+   "04_Sanctions_Screening.md",
+   "05_Entity_Resolution.md",
+   "06_Typed_Fraud_Graphs.md",
+   "07_Streaming_Fraud_Controls.md",
+   "08_Case_Management.md",
+   "09_Investigator_UX.md",
+   "10_Model_Risk_Controls.md",
+   "11_Privacy_and_Access.md",
+   "12_Auditability_and_Evidence.md",
+   "13_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk/02_credit_risk_markets_and_customer_finance",
+  "case_rows": [
+   "Credit decision policy",
+   "Portfolio stress scenario",
+   "Collections prioritisation",
+   "Fair-lending review",
+   "Market volatility forecast"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Credit_Decision_Policy.md",
+   "02_Portfolio_Stress_Scenario.md",
+   "03_Collections_Prioritisation.md",
+   "04_Fair_Lending_Review.md",
+   "05_Market_Volatility_Forecast.md"
+  ],
+  "sheets": [
+   "01_Credit_Data_and_Point_in_Time.md",
+   "02_Underwriting_Policy.md",
+   "03_Scorecards_and_Calibration.md",
+   "04_Portfolio_Risk.md",
+   "05_Stress_Testing.md",
+   "06_Market_Time_Series.md",
+   "07_Collections_Prioritization.md",
+   "08_Customer_Offers.md",
+   "09_Fair_Lending_Assessment.md",
+   "10_Explainability_and_Adverse_Actions.md",
+   "11_Model_Governance.md",
+   "12_Portfolio_Monitoring.md",
+   "13_25_Common_Issues.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/12_marketing_growth_and_adtech",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/12_marketing_growth_and_adtech/01_measurement_attribution_and_incrementality",
+  "case_rows": [
+   "MMM refresh",
+   "Geo experiment",
+   "Attribution dispute",
+   "Budget reallocation",
+   "Privacy-safe measurement"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [
+   "01_Measurement_Decision_Contract.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/12_marketing_growth_and_adtech/02_advertising_auction_creative_and_audience",
+  "case_rows": [
+   "Bid-pacing incident",
+   "Creative selection model",
+   "Audience expansion test",
+   "Brand-safety detection",
+   "Conversion calibration"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/12_marketing_growth_and_adtech/03_lifecycle_growth_and_customer_value",
+  "case_rows": [
+   "Retention prioritisation",
+   "Referral programme",
+   "Lifecycle messaging",
+   "CLV-based acquisition",
+   "Offer fatigue prevention"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/13_mobility_travel_and_hospitality",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/13_mobility_travel_and_hospitality/01_mobility_dispatch_eta_and_pricing",
+  "case_rows": [
+   "ETA calibration",
+   "Driver-supply forecast",
+   "Surge fairness review",
+   "Dispatch failure",
+   "Safety-event triage",
+   "Specify correctness contracts before choosing production algorithms",
+   "Keep routing correctness separate from ETA quality",
+   "Reject stale shortcuts without losing a shortest-path guarantee",
+   "[REF-IR018](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_01.md)",
+   "[REF-IR019](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_02.md)",
+   "[REF-IR023](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Routing/closure_aware_shortest_paths.md)"
+  ],
+  "sheet_rows": [
+   "CH and A* assumptions; rolling-window semantics; clock skew; positional postings; BM25 statistics",
+   "Coherent traffic snapshots; CH compatibility; fallback Dijkstra; map matching; route versus ETA objectives",
+   "Shortcut expansion; closure snapshots; CH compatibility; directed nonnegative Dijkstra fallback"
+  ],
+  "cases": [
+   "01_ETA_Calibration.md",
+   "02_Driver_Supply_Forecast.md",
+   "03_Surge_Fairness_Review.md",
+   "04_Dispatch_Failure_Recovery.md",
+   "05_Safety_Event_Triage.md"
+  ],
+  "sheets": [
+   "01_Mobility_Metric_Tree.md",
+   "02_ETA_Evaluation.md",
+   "03_Dynamic_Pricing_Guardrails.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/13_mobility_travel_and_hospitality/02_travel_hospitality_revenue_and_disruption",
+  "case_rows": [
+   "Hotel revenue forecast",
+   "Flight disruption rebooking",
+   "Travel search ranking",
+   "No-show prediction",
+   "Service recovery"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Hotel_Revenue_Forecast.md",
+   "02_Flight_Disruption_Rebooking.md",
+   "03_Travel_Search_Ranking.md",
+   "04_No_Show_Prediction.md",
+   "05_Service_Recovery.md"
+  ],
+  "sheets": [
+   "01_Revenue_Management_Controls.md",
+   "02_Disruption_Response_Playbook.md",
+   "03_Travel_Fairness_and_Transparency.md"
+  ],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/14_saas_telecom_and_b2b",
+  "case_rows": [
+   "Unified account-health intervention",
+   "Authorized support-answer handoff",
+   "Incident communication across service channels"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/14_saas_telecom_and_b2b/01_saas_product_growth_and_customer_success",
+  "case_rows": [
+   "Onboarding improvement",
+   "Account health model",
+   "Expansion propensity",
+   "Support copilot",
+   "Usage-based pricing"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_activation_funnel_and_guided_onboarding.md"
+  ],
+  "sheets": [
+   "01_SaaS_Metrics_and_Event_Grain.md"
+  ],
+  "case_index_sections": 8,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/14_saas_telecom_and_b2b/02_telecom_network_customer_and_operations",
+  "case_rows": [
+   "Network anomaly detection",
+   "Capacity forecast",
+   "Churn intervention",
+   "Field-service routing",
+   "Outage communication"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/14_saas_telecom_and_b2b/03_enterprise_knowledge_support_and_sales",
+  "case_rows": [
+   "Permission-aware support agent",
+   "Sales call intelligence",
+   "Contract review",
+   "Ticket routing",
+   "Knowledge freshness incident",
+   "Answer support questions from the applicable policy version",
+   "Customize tenant assistants without crossing isolation boundaries",
+   "Preserve answer evidence through ingestion and filtered retrieval",
+   "Publish reviewed coaching scripts from current product evidence",
+   "[REF-IR003](../../../../../INTERVIEW_CASES/Agentic_AI_System/Applied_AI_engineering/grounded_policy_rag.md)",
+   "[REF-IR004](../../../../../INTERVIEW_CASES/Agentic_AI_System/Finetuning_LLM/multi_tenant_adapter_platform.md)",
+   "[REF-IR012](../../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Chunking_And_Vector_Index.md)",
+   "[REF-IR015](../../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md)"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 7,
+  "sheet_index_sections": 11
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/15_energy_climate_and_public_sector",
+  "case_rows": [],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 0,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/15_energy_climate_and_public_sector/01_energy_grid_and_asset_intelligence",
+  "case_rows": [
+   "Load-probability forecast",
+   "Asset predictive maintenance",
+   "Outage restoration",
+   "Renewable dispatch",
+   "Grid anomaly detection"
+  ],
+  "sheet_rows": [],
+  "cases": [
+   "01_Load_Probability_Forecast.md"
+  ],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/15_energy_climate_and_public_sector/02_climate_geospatial_and_resilience",
+  "case_rows": [
+   "Flood-risk prioritisation",
+   "Wildfire detection",
+   "Crop yield forecast",
+   "Disaster logistics",
+   "Climate-data shift"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ },
+ {
+  "unit": "11_data_science_domain_specialisations/15_energy_climate_and_public_sector/03_public_sector_education_and_civic_services",
+  "case_rows": [
+   "Benefits case triage",
+   "Student support analytics",
+   "Public-service knowledge assistant",
+   "Procurement risk",
+   "Appeals-aware decision review"
+  ],
+  "sheet_rows": [],
+  "cases": [],
+  "sheets": [],
+  "case_index_sections": 6,
+  "sheet_index_sections": 0
+ }
+]
