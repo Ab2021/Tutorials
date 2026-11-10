@@ -484,516 +484,434 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Verification: verify metrics report reviewed and all-released populations separately.
 - Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
 
-### Failure diagnostic and recovery ledger
+### Field-decision analysis 01: low-resolution fax
+**Decision grain:** `low-resolution fax` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** character strokes merge after rasterization can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use OCR confidence by token and effective DPI; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** route pages below validated scan-quality threshold; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** compare reviewer field agreement after re-scan; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `low-resolution fax` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-The following ledger expands the failure modes into observable state transitions. Each entry is an illustrative operating rule, not an observed incident record.
+### Field-decision analysis 02: handwritten adjustment
+**Decision grain:** `handwritten adjustment` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** cursive differs from the printed template can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use handwriting flag plus field-level confidence; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** require reviewer transcription; do not infer a value; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** audit accepted transcription against double entry; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `handwritten adjustment` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-01 recovery trace — low-resolution fax
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `low-resolution fax` is evaluated.
-2. **Observed state:** the system records a bounded `low-resolution fax` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** character strokes merge after rasterization.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** OCR confidence by token and effective DPI; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** route pages below validated scan-quality threshold; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** compare reviewer field agreement after re-scan; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 03: rotated page
+**Decision grain:** `rotated page` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** orientation transform is wrong can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use orientation score and text-line angle; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** rotate then rerun layout detection; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify anchors align to expected page coordinates; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `rotated page` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-02 recovery trace — handwritten adjustment
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `handwritten adjustment` is evaluated.
-2. **Observed state:** the system records a bounded `handwritten adjustment` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** cursive differs from the printed template.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** handwriting flag plus field-level confidence; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** require reviewer transcription; do not infer a value; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** audit accepted transcription against double entry; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 04: mixed document bundle
+**Decision grain:** `mixed document bundle` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** pages belong to multiple claim packets can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use claim identifier conflict and page-sequence discontinuity; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** split bundle for reviewer reconciliation; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify every page has exactly one approved bundle owner; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `mixed document bundle` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-03 recovery trace — rotated page
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `rotated page` is evaluated.
-2. **Observed state:** the system records a bounded `rotated page` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** orientation transform is wrong.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** orientation score and text-line angle; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** rotate then rerun layout detection; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify anchors align to expected page coordinates; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 05: stale form version
+**Decision grain:** `stale form version` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** field label is reused with changed semantics can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use template/version classifier and effective-date lookup; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** abstain unless the schema version is approved; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** compare schema hash to the source-record version; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `stale form version` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-04 recovery trace — mixed document bundle
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `mixed document bundle` is evaluated.
-2. **Observed state:** the system records a bounded `mixed document bundle` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** pages belong to multiple claim packets.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** claim identifier conflict and page-sequence discontinuity; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** split bundle for reviewer reconciliation; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify every page has exactly one approved bundle owner; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 06: missing policy number
+**Decision grain:** `missing policy number` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** identifier is absent or obscured can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use required-field completeness check; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** route without entity linkage; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify no downstream join was created; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `missing policy number` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-05 recovery trace — stale form version
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `stale form version` is evaluated.
-2. **Observed state:** the system records a bounded `stale form version` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** field label is reused with changed semantics.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** template/version classifier and effective-date lookup; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** abstain unless the schema version is approved; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** compare schema hash to the source-record version; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 07: duplicate upload
+**Decision grain:** `duplicate upload` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** same pages arrive with different filenames can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use perceptual hash and canonical page hash; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** deduplicate before extraction; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify one retained source lineage; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `duplicate upload` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-06 recovery trace — missing policy number
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `missing policy number` is evaluated.
-2. **Observed state:** the system records a bounded `missing policy number` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** identifier is absent or obscured.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** required-field completeness check; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** route without entity linkage; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify no downstream join was created; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 08: cropped signature region
+**Decision grain:** `cropped signature region` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** capture omits a required region can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use page-boundary and required-region coverage check; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** request complete capture; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify region coverage against page dimensions; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `cropped signature region` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-07 recovery trace — duplicate upload
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `duplicate upload` is evaluated.
-2. **Observed state:** the system records a bounded `duplicate upload` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** same pages arrive with different filenames.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** perceptual hash and canonical page hash; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** deduplicate before extraction; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify one retained source lineage; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 09: table row drift
+**Decision grain:** `table row drift` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** cell boundaries shift across rows can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use row/column consistency and amount-format check; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** send table to structured review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify reconciled row totals; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `table row drift` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-08 recovery trace — cropped signature region
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `cropped signature region` is evaluated.
-2. **Observed state:** the system records a bounded `cropped signature region` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** capture omits a required region.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** page-boundary and required-region coverage check; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** request complete capture; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify region coverage against page dimensions; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 10: currency ambiguity
+**Decision grain:** `currency ambiguity` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** symbol or locale formatting is ambiguous can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use currency source and amount-pattern conflict; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** hold monetary field for reviewer; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify currency against authoritative document context; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `currency ambiguity` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-09 recovery trace — table row drift
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `table row drift` is evaluated.
-2. **Observed state:** the system records a bounded `table row drift` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** cell boundaries shift across rows.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** row/column consistency and amount-format check; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** send table to structured review; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify reconciled row totals; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 11: date ambiguity
+**Decision grain:** `date ambiguity` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** numeric date order is locale-dependent can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use locale evidence and impossible-date test; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** retain raw string and route; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify normalized date with source image; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `date ambiguity` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-10 recovery trace — currency ambiguity
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `currency ambiguity` is evaluated.
-2. **Observed state:** the system records a bounded `currency ambiguity` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** symbol or locale formatting is ambiguous.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** currency source and amount-pattern conflict; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** hold monetary field for reviewer; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify currency against authoritative document context; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 12: negated clause
+**Decision grain:** `negated clause` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** a nearby negation changes the extracted status can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use evidence span includes sentence and qualifier; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** require reviewer confirmation; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify span entails displayed status; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `negated clause` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-11 recovery trace — date ambiguity
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `date ambiguity` is evaluated.
-2. **Observed state:** the system records a bounded `date ambiguity` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** numeric date order is locale-dependent.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** locale evidence and impossible-date test; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** retain raw string and route; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify normalized date with source image; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 13: cross-page continuation
+**Decision grain:** `cross-page continuation` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** field value begins on one page and ends on another can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use continuation markers and page adjacency; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** assemble only with bundle-level evidence; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify both page references remain attached; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `cross-page continuation` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-12 recovery trace — negated clause
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `negated clause` is evaluated.
-2. **Observed state:** the system records a bounded `negated clause` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** a nearby negation changes the extracted status.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** evidence span includes sentence and qualifier; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** require reviewer confirmation; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify span entails displayed status; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 14: stamp obscures text
+**Decision grain:** `stamp obscures text` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** overlay hides printed characters can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use occlusion detector and image-layer check; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** abstain rather than hallucinate characters; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify reviewer can see an unoccluded source; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `stamp obscures text` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-13 recovery trace — cross-page continuation
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `cross-page continuation` is evaluated.
-2. **Observed state:** the system records a bounded `cross-page continuation` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** field value begins on one page and ends on another.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** continuation markers and page adjacency; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** assemble only with bundle-level evidence; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify both page references remain attached; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 15: non-English rider
+**Decision grain:** `non-English rider` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** language model chooses the wrong language can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use language identification confidence and script coverage; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** route to qualified-language reviewer; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify reviewed translation preserves field meaning; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `non-English rider` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-14 recovery trace — stamp obscures text
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `stamp obscures text` is evaluated.
-2. **Observed state:** the system records a bounded `stamp obscures text` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** overlay hides printed characters.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** occlusion detector and image-layer check; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** abstain rather than hallucinate characters; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify reviewer can see an unoccluded source; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 16: barcode mismatch
+**Decision grain:** `barcode mismatch` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** barcode payload disagrees with visible identifier can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use decode result versus OCR comparison; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** treat as conflict, not automatic correction; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify source-system identifier before release; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `barcode mismatch` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-15 recovery trace — non-English rider
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `non-English rider` is evaluated.
-2. **Observed state:** the system records a bounded `non-English rider` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** language model chooses the wrong language.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** language identification confidence and script coverage; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** route to qualified-language reviewer; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify reviewed translation preserves field meaning; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 17: template lookalike
+**Decision grain:** `template lookalike` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** similar layout belongs to a different issuer can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use issuer/logo/template evidence disagreement; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** use unknown-template route; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify template approval against controlled registry; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `template lookalike` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-16 recovery trace — barcode mismatch
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `barcode mismatch` is evaluated.
-2. **Observed state:** the system records a bounded `barcode mismatch` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** barcode payload disagrees with visible identifier.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** decode result versus OCR comparison; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** treat as conflict, not automatic correction; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify source-system identifier before release; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 18: late corrected page
+**Decision grain:** `late corrected page` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** replacement page arrives after extraction can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use version timestamp and page fingerprint change; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** invalidate affected fields and re-review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify superseded values are not exported; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `late corrected page` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-17 recovery trace — template lookalike
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `template lookalike` is evaluated.
-2. **Observed state:** the system records a bounded `template lookalike` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** similar layout belongs to a different issuer.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** issuer/logo/template evidence disagreement; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** use unknown-template route; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify template approval against controlled registry; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 19: encrypted attachment
+**Decision grain:** `encrypted attachment` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** content is unavailable to extractor can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use decryption/access state; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** route to authorized intake process; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify no placeholder extraction entered the record; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `encrypted attachment` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-18 recovery trace — late corrected page
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `late corrected page` is evaluated.
-2. **Observed state:** the system records a bounded `late corrected page` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** replacement page arrives after extraction.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** version timestamp and page fingerprint change; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** invalidate affected fields and re-review; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify superseded values are not exported; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 20: redaction overlap
+**Decision grain:** `redaction overlap` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** redaction covers a required field can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use redaction geometry intersects field region; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** record unavailable rather than reconstruct; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify redaction policy and reviewer disposition; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `redaction overlap` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-19 recovery trace — encrypted attachment
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `encrypted attachment` is evaluated.
-2. **Observed state:** the system records a bounded `encrypted attachment` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** content is unavailable to extractor.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** decryption/access state; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** route to authorized intake process; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify no placeholder extraction entered the record; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 21: long narrative note
+**Decision grain:** `long narrative note` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** field is implied rather than explicitly stated can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use evidence-span absence and low entailment score; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** do not populate structured field; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify reviewer identifies explicit source span; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `long narrative note` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-20 recovery trace — redaction overlap
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `redaction overlap` is evaluated.
-2. **Observed state:** the system records a bounded `redaction overlap` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** redaction covers a required field.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** redaction geometry intersects field region; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** record unavailable rather than reconstruct; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify redaction policy and reviewer disposition; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 22: multi-claim packet
+**Decision grain:** `multi-claim packet` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** one bundle contains several valid claim identifiers can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use entity clustering conflict; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** split into separate work items; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify each output has isolated provenance; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `multi-claim packet` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-21 recovery trace — long narrative note
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `long narrative note` is evaluated.
-2. **Observed state:** the system records a bounded `long narrative note` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** field is implied rather than explicitly stated.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** evidence-span absence and low entailment score; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** do not populate structured field; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify reviewer identifies explicit source span; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 23: scan shadow
+**Decision grain:** `scan shadow` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** edge shadow resembles a digit or punctuation can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use illumination/contrast diagnostic; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** reprocess image then compare candidates; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify stable result across approved preprocessing; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `scan shadow` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-22 recovery trace — multi-claim packet
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `multi-claim packet` is evaluated.
-2. **Observed state:** the system records a bounded `multi-claim packet` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** one bundle contains several valid claim identifiers.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** entity clustering conflict; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** split into separate work items; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify each output has isolated provenance; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 24: checkbox ambiguity
+**Decision grain:** `checkbox ambiguity` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** mark is faint or partially outside box can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use mark coverage and neighboring-box check; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** route binary decision to reviewer; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify image crop and reviewer rationale; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `checkbox ambiguity` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-23 recovery trace — scan shadow
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `scan shadow` is evaluated.
-2. **Observed state:** the system records a bounded `scan shadow` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** edge shadow resembles a digit or punctuation.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** illumination/contrast diagnostic; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** reprocess image then compare candidates; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify stable result across approved preprocessing; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 25: footer leakage
+**Decision grain:** `footer leakage` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** page footer is mistaken for a field value can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use region role classifier and coordinate policy; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** exclude footer region from field candidate set; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify no forbidden region is cited; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `footer leakage` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-24 recovery trace — checkbox ambiguity
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `checkbox ambiguity` is evaluated.
-2. **Observed state:** the system records a bounded `checkbox ambiguity` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** mark is faint or partially outside box.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** mark coverage and neighboring-box check; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** route binary decision to reviewer; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify image crop and reviewer rationale; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 26: header carryover
+**Decision grain:** `header carryover` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** repeated header duplicates an entity name can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use repetition across pages and coordinate role; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** prefer designated entity field only; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify field provenance is not a header; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `header carryover` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-25 recovery trace — footer leakage
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `footer leakage` is evaluated.
-2. **Observed state:** the system records a bounded `footer leakage` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** page footer is mistaken for a field value.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** region role classifier and coordinate policy; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** exclude footer region from field candidate set; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify no forbidden region is cited; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 27: PDF text-layer conflict
+**Decision grain:** `PDF text-layer conflict` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** embedded text differs from rendered pixels can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use text-layer/rendered-token comparison; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** preserve conflict and route; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify reviewer selects authoritative rendition; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `PDF text-layer conflict` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-26 recovery trace — header carryover
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `header carryover` is evaluated.
-2. **Observed state:** the system records a bounded `header carryover` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** repeated header duplicates an entity name.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** repetition across pages and coordinate role; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** prefer designated entity field only; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify field provenance is not a header; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 28: blank page insertion
+**Decision grain:** `blank page insertion` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** separator page shifts page numbering can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use blank-page detector and source index reconciliation; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** retain page identity independent of ordinal; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify page-to-source mapping; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `blank page insertion` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-27 recovery trace — PDF text-layer conflict
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `PDF text-layer conflict` is evaluated.
-2. **Observed state:** the system records a bounded `PDF text-layer conflict` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** embedded text differs from rendered pixels.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** text-layer/rendered-token comparison; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** preserve conflict and route; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify reviewer selects authoritative rendition; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 29: quality threshold gaming
+**Decision grain:** `quality threshold gaming` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** high confidence is produced on an easy subset can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use coverage by template and scan-quality slice; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** monitor selective coverage; retain review sample; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify calibration on routed and accepted populations; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `quality threshold gaming` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-28 recovery trace — blank page insertion
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `blank page insertion` is evaluated.
-2. **Observed state:** the system records a bounded `blank page insertion` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** separator page shifts page numbering.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** blank-page detector and source index reconciliation; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** retain page identity independent of ordinal; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify page-to-source mapping; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 30: review queue overload
+**Decision grain:** `review queue overload` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** valid routed items wait beyond service target can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use arrival/service rates and queue age; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** throttle intake or add authorized capacity; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify queue age and error rate recover; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `review queue overload` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-29 recovery trace — quality threshold gaming
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `quality threshold gaming` is evaluated.
-2. **Observed state:** the system records a bounded `quality threshold gaming` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** high confidence is produced on an easy subset.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** coverage by template and scan-quality slice; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** monitor selective coverage; retain review sample; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify calibration on routed and accepted populations; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 31: reviewer override loop
+**Decision grain:** `reviewer override loop` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** same disputed field cycles between model and reviewer can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use override reason codes and repeat count; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** finalize reviewer authority and create issue record; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify loop stops with one final disposition; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `reviewer override loop` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-30 recovery trace — review queue overload
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `review queue overload` is evaluated.
-2. **Observed state:** the system records a bounded `review queue overload` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** valid routed items wait beyond service target.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** arrival/service rates and queue age; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** throttle intake or add authorized capacity; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify queue age and error rate recover; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 32: schema deployment mismatch
+**Decision grain:** `schema deployment mismatch` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** extractor emits a field absent from target schema can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use contract-version validation; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** block export and roll back mapping; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify producer/consumer versions match; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `schema deployment mismatch` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-31 recovery trace — reviewer override loop
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `reviewer override loop` is evaluated.
-2. **Observed state:** the system records a bounded `reviewer override loop` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** same disputed field cycles between model and reviewer.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** override reason codes and repeat count; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** finalize reviewer authority and create issue record; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify loop stops with one final disposition; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 33: downstream coercion
+**Decision grain:** `downstream coercion` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** text amount is silently rounded or truncated can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use typed parse audit and precision comparison; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** store raw value and reject lossy coercion; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify exported amount matches approved value; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `downstream coercion` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-32 recovery trace — schema deployment mismatch
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `schema deployment mismatch` is evaluated.
-2. **Observed state:** the system records a bounded `schema deployment mismatch` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** extractor emits a field absent from target schema.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** contract-version validation; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** block export and roll back mapping; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify producer/consumer versions match; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 34: access-scope leak
+**Decision grain:** `access-scope leak` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** review screen shows another claim page can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use authorization decision and page-to-claim binding; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** revoke session and investigate exposure; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify negative authorization tests; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `access-scope leak` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-33 recovery trace — downstream coercion
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `downstream coercion` is evaluated.
-2. **Observed state:** the system records a bounded `downstream coercion` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** text amount is silently rounded or truncated.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** typed parse audit and precision comparison; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** store raw value and reject lossy coercion; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify exported amount matches approved value; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 35: audit-log gap
+**Decision grain:** `audit-log gap` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** extraction lacks model or source version can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use required lineage fields absent; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** block release until lineage is complete; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify immutable audit record; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `audit-log gap` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-34 recovery trace — access-scope leak
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `access-scope leak` is evaluated.
-2. **Observed state:** the system records a bounded `access-scope leak` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** review screen shows another claim page.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** authorization decision and page-to-claim binding; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** revoke session and investigate exposure; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify negative authorization tests; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 36: reviewer fatigue
+**Decision grain:** `reviewer fatigue` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** long bundles reduce correction quality can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use error rate by bundle length and reviewer workload; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** split work and sample second review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify agreement returns to control range; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `reviewer fatigue` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-35 recovery trace — audit-log gap
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `audit-log gap` is evaluated.
-2. **Observed state:** the system records a bounded `audit-log gap` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** extraction lacks model or source version.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** required lineage fields absent; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** block release until lineage is complete; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify immutable audit record; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 37: rare template drift
+**Decision grain:** `rare template drift` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** new template has no labelled validation examples can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use unknown-template rate and novelty embedding distance; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** abstain and create controlled onboarding set; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify approval before automatic route; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `rare template drift` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-36 recovery trace — reviewer fatigue
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `reviewer fatigue` is evaluated.
-2. **Observed state:** the system records a bounded `reviewer fatigue` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** long bundles reduce correction quality.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** error rate by bundle length and reviewer workload; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** split work and sample second review; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify agreement returns to control range; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 38: label leakage
+**Decision grain:** `label leakage` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** post-decision adjudication note enters input can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use availability timestamp exceeds extraction cut-off; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** remove field and rerun split; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify point-in-time feature manifest; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `label leakage` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
-#### FM-37 recovery trace — rare template drift
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `rare template drift` is evaluated.
-2. **Observed state:** the system records a bounded `rare template drift` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** new template has no labelled validation examples.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** unknown-template rate and novelty embedding distance; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** abstain and create controlled onboarding set; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify approval before automatic route; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
-
-#### FM-38 recovery trace — label leakage
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `label leakage` is evaluated.
-2. **Observed state:** the system records a bounded `label leakage` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** post-decision adjudication note enters input.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** availability timestamp exceeds extraction cut-off; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** remove field and rerun split; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify point-in-time feature manifest; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
-
-#### FM-39 recovery trace — selective-label bias
-1. **Precondition:** a candidate field is associated with an immutable source version, page hash, region, schema, and access decision before `selective-label bias` is evaluated.
-2. **Observed state:** the system records a bounded `selective-label bias` signal rather than converting uncertainty into a completed field.
-3. **Competing cause A:** only routed documents receive gold labels.
-4. **Competing cause B:** an upstream identity, access, template, or source-version error can produce the same apparent symptom; inspect those gates first.
-5. **Discriminator:** route propensity and sampled accepted audits; retain the raw signal and threshold/configuration version with the decision.
-6. **State transition:** candidate `PENDING` becomes `ROUTED` or `SOURCE_REQUESTED`; it must not become `ACCEPTED` solely because another field looks plausible.
-7. **Recovery control:** sample accepted outputs for independent review; the reviewer receives the source crop and reason code, not a hidden score alone.
-8. **Correction:** update only the reviewed field/version lineage; do not overwrite the raw evidence or silently reuse a correction for a different bundle.
-9. **Prevention:** monitor occurrence by template, scan channel, language, bundle length, and extraction version so a local regression is not hidden in an aggregate.
-10. **Verification:** verify metrics report reviewed and all-released populations separately; verify the output includes the final disposition, responsible role, and timestamp.
-11. **Escalation boundary:** if source identity, authority, or schema validity is unresolved, stop the workflow and hand off to the corresponding intake, security, or schema owner.
+### Field-decision analysis 39: selective-label bias
+**Decision grain:** `selective-label bias` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
+**Competing explanation:** only routed documents receive gold labels can resemble a valid extraction, while a wrong claim binding can produce the same displayed text on the wrong record.
+**Evidence test:** use route propensity and sampled accepted audits; this test changes the decision only when its source and configuration version are recorded with the candidate.
+**Routing consequence:** sample accepted outputs for independent review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
+**Acceptance boundary:** verify metrics report reviewed and all-released populations separately; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
+**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
+**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Counterexample:** a high OCR score does not resolve `selective-label bias` when required page-region, claim-binding, or access evidence is absent.
+**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
 
 ## 13. Transferable Lesson
 

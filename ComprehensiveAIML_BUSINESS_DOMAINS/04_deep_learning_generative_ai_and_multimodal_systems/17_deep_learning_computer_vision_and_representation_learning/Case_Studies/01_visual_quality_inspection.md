@@ -401,7 +401,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q01. Why is accuracy inadequate for this case?**
 - **Checked answer:** At p=1.2%, always accepting is 98.8% accurate yet captures no defects. Use confusion-matrix counts, defect recall, false-alert rate, queue load, and disposition cost instead.
-- **Reasoning:** At p=1.2%, always accepting is 98.8% accurate yet captures no defects. Use confusion-matrix counts, defect recall, false-alert rate, queue load, and disposition cost instead.
+- **Reasoning:** The base rate makes the negative class dominate; the same 98.8% figure leaves the defect numerator, review burden, and cost of an escape entirely unspecified.
 - **Follow-up:** Ask for the positive-class definition and prevalence.
 - **Acceptable alternatives:** AUC may be reported for ranking, but it cannot select a staffed operating point alone.
 - **Red flags:** Quoting one accuracy number or ignoring denominator.
@@ -410,7 +410,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q02. Recompute the modeled review volume at the stated threshold.**
 - **Checked answer:** Defects: 216,000*.012=2,592; TP=2,592*.92=2,384.64. Good: 213,408; FP=213,408*.035=7,469.28. Review total=9,853.92.
-- **Reasoning:** Defects: 216,000*.012=2,592; TP=2,592*.92=2,384.64. Good: 213,408; FP=213,408*.035=7,469.28. Review total=9,853.92.
+- **Reasoning:** TPR conditions on the 2,592 defective parts whereas FPR conditions on the 213,408 good parts, so applying either rate to 216,000 would mix denominators.
 - **Follow-up:** What does a fractional count mean here?
 - **Acceptable alternatives:** It is an expected count; integer simulation would vary around it.
 - **Red flags:** Adding TPR and FPR or applying FPR to all parts.
@@ -419,7 +419,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q03. Why must parts and lots be grouped in the split?**
 - **Checked answer:** Views of one part and serially similar lot parts share appearance and process conditions. Random image splits leak these correlations, creating optimistic held-out results.
-- **Reasoning:** Views of one part and serially similar lot parts share appearance and process conditions. Random image splits leak these correlations, creating optimistic held-out results.
+- **Reasoning:** Part and lot correlation is information that will not be available on a genuinely future lot; grouping removes that shortcut and therefore tests the intended generalization.
 - **Follow-up:** How would you test for leakage?
 - **Acceptable alternatives:** Group by part and lot, audit overlap, and deduplicate near images.
 - **Red flags:** Only randomizing image filenames.
@@ -428,7 +428,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q04. A model identifies the correct defective part but highlights glare. Is it correct?**
 - **Checked answer:** It is correct for part-level classification but fails the separate localization requirement. Report localization only on region-annotated visible defects with a predetermined criterion.
-- **Reasoning:** It is correct for part-level classification but fails the separate localization requirement. Report localization only on region-annotated visible defects with a predetermined criterion.
+- **Reasoning:** The classification label answers whether the part is defective, while a region claim adds a geometric correspondence requirement that glare can violate independently.
 - **Follow-up:** When would you hide the overlay?
 - **Acceptable alternatives:** Hide it if it misleads reviewers or lacks validated utility.
 - **Red flags:** Calling saliency a verified defect location.
@@ -437,7 +437,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q05. What is the reviewer capacity, and why is staffed time important?**
 - **Checked answer:** Six reviewers * 15 parts/(reviewer*min) * 450 staffed min = 40,500 reviews/shift. Breaks and handover mean calendar eight hours are not the service denominator.
-- **Reasoning:** Six reviewers * 15 parts/(reviewer*min) * 450 staffed min = 40,500 reviews/shift. Breaks and handover mean calendar eight hours are not the service denominator.
+- **Reasoning:** The service rate is earned only during staffed work, so breaks and handover reduce available reviewer-minutes even when the calendar shift remains eight hours long.
 - **Follow-up:** How many reviewers for manual inspection?
 - **Acceptable alternatives:** ceil(216,000/(15*450))=32.
 - **Red flags:** Using 480 calendar minutes without saying so.
@@ -446,7 +446,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q06. What FPR boundary follows from the stated staffing constraint?**
 - **Checked answer:** With TPR=.92, FPR_max=(40,500-2,592*.92)/213,408=17.8603%. Above it, mean review demand exceeds mean capacity.
-- **Reasoning:** The boundary leaves exactly 40,500 expected review slots under the stated fluid model, but it provides no headroom for bursts, breaks, or rate-estimation error.
+- **Reasoning:** The equation spends the available 40,500 slots on expected true and false alerts; any higher FPR creates more work than the mean service budget can remove.
 - **Follow-up:** Is operating exactly there safe?
 - **Acceptable alternatives:** No; bursts, interruptions, and rounding need headroom.
 - **Red flags:** Treating it as a service-level guarantee.
@@ -455,7 +455,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q07. Why is score calibration relevant after choosing a ranking model?**
 - **Checked answer:** A threshold chosen from expected risk/cost assumes scores correspond to observed risk. Ranking can remain good while predicted probabilities are overconfident or shift by lot.
-- **Reasoning:** A threshold chosen from expected risk/cost assumes scores correspond to observed risk. Ranking can remain good while predicted probabilities are overconfident or shift by lot.
+- **Reasoning:** The operating policy attaches an economic meaning to score ranges; without held-out calibration, a nominal risk threshold cannot support that expected-cost comparison.
 - **Follow-up:** How do you check it?
 - **Acceptable alternatives:** Reliability bins on held-out adjudicated data by relevant slices.
 - **Red flags:** Using training-set calibration only.
@@ -464,7 +464,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q08. A new lot doubles defect prevalence but rates are assumed unchanged. What changes?**
 - **Checked answer:** At p=3%, review becomes 13,294.80 and PPV rises to 44.841% in the stated sensitivity. The quality consequence still needs defect-type validation.
-- **Reasoning:** At p=3%, review becomes 13,294.80 and PPV rises to 44.841% in the stated sensitivity. The quality consequence still needs defect-type validation.
+- **Reasoning:** Changing prevalence changes the mixture of defective and good parts entering the same conditional-rate equations, so the alert composition changes even before any model is retrained.
 - **Follow-up:** What may not stay unchanged?
 - **Acceptable alternatives:** TPR/FPR, calibration, and reviewer behavior can change with the lot.
 - **Red flags:** Assuming prevalence changes only PPV with certainty.
@@ -473,7 +473,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q09. A camera loses focus during a shift. What should the system do?**
 - **Checked answer:** Detect health degradation with reference/golden-part checks, prevent automated accept for affected views, route to manual handling, preserve the incident interval, then clean/refocus and verify before release.
-- **Reasoning:** Detect health degradation with reference/golden-part checks, prevent automated accept for affected views, route to manual handling, preserve the incident interval, then clean/refocus and verify before release.
+- **Reasoning:** Defocus invalidates the input measurement itself, so model output is outside its validated sensing condition and physical containment must precede model troubleshooting.
 - **Follow-up:** Why not keep accepting low scores?
 - **Acceptable alternatives:** The score distribution is no longer validated for degraded sensing.
 - **Red flags:** Merely retraining without physical recovery.
@@ -482,7 +482,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q10. What is label ambiguity here, and how do you manage it?**
 - **Checked answer:** A cosmetic variation, rework route, and customer-relevant defect may differ. Use specification-linked adjudication, an uncertain state, disagreement records, and taxonomy versions.
-- **Reasoning:** A cosmetic variation, rework route, and customer-relevant defect may differ. Use specification-linked adjudication, an uncertain state, disagreement records, and taxonomy versions.
+- **Reasoning:** The training target is only defensible when it records the specification-based quality judgment rather than a workflow action that can be caused by caution or capacity.
 - **Follow-up:** Can rework code be the label?
 - **Acceptable alternatives:** Not without audit; it can encode caution or downstream routing.
 - **Red flags:** Forcing disagreement into a binary label.
@@ -491,7 +491,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q11. Why is an automatic reject intentionally excluded?**
 - **Checked answer:** The scenario retains human final authority because false rejects and correction decisions carry physical and business consequences, and no validation supports autonomy.
-- **Reasoning:** The scenario retains human final authority because false rejects and correction decisions carry physical and business consequences, and no validation supports autonomy.
+- **Reasoning:** A high score is evidence about an input under a model, whereas reject/rework has physical and business consequences that remain assigned to the authorized reviewer.
 - **Follow-up:** When might the policy change?
 - **Acceptable alternatives:** Only after governed evidence and explicit authority, outside this initial case.
 - **Red flags:** Equating high confidence with authorization.
@@ -500,7 +500,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q12. What does an inference timeout mean operationally?**
 - **Checked answer:** It means the part lacks a timely trustworthy route. Emit a manual-handling event, use the physical fallback lane, reconcile the part ID, and investigate latency reason codes.
-- **Reasoning:** It means the part lacks a timely trustworthy route. Emit a manual-handling event, use the physical fallback lane, reconcile the part ID, and investigate latency reason codes.
+- **Reasoning:** Once the part reaches the routing point, a late retry cannot safely restore a missed physical decision; the state machine therefore needs an explicit manual terminal path.
 - **Follow-up:** What must not happen?
 - **Acceptable alternatives:** Silent accept or duplicate final disposition.
 - **Red flags:** Retrying until a physical part has passed the decision point.
@@ -509,7 +509,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q13. Compare a detector and a part-level classifier for this task.**
 - **Checked answer:** A classifier may offer simpler triage; a detector/segmenter may support visible-region review. Neither is selected by fashion: use label availability, defect geometry, reviewer need, and grouped evaluation.
-- **Reasoning:** A classifier may offer simpler triage; a detector/segmenter may support visible-region review. Neither is selected by fashion: use label availability, defect geometry, reviewer need, and grouped evaluation.
+- **Reasoning:** Detector value depends on whether reliable region labels and localized reviewer actions exist; a classifier can be the better decision tool when the required outcome is part-level triage.
 - **Follow-up:** What if defects are diffuse?
 - **Acceptable alternatives:** Region labels/overlap may be inappropriate; evaluate part-level decision instead.
 - **Red flags:** Assuming localization always improves quality.
@@ -518,7 +518,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q14. What plausible wrong method could make the project look successful?**
 - **Checked answer:** Randomly splitting all images lets near-duplicate views and lot appearance leak across train/test. It can inflate metrics while failing on a future lot.
-- **Reasoning:** Randomly splitting all images lets near-duplicate views and lot appearance leak across train/test. It can inflate metrics while failing on a future lot.
+- **Reasoning:** Randomization estimates performance on correlated images from the same production context, not performance on an unseen context; it answers an easier question than the operational one.
 - **Follow-up:** What is the correction?
 - **Acceptable alternatives:** Part/lot/time grouped splits plus overlap audits and a later-lot final holdout.
 - **Red flags:** Only adding more augmentations.
@@ -527,7 +527,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q15. The review queue is below mean capacity but waits spike at breaks. What changes?**
 - **Checked answer:** Model arrivals and service by time block, preserve headroom, set queue-age alerts, redistribute staff or throttle routing, and route overflow to manual handling.
-- **Reasoning:** Model arrivals and service by time block, preserve headroom, set queue-age alerts, redistribute staff or throttle routing, and route overflow to manual handling.
+- **Reasoning:** A shift total is a fluid average, while break-aligned arrivals and interruptions create time-varying imbalance that can produce unacceptable waits despite spare average capacity.
 - **Follow-up:** Does 24.33% utilization prove no waits?
 - **Acceptable alternatives:** No; averages hide bursts and interruptions.
 - **Red flags:** Declaring capacity solved from shift totals.
@@ -536,7 +536,7 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 
 **Q16. How would you decide whether an alert-cost threshold should tighten?**
 - **Checked answer:** Compare the incremental reduction in escaped-defect consequence against review labor, false-reject correction, capacity, and human-factor guardrails using held-out evidence. Recompute under changed prevalence and costs.
-- **Reasoning:** Compare the incremental reduction in escaped-defect consequence against review labor, false-reject correction, capacity, and human-factor guardrails using held-out evidence. Recompute under changed prevalence and costs.
+- **Reasoning:** Tightening is justified only when the marginal avoided escape harm exceeds added review and correction burden without violating capacity or the human authority guardrail.
 - **Follow-up:** What evidence is missing here?
 - **Acceptable alternatives:** Actual costs, conditional rates, queue data, and quality authority acceptance.
 - **Red flags:** Optimizing F1 without decision costs.
@@ -549,505 +549,444 @@ Related module topics include vision evaluation and error taxonomy, CNNs/attenti
 - **Failure boundary:** PLC sequence, readable code, and manifest ID can disagree.
 - **Diagnostic signal:** Sequence gaps and code/manifest mismatch rate.
 - **Immediate recovery:** Route unmatched events to manual; never borrow adjacent identity.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The controls engineer owns the part identity handshake control: it must evaluate `Sequence gaps and code/manifest mismatch rate.` at the stated decision boundary and authorize or escalate `Route unmatched events to manual; never borrow adjacent identity.` rather than treating a score as authority.
+- **Evidence record:** For a part identity handshake event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Sequence gaps and code/manifest mismatch rate.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The part identity handshake incident closes only after `Route unmatched events to manual; never borrow adjacent identity.` has been performed, the diagnostic `Sequence gaps and code/manifest mismatch rate.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Clock synchronization
 - **Failure boundary:** Late or non-monotonic timestamps corrupt time splits and reconciliation.
 - **Diagnostic signal:** Offset and monotonicity checks across station devices.
 - **Immediate recovery:** Mark time-uncertain records and repair synchronization before evaluation.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The controls engineer owns the clock synchronization control: it must evaluate `Offset and monotonicity checks across station devices.` at the stated decision boundary and authorize or escalate `Mark time-uncertain records and repair synchronization before evaluation.` rather than treating a score as authority.
+- **Evidence record:** For a clock synchronization event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Offset and monotonicity checks across station devices.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The clock synchronization incident closes only after `Mark time-uncertain records and repair synchronization before evaluation.` has been performed, the diagnostic `Offset and monotonicity checks across station devices.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Required-view manifest
 - **Failure boundary:** One missing view can hide a defect-bearing surface.
 - **Diagnostic signal:** Completion fraction by camera and revision.
 - **Immediate recovery:** Make any absent required view a manual route.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the required-view manifest control: it must evaluate `Completion fraction by camera and revision.` at the stated decision boundary and authorize or escalate `Make any absent required view a manual route.` rather than treating a score as authority.
+- **Evidence record:** For a required-view manifest event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Completion fraction by camera and revision.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The required-view manifest incident closes only after `Make any absent required view a manual route.` has been performed, the diagnostic `Completion fraction by camera and revision.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Exposure saturation
 - **Failure boundary:** Clipped highlights or shadows erase texture evidence.
 - **Diagnostic signal:** Pixel-extrema fraction by camera.
 - **Immediate recovery:** Hold affected view and restore approved exposure setting.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the exposure saturation control: it must evaluate `Pixel-extrema fraction by camera.` at the stated decision boundary and authorize or escalate `Hold affected view and restore approved exposure setting.` rather than treating a score as authority.
+- **Evidence record:** For a exposure saturation event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Pixel-extrema fraction by camera.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The exposure saturation incident closes only after `Hold affected view and restore approved exposure setting.` has been performed, the diagnostic `Pixel-extrema fraction by camera.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Lens contamination
 - **Failure boundary:** Dust and oil become a sensing fault, not a defect class.
 - **Diagnostic signal:** Sharpness trend and fixed-pattern residue.
 - **Immediate recovery:** Clean under procedure and verify with a reference part.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the lens contamination control: it must evaluate `Sharpness trend and fixed-pattern residue.` at the stated decision boundary and authorize or escalate `Clean under procedure and verify with a reference part.` rather than treating a score as authority.
+- **Evidence record:** For a lens contamination event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Sharpness trend and fixed-pattern residue.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The lens contamination incident closes only after `Clean under procedure and verify with a reference part.` has been performed, the diagnostic `Sharpness trend and fixed-pattern residue.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Mechanical vibration
 - **Failure boundary:** Mount movement changes registration and blur.
 - **Diagnostic signal:** Fiducial displacement and blur during conveyor operation.
 - **Immediate recovery:** Hold automated accepts, secure mount, and realign.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the mechanical vibration control: it must evaluate `Fiducial displacement and blur during conveyor operation.` at the stated decision boundary and authorize or escalate `Hold automated accepts, secure mount, and realign.` rather than treating a score as authority.
+- **Evidence record:** For a mechanical vibration event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Fiducial displacement and blur during conveyor operation.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The mechanical vibration incident closes only after `Hold automated accepts, secure mount, and realign.` has been performed, the diagnostic `Fiducial displacement and blur during conveyor operation.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Illumination aging
 - **Failure boundary:** Changing light output shifts appearance and scores.
 - **Diagnostic signal:** Reference-panel intensity trend.
 - **Immediate recovery:** Replace/recalibrate light and version the changed setting.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the illumination aging control: it must evaluate `Reference-panel intensity trend.` at the stated decision boundary and authorize or escalate `Replace/recalibrate light and version the changed setting.` rather than treating a score as authority.
+- **Evidence record:** For a illumination aging event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Reference-panel intensity trend.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The illumination aging incident closes only after `Replace/recalibrate light and version the changed setting.` has been performed, the diagnostic `Reference-panel intensity trend.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Ambient-light intrusion
 - **Failure boundary:** External light leaks can create shift-specific alerts.
 - **Diagnostic signal:** Score change correlated with enclosure state/time.
 - **Immediate recovery:** Repair shield and retain manual handling until stable.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the ambient-light intrusion control: it must evaluate `Score change correlated with enclosure state/time.` at the stated decision boundary and authorize or escalate `Repair shield and retain manual handling until stable.` rather than treating a score as authority.
+- **Evidence record:** For a ambient-light intrusion event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Score change correlated with enclosure state/time.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The ambient-light intrusion incident closes only after `Repair shield and retain manual handling until stable.` has been performed, the diagnostic `Score change correlated with enclosure state/time.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Camera replacement
 - **Failure boundary:** Same camera model can have different color and optics.
 - **Diagnostic signal:** Serial-number/configuration fingerprint mismatch.
 - **Immediate recovery:** Treat replacement as unvalidated sensing configuration.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the camera replacement control: it must evaluate `Serial-number/configuration fingerprint mismatch.` at the stated decision boundary and authorize or escalate `Treat replacement as unvalidated sensing configuration.` rather than treating a score as authority.
+- **Evidence record:** For a camera replacement event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Serial-number/configuration fingerprint mismatch.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The camera replacement incident closes only after `Treat replacement as unvalidated sensing configuration.` has been performed, the diagnostic `Serial-number/configuration fingerprint mismatch.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Firmware change
 - **Failure boundary:** Firmware can change trigger timing or image encoding.
 - **Diagnostic signal:** Firmware delta in manifest.
 - **Immediate recovery:** Freeze automated policy pending compatibility test.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The controls engineer owns the firmware change control: it must evaluate `Firmware delta in manifest.` at the stated decision boundary and authorize or escalate `Freeze automated policy pending compatibility test.` rather than treating a score as authority.
+- **Evidence record:** For a firmware change event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Firmware delta in manifest.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The firmware change incident closes only after `Freeze automated policy pending compatibility test.` has been performed, the diagnostic `Firmware delta in manifest.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Part orientation
 - **Failure boundary:** A flipped or rotated part can make target area invisible.
 - **Diagnostic signal:** Pose confidence and fiducial geometry.
 - **Immediate recovery:** Send out-of-pose part to fixture correction/manual review.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the part orientation control: it must evaluate `Pose confidence and fiducial geometry.` at the stated decision boundary and authorize or escalate `Send out-of-pose part to fixture correction/manual review.` rather than treating a score as authority.
+- **Evidence record:** For a part orientation event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Pose confidence and fiducial geometry.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The part orientation incident closes only after `Send out-of-pose part to fixture correction/manual review.` has been performed, the diagnostic `Pose confidence and fiducial geometry.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Occlusion
 - **Failure boundary:** Fixture, hand, debris, or packaging can cover the region.
 - **Diagnostic signal:** Required-region visibility flag.
 - **Immediate recovery:** Manual route and capture only after obstruction removal.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the occlusion control: it must evaluate `Required-region visibility flag.` at the stated decision boundary and authorize or escalate `Manual route and capture only after obstruction removal.` rather than treating a score as authority.
+- **Evidence record:** For a occlusion event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Required-region visibility flag.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The occlusion incident closes only after `Manual route and capture only after obstruction removal.` has been performed, the diagnostic `Required-region visibility flag.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Compression change
 - **Failure boundary:** Lossy encoding can erase small scratches.
 - **Diagnostic signal:** Codec/version and high-frequency artifact audit.
 - **Immediate recovery:** Restore approved encoding and re-evaluate candidate.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the compression change control: it must evaluate `Codec/version and high-frequency artifact audit.` at the stated decision boundary and authorize or escalate `Restore approved encoding and re-evaluate candidate.` rather than treating a score as authority.
+- **Evidence record:** For a compression change event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Codec/version and high-frequency artifact audit.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The compression change incident closes only after `Restore approved encoding and re-evaluate candidate.` has been performed, the diagnostic `Codec/version and high-frequency artifact audit.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Color pipeline
 - **Failure boundary:** Auto white balance confounds print and discoloration analysis.
 - **Diagnostic signal:** Color-patch error and white-balance setting.
 - **Immediate recovery:** Lock approved pipeline or use manual color check.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the color pipeline control: it must evaluate `Color-patch error and white-balance setting.` at the stated decision boundary and authorize or escalate `Lock approved pipeline or use manual color check.` rather than treating a score as authority.
+- **Evidence record:** For a color pipeline event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Color-patch error and white-balance setting.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The color pipeline incident closes only after `Lock approved pipeline or use manual color check.` has been performed, the diagnostic `Color-patch error and white-balance setting.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Crop registration
 - **Failure boundary:** Offset crop can omit the feature under inspection.
 - **Diagnostic signal:** Fiducial-to-crop displacement.
 - **Immediate recovery:** Reject crop config and use full-frame/manual route.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the crop registration control: it must evaluate `Fiducial-to-crop displacement.` at the stated decision boundary and authorize or escalate `Reject crop config and use full-frame/manual route.` rather than treating a score as authority.
+- **Evidence record:** For a crop registration event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Fiducial-to-crop displacement.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The crop registration incident closes only after `Reject crop config and use full-frame/manual route.` has been performed, the diagnostic `Fiducial-to-crop displacement.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Resolution mismatch
 - **Failure boundary:** Serving scale may not resolve training-scale defect.
 - **Diagnostic signal:** Input dimensions and pixels-per-millimeter proxy.
 - **Immediate recovery:** Block mismatched deployment and recapture/revalidate.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the resolution mismatch control: it must evaluate `Input dimensions and pixels-per-millimeter proxy.` at the stated decision boundary and authorize or escalate `Block mismatched deployment and recapture/revalidate.` rather than treating a score as authority.
+- **Evidence record:** For a resolution mismatch event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Input dimensions and pixels-per-millimeter proxy.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The resolution mismatch incident closes only after `Block mismatched deployment and recapture/revalidate.` has been performed, the diagnostic `Input dimensions and pixels-per-millimeter proxy.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Exact duplicate image
 - **Failure boundary:** Repeated bytes can signal trigger or storage fault.
 - **Diagnostic signal:** Checksum collision across event IDs.
 - **Immediate recovery:** Quarantine pair and reconcile physical sequence.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the exact duplicate image control: it must evaluate `Checksum collision across event IDs.` at the stated decision boundary and authorize or escalate `Quarantine pair and reconcile physical sequence.` rather than treating a score as authority.
+- **Evidence record:** For a exact duplicate image event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Checksum collision across event IDs.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The exact duplicate image incident closes only after `Quarantine pair and reconcile physical sequence.` has been performed, the diagnostic `Checksum collision across event IDs.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Near duplicate image
 - **Failure boundary:** Similarity can leak across splits or reveal stalled flow.
 - **Diagnostic signal:** Embedding similarity with sequence audit.
 - **Immediate recovery:** Keep in one split and investigate repeat capture.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the near duplicate image control: it must evaluate `Embedding similarity with sequence audit.` at the stated decision boundary and authorize or escalate `Keep in one split and investigate repeat capture.` rather than treating a score as authority.
+- **Evidence record:** For a near duplicate image event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Embedding similarity with sequence audit.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The near duplicate image incident closes only after `Keep in one split and investigate repeat capture.` has been performed, the diagnostic `Embedding similarity with sequence audit.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Lot leakage
 - **Failure boundary:** Shared process conditions make randomized splits optimistic.
 - **Diagnostic signal:** Lot membership in each split.
 - **Immediate recovery:** Assign each lot wholly to one split and rerun.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the lot leakage control: it must evaluate `Lot membership in each split.` at the stated decision boundary and authorize or escalate `Assign each lot wholly to one split and rerun.` rather than treating a score as authority.
+- **Evidence record:** For a lot leakage event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Lot membership in each split.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The lot leakage incident closes only after `Assign each lot wholly to one split and rerun.` has been performed, the diagnostic `Lot membership in each split.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Time leakage
 - **Failure boundary:** Later rework/disposition fields encode the answer.
 - **Diagnostic signal:** Feature availability timestamp audit.
 - **Immediate recovery:** Remove late fields and retrain/evaluate.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the time leakage control: it must evaluate `Feature availability timestamp audit.` at the stated decision boundary and authorize or escalate `Remove late fields and retrain/evaluate.` rather than treating a score as authority.
+- **Evidence record:** For a time leakage event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Feature availability timestamp audit.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The time leakage incident closes only after `Remove late fields and retrain/evaluate.` has been performed, the diagnostic `Feature availability timestamp audit.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Revision leakage
 - **Failure boundary:** Revision ID can proxy known quality outcome.
 - **Diagnostic signal:** Error and score by revision.
 - **Immediate recovery:** Separate revisions or document supported mapping.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the revision leakage control: it must evaluate `Error and score by revision.` at the stated decision boundary and authorize or escalate `Separate revisions or document supported mapping.` rather than treating a score as authority.
+- **Evidence record:** For a revision leakage event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Error and score by revision.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The revision leakage incident closes only after `Separate revisions or document supported mapping.` has been performed, the diagnostic `Error and score by revision.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Reviewer overlay leakage
 - **Failure boundary:** Annotations or old disposition reveal the label.
 - **Diagnostic signal:** Input-pipeline visual audit.
 - **Immediate recovery:** Mask layers and regenerate training inputs.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the reviewer overlay leakage control: it must evaluate `Input-pipeline visual audit.` at the stated decision boundary and authorize or escalate `Mask layers and regenerate training inputs.` rather than treating a score as authority.
+- **Evidence record:** For a reviewer overlay leakage event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Input-pipeline visual audit.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The reviewer overlay leakage incident closes only after `Mask layers and regenerate training inputs.` has been performed, the diagnostic `Input-pipeline visual audit.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Preprocessing leakage
 - **Failure boundary:** Test distribution fitted into normalization inflates result.
 - **Diagnostic signal:** Fold-specific transform digest.
 - **Immediate recovery:** Fit transforms on training fold only.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the preprocessing leakage control: it must evaluate `Fold-specific transform digest.` at the stated decision boundary and authorize or escalate `Fit transforms on training fold only.` rather than treating a score as authority.
+- **Evidence record:** For a preprocessing leakage event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Fold-specific transform digest.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The preprocessing leakage incident closes only after `Fit transforms on training fold only.` has been performed, the diagnostic `Fold-specific transform digest.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Label ambiguity
 - **Failure boundary:** Cosmetic variation and defect have disputed boundary.
 - **Diagnostic signal:** Adjudicator disagreement matrix.
 - **Immediate recovery:** Version taxonomy and retain uncertain label.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality analyst owns the label ambiguity control: it must evaluate `Adjudicator disagreement matrix.` at the stated decision boundary and authorize or escalate `Version taxonomy and retain uncertain label.` rather than treating a score as authority.
+- **Evidence record:** For a label ambiguity event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Adjudicator disagreement matrix.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The label ambiguity incident closes only after `Version taxonomy and retain uncertain label.` has been performed, the diagnostic `Adjudicator disagreement matrix.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Delayed label
 - **Failure boundary:** Unadjudicated records are not known negatives.
 - **Diagnostic signal:** Label-delay distribution and censored fraction.
 - **Immediate recovery:** Freeze cutoff and report immature-label exclusion.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality analyst owns the delayed label control: it must evaluate `Label-delay distribution and censored fraction.` at the stated decision boundary and authorize or escalate `Freeze cutoff and report immature-label exclusion.` rather than treating a score as authority.
+- **Evidence record:** For a delayed label event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Label-delay distribution and censored fraction.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The delayed label incident closes only after `Freeze cutoff and report immature-label exclusion.` has been performed, the diagnostic `Label-delay distribution and censored fraction.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Rework-label bias
 - **Failure boundary:** Rework route is not always true defect evidence.
 - **Diagnostic signal:** Cross-tab rework versus adjudication.
 - **Immediate recovery:** Use adjudicated target; retain rework separately.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality analyst owns the rework-label bias control: it must evaluate `Cross-tab rework versus adjudication.` at the stated decision boundary and authorize or escalate `Use adjudicated target; retain rework separately.` rather than treating a score as authority.
+- **Evidence record:** For a rework-label bias event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Cross-tab rework versus adjudication.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The rework-label bias incident closes only after `Use adjudicated target; retain rework separately.` has been performed, the diagnostic `Cross-tab rework versus adjudication.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Selection bias
 - **Failure boundary:** Only alerts may receive rich labels.
 - **Diagnostic signal:** Label coverage by route.
 - **Immediate recovery:** Randomly audit accepted parts under approved plan.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality analyst owns the selection bias control: it must evaluate `Label coverage by route.` at the stated decision boundary and authorize or escalate `Randomly audit accepted parts under approved plan.` rather than treating a score as authority.
+- **Evidence record:** For a selection bias event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Label coverage by route.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The selection bias incident closes only after `Randomly audit accepted parts under approved plan.` has been performed, the diagnostic `Label coverage by route.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Class imbalance
 - **Failure boundary:** Rare defects hide beneath high average accuracy.
 - **Diagnostic signal:** Counts and rates by defect type.
 - **Immediate recovery:** Use stratified raw-count reporting.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the class imbalance control: it must evaluate `Counts and rates by defect type.` at the stated decision boundary and authorize or escalate `Use stratified raw-count reporting.` rather than treating a score as authority.
+- **Evidence record:** For a class imbalance event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Counts and rates by defect type.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The class imbalance incident closes only after `Use stratified raw-count reporting.` has been performed, the diagnostic `Counts and rates by defect type.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Hard-negative drift
 - **Failure boundary:** Permitted variation and glare can dominate alerts.
 - **Diagnostic signal:** False-positive taxonomy trend.
 - **Immediate recovery:** Collect representative negatives into training only.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the hard-negative drift control: it must evaluate `False-positive taxonomy trend.` at the stated decision boundary and authorize or escalate `Collect representative negatives into training only.` rather than treating a score as authority.
+- **Evidence record:** For a hard-negative drift event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`False-positive taxonomy trend.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The hard-negative drift incident closes only after `Collect representative negatives into training only.` has been performed, the diagnostic `False-positive taxonomy trend.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Unphysical augmentation
 - **Failure boundary:** Synthetic changes may not match optics or process.
 - **Diagnostic signal:** Recipe review and sample audit.
 - **Immediate recovery:** Remove unsupported transform and compare real holdout.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the unphysical augmentation control: it must evaluate `Recipe review and sample audit.` at the stated decision boundary and authorize or escalate `Remove unsupported transform and compare real holdout.` rather than treating a score as authority.
+- **Evidence record:** For a unphysical augmentation event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Recipe review and sample audit.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The unphysical augmentation incident closes only after `Remove unsupported transform and compare real holdout.` has been performed, the diagnostic `Recipe review and sample audit.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Threshold change
 - **Failure boundary:** Policy alters workload and error tradeoff.
 - **Diagnostic signal:** Policy digest, approver, effective time.
 - **Immediate recovery:** Require approved change record and new report segment.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the threshold change control: it must evaluate `Policy digest, approver, effective time.` at the stated decision boundary and authorize or escalate `Require approved change record and new report segment.` rather than treating a score as authority.
+- **Evidence record:** For a threshold change event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Policy digest, approver, effective time.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The threshold change incident closes only after `Require approved change record and new report segment.` has been performed, the diagnostic `Policy digest, approver, effective time.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Calibration decay
 - **Failure boundary:** Risk meaning changes even when ranking remains useful.
 - **Diagnostic signal:** Recent reliability bins by slice.
 - **Immediate recovery:** Recalibrate on held-out labels or return manual.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the calibration decay control: it must evaluate `Recent reliability bins by slice.` at the stated decision boundary and authorize or escalate `Recalibrate on held-out labels or return manual.` rather than treating a score as authority.
+- **Evidence record:** For a calibration decay event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Recent reliability bins by slice.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The calibration decay incident closes only after `Recalibrate on held-out labels or return manual.` has been performed, the diagnostic `Recent reliability bins by slice.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Model update
 - **Failure boundary:** New weights change behavior behind same endpoint.
 - **Diagnostic signal:** Model digest and release ledger.
 - **Immediate recovery:** Shadow/canary and atomic rollback.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the model update control: it must evaluate `Model digest and release ledger.` at the stated decision boundary and authorize or escalate `Shadow/canary and atomic rollback.` rather than treating a score as authority.
+- **Evidence record:** For a model update event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Model digest and release ledger.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The model update incident closes only after `Shadow/canary and atomic rollback.` has been performed, the diagnostic `Model digest and release ledger.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Bundle mismatch
 - **Failure boundary:** Model, calibrator, and threshold can be incompatible.
 - **Diagnostic signal:** Approved tuple audit.
 - **Immediate recovery:** Manual route mismatched tuple and restore bundle.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The platform engineer owns the bundle mismatch control: it must evaluate `Approved tuple audit.` at the stated decision boundary and authorize or escalate `Manual route mismatched tuple and restore bundle.` rather than treating a score as authority.
+- **Evidence record:** For a bundle mismatch event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Approved tuple audit.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The bundle mismatch incident closes only after `Manual route mismatched tuple and restore bundle.` has been performed, the diagnostic `Approved tuple audit.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Inference saturation
 - **Failure boundary:** Concurrent images raise latency and timeout.
 - **Diagnostic signal:** Queue depth, utilization, p99 latency.
 - **Immediate recovery:** Throttle/scale or send overflow manual.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The platform engineer owns the inference saturation control: it must evaluate `Queue depth, utilization, p99 latency.` at the stated decision boundary and authorize or escalate `Throttle/scale or send overflow manual.` rather than treating a score as authority.
+- **Evidence record:** For a inference saturation event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Queue depth, utilization, p99 latency.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The inference saturation incident closes only after `Throttle/scale or send overflow manual.` has been performed, the diagnostic `Queue depth, utilization, p99 latency.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Network partition
 - **Failure boundary:** Storage, inference, or policy dependency can disappear.
 - **Diagnostic signal:** Dependency health and timeout codes.
 - **Immediate recovery:** Fail to manual handling with traceable incident.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The platform engineer owns the network partition control: it must evaluate `Dependency health and timeout codes.` at the stated decision boundary and authorize or escalate `Fail to manual handling with traceable incident.` rather than treating a score as authority.
+- **Evidence record:** For a network partition event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Dependency health and timeout codes.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The network partition incident closes only after `Fail to manual handling with traceable incident.` has been performed, the diagnostic `Dependency health and timeout codes.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Event retry
 - **Failure boundary:** At-least-once delivery can duplicate dispositions.
 - **Diagnostic signal:** Duplicate event-ID counter.
 - **Immediate recovery:** Deduplicate with immutable idempotency key.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The platform engineer owns the event retry control: it must evaluate `Duplicate event-ID counter.` at the stated decision boundary and authorize or escalate `Deduplicate with immutable idempotency key.` rather than treating a score as authority.
+- **Evidence record:** For a event retry event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Duplicate event-ID counter.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The event retry incident closes only after `Deduplicate with immutable idempotency key.` has been performed, the diagnostic `Duplicate event-ID counter.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### MES acknowledgement
 - **Failure boundary:** A digital decision can fail to reach correction workflow.
 - **Diagnostic signal:** Acknowledgement age and terminal-state gaps.
 - **Immediate recovery:** Hold/reconcile and retry idempotently.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality systems engineer owns the mes acknowledgement control: it must evaluate `Acknowledgement age and terminal-state gaps.` at the stated decision boundary and authorize or escalate `Hold/reconcile and retry idempotently.` rather than treating a score as authority.
+- **Evidence record:** For a mes acknowledgement event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Acknowledgement age and terminal-state gaps.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The mes acknowledgement incident closes only after `Hold/reconcile and retry idempotently.` has been performed, the diagnostic `Acknowledgement age and terminal-state gaps.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Physical lane divergence
 - **Failure boundary:** Digital route may not match actual location.
 - **Diagnostic signal:** Lane sensor/event-state reconciliation.
 - **Immediate recovery:** Stop affected lane and manually reconcile.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The controls engineer owns the physical lane divergence control: it must evaluate `Lane sensor/event-state reconciliation.` at the stated decision boundary and authorize or escalate `Stop affected lane and manually reconcile.` rather than treating a score as authority.
+- **Evidence record:** For a physical lane divergence event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Lane sensor/event-state reconciliation.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The physical lane divergence incident closes only after `Stop affected lane and manually reconcile.` has been performed, the diagnostic `Lane sensor/event-state reconciliation.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Workbench latency
 - **Failure boundary:** Slow screens lower reviewer service rate.
 - **Diagnostic signal:** Page-load and handling-time distribution.
 - **Immediate recovery:** Simplify rendering or revise capacity plan.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality systems engineer owns the workbench latency control: it must evaluate `Page-load and handling-time distribution.` at the stated decision boundary and authorize or escalate `Simplify rendering or revise capacity plan.` rather than treating a score as authority.
+- **Evidence record:** For a workbench latency event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Page-load and handling-time distribution.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The workbench latency incident closes only after `Simplify rendering or revise capacity plan.` has been performed, the diagnostic `Page-load and handling-time distribution.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Automation bias
 - **Failure boundary:** Reviewers may over-trust a score or heat map.
 - **Diagnostic signal:** Blind A/B disagreement and error analysis.
 - **Immediate recovery:** Hide/simplify overlay and retrain reviewers.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the automation bias control: it must evaluate `Blind A/B disagreement and error analysis.` at the stated decision boundary and authorize or escalate `Hide/simplify overlay and retrain reviewers.` rather than treating a score as authority.
+- **Evidence record:** For a automation bias event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Blind A/B disagreement and error analysis.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The automation bias incident closes only after `Hide/simplify overlay and retrain reviewers.` has been performed, the diagnostic `Blind A/B disagreement and error analysis.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Reviewer fatigue
 - **Failure boundary:** Service and error rates vary by time and alert load.
 - **Diagnostic signal:** Handling time/disagreement by staffed block.
 - **Immediate recovery:** Rotate staff, add breaks, or lower routed volume.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the reviewer fatigue control: it must evaluate `Handling time/disagreement by staffed block.` at the stated decision boundary and authorize or escalate `Rotate staff, add breaks, or lower routed volume.` rather than treating a score as authority.
+- **Evidence record:** For a reviewer fatigue event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Handling time/disagreement by staffed block.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The reviewer fatigue incident closes only after `Rotate staff, add breaks, or lower routed volume.` has been performed, the diagnostic `Handling time/disagreement by staffed block.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Correction queue
 - **Failure boundary:** False rejects can clog rework capacity.
 - **Diagnostic signal:** Rework WIP, age, and reason.
 - **Immediate recovery:** Tighten policy or add verification.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The line leader owns the correction queue control: it must evaluate `Rework WIP, age, and reason.` at the stated decision boundary and authorize or escalate `Tighten policy or add verification.` rather than treating a score as authority.
+- **Evidence record:** For a correction queue event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Rework WIP, age, and reason.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The correction queue incident closes only after `Tighten policy or add verification.` has been performed, the diagnostic `Rework WIP, age, and reason.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Escaped defect discovery
 - **Failure boundary:** Downstream finding needs causal trace, not assumption.
 - **Diagnostic signal:** Part ID, route, evidence, and defect-family trace.
 - **Immediate recovery:** Contain lot and classify sensing/model/human/process cause.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the escaped defect discovery control: it must evaluate `Part ID, route, evidence, and defect-family trace.` at the stated decision boundary and authorize or escalate `Contain lot and classify sensing/model/human/process cause.` rather than treating a score as authority.
+- **Evidence record:** For a escaped defect discovery event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Part ID, route, evidence, and defect-family trace.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The escaped defect discovery incident closes only after `Contain lot and classify sensing/model/human/process cause.` has been performed, the diagnostic `Part ID, route, evidence, and defect-family trace.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Novel defect
 - **Failure boundary:** Closed-set score can accept a new appearance family.
 - **Diagnostic signal:** Escaped-defect taxonomy and novelty review.
 - **Immediate recovery:** Increase manual sampling and evaluate new family separately.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the novel defect control: it must evaluate `Escaped-defect taxonomy and novelty review.` at the stated decision boundary and authorize or escalate `Increase manual sampling and evaluate new family separately.` rather than treating a score as authority.
+- **Evidence record:** For a novel defect event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Escaped-defect taxonomy and novelty review.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The novel defect incident closes only after `Increase manual sampling and evaluate new family separately.` has been performed, the diagnostic `Escaped-defect taxonomy and novelty review.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Drift alert
 - **Failure boundary:** A score shift can arise from mix, light, or software.
 - **Diagnostic signal:** Joint telemetry, lot/revision, score, and label view.
 - **Immediate recovery:** Investigate cause before retraining.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The vision engineer owns the drift alert control: it must evaluate `Joint telemetry, lot/revision, score, and label view.` at the stated decision boundary and authorize or escalate `Investigate cause before retraining.` rather than treating a score as authority.
+- **Evidence record:** For a drift alert event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Joint telemetry, lot/revision, score, and label view.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The drift alert incident closes only after `Investigate cause before retraining.` has been performed, the diagnostic `Joint telemetry, lot/revision, score, and label view.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Metric denominator
 - **Failure boundary:** A rate can hide exclusions and censorship.
 - **Diagnostic signal:** Report numerator, denominator, window, exclusion fields.
 - **Immediate recovery:** Reject incomplete dashboard calculation.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality analyst owns the metric denominator control: it must evaluate `Report numerator, denominator, window, exclusion fields.` at the stated decision boundary and authorize or escalate `Reject incomplete dashboard calculation.` rather than treating a score as authority.
+- **Evidence record:** For a metric denominator event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Report numerator, denominator, window, exclusion fields.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The metric denominator incident closes only after `Reject incomplete dashboard calculation.` has been performed, the diagnostic `Report numerator, denominator, window, exclusion fields.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Cost scope
 - **Failure boundary:** Labor, correction, capital, and downtime differ in scope.
 - **Diagnostic signal:** Dated source and included/excluded cost fields.
 - **Immediate recovery:** Mark unknowns; do not call estimate ROI.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The finance partner owns the cost scope control: it must evaluate `Dated source and included/excluded cost fields.` at the stated decision boundary and authorize or escalate `Mark unknowns; do not call estimate ROI.` rather than treating a score as authority.
+- **Evidence record:** For a cost scope event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Dated source and included/excluded cost fields.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The cost scope incident closes only after `Mark unknowns; do not call estimate ROI.` has been performed, the diagnostic `Dated source and included/excluded cost fields.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Prevalence shift
 - **Failure boundary:** PPV and expected costs change with defect mix.
 - **Diagnostic signal:** Recent adjudicated prevalence by lot/revision.
 - **Immediate recovery:** Recompute policy sensitivity.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality analyst owns the prevalence shift control: it must evaluate `Recent adjudicated prevalence by lot/revision.` at the stated decision boundary and authorize or escalate `Recompute policy sensitivity.` rather than treating a score as authority.
+- **Evidence record:** For a prevalence shift event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Recent adjudicated prevalence by lot/revision.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The prevalence shift incident closes only after `Recompute policy sensitivity.` has been performed, the diagnostic `Recent adjudicated prevalence by lot/revision.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Burst arrival
 - **Failure boundary:** Shift average hides batch-release spikes.
 - **Diagnostic signal:** Per-minute arrival and queue-age trace.
 - **Immediate recovery:** Reserve headroom or route burst overflow manual.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The line leader owns the burst arrival control: it must evaluate `Per-minute arrival and queue-age trace.` at the stated decision boundary and authorize or escalate `Reserve headroom or route burst overflow manual.` rather than treating a score as authority.
+- **Evidence record:** For a burst arrival event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Per-minute arrival and queue-age trace.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The burst arrival incident closes only after `Reserve headroom or route burst overflow manual.` has been performed, the diagnostic `Per-minute arrival and queue-age trace.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Fallback staffing
 - **Failure boundary:** A manual fallback fails without available trained people.
 - **Diagnostic signal:** Roster, training, and lane-readiness check.
 - **Immediate recovery:** Pause automation when fallback unavailable.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the fallback staffing control: it must evaluate `Roster, training, and lane-readiness check.` at the stated decision boundary and authorize or escalate `Pause automation when fallback unavailable.` rather than treating a score as authority.
+- **Evidence record:** For a fallback staffing event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Roster, training, and lane-readiness check.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The fallback staffing incident closes only after `Pause automation when fallback unavailable.` has been performed, the diagnostic `Roster, training, and lane-readiness check.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Stop criterion
 - **Failure boundary:** Pilot needs predeclared pause conditions.
 - **Diagnostic signal:** Missing-view, queue-age, slice-error, trace-gap thresholds.
 - **Immediate recovery:** Pause, contain population, and review authority.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the stop criterion control: it must evaluate `Missing-view, queue-age, slice-error, trace-gap thresholds.` at the stated decision boundary and authorize or escalate `Pause, contain population, and review authority.` rather than treating a score as authority.
+- **Evidence record:** For a stop criterion event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Missing-view, queue-age, slice-error, trace-gap thresholds.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The stop criterion incident closes only after `Pause, contain population, and review authority.` has been performed, the diagnostic `Missing-view, queue-age, slice-error, trace-gap thresholds.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Audit retrieval
 - **Failure boundary:** Disputed disposition needs original evidence and versions.
 - **Diagnostic signal:** Sample manifest-to-object retrieval.
 - **Immediate recovery:** Repair retention/index permissions.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The data steward owns the audit retrieval control: it must evaluate `Sample manifest-to-object retrieval.` at the stated decision boundary and authorize or escalate `Repair retention/index permissions.` rather than treating a score as authority.
+- **Evidence record:** For a audit retrieval event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Sample manifest-to-object retrieval.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The audit retrieval incident closes only after `Repair retention/index permissions.` has been performed, the diagnostic `Sample manifest-to-object retrieval.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Access control
 - **Failure boundary:** Images and reviewer records require least privilege.
 - **Diagnostic signal:** Role review and access-log anomaly.
 - **Immediate recovery:** Remove excess grant and investigate incident.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The data steward owns the access control control: it must evaluate `Role review and access-log anomaly.` at the stated decision boundary and authorize or escalate `Remove excess grant and investigate incident.` rather than treating a score as authority.
+- **Evidence record:** For a access control event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Role review and access-log anomaly.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The access control incident closes only after `Remove excess grant and investigate incident.` has been performed, the diagnostic `Role review and access-log anomaly.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Retention lifecycle
 - **Failure boundary:** Too-early deletion blocks investigation; over-retention breaks policy.
 - **Diagnostic signal:** Lifecycle configuration against approved schedule.
 - **Immediate recovery:** Hold deletion for review and apply approved schedule.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The data steward owns the retention lifecycle control: it must evaluate `Lifecycle configuration against approved schedule.` at the stated decision boundary and authorize or escalate `Hold deletion for review and apply approved schedule.` rather than treating a score as authority.
+- **Evidence record:** For a retention lifecycle event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Lifecycle configuration against approved schedule.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The retention lifecycle incident closes only after `Hold deletion for review and apply approved schedule.` has been performed, the diagnostic `Lifecycle configuration against approved schedule.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Operator communication
 - **Failure boundary:** Route meaning changes require procedural understanding.
 - **Diagnostic signal:** Acknowledged training/version bulletin.
 - **Immediate recovery:** Pause cutover until briefing and drill complete.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the operator communication control: it must evaluate `Acknowledged training/version bulletin.` at the stated decision boundary and authorize or escalate `Pause cutover until briefing and drill complete.` rather than treating a score as authority.
+- **Evidence record:** For a operator communication event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Acknowledged training/version bulletin.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The operator communication incident closes only after `Pause cutover until briefing and drill complete.` has been performed, the diagnostic `Acknowledged training/version bulletin.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Independent release review
 - **Failure boundary:** Model author alone cannot certify operational evidence.
 - **Diagnostic signal:** Approval roles and unresolved objections.
 - **Immediate recovery:** Escalate disagreement and retain baseline.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality manager owns the independent release review control: it must evaluate `Approval roles and unresolved objections.` at the stated decision boundary and authorize or escalate `Escalate disagreement and retain baseline.` rather than treating a score as authority.
+- **Evidence record:** For a independent release review event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Approval roles and unresolved objections.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The independent release review incident closes only after `Escalate disagreement and retain baseline.` has been performed, the diagnostic `Approval roles and unresolved objections.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Retirement trigger
 - **Failure boundary:** Process or product change can obsolete the candidate.
 - **Diagnostic signal:** Overrides, unsupported mix, maintenance burden.
 - **Immediate recovery:** Retire to manual baseline and archive artifacts.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The controls engineer owns the retirement trigger control: it must evaluate `Overrides, unsupported mix, maintenance burden.` at the stated decision boundary and authorize or escalate `Retire to manual baseline and archive artifacts.` rather than treating a score as authority.
+- **Evidence record:** For a retirement trigger event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Overrides, unsupported mix, maintenance burden.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The retirement trigger incident closes only after `Retire to manual baseline and archive artifacts.` has been performed, the diagnostic `Overrides, unsupported mix, maintenance burden.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Golden-part control
 - **Failure boundary:** A reference part tests whole sensing path, not model quality.
 - **Diagnostic signal:** Scheduled golden-part result by camera/view.
 - **Immediate recovery:** Manual route while control fails; repair sensing path.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The manufacturing engineer owns the golden-part control control: it must evaluate `Scheduled golden-part result by camera/view.` at the stated decision boundary and authorize or escalate `Manual route while control fails; repair sensing path.` rather than treating a score as authority.
+- **Evidence record:** For a golden-part control event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Scheduled golden-part result by camera/view.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The golden-part control incident closes only after `Manual route while control fails; repair sensing path.` has been performed, the diagnostic `Scheduled golden-part result by camera/view.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Queue-age alarm
 - **Failure boundary:** Oldest review matters more than average queue count.
 - **Diagnostic signal:** Maximum and percentile review wait.
 - **Immediate recovery:** Escalate staffing or throttle incoming review work.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The quality systems engineer owns the queue-age alarm control: it must evaluate `Maximum and percentile review wait.` at the stated decision boundary and authorize or escalate `Escalate staffing or throttle incoming review work.` rather than treating a score as authority.
+- **Evidence record:** For a queue-age alarm event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Maximum and percentile review wait.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The queue-age alarm incident closes only after `Escalate staffing or throttle incoming review work.` has been performed, the diagnostic `Maximum and percentile review wait.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Reconciliation sweep
 - **Failure boundary:** Every READY state must reach a terminal state exactly once.
 - **Diagnostic signal:** Nonterminal age and duplicated terminal state count.
 - **Immediate recovery:** Hold/reconcile missing records before release.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The platform engineer owns the reconciliation sweep control: it must evaluate `Nonterminal age and duplicated terminal state count.` at the stated decision boundary and authorize or escalate `Hold/reconcile missing records before release.` rather than treating a score as authority.
+- **Evidence record:** For a reconciliation sweep event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Nonterminal age and duplicated terminal state count.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The reconciliation sweep incident closes only after `Hold/reconcile missing records before release.` has been performed, the diagnostic `Nonterminal age and duplicated terminal state count.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Change freeze
 - **Failure boundary:** Untracked changes make evaluation comparison uninterpretable.
 - **Diagnostic signal:** Configuration-change ledger completeness.
 - **Immediate recovery:** Freeze policy/config during measurement window.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
-
+- **Operational owner and authority:** The platform engineer owns the change freeze control: it must evaluate `Configuration-change ledger completeness.` at the stated decision boundary and authorize or escalate `Freeze policy/config during measurement window.` rather than treating a score as authority.
+- **Evidence record:** For a change freeze event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Configuration-change ledger completeness.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The change freeze incident closes only after `Freeze policy/config during measurement window.` has been performed, the diagnostic `Configuration-change ledger completeness.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
 #### Human escalation
 - **Failure boundary:** Uncertain reviewer cases need accountable resolution.
 - **Diagnostic signal:** Escalation rate and resolution time.
 - **Immediate recovery:** Route to designated quality authority with evidence.
-- **Accountable owner:** The quality manager assigns the responsible controls, engineering, platform, or operations role in the release record.
-- **Evidence to retain:** Preserve the part/lot/time scope, configuration versions, diagnostic result, recovery action, and closure decision.
-- **Verification:** Demonstrate that affected parts are contained or reconciled and that the stated diagnostic returns to its approved operating range.
+- **Operational owner and authority:** The quality manager owns the human escalation control: it must evaluate `Escalation rate and resolution time.` at the stated decision boundary and authorize or escalate `Route to designated quality authority with evidence.` rather than treating a score as authority.
+- **Evidence record:** For a human escalation event, retain the affected part IDs, lot/revision, event-time interval, the measured signal (`Escalation rate and resolution time.`), the configuration/model-policy tuple, and the disposition taken; these fields distinguish a sensing/process fault from a classification error.
+- **Closure test:** The human escalation incident closes only after `Route to designated quality authority with evidence.` has been performed, the diagnostic `Escalation rate and resolution time.` is rechecked on the affected operating condition, and reconciliation shows that no impacted part bypassed the manual route.
+
 ## 15. Quick Reference Card
 
 | Field | Decision-ready content |

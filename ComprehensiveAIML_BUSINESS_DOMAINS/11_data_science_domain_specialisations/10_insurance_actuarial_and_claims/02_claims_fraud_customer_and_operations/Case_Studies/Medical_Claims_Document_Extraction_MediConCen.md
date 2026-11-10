@@ -1130,112 +1130,112 @@ Answer: Whether and how to introduce extraction assistance or gated automation f
 Reasoning: The output is a source-supported administrative package, not a clinical decision.
 Follow-up: What would force manual processing?
 Follow-up answer: Missing evidence, unavailable audit coverage, unauthorized data use or inadequate review capacity.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must name the output package and the review gate, and must not describe extraction as an approval decision.
 #### Interview 02
 Candidate question: Who owns the outcome?
 Answer: The insurer claims operations lead owns the workflow, supported by evaluation, platform, privacy and security roles.
 Reasoning: A service provider cannot replace the insurer’s accountability for its own process.
 Follow-up: Who may change access rules?
 Follow-up answer: Only the accountable access owner through an approved policy and audit process.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must separate insurer accountability from vendor service delivery and must not assign ownership to the model or the vendor.
 #### Interview 03
 Candidate question: What is the evaluation grain?
 Answer: Use field instances for extraction diagnostics and claims for complete-package success.
 Reasoning: Multiple field observations within a claim are correlated and claim field counts can vary.
 Follow-up: How do you estimate uncertainty?
 Follow-up answer: Use a sampling design and interval method that respects claim and relevant provider or time clusters.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must state that field-instance and claim-level grains answer different questions, and must not average field errors into a claim verdict.
 #### Interview 04
 Candidate question: How do absent fields enter the metric?
 Answer: Distinguish source-incomplete, unreadable and extraction-missing cases before scoring.
 Reasoning: Silently excluding difficult documents biases quality upward.
 Follow-up: What if the field is required but absent?
 Follow-up answer: Follow the prespecified end-to-end disposition and report its frequency.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must separate source absence from extraction failure and must not silently drop unreadable documents from the denominator.
 #### Interview 05
 Candidate question: Why is 98% field accuracy not 98% claim accuracy?
 Answer: A claim fails the all-correct criterion when any required field is wrong.
 Reasoning: Errors may be dispersed or concentrated, so the joint distribution matters.
 Follow-up: What does independence imply for five fields?
 Follow-up answer: Under the illustrative assumption, 0.98^5 is approximately 90.39%.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must show the joint-probability reasoning explicitly and must reject treating a field average as a claim guarantee.
 #### Interview 06
 Candidate question: Interpret 100% higher straight-through processing.
 Answer: It means twice the baseline rate if the source uses relative change convention.
 Reasoning: For example, 20% to 40% is a 20-point increase and a 100% relative increase.
 Follow-up: Can the company baseline be inferred?
 Follow-up answer: No; the source does not disclose the baseline or final rate.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must distinguish relative change from percentage-point change and must not invent the undisclosed baseline.
 #### Interview 07
 Candidate question: How should reviewers use evidence?
 Answer: Show the original authorized region and allow correction, ambiguity and escalation.
 Reasoning: A fluent value or model confidence is not proof of source support.
 Follow-up: What if the citation is wrong?
 Follow-up answer: Treat the candidate as unsupported and route it to review.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must require a verifiable source region for each value and must not accept model confidence as evidence.
 #### Interview 08
 Candidate question: What is the best baseline?
 Answer: Compare with the actual manual workflow and, if useful, OCR with manual correction.
 Reasoning: A baseline must use the same eligible cohort and definitions as the candidate.
 Follow-up: What if workload changes?
 Follow-up answer: Use a controlled or carefully adjusted comparison and report remaining confounding.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must define the comparison cohort before choosing a baseline and must not compare a tuned system to an untuned manual straw man.
 #### Interview 09
 Candidate question: How do you prevent duplicate actions?
 Answer: Use stable logical package idempotency keys and reconcile uncertain outcomes before retrying.
 Reasoning: A network timeout does not prove the downstream write failed.
 Follow-up: What if acknowledgment is lost?
 Follow-up answer: Query the downstream system for the key before a bounded reissue.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must identify a stable logical key and a reconciliation step, not merely a retry counter.
 #### Interview 10
 Candidate question: What should happen during a service outage?
 Answer: Preserve authorized intake, bound retries, queue or route to manual handling and escalate.
 Reasoning: Relaxing evidence checks to maintain throughput trades availability for unmeasured risk.
 Follow-up: What constrains the fallback?
 Follow-up answer: Manual capacity, skills, privacy controls and backlog limits.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must preserve evidence controls during degradation and must not relax verification to restore throughput.
 #### Interview 11
 Candidate question: How is a minority slice evaluated?
 Answer: Audit appropriate document slices separately with counts, uncertainty, review rates and missingness.
 Reasoning: A high aggregate can conceal poor outcomes in a small subgroup.
 Follow-up: What if the sample is too small?
 Follow-up answer: Do not infer a pass; retain review or gather authorized additional data.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must state the slice's denominator and uncertainty and must not generalise a small-slice pass.
 #### Interview 12
 Candidate question: What does a controlled comparison add?
 Answer: It can separate the workflow intervention from changes in population, staffing and time when properly designed.
 Reasoning: Randomization, stable eligibility and contamination controls support causal interpretation.
 Follow-up: What if randomization is unavailable?
 Follow-up answer: Use a justified observational design and explicitly state residual confounding.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must name the identification strategy and its residual confounding rather than implying a measured causal effect.
 #### Interview 13
 Candidate question: How should capacity be estimated?
 Answer: Multiply peak arrivals by pages and benchmark per-worker throughput, then add headroom and review capacity.
 Reasoning: A daily average hides burst and queue effects.
 Follow-up: What is the illustrative peak?
 Follow-up answer: A quarter of 1,000 claims in an hour is 250 claims or 1,000 pages at four pages each.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must carry peak arrivals through pages, workers and review capacity with consistent units.
 #### Interview 14
 Candidate question: What is the right cost denominator?
 Answer: Use correctly processed claims under a defensible audited rubric.
 Reasoning: Raw calls or gross straight-through claims can reward cheap but erroneous work.
 Follow-up: Which costs matter?
 Follow-up answer: Include model requests, compute, storage, network, retries, review labor and failed work.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must charge failed and reworked claims to the denominator, not only successful ones.
 #### Interview 15
 Candidate question: What should be released together?
 Answer: Version the model, prompt, schema, preprocessing, policy checks and routing rules as a compatible bundle.
 Reasoning: Rolling back only one part can leave in-flight work incompatible.
 Follow-up: How do you validate rollback?
 Follow-up answer: Exercise restoration and reconciliation against representative versioned state.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must enumerate every coupled artifact and describe an actual restoration exercise.
 #### Interview 16
 Candidate question: What does the public story prove about security or clinical outcomes?
 Answer: It reports product features and vendor/company claims, not deployment-specific compliance or clinical outcomes.
 Reasoning: An advertised security feature is not a legal applicability analysis or a control audit.
 Follow-up: What must happen before data use?
 Follow-up answer: Confirm purpose, access, contractual terms and applicable obligations with authorized owners.
-Interviewer check: distinguish sourced facts from proposed controls and illustrative arithmetic.
+Interviewer check: the candidate must not convert a marketing or feature description into a compliance or clinical conclusion.
 ## 15. Quick Reference Card
 
 | Field | Value |

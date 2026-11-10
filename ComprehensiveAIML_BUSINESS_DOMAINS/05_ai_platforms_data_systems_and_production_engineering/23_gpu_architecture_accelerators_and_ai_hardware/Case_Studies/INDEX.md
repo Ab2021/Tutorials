@@ -18,7 +18,7 @@
 
 | Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-2026-023-001 | [Size an inference cluster under an interactive latency and memory budget](01_Size_an_Inference_Cluster.md) | hardware/interactive serving | hybrid | select capacity, replica count, and admission policy | resource-admission | cost-latency-tradeoff; correctness-contract | illustrative | proposed | — | draft; arithmetic and state boundary are derived; workload/runtime evidence remains required |
+| CASE-2026-023-001 | [Size an inference cluster under an interactive latency and memory budget](01_Size_an_Inference_Cluster.md) | hardware/interactive serving | hybrid | select a validation configuration and bounded admission; defer unsupported production sizing | resource-admission | cost-latency-tradeoff; correctness-contract | illustrative inputs; derived arithmetic | proposed | — | 1,091-line draft; rank-local memory, TP=2 device cost and conditional token-conservation bounds checked; no measured production-capacity claim |
 | PLAN-23-02 | Profile memory-bound training | hardware | incident | choose the bottleneck-removal change | resource-accounting | correctness-contract | not-measured | proposed | — | planned; needs profiler and numerical-parity evidence |
 | PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | hardware/serving | hybrid | scheduling and KV-memory policy | resource-admission | cost-latency-tradeoff; authorization-scope | not-measured | proposed | 2026-11-06 (planning) | planned reference addition; geometry and speedups unmeasured |
 
@@ -52,11 +52,14 @@
 |---|---|---|---|
 | 2026-11-09 | Collection catalog | retained planned rows | no primary workload evidence or authored case then |
 | 2026-11-10 | CASE-2026-023-001 | catalog reconciled as authored draft / proposed intervention | constructed arithmetic and state contract are complete; runtime evidence remains OPEN |
+| current integration pass | CASE-2026-023-001 | removed repeated drill fields; corrected per-rank versus per-replica accounting, group reservation, device-hour cost and FIFO wait versus drain | executed the written rational calculator, limiting-rank/placement counterexamples, 154-replica conditional bound, post-loss deficit and capped/uncapped fluid traces; hardware/distributed-runtime evidence remains OPEN |
 
 ## 7. Pre-publish checks
 
 - [x] Stable CASE ID, linked manuscript, 15 sections, and final card are present for CASE-2026-023-001.
 - [x] Catalog has 11 columns and keeps evidence, stage, and editorial status distinct in its limitation field and metadata.
+- [x] Limited screen: 1,091 physical lines, 15 ordered numbered sections, no long-prose group repeated four or more times; substantive independent publication review remains required.
+- [x] Written calculator and queue examples executed: per-rank slots 38/21/19, conditional replica bounds 154/205, and capped/uncapped backlog, rejection, wait and drain checked.
 - [ ] Verify target-runtime source version, workload trace, device/rank memory inventory, and closed-loop measurements before review/publication.
 - [ ] Verify all links and rerun the arithmetic, failure/recovery trace, and N-1 capacity boundary when the configuration changes.
 - [x] Retain proposed cases and source/reference additions without treating them as completed.

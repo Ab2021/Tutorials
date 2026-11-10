@@ -364,7 +364,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** compare task, slice, labels, exclusions, and version.
 **Immediate recovery:** freeze a representative protocol.
 **Verification:** rerun every slice; reject unsupported claim.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Headline benchmark accepted” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-02 — Easy documents dominate
 **Symptom:** Easy documents dominate.
@@ -372,7 +372,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** inspect stratum shares versus intake definition.
 **Immediate recovery:** stratify and report separately.
 **Verification:** recompute gates by stratum.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Easy documents dominate” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-03 — Vendor sees test items
 **Symptom:** Vendor sees test items.
@@ -380,7 +380,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** audit access and selection timestamps.
 **Immediate recovery:** invalidate exposed set.
 **Verification:** create a new hidden set.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Vendor sees test items” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-04 — Reference labels leak
 **Symptom:** Reference labels leak.
@@ -388,7 +388,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** inspect blind-review logs.
 **Immediate recovery:** relabel blindly.
 **Verification:** compare adjudication drift.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Reference labels leak” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-05 — Abstentions disappear
 **Symptom:** Abstentions disappear.
@@ -396,7 +396,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** reconcile submitted, returned, and scored counts.
 **Immediate recovery:** count abstentions separately.
 **Verification:** verify denominator ledger.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Abstentions disappear” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-06 — Version silently changes
 **Symptom:** Version silently changes.
@@ -404,7 +404,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** compare assertion and response version.
 **Immediate recovery:** block run.
 **Verification:** re-run frozen comparison.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Version silently changes” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-07 — Price excludes retries
 **Symptom:** Price excludes retries.
@@ -412,7 +412,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** trace all request and support charges.
 **Immediate recovery:** add cost row.
 **Verification:** finance review.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Price excludes retries” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-08 — Reviewer queue is unstaffed
 **Symptom:** Reviewer queue is unstaffed.
@@ -420,7 +420,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** calculate R and staffed hours.
 **Immediate recovery:** cap pilot.
 **Verification:** observe scheduled coverage.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Reviewer queue is unstaffed” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-09 — High-cost label fails
 **Symptom:** High-cost label fails.
@@ -428,7 +428,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** report confusion by cost tier.
 **Immediate recovery:** set tier gate.
 **Verification:** adjudicate error impact.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “High-cost label fails” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-10 — Latency claim hides tail
 **Symptom:** Latency claim hides tail.
@@ -436,7 +436,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** inspect p50/p95/p99 plus timeout rate.
 **Immediate recovery:** keep manual fallback.
 **Verification:** load test permitted workload.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Latency claim hides tail” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-11 — Data term is assumed
 **Symptom:** Data term is assumed.
@@ -444,7 +444,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** obtain current primary terms.
 **Immediate recovery:** do not transmit data.
 **Verification:** authorized review.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Data term is assumed” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-12 — Prompt/config changes
 **Symptom:** Prompt/config changes.
@@ -452,7 +452,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** compare hash and run ledger.
 **Immediate recovery:** invalidate run.
 **Verification:** change control.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Prompt/config changes” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-13 — Manual baseline is weakened
 **Symptom:** Manual baseline is weakened.
@@ -460,7 +460,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** audit same input and rubric.
 **Immediate recovery:** restore symmetric baseline.
 **Verification:** paired replay.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Manual baseline is weakened” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-14 — Pilot expands by exception
 **Symptom:** Pilot expands by exception.
@@ -468,7 +468,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** check ledger count.
 **Immediate recovery:** stop intake.
 **Verification:** owner approval for new protocol.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Pilot expands by exception” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-15 — Retry double-counts
 **Symptom:** Retry double-counts.
@@ -476,7 +476,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** inspect idempotency keys and charges.
 **Immediate recovery:** deduplicate accounting.
 **Verification:** replay same key.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Retry double-counts” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-16 — Cost period mixed
 **Symptom:** Cost period mixed.
@@ -484,7 +484,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** check units and currency date.
 **Immediate recovery:** normalize period.
 **Verification:** independent finance calculation.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Cost period mixed” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-17 — Language slice omitted
 **Symptom:** Language slice omitted.
@@ -492,7 +492,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** compare intake languages with manifest.
 **Immediate recovery:** defer unsupported language.
 **Verification:** add explicit handoff.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Language slice omitted” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-18 — Format failure is cleaned away
 **Symptom:** Format failure is cleaned away.
@@ -500,7 +500,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** inspect exclusion reason table.
 **Immediate recovery:** report failure slice.
 **Verification:** test raw format path.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Format failure is cleaned away” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-19 — Interval overinterpreted
 **Symptom:** Interval overinterpreted.
@@ -508,7 +508,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** check n, dependence, sampling.
 **Immediate recovery:** use appropriate analysis.
 **Verification:** state uncertainty.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Interval overinterpreted” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 ### F-20 — Human approval becomes rubber stamp
 **Symptom:** Human approval becomes rubber stamp.
@@ -516,7 +516,7 @@ Rollback is not deletion: disable submissions, preserve the run ledger, return q
 **Diagnostic check:** audit rationale and dissent.
 **Immediate recovery:** require decision packet.
 **Verification:** sample decision quality.
-**Mitigation risk:** stricter gates can increase manual load; disclose the queue impact to the owner.
+**Mitigation risk:** containing “Human approval becomes rubber stamp” can increase the evidence-request queue or delay a valid pilot; measure that specific delay before relaxing its gate.
 
 **Takeaway:** every failure is a decision to contain, diagnose, correct, and re-check—not a reason to hide a denominator.
 
@@ -540,7 +540,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** scope claim as unverified.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** request exact evidence.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the claim verb gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only claim verb; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 02 — task taxonomy
@@ -549,7 +549,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unmapped task.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** exclude from pilot.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the task taxonomy gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only task taxonomy; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 03 — input modality
@@ -558,7 +558,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unsupported modality rate.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** route to manual review.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the input modality gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only input modality; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 04 — language slice
@@ -567,7 +567,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unknown language.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** defer that slice.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the language slice gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only language slice; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 05 — document length
@@ -576,7 +576,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** tail documents omitted.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** add tail stratum.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the document length gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only document length; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 06 — timestamp cutoff
@@ -585,7 +585,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** post-decision field.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** remove it.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the timestamp cutoff gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only timestamp cutoff; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 07 — deduplication
@@ -594,7 +594,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** duplicate across sets.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** resample.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the deduplication gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only deduplication; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 08 — baseline rubric
@@ -603,7 +603,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** baseline instructions drift.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** rerun paired baseline.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the baseline rubric gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only baseline rubric; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 09 — reviewer blinding
@@ -612,7 +612,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** identity exposed.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** invalidate affected labels.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the reviewer blinding gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only reviewer blinding; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 10 — adjudication
@@ -621,7 +621,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** no final label.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** mark unresolved.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the adjudication gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only adjudication; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 11 — abstention
@@ -630,7 +630,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** abstention silently dropped.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** count and schedule review.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the abstention gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only abstention; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 12 — timeout
@@ -639,7 +639,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** late response counted as success.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** classify timeout.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the timeout gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only timeout; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 13 — retry
@@ -648,7 +648,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** duplicate billable attempt.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** deduplicate and price.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the retry gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only retry; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 14 — model version
@@ -657,7 +657,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unverifiable version.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** block acceptance.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the model version gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only model version; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 15 — endpoint region
@@ -666,7 +666,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** region unknown where material.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** defer terms review.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the endpoint region gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only endpoint region; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 16 — prompt revision
@@ -675,7 +675,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** configuration changed mid-run.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** start new run.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the prompt revision gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only prompt revision; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 17 — temperature setting
@@ -684,7 +684,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** mixed settings.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** segregate outputs.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the temperature setting gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only temperature setting; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 18 — tool use
@@ -693,7 +693,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** hidden tool result.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** exclude claim.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the tool use gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only tool use; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 19 — retrieval corpus
@@ -702,7 +702,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** corpus changes.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** rerun comparison.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the retrieval corpus gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only retrieval corpus; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 20 — reference date
@@ -711,7 +711,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** undated assertion.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** treat as OPEN.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the reference date gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only reference date; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 21 — metric numerator
@@ -720,7 +720,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** rounded numerator.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** recompute.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the metric numerator gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only metric numerator; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 22 — metric denominator
@@ -729,7 +729,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** denominator mismatch.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** stop analysis.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the metric denominator gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only metric denominator; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 23 — cost weight
@@ -738,7 +738,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** implicit equal costs.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** defer threshold.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the cost weight gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only cost weight; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 24 — threshold
@@ -747,7 +747,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** post-hoc threshold.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** freeze new protocol.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the threshold gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only threshold; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 25 — confidence display
@@ -756,7 +756,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** interval called guarantee.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** narrow conclusion.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the confidence display gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only confidence display; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 26 — paired analysis
@@ -765,7 +765,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** different populations.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** do not compare.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the paired analysis gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only paired analysis; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 27 — slice reporting
@@ -774,7 +774,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** aggregate-only report.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** block acceptance.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the slice reporting gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only slice reporting; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 28 — missingness
@@ -783,7 +783,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unknown values converted to default.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** defer item.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the missingness gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only missingness; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 29 — outlier handling
@@ -792,7 +792,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** tail deleted after outcome.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** restore and report.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the outlier handling gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only outlier handling; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 30 — cost currency
@@ -801,7 +801,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** mixed periods.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** recompute.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the cost currency gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only cost currency; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 31 — fixed fee
@@ -810,7 +810,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** fee omitted.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** add to total.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the fixed fee gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only fixed fee; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 32 — variable fee
@@ -819,7 +819,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unit mismatch.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** reprice.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the variable fee gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only variable fee; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 33 — reviewer rate
@@ -828,7 +828,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unpaid time ignored.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** re-estimate.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the reviewer rate gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only reviewer rate; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 34 — integration effort
@@ -837,7 +837,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** assumed zero.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** mark OPEN.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the integration effort gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only integration effort; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 35 — monitoring effort
@@ -846,7 +846,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** ongoing work excluded.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** add run-rate.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the monitoring effort gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only monitoring effort; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 36 — contingency
@@ -855,7 +855,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** contingency treated as observed.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** label illustrative.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the contingency gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only contingency; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 37 — privacy review
@@ -864,7 +864,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** unreviewed terms treated approved.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** do not transmit.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the privacy review gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only privacy review; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 38 — security review
@@ -873,7 +873,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** marketing assurance accepted.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** request primary evidence.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the security review gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only security review; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 39 — contract exit
@@ -882,7 +882,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** lock-in omitted.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** defer commercial gate.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the contract exit gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only contract exit; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 40 — manual fallback
@@ -891,7 +891,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** fallback exists only on paper.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** rehearse drill.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the manual fallback gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only manual fallback; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 41 — kill switch
@@ -900,7 +900,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** stop action deletes evidence.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** fix transition.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the kill switch gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only kill switch; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 42 — review queue
@@ -909,7 +909,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** overlap double counted or ignored.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** measure overlap.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the review queue gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only review queue; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 43 — incident escalation
@@ -918,7 +918,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** no accountable responder.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** do not start pilot.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the incident escalation gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only incident escalation; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 44 — decision authority
@@ -927,7 +927,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** vendor or model decides.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** restore authority.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the decision authority gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only decision authority; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 45 — audit retention
@@ -936,7 +936,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** evidence unavailable at review.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** resolve authorized policy.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the audit retention gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only audit retention; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 46 — expiry
@@ -945,7 +945,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** old approval reused.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** transition REVIEW_REQUIRED.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the expiry gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only expiry; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 47 — price change
@@ -954,7 +954,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** price update ignored.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** re-cost.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the price change gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only price change; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 48 — workload drift
@@ -963,7 +963,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** new slice hidden.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** pause or resample.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the workload drift gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only workload drift; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 49 — vendor outage
@@ -972,7 +972,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** outage excluded from metric.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** include reliability outcome.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the vendor outage gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only vendor outage; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 #### Gate 50 — termination decision
@@ -981,7 +981,7 @@ The following gate cards are distinct decision checks. They deliberately separat
 **Failing signal:** ambiguous next state.
 **Decision effect:** The gate is not passed; no aggregate score compensates for it.
 **Recovery:** return to evidence request.
-**Verification:** record the check, actor, timestamp, source version, and resulting state in the decision ledger.
+**Verification:** for the termination decision gate, preserve the observed value, the required artifact hash, the reviewer or system actor, and the resulting decision-state transition; replay the same claim packet after correction.
 **Boundary:** passing this gate establishes only termination decision; it does not establish vendor capability, contractual approval, or deployment readiness.
 
 

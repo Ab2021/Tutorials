@@ -1178,150 +1178,150 @@ The following questions are ILLUSTRATIVE; answers are worked from the stated ass
 **Reasoning / numerical check:** For 200000 CU over 1000 policy-years, the empirical value is 200 CU per policy-year.
 **Follow-up:** Why not just use written policies?
 **Follow-up answer:** Written policy count ignores duration and may not represent earned risk.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting instead `L/E` computed directly from a reconciled extract and noting that `(N/E)(L/N)` is only an algebraic decomposition of the same quantity.
 **Red flag:** Confusing loss cost with premium or ignoring exposure units.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the per-unit normalisation, the exclusion of charged premium from the definition, and one stated reason the denominator must be earned rather than written.
+Support: [P1] defines the ratio, and Section 5 substitutes the same figures (200000 CU over 1000 policy-years) in the full walkthrough.
 
 ### Question 02: Derive the observed frequency–severity identity.
 **Answer:** With matched count N>0 and exposure E>0, (N/E)(L/N)=L/E by cancellation.
 **Reasoning / numerical check:** With N=100, E=1000 and L=200000 CU, the factors are 0.1 and 2000, yielding 200 CU/year.
 **Follow-up:** What if there are no claims?
 **Follow-up answer:** Sample severity is undefined; use pooling or another justified estimator rather than dividing by zero.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting the identity stated as a conditional derivation, with the zero-claim and mismatched-denominator cases named as the places it stops applying, is equivalent credit.
 **Red flag:** Calling the zero-claim sample severity zero.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the cancellation shown symbolically, the matched-population condition, and an explicit statement that a zero-claim cell makes sample severity undefined.
+Support: [P2] carries the same cancellation, and Diagnostic 08 records the count-versus-loss population mismatch that breaks it.
 
 ### Question 03: What is earned exposure for a 180-day term?
 **Answer:** It depends on the stated annual convention and eligible covered days.
 **Reasoning / numerical check:** Using a 360-day convention, one unit earns 180/360=0.5 exposure years.
 **Follow-up:** What about a cancellation after 90 days?
 **Follow-up answer:** Under the same convention and no other adjustments, it earns 90/360=0.25 years.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting an explicit daily-count formulation, for example 180 covered days divided by 365 days, provided the convention is declared before any portfolio total is summed.
 **Red flag:** Assuming every written policy contributes a full year.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the convention named before the substitution, the arithmetic shown to a stated rounding, and one sentence on why a mixed convention corrupts portfolio sums.
+Support: the earned-interval construction in Section 5 and Probe 02 supply the day counts used here.
 
 ### Question 04: Can frequency exceed one?
 **Answer:** Yes; frequency is an expected claim count per exposure unit, not necessarily a probability.
 **Reasoning / numerical check:** For 150 claims across 100 policy-years, observed frequency is 1.5 claims per policy-year.
 **Follow-up:** When can frequency equal claim probability?
 **Follow-up answer:** When at most one claim per exposure is possible and the time unit and population match.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a statement that frequency is a rate with units `claims per exposure-year` and that only a one-claim-maximum exposure converts it to a probability.
 **Red flag:** Treating every count rate as a bounded probability.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the units stated, one numeric counterexample above 1, and the condition under which the rate becomes a probability.
+Support: [P1] and the count convention definition in Section 3 establish the unit; Diagnostic 07 separates a payment from a claim.
 
 ### Question 05: How do you price a segment with no claims?
 **Answer:** Do not infer that expected cost is zero solely from a zero-claim sample.
 **Reasoning / numerical check:** The sample has zero observed loss per positive exposure, but sample severity is undefined.
 **Follow-up:** What would you do next?
 **Follow-up answer:** Assess exposure volume and pool or use an explicitly justified credibility model.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a pooled or credibility-weighted estimate that names the borrowed population and the weight, instead of the zero-claim segment mean, is full credit.
 **Red flag:** Dividing by zero or asserting certainty from no events.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs a refusal to call the segment cost zero, a named pooling or credibility route, and the exposure volume that would change the recommendation.
+Support: Diagnostic 28 records the zero-cell hazard, and [P6] gives the pooled alternative used in the answer.
 
 ### Question 06: Why do components fail to reconcile?
 **Answer:** Claim count or loss populations, maturity, coverage, or weighting may differ.
 **Reasoning / numerical check:** If frequency uses 100 claims and severity uses 80 positive-paid claims, the cancellation in [P2] is invalid.
 **Follow-up:** What is the fastest diagnostic?
 **Follow-up answer:** Rebuild both ratios from identical claim IDs and compare their product with total loss per exposure.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a rebuilt extract that filters on a shared claim-ID set and a shared valuation date, with the residual difference quantified rather than asserted absent.
 **Red flag:** Assuming numeric similarity proves that the populations match.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the concrete mismatched component identified from a worked reconciliation, not a generic list of possible causes.
+Support: Diagnostic 08 and the Section 5 independent arithmetic check both exercise the reconciliation.
 
 ### Question 07: What is a log-exposure offset?
 **Answer:** It is a fixed coefficient-one log exposure term in a count model with a log link.
 **Reasoning / numerical check:** At annual rate 0.1, half a year has expected count 0.05.
 **Follow-up:** What happens at zero exposure?
 **Follow-up answer:** The logarithm is undefined; investigate the row instead of silently replacing zero.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a model written as `log E[N] = log E + Xb` with the offset entered as a known constant, which is algebraically the same constraint.
 **Red flag:** Estimating the offset coefficient without declaring a different model.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the offset shown as coefficient one by construction, the positive-exposure requirement, and the zero-exposure handling decision.
+Support: [P4] derives the offset, and Diagnostic 44 records the fitted-coefficient error.
 
 ### Question 08: How do development and trend differ?
 **Answer:** Development estimates eventual loss for a historical cohort; trend moves costs to a prospective level.
 **Reasoning / numerical check:** A valued loss of 160000 CU at factor 1.25 is 200000 CU ultimate; two years at 5% yields 220500 CU.
 **Follow-up:** Are they interchangeable?
 **Follow-up answer:** No; they address different timing mechanisms and can each be wrong separately.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a worked illustration that first develops an immature cohort and then applies a declared trend, in either order, if the composition is arithmetically identical.
 **Red flag:** Calling every future adjustment inflation.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs both adjustments applied with their units, an ordering check, and the statement that the two answer different timing questions.
+Support: [P3] separates development from trend, and Diagnostics 11 to 16 supply the mismatch cases.
 
 ### Question 09: What if the count and severity are dependent?
 **Answer:** The simple expected product requires the appropriately conditioned claim mean or a suitable claim-weighted severity.
 **Reasoning / numerical check:** If N is equally likely 0 or 2 and each claim in the two-claim state costs 300 CU, expected aggregate loss is 300 CU.
 **Follow-up:** Why is 1 times 200 CU wrong?
 **Follow-up answer:** The unrelated 200 CU severity is not the conditional claim mean for the active state.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a claim-weighted severity formed as `E[L]/E[N]` from the joint distribution rather than the product of marginal means, which is the correct general form.
 **Red flag:** Claiming unconditional multiplication always holds.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the conditional mean or joint-expectation argument, the numeric outcome, and the reason the marginal product overstates or understates it.
+Support: [P5] conditions aggregate loss on claim count, and the Section 6 map shows where the product form applies.
 
 ### Question 10: How is a portfolio rate aggregated?
 **Answer:** Weight segment rates by their exposure, assuming matching units and disjoint segments.
 **Reasoning / numerical check:** 800 years at 100 CU and 200 years at 300 CU give (80000+60000)/1000=140 CU per year.
 **Follow-up:** Why not 200 CU?
 **Follow-up answer:** That is the unweighted average and overweights the smaller segment.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting `sum(L_i)/sum(E_i)` computed from segment totals, which is the same exposure-weighted mean expressed without intermediate rates.
 **Red flag:** Using simple averages of segment rates without exposure weights.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the weights stated as exposures, the arithmetic to a rounded value, and the reason an unweighted mean misstates the portfolio.
+Support: [P2] and the exposure-additivity result in Section 10 justify the weighting.
 
 ### Question 11: How do you convert loss cost to a price?
 **Answer:** Add fixed expense per exposure then divide by the premium fraction remaining after variable expense and profit.
 **Reasoning / numerical check:** With loss 200 CU, fixed cost 20 CU, variable expense 20% and profit 5%, the rate is 220/0.75=293.33 CU.
 **Follow-up:** What if percentages total 100%?
 **Follow-up answer:** The simple equation has no finite positive solution when the numerator is positive.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a solution that states the equation as `R*(1-v) = loss + fixed` and solves for `R`, equivalent to the division form but easier to audit at the feasibility boundary.
 **Red flag:** Adding a percentage of premium directly to loss cost as if it were fixed.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the feasibility boundary identified from the equation itself, not from trial substitution, plus one action when the loaded fractions reach the limit.
+Support: [P6] derives the loading equation, and Diagnostic 24 tests the infeasible region.
 
 ### Question 12: How do you diagnose lower recent severity?
 **Answer:** First compare equivalent valuation ages, claim definitions, and coverage mix before claiming improvement.
 **Reasoning / numerical check:** If recent losses are immature, later development can reverse the apparent reduction.
 **Follow-up:** What competing hypothesis matters?
 **Follow-up answer:** A genuine improvement in repair cost or claim mix may also lower severity.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting an age-to-age comparison at a common development age, which is a stronger control than matching calendar periods when the cohorts differ in maturity.
 **Red flag:** Using current snapshot amounts as though every accident cohort were equally mature.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs a competing explanation named, a discriminating comparison at equal maturity, and the action if development later reverses the apparent improvement.
+Support: Diagnostic 09 and Diagnostic 14 give the closure and regime-break explanations referenced in the answer.
 
 ### Question 13: How do deductible changes affect comparability?
 **Answer:** Paid insurer loss depends on policy terms, so different deductibles change the target distribution.
 **Reasoning / numerical check:** A 1000 CU covered ground-up loss under a simple per-claim 250 CU deductible yields 750 CU before limits.
 **Follow-up:** What assumption is important?
 **Follow-up answer:** The example assumes the deductible applies exactly once to that loss and ignores other coverage terms.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a restatement of historical paid loss onto the current deductible basis with the restatement adjustment disclosed separately from the trend selection.
 **Red flag:** Treating observed paid losses across deductibles as directly interchangeable.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the deductible treatment applied to a stated loss, one limit or coinsurance term acknowledged, and the comparability consequence.
+Support: Diagnostic 32 and Diagnostic 33 record the deductible and limit comparability breaks, with the numeric check in the answer.
 
 ### Question 14: How do you validate a prospective indication?
 **Answer:** Use out-of-time cohorts with matched exposure and sufficiently mature or consistently developed outcomes.
 **Reasoning / numerical check:** Compare aggregate predicted and actual loss on the same coverage, loss basis, and period.
 **Follow-up:** What else must be monitored?
 **Follow-up answer:** Check component calibration, mix, uncertainty, legal constraints, and material operational changes.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting a backtest that uses only cohorts mature enough to support the metric, provided the excluded cohorts and their share are disclosed.
 **Red flag:** Randomly splitting transactions and counting leakage-prone immature outcomes as truth.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs the cohort and window defined, a component-level comparison rather than an aggregate-only one, and a named monitoring signal.
+Support: Diagnostic 48 records maturity leakage, and Section 9 defines the evaluation window.
 
 ### Question 15: A rate is flat but segment rates rise; is that possible?
 **Answer:** Yes; a shift of exposure toward lower-cost segments can offset within-segment deterioration.
 **Reasoning / numerical check:** A 50/50 mix of rates 100 and 300 gives 200; a 90/10 mix of rates 110 and 330 gives 132.
 **Follow-up:** What would reveal it?
 **Follow-up answer:** Report both current-mix and fixed-mix exposure-weighted results.
-**Acceptable alternative:** A different method is acceptable if it defines the same target and makes its assumptions explicit.
+Accepting the same conclusion argued through fixed-mix reweighting rather than a segment decomposition, since both hold mix constant to expose within-segment movement.
 **Red flag:** Equating a stable portfolio average with stable segment risk.
-**Scoring:** Full credit requires the answer, the stated condition, and a reasoned boundary.
-**Support:** The corresponding definition, derivation, or diagnostic above provides the evidence; numerical inputs are constructed.
+Full credit needs both the current-mix and fixed-mix computations, the numeric contrast, and the interpretive rule for reading a flat portfolio rate.
+Support: Diagnostic 26 records the mix-shift mechanism, and Probe 07 reconstructs the target mix arithmetically.
 
 **Takeaway:** Strong answers name the target, matching condition, numerical result, and failure boundary.
 

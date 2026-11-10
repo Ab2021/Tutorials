@@ -657,6 +657,351 @@ Boundary: if all values are equal, the weighted objective reduces to maximizing 
 **Answer:** name the objective, interval convention, tie rule, resource model, and small-instance oracle. **Follow-up:** show a counterexample. **Red flag:** applying cardinality greedy to unequal values.
 **Takeaway:** algorithm correctness is conditional on the objective and resource contract.
 
+
+### 14.2 Scheduling contract audit drills
+#### Drill 1: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 2: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 3: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 4: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 5: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 6: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 7: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 8: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 9: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 10: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 11: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 12: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 13: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 14: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 15: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 16: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 17: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 18: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 19: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 20: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 21: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 22: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 23: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 24: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 25: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 26: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 27: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 28: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 29: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 30: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 31: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 32: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 33: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 34: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 35: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 36: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 37: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 38: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 39: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 40: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 41: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 42: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 43: objective value
+**Contract:** preserve `objective value` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 44: half-open endpoint
+**Contract:** preserve `half-open endpoint` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 45: task identity
+**Contract:** preserve `task identity` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 46: predecessor index
+**Contract:** preserve `predecessor index` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 47: end-time order
+**Contract:** preserve `end-time order` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 48: tie rule
+**Contract:** preserve `tie rule` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
+#### Drill 49: resource count
+**Contract:** preserve `resource count` before selecting an algorithm.
+**Diagnostic:** enumerate all subsets for the small instance and compare feasibility and objective with the greedy or DP trace.
+**Competing causes:** closed-vs-half-open mismatch, unstable tie, wrong predecessor, unsorted input, or unmodeled resource coupling.
+**Recovery:** stop automated selection, correct the specification, and rerun the oracle; do not patch the chosen schedule after evaluation.
+**Verification:** the reconstructed schedule has the same objective and passes pairwise compatibility under the declared interval rule.
+**Boundary:** a small exhaustive oracle validates the example, not runtime or optimality for a different resource model.
 ## 15. Quick Reference Card
 | Field | Rule |
 |---|---|

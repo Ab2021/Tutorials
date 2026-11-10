@@ -1,1035 +1,463 @@
 ---
 case_id: "CASE-M11-02"
 case_title: "Churn leakage remediation: withdrawing a retention model that could not be scored on the day it decided"
-case_version: "1.0"
+case_version: "2.0"
 created: "2026-11-10"
 last_reviewed: null
 status: "draft"
 reviewed: null
-content_status: "draft"
-source_status: "OPEN"
+content_status: "authored draft; independent review open"
+evidence_status: "illustrative teaching values; arithmetic verified locally; no measured company outcome"
+implementation_stage: "proposed; no queue change executed"
+source_status: "OPEN — original retention source bodies unavailable; method references named in Section 14a"
 case_type: "predictive-ml"
-domain: "B2B SaaS retention and customer success"
+domain: "B2B subscription retention and customer success"
 primary_pattern: "temporal-validation"
 secondary_patterns: ["leakage-control", "decision-threshold-under-capacity"]
 evidence_level: "illustrative"
-source_basis: "illustrative"
 as_of_date: "2026-11-10"
-owner_role: "Retention analytics lead (data science) with customer-success operations as decision owner"
-source_index: "INDEX.md"
-review_trigger: "Billing-system snapshot semantics, CRM activity taxonomy, contact capacity, offer economics, contract-length mix, or churn definition change"
+owner_role: "Customer-success operations lead (decision owner); retention analytics lead (recommender); finance business partner (budget approver)"
+review_trigger: "billing snapshot semantics, CRM activity taxonomy, contact capacity, save-offer economics, contract-length mix, or churn definition change"
 ---
 
 # Case study: Churn leakage remediation
 
+> **Evidence statement, read first.** Every account count, rate, currency amount and hour figure below is a
+> constructed teaching value. The arithmetic tying those values together has been recomputed by hand and by an
+> independent expression evaluation, and the results appear in Section 6.8 and Section 11. No number is a
+> measurement of a real company, no model was trained, no queue was run, and no save offer was made. Where the
+> text states a mechanism rather than a quantity, the statement is a consequence of the definitions in Sections
+> 3 and 5, not an empirical claim. Source bodies for the retention material referenced by this course were not
+> available for reading, so no claim about their contents is made anywhere in this file.
+
 ## 1. The One-Line Framing
 
-Given a monthly snapshot of mid-market subscription accounts and the signals that were genuinely recorded before that snapshot, decide which 900 accounts enter the human outreach queue for the retention team, to protect contribution-margin revenue that would otherwise be lost to voluntary cancellation, subject to a hard customer-success contact capacity of 900 accounts per nine-week cycle and a requirement that every feature be reproducible from the warehouse as of the decision instant, compared with the currently deployed rules-based health-score queue.
+Given a monthly snapshot of 60,000 mid-market subscription accounts and only those signals that were actually
+recorded before the planning cut, decide which **900 accounts** enter the human outreach queue for a nine-week
+retention cycle, to protect contribution-margin revenue that would otherwise be lost to voluntary cancellation,
+subject to a hard customer-success capacity of 900 contacts per cycle and a non-negotiable requirement that
+every feature be reproducible from the warehouse as of the decision instant, compared with the deployed
+**rules health score** that has ordered that queue for three years.
 
-This is a **predictive-ML remediation case**, and it is **ILLUSTRATIVE**. No named company, account population, CRM system, model artifact, or business outcome is represented anywhere in this file. Every count, rate, and currency figure is a constructed teaching value chosen so the arithmetic is checkable by hand; the arithmetic is verified, the setting is not. Where a number would normally come from a vendor benchmark or an industry survey, that number is absent and the gap is stated instead.
+The unit of decision is the **account-cycle**: one account, one planning cut, one queue slot request. The unit
+of measurement is the same account observed at its 90-day outcome boundary. Those two units are not the same
+row and must not be joined as if they were, which is the first of several grain errors this case makes
+deliberate.
 
-The decision recurs on a nine-week cycle, twelve times a year, at the point when customer success plans its outreach calendar. The primary success condition in plain language is: the accounts that the queue selects should churn less often than the accounts the health score would have selected under the same contact capacity, and the claim must survive being recomputed on a forward holdout with only decision-time-available inputs.
+The primary success condition in plain language: the accounts this queue selects must churn **less often** than
+the accounts the health score would have selected under the same 900-slot capacity, and that claim must survive
+recomputation on a forward holdout built only from decision-time-available inputs. The secondary condition, and
+the one finance actually funds, is that the queue's expected retained contribution margin be positive after
+contact cost.
 
-The reusable pattern is `temporal-validation`; the two secondary patterns are `leakage-control` and `decision-threshold-under-capacity`. The decisive tradeoff, stated before any evidence, is this: the model that the team had built was the best-performing model anyone in the function had ever seen offline, and that was precisely the symptom. A 52% precision at the contact capacity, against a 6% base rate, is an 8.7x lift on a problem where the published range for voluntary B2B churn models is far lower. The obvious simpler framing -- "the model is great, ship it, and investigate the feature importances later" -- misses the part of the decision that actually matters, because the model cannot be scored for an account on the morning the queue is built. The features that made it great are, in the main, records of what happened after the decision it claims to make.
+**The supported surprise, stated before the evidence.** The model the analytics team built reported 52%
+precision at the 900-slot capacity against a 6% base rate — a lift of 8.67× — and that number is the symptom,
+not the achievement. At the moment the queue must be built, the field driving that performance does not exist
+yet. The honest forward number is 18% precision, a lift of 3.0×, which is still commercially useful: it clears
+the 7.75% break-even threshold and adds roughly 119,459 USD of expected margin per cycle over the health score.
+So the case is not "the model was bad." It is "the model was evaluated on a protocol the deployment cannot
+reproduce," and the remediated version is worth shipping while the celebrated version was not.
 
-**Takeaway:** a performance number is evidence about a protocol, not about a system. When the number is implausibly good, the first hypothesis to test is that the protocol is wrong, not that the team is lucky.
+**Why the obvious simpler framing misses the point.** The obvious framing is "a better churn model means higher
+precision, and precision at capacity is the metric, so maximise it and ship the winner." That framing is blind
+to three things that decide this case. First, precision computed on rows whose features were assembled after the
+outcome was already visible measures hindsight, and the protocol — not the model — produced the 52%. Second, a
+queue is a *fixed-capacity ranking*, so the economic question is where the marginal account stops paying for its
+contact, which is a threshold question the precision number cannot answer on its own. Third, the outcome that
+matters is churn *among accounts that were not contacted*, so the evaluation population has to include a
+comparison group the operations team is willing to leave alone; the moment a queue exists, the population it
+did not contact becomes the only honest counterfactual available, and that group must be designed rather than
+inherited.
+
+Primary pattern: `temporal-validation`. Secondary: `leakage-control` and `decision-threshold-under-capacity`.
+The decisive trade-off, stated before any evidence: the as-built model looks better than anything the function
+has produced, and adopting it would consume 510 analyst hours per cycle and 108,900 USD of contact cost on a
+ranking that cannot be produced on the morning it is needed.
+
+**Takeaway:** a performance number is evidence about a protocol, not about a system; when the number is
+implausible for the base rate, audit the protocol before celebrating the model.
 
 ## 2. Context & Background
 
-### 2.1 The product and the commercial shape
+### 2.1 The commercial shape
 
-The teaching setting is a mid-market business-to-business software subscription. Accounts are companies; each account holds one or more named seats; each account pays a monthly recurring charge under an annual or multi-year contract. The commercial team reports on recurring revenue, not on user counts, so every metric in this case is denominated in accounts or in monthly recurring revenue, never in logins.
+The teaching setting is a mid-market business-to-business software subscription. Accounts are companies; each
+account holds one or more named seats; each account pays a monthly recurring charge under an annual or
+multi-year contract. The commercial team reports on recurring revenue, not on user counts, so every metric here
+is denominated in accounts or in monthly recurring revenue (MRR), never in logins or seats.
 
-The relevant behavioural unit is the **account-month**: an account observed at one monthly billing boundary. Accounts are not independent across months -- the same account appears up to twelve times in a year of history, with correlated outcomes -- and that dependence becomes a first-class problem in Sections 6 and 9. It is the single most common reason a retention model's uncertainty is overstated.
+The behavioural unit is the **account-month**: an account observed at one monthly billing boundary. Accounts are
+not independent across months — the same account appears up to twelve times in a year of history, with
+correlated outcomes. That dependence is a first-class problem in Sections 6 and 9; it is the single most common
+reason a retention model's uncertainty interval is overstated.
 
 ### 2.2 The workflow that the decision interrupts
 
-Six weeks before a renewal date, the renewal operations team generates a renewal forecast. Four weeks before, customer success plans outreach. Two weeks before, the account executive receives an expansion or defence brief. If the customer intends to cancel, they submit notice through the account portal, and the notice date -- not the contract end date -- is the event that matters for measurement.
+Six weeks before a renewal date the renewal operations team produces a forecast. Four weeks before, customer
+success plans outreach. Two weeks before, the account executive receives a defence brief. If the customer
+intends to cancel, they submit notice through the account portal, and the **notice date** — not the contract end
+date — is the event that matters for measurement.
 
-The retention queue is built at the *planning* boundary, roughly ten weeks before the average renewal date, because outreach has to be scheduled into human calendars and offers have to be approved by finance. That timing is not a technical detail. It means the model must produce a score at a moment when the current month's usage is only partially complete, when the renewal conversation has not yet happened, and when no cancellation signal exists for most accounts. Any feature that records the renewal conversation itself is, by construction, unavailable.
+The retention queue is built at the *planning* boundary, roughly ten weeks before the average renewal date,
+because outreach has to be scheduled into human calendars and offers have to be approved by finance. That timing
+is not a technical detail. It means the model must produce a score at a moment when the current month's usage is
+only partially complete, when the renewal conversation has not yet happened, and when no cancellation signal
+exists for most accounts.
+
+Three clocks therefore coexist and are constantly confused:
+
+| Clock | Definition | Typical value in this case | What it governs |
+|---|---|---|---|
+| Event time | When the customer behaviour occurred | within the trailing 30 days | feature semantic window |
+| Ingestion time | When the warehouse recorded the event | 2–36 hours after event time | latency budget for the build |
+| Availability time | When the value became queryable at the planning cut | event time + ingestion + transform | **the only legal cutoff** |
+| Decision time `t0` | Monday 06:00 local, the snapshot instant | fixed per cycle | row set and population |
+| Outcome time | `t0` + 90 days | per account | label maturity |
+| Notice time | customer cancellation submission | 0–90 days after `t0` | the label itself |
+
+The distinction between event time and availability time is where the case lives. A support ticket created at
+23:40 on the Sunday before a 06:00 Monday cut has an event time inside the feature window and an availability
+time after the cut for perhaps a third of accounts, depending on the CRM sync schedule. Using it is leakage.
 
 ### 2.3 Stakeholders and their conflicting objectives
 
-| Stakeholder | What they own | What they are measured on | What they would optimize if unopposed |
+| Stakeholder | Owns | Measured on | Optimises if unopposed |
 |---|---|---|---|
-| Customer-success operations lead | The outreach calendar and the 900-account capacity | Contact coverage and post-contact retention | Number of accounts touched, because coverage is the metric they can control |
-| Retention analytics lead | The queue's ordering and the evidence behind it | Whether queued accounts churn less than a comparable unqueued group | Offline discrimination, because it is the metric that moves fastest |
-| Finance business partner | The discount and credit budget for save offers | Cost per retained dollar of recurring revenue | Approving no offers until the effect is proven |
-| Renewal operations | The renewal forecast | Forecast accuracy against booked renewals | Excluding uncertain accounts from the forecast |
-| Data platform owner | Snapshot semantics and feature availability | Freshness and correctness of the warehouse | Serving whatever is cheapest to materialise |
-| Privacy and legal reviewer | Permitted use of support, sentiment, and usage data | Documented purpose and retention limits | Removing more fields than necessary |
+| Customer-success operations lead | the outreach calendar and 900 slots | contact coverage and post-contact retention | accounts touched, the quantity they control |
+| Retention analytics lead | queue ordering and its evidence | whether queued accounts churn less than comparable unqueued ones | offline discrimination, the metric that moves fastest |
+| Finance business partner | discount and credit budget | cost per retained dollar of MRR | approving no offers until effect is proven |
+| Renewal operations | renewal forecast | forecast accuracy against booked renewals | excluding uncertain accounts from the forecast |
+| Data platform owner | snapshot semantics, feature availability | freshness and correctness | serving whatever is cheapest to materialise |
+| Privacy and legal reviewer | permitted use of support, sentiment and usage data | documented purpose and retention limits | removing more fields than necessary |
 
-The conflict is structural rather than personal. The analytics lead is rewarded for a discrimination number; the operations lead is rewarded for coverage; finance is rewarded for not spending. A queue that maximizes discrimination at fixed capacity can easily be a queue that consumes the entire discount budget on accounts that would have stayed anyway.
+The conflict is structural rather than personal. A queue that maximises discrimination at fixed capacity can be
+a queue that spends the entire discount budget on accounts that would have stayed anyway, because the ranking
+optimises *risk* while finance funds *incremental saves*.
 
-### 2.4 The baseline and its documented weakness
+### 2.4 The baseline and its documented design weaknesses
 
-The deployed process is a **rules health score**. It is a weighted sum of five signals: login frequency in the trailing 30 days, open support-ticket count, days since the last executive sponsor meeting, contract days remaining, and whether the account has an active expansion opportunity. Each signal is banded, banded scores are summed, and the top 900 accounts by score enter the queue.
+The deployed process is a **rules health score**: a weighted sum of five banded signals — logins in the trailing
+30 days, open support-ticket count, days since the last executive-sponsor meeting, contract days remaining, and
+whether an expansion opportunity is open. The top 900 accounts enter the queue.
 
-The health score has three documented weaknesses, all of which are properties of the design rather than of its parameters:
+Three weaknesses are properties of the design rather than of its parameters:
 
-1. **It is not calibrated.** The sum has no probability interpretation, so it cannot be compared with the cost of a contact, and it cannot be used to decide whether 900 contacts is the right number rather than merely the available number.
-2. **Its weights were set by workshop, not estimation.** The bands and weights were agreed in a half-day session with customer success and have not been revisited in three years, during which the product's pricing model changed twice.
-3. **It double-counts correlated signals.** Open support tickets and days since sponsor meeting are strongly associated, so the effective weight on "account is in difficulty" is larger than any single band suggests. This is not fatal, but it makes the score's ordering sensitive to small changes in the ticket threshold.
+1. **It is not calibrated.** The sum has no probability interpretation, so it cannot be compared against the
+   cost of a contact, and it cannot answer whether 900 contacts is the right number rather than the available
+   number.
+2. **Its weights were set in a workshop.** Bands and weights were agreed in a half-day session and not revisited
+   in three years, during which the pricing model changed twice.
+3. **It double-counts correlated signals.** Open tickets and days-since-sponsor are strongly associated, so the
+   effective weight on "account in difficulty" exceeds any single band.
 
-The health score's measured performance is **not measured** in this case. No baseline precision is asserted. This is deliberate: the whole argument of the case is that an unmeasured baseline plus an inflated model number produces a confident wrong decision, and it would be inconsistent to fill that gap with a fabricated baseline.
+The health score's own precision is **not measured** in this file. That is deliberate: the argument is that an
+unmeasured baseline plus an inflated model number produces a confident wrong decision, and filling that gap with
+a fabricated baseline would repeat the error. Section 6 instead uses a *declared planning value* of 9.5%
+precision at capacity, labelled illustrative, purely so the economic comparison has an arithmetic spine.
 
-### 2.5 Scale, timing, and boundaries
+### 2.5 Scale, timing and boundaries
 
 | Context field | Teaching value | Status |
 |---|---|---|
-| Account population | 60,000 mid-market accounts in scope | illustrative |
-| Monthly recurring revenue, median in-scope account | 1,400 USD per month | illustrative |
+| In-scope accounts | 60,000 mid-market accounts | illustrative |
+| Median in-scope MRR | 1,400 USD per month | illustrative |
 | Contribution margin on recurring revenue | 78% | illustrative |
 | Expected remaining tenure at snapshot | 11 months | illustrative |
 | Churn base rate over the 90-day label window | 6.00% | illustrative |
 | Contact capacity per nine-week cycle | 900 accounts | illustrative |
 | Analyst time per contacted account | 34 minutes | illustrative |
-| Geography | Single region, single currency, single billing system | illustrative |
-| History available for modelling | 24 monthly snapshots | illustrative |
-| Decision cadence | Every nine weeks, 5.2 cycles per year | derived: 52/9 |
+| Fully loaded contact cost | 121 USD per account | illustrative |
+| Cycles per year | 5.78 (52/9) | derived |
+| History available | 24 monthly snapshots | illustrative |
+| Geography / currency / billing system | single region, single currency, single system | illustrative boundary |
 
-The boundaries matter as much as the numbers. Accounts below a revenue floor are excluded because outreach is not economically justified; accounts already in formal notice are excluded because the outcome is determined; accounts in their first 30 days are excluded because they have no usage baseline. Those exclusions are applied *before* any modelling and are therefore not leakage -- but they change the population that the precision number refers to, and a precision computed on a different population is not comparable.
+Population exclusions are applied before modelling: accounts below a revenue floor (outreach not economically
+justified), accounts in formal notice (outcome determined), accounts in their first 30 days (no usage baseline).
+These are not leakage, but they change the denominator the precision number refers to, and a precision computed
+on a different population is not comparable.
 
 ### 2.6 Prior attempts
 
-Two prior attempts are relevant, and both are labelled as narrative rather than as measurement because no artifact survives in the teaching setting.
+Two prior attempts matter, both recorded as narrative because no artifact survives in the teaching setting.
 
-The first attempt added a gradient-boosted model on top of the existing health score as a re-ranker. It was abandoned after two cycles because the re-ranked queue was perceived by customer success as "the same accounts in a slightly different order." That perception was probably correct: a re-ranker trained on the same leaky features inherits the leak, and a leaky model's ordering is dominated by whichever accounts are closest to the extraction date rather than by which accounts are at risk.
+The first added a gradient-boosted re-ranker on top of the health score. It was abandoned after two cycles
+because operations saw "the same accounts in a slightly different order." That perception was probably correct:
+a re-ranker trained on the same leaky features inherits the leak, and a leaky model's ordering is dominated by
+whichever accounts sit closest to the extraction date rather than by which accounts are at risk.
 
-The second attempt built a churn model on the previous twelve months of snapshots with a random train/test split. It reported an area under the receiver operating characteristic curve of 0.94 and a top-decile lift of eleven. Customer success ran one cycle on it, observed that the top of the queue was full of accounts that had already renewed, and stopped using it. The stop reason was recorded as "model does not reflect reality." That diagnosis was directionally right and mechanistically wrong, and Section 12 returns to it.
+The second built a churn model on twelve months of snapshots with a random row split. It reported AUC 0.94 and
+a top-decile lift of eleven. Operations ran one cycle, observed that the top of the queue was full of accounts
+that had already renewed, and stopped using it. The recorded reason was "model does not reflect reality." That
+diagnosis is directionally right and mechanistically wrong: the model reflected the past very accurately, and
+the queue needed the present.
 
-**Takeaway:** the failure mode that repeatedly kills retention models is not weak signal; it is that the model is answering "which accounts were at risk in the past, as seen from today" rather than "which accounts are at risk today, as seen from today."
+**Takeaway:** the failure mode that repeatedly kills retention models is not weak signal; it is that the model
+answers "which accounts were at risk in the past, as seen from today" instead of "which accounts are at risk
+today, as seen from today."
 
 ## 3. The Business Question
 
 ### 3.1 The question as the decision owner put it
 
-> "I have 900 outreach slots and twelve cycles a year. Your model says the top 900 accounts are twice as likely to leave as the health score's top 900. Before I rebuild my calendar around it, tell me whether those 900 accounts are the ones I can actually identify ten weeks before renewal -- and if they are not, tell me what the honest number is, because I would rather plan against a real 30% than a fictional 52%."
+> "I have 900 slots and six cycles before the year closes. Your model says its top 900 are more than five times
+> as likely to leave as the health score's top 900. Before I rebuild the calendar around it, tell me whether
+> those 900 accounts are ones I can actually identify ten weeks before renewal — and if they are not, give me the
+> honest number, because I would rather plan against a real 18% than a fictional 52%."
 
-This is an **illustrative stakeholder question**, reconstructed for teaching. It is not a quotation from a real person, and the numbers in it are the teaching values used throughout.
+This is a constructed stakeholder question for teaching, not a quotation from a person.
 
 ### 3.2 The decision contract
 
 | Field | Content |
 |---|---|
-| Question | Should the retention queue be ordered by the gradient-boosted churn model, by the existing rules health score, or by the remediated model; and at what contact capacity? |
-| Decision owner | Customer-success operations lead, with the analytics lead as recommender and finance as budget approver |
-| Trigger | The offline evaluation reported 52% precision at 900; the operations lead was asked to commit the next four cycles to the new queue |
-| Deadline | Two weeks before the next outreach planning cycle, because calendar blocks are published then |
-| Available actions | (a) keep the health score; (b) adopt the as-built model; (c) adopt a remediated model with a forward holdout; (d) adopt the remediated model with a randomized holdout group; (e) defer and run a measurement cycle first |
-| Value at stake | Approximately 41 to 65 incremental saves per cycle, worth 0.50 to 0.78 million USD of contribution margin per cycle under the stated assumptions |
-| Downside | A wrong queue consumes 510 analyst hours and 108,900 USD of contact and incentive cost per cycle, and displaces whatever else customer success would have done with that capacity |
-| Objective | Maximize incremental retained contribution margin per cycle at fixed capacity, subject to a calibration and reproducibility gate |
-| Hard constraints | Features must be reproducible from the warehouse as of the planning instant; the queue must be explainable to the account executive; contact capacity cannot exceed 900 per cycle |
-| Scope | 60,000 mid-market accounts, one region, one billing system, twelve cycles per year |
-| Out of scope | Pricing changes, product changes, involuntary churn from payment failure, expansion targeting, and individual-level treatment assignment |
+| Question | Order the retention queue by the as-built model, the remediated model, or the incumbent health score — and at what capacity? |
+| Decision owner | Customer-success operations lead; analytics lead recommends; finance approves offer budget |
+| Trigger | Offline evaluation reported 52% precision at 900; operations was asked to commit four cycles |
+| Deadline | Two weeks before the next planning cycle, when calendar blocks publish |
+| Actions available | (a) keep health score; (b) adopt as-built; (c) adopt remediated with forward holdout; (d) adopt remediated plus randomized no-contact holdout; (e) defer one cycle to measure |
+| Value at stake | 11–26 expected saves per cycle under the declared save rate, worth 0.13–0.31 M USD of contribution margin before contact cost |
+| Downside of a wrong queue | 510 analyst hours and 108,900 USD of contact cost per cycle, displacing other customer-success work |
+| Objective | Maximise incremental retained contribution margin per cycle at fixed capacity, subject to a reproducibility gate and a calibration gate |
+| Hard constraints | Features reproducible as of `t0`; queue explainable to the account executive; capacity ≤900 per cycle; finance approval for any offer |
+| Scope | 60,000 accounts, one region, one billing system, 5.78 cycles per year |
+| Out of scope | pricing changes, product changes, involuntary churn from payment failure, expansion targeting, individual treatment assignment |
 
-### 3.3 Why the objective and the proxy can disagree
+### 3.3 Why objective and proxy can disagree
 
-The objective is retained contribution margin. The proxy that the analytics team reported is precision at the contact capacity. These agree only under three conditions: the probability of saving a contacted account is the same for every true churner; the cost of a contact is the same for every account; and the accounts displaced from the queue have no value.
+The objective is retained contribution margin. The proxy the analytics team reported is precision at the contact
+capacity. They agree only if three conditions hold: the probability of saving a contacted account is equal across
+true churners; contact cost is equal across accounts; and accounts displaced from the queue have no value. None
+holds exactly. High-value accounts receive better save offers, so save probability rises with revenue; contact
+cost is roughly flat, so value per contact is not; and ranks 901+ have real but lower risk, so displacement is
+not free.
 
-None of the three holds exactly. High-value accounts receive better save offers, so the save probability rises with revenue. Contacts cost roughly the same regardless of account size, so cost per contact is flat while value per contact is not. And the displaced accounts -- the 901st through, say, 1,400th -- have real but lower risk, so displacing them is not free.
+The arithmetic that makes the disagreement concrete uses one value per *true churner contacted*:
 
-The guardrail that keeps the proxy honest is therefore a **value-weighted** comparison: the queue's expected retained margin, not its raw precision, is the quantity that must improve. Precision remains the diagnostic because it is the quantity the model can be tuned on, but no threshold is justified by precision alone.
+```text
+FORMULA [CH-01]: v = s * R * m * T
+WHERE: v = expected retained contribution margin per true churner placed in the queue [USD/account];
+       s = probability that a contacted true churner is saved [dimensionless, 0..1];
+       R = monthly recurring revenue [USD/account-month];
+       m = contribution margin fraction on recurring revenue [dimensionless];
+       T = expected remaining tenure at snapshot [months].
+CONSTRAINT: s must be estimated on contacted accounts of the same segment; v is an expectation,
+            not a receipt, and assumes no displacement of other revenue.
+NUMERICAL EXAMPLE: s=0.13, R=1400, m=0.78, T=11 -> v = 0.13*1400*0.78*11 = 1561.56 USD.
+INTERPRETATION: each true churner occupying a slot is worth about 1.56k USD of expected margin,
+               which is what a contact must be compared against.
+```
+
+```text
+FORMULA [CH-02]: N(p) = C * (p * v - k)
+WHERE: N = expected net margin of one cycle's queue [USD]; C = contact capacity [accounts];
+       p = precision at capacity = share of queued accounts that would churn without contact;
+       v as above; k = fully loaded cost per contact [USD/account].
+CONSTRAINT: p measured on the same population and horizon as the queue; cost is linear in
+            contacts; no offer spend beyond k is included.
+NUMERICAL EXAMPLE: C=900, p=0.18, v=1561.56, k=121 ->
+                   N = 900*(0.18*1561.56 - 121) = 900*(281.0808 - 121) = 144072.72 USD.
+INTERPRETATION: the queue is worth a positive expected margin only while p*v > k; the
+                break-even precision p* = k/v follows directly.
+```
+
+```text
+FORMULA [CH-03]: p* = k / v
+WHERE: p* = break-even precision at capacity [dimensionless]; k, v as above.
+CONSTRAINT: same population and horizon; v estimated, not observed.
+NUMERICAL EXAMPLE: p* = 121 / 1561.56 = 0.077487 -> 7.75%.
+INTERPRETATION: below ~7.75% precision the queue destroys margin even though it "finds churners".
+```
+
+The guardrail that keeps the proxy honest is therefore a **value-weighted** comparison: the queue's expected
+retained margin must improve, not merely its precision.
 
 ### 3.4 What an expensive false decision looks like
 
-A false decision here has two distinct shapes, and they cost different things.
+There are two distinct shapes, and they cost different things.
 
-A **false positive** puts a healthy account in the queue. The cost is a contact: 34 analyst minutes plus the offer budget if an offer is made. If the account was never going to leave, the contact is pure cost, though it may produce a mildly positive side effect on relationship quality that this case does not attempt to measure.
+**Shape A — adopting the as-built model.** The 52% number is believed, four cycles are committed, and the queue
+is rebuilt each cycle from features that either do not exist at `t0` (the build fails, and the team silently falls
+back to last month's scores) or exist only because the pipeline reads the current warehouse state (the queue is
+built from today's data and is therefore a ranking of accounts that already renewed). The cost is 4 × 108,900 =
+435,600 USD of contact spend plus 4 × 510 = 2,040 analyst hours, against saves that may not materialise because
+the ranking is dominated by accounts whose outcome is already decided.
 
-A **false negative** leaves an at-risk account out of the queue. The cost is the lost contribution margin over the remaining life, minus whatever retention would have happened anyway. In this setting a false negative is roughly 12,012 USD of contribution margin against a 121 USD contact, a ratio near 99:1. That asymmetry is why recall matters even though capacity is the binding constraint, and it is why the queue must be evaluated at the operating point rather than at an arbitrary threshold.
+**Shape B — rejecting everything.** Operations, having been burned twice, keeps the health score. The
+opportunity cost is the incremental margin of the remediated queue, which Section 6 computes as 119,459 USD per
+cycle. Because the health score is unmeasured, this cost is invisible: nobody is ever asked to justify the queue
+they did not change. Shape B is the more likely failure in practice, because it requires no decision at all.
 
-**Takeaway:** the business question is not "how accurate is the model"; it is "at 900 contacts per cycle, does this ordering retain more contribution margin than the alternative ordering, and can that claim be reproduced on data the model has never influenced?"
+**Takeaway:** the expensive error is usually not a wrong model but a decision protocol that lets an unverifiable
+number, or an unmeasured baseline, settle a recurring resource allocation.
 
 ## 4. Assumptions & Constraints
 
-### 4.1 The assumption register
+### 4.1 Assumption register
 
-| ID | Assumption or constraint | Type | Verification plan | Status | Impact if wrong | Fallback | Recheck trigger / owner |
-|---|---|---|---|---|---|---|---|
-| A-01 | Every feature can be reconstructed from the warehouse as of the planning instant, using only events recorded before it | Data | Point-in-time rebuild of the full feature table; compare to the as-built table row by row | **violated** in the as-built model; verified after remediation | The model cannot be scored at all, or is scored on different inputs than it was trained on | Drop or rebuild the offending feature | Any new feature; data platform owner |
-| A-02 | The 90-day churn label is mature for every row used in evaluation | Data | Vintage-by-vintage maturity audit against the contract-end and notice-date records | **violated** for the two most recent vintages | Churn is understated by up to 28% and the model learns from falsely negative rows | Restrict to matured vintages; report the maturity curve | Monthly; analytics lead |
-| A-03 | The churn base rate is stable enough that a 90-day historical rate transfers to the next cycle | Model | Compare month-over-month rates and a trailing-twelve-month band | unverified | Threshold and value estimates are miscalibrated | Recalibrate per cycle; widen the decision band | Base rate moves more than 1 pp; analytics lead |
-| A-04 | The account is the right unit, and account identity is stable across the window | Data | Identity audit on the billing key; count of accounts with mid-window mergers or splits | unverified | Repeated rows and entity leakage; inflated evaluation | Aggregate to the billing account and split by entity | Any CRM migration; data platform owner |
-| A-05 | Contact capacity is genuinely 900 and does not flex with queue quality | Business | Confirm against the published calendar and staffing plan | confirmed for the cycle, by assertion | Threshold is wrong in either direction | Recompute at the actual capacity | Staffing change; operations lead |
-| A-06 | The save rate for contacted true churners is 13%, and 1% for contacted non-churners | Business | Randomized holdout within the queue | **not measured**; treated as a prior | Value estimate is wrong by a factor, not by a percentage | Run the 9:1 holdout in Section 9 | Holdout result; analytics lead |
-| A-07 | A contacted account's outcome is unaffected by other contacted accounts | Model | Interference check: compare treated accounts sharing a customer-success pod | unverified | Individual-level effects are overstated | Cluster-randomize or aggregate to the pod | Pod-level design change; analytics lead |
-| A-08 | The offer budget is 100 USD per contacted account on average | Business | Finance approval record per cycle | confirmed for the cycle | Cost per contact changes, moving the break-even save count | Recompute break-even | Finance review; finance partner |
-| C-01 | No feature may be derived from the cancellation event, the notice record, or the post-decision account state | Constraint | Feature lineage review against the decision clock | enforced by design after remediation | Direct target leakage; the headline failure of this case | Remove the field | Every feature addition; analytics lead |
-| C-02 | Every learned transformation must be fitted inside the evaluation fold, never on the pooled dataset | Constraint | Pipeline audit: refit per fold and diff the transformed values | enforced by design after remediation | Preprocessing leakage, visible as a collapse when refitted | Wrap transforms in a fold-scoped pipeline | Any pipeline refactor; analytics lead |
-| C-03 | The evaluation split must be forward in time and grouped by account | Constraint | Split audit: maximum training date less than minimum test date; zero account overlap | enforced by design after remediation | Entity leakage and optimistic intervals | Rebuild the split | Any resampling change; analytics lead |
-| C-04 | No protected or special-category attribute may enter the model, directly or as a proxy | Constraint | Feature review plus proxy test on the retained set | review needed | Legal and ethical exposure; subgroup harm | Drop the field and its proxies | Legal review; privacy reviewer |
-| C-05 | The queue must be explainable: each account carries at most five reason codes | Constraint | Reason-code coverage check on the queue | review needed | Account executives ignore the queue, destroying adoption | Reduce to three codes | Adoption falls; operations lead |
-| C-06 | Inference must complete within the planning window, which is one business day | Infrastructure | Timed rebuild on the production snapshot | not yet tested | Calendar misses the planning date | Precompute features nightly | Volume growth; data platform owner |
+Each row states the assumption, the unit or clock it lives on, where it came from, and what happens if it fails.
+Assumptions marked **reversal-critical** can flip the recommendation on their own; the rest change magnitude.
 
-### 4.2 The three assumptions that can reverse the design
+| ID | Assumption | Units / clock | Basis | If false |
+|---|---|---|---|---|
+| A1 | Warehouse state at `t0` is a faithful record of what was known at `t0` | timestamp | platform contract | features must be rebuilt from immutable event logs; A1 is reversal-critical |
+| A2 | Notice date is the churn event | date | billing/portal definition | label changes and every number shifts; reversal-critical |
+| A3 | 90 days is enough for the label to mature for the scored cohort | days | maturity curve in §5d | precision inflated by immature negatives; reversal-critical |
+| A4 | Save probability is 13% for contacted true churners | dimensionless | declared planning value, not measured | break-even precision moves between 5.04% and 16.79% (§6.5) |
+| A5 | Contact cost is 121 USD and roughly flat across accounts | USD/account | loaded analyst time plus tooling | value-weighted ranking must include account-level cost |
+| A6 | Expected remaining tenure is 11 months | months | contract mix | scales all values proportionally; ranking unaffected |
+| A7 | Contribution margin is 78% of MRR | dimensionless | finance declaration | scales all values linearly |
+| A8 | Accounts are the decision unit; contacts are not shared across accounts | account | operations design | two accounts under one parent company break independence |
+| A9 | The 900-slot capacity is hard, not elastic | accounts/cycle | staffing plan | capacity becomes a cost variable (§6.5) |
+| A10 | No save offer exceeds the standard discount band | USD | finance policy | value per save rises; policy risk unquantified here |
+| A11 | The health score's ordering is stable run to run | rank | its deterministic band sum | baseline comparison becomes noisy; reversal-critical for A/B claims |
+| A12 | Excluded populations stay excluded across cycles | account set | policy | precision denominator changes; comparability breaks |
+| A13 | A queued account receives exactly one outreach attempt per cycle | count | operations standard | repeated contacts multiply cost without modelled benefit |
+| A14 | No cross-cycle interference: this cycle's contact does not change a later cycle's baseline risk | account | assumption, untested | effects attributed to later cycles are contaminated |
 
-Of the fourteen entries above, three can reverse the recommendation rather than merely shift a number.
+A1, A2, A3 and A11 are the four that can reverse the design; Sections 5d, 6.1 and 12 test each explicitly.
 
-**A-01 is the first.** If a material share of the feature set cannot be reconstructed as of the planning instant, then the as-built model has no deployable form at all -- it is not a model with a leaky feature, it is a model whose input vector does not exist at decision time. The remediation is not parameter tuning; it is deleting the inputs and accepting the performance loss.
+### 4.2 Constraints versus choices
 
-**A-06 is the second.** The entire value case rests on a 13% save rate among contacted true churners. If the true save rate is 4%, the remediated model retains 12.7 accounts per cycle instead of 41.4, and the net return collapses from 3.57 dollars per dollar spent to roughly 0.40 -- a loss. Section 6 shows the exact crossover, and Section 9 shows the experiment that would settle it.
+A **constraint** is imposed by an authority outside the analytics team and cannot be optimised away: the 900-slot
+capacity, the 34-minute handling time, the requirement that features be reproducible at `t0`, the requirement
+that the queue be explainable, the prohibition on using free-text support sentiment without a documented lawful
+basis, and the finance rule that any discount requires approval.
 
-**A-05 is the third.** If capacity is not actually 900 but flexes with queue quality, then the threshold is mis-specified in both directions: the model is being tuned to a constraint that does not bind, and the marginal-value calculation that justifies the 900th contact is invalid. Capacity is a business fact that has to be confirmed with the operations lead, not read off a spreadsheet.
+A **choice** is a design decision the team owns and must defend: the model family, the split design, the
+calibration method, the rank-versus-threshold rule, the reason-code format, the number of features, and whether
+to run a randomized no-contact holdout. Confusing the two produces the classic failure of "we cannot change the
+capacity, so let us relax the reproducibility requirement" — one is fixed, the other is the whole point.
 
-### 4.3 What is a constraint and what is a choice
+### 4.3 What the case deliberately does not assume
 
-Two of the entries above are sometimes confused in practice. C-01 through C-03 are **not choices**. They are properties that any evaluation must have in order to be an evaluation of the deployed system. A team cannot decide to relax them for speed, in the way it can decide to accept a coarser feature or a simpler model, because relaxing them changes what the number means rather than how precise it is.
+- It does not assume the 52% number is wrong because it is large. It assumes the number is *unexplained*, and
+  the audit in §6.1 supplies the explanation.
+- It does not assume the health score's 9.5% precision is real. It is a declared planning value used to size a
+  comparison, and the file says so wherever the number appears.
+- It does not assume that a contacted account would have churned without contact. Save probability is a separate
+  quantity, estimated only by a randomized holdout, and no such holdout exists here.
+- It does not assume the label is mature for the most recent vintages; §5d and §6.6 quantify the bias.
+- It does not assume a model score authorises a contact. Operations and finance hold that authority.
 
-By contrast, the choice of model family, the choice between a point estimate and a calibrated probability, and the choice of whether to run a randomized holdout are genuine choices with cost and benefit. The rest of this file keeps that distinction explicit, because the most common failure in leakage remediation is treating a validity constraint as a tuning parameter.
-
-```text
-INVARIANT [CH-I1]: every row's feature vector is a function of events timestamped strictly
-                   before the row's decision instant, and of nothing else.
-WHERE: a row is one (account, planning cycle) pair; the decision instant is the planning
-       boundary at which the queue is built.
-CONSTRAINT: the invariant is a property of the data pipeline, not of the model; it must hold
-            for training rows and scoring rows identically.
-CHECK: for each feature, the maximum contributing event timestamp in the lineage record must
-       be earlier than the row's decision instant; a single violation invalidates the field.
-INTERPRETATION: a model that satisfies this on training data but not on scoring data is
-                not merely degraded, it is undefined at serving time.
-```
-
-**Takeaway:** separate the constraints that define validity from the choices that trade off cost, and never let a scheduling pressure migrate an item from the first list to the second.
-
+**Takeaway:** the assumption register is the case's real content; a reader who can name which assumption is
+load-bearing has understood more than a reader who can quote the precision.
 
 ## 5. Data, Tools & Method
+
 ### 5a. Data Specification
-| Field | Contract |
+
+| Element | Specification |
 |---|---|
-| Unit | one billing account at one nine-week planning instant; the billing-account key is stable within a snapshot |
-| Window | 24 historical monthly snapshots; rows are eligible only after the full 90-day label window matures |
-| Inputs | trailing usage aggregates, support counts, contract schedule, prior invoice state, and pre-decision CRM activity timestamps |
-| Label | voluntary cancellation notice within 90 calendar days after the planning instant; payment failure is excluded |
-| Exclusions | formal notices, first-30-day accounts, and accounts below the approved revenue floor, applied before scoring |
-| Split | grouped account-level, forward-time train/validation/holdout; no row may move backward across its decision time |
-The timestamp rule is operational: `feature_available_at <= decision_at`, while `label_observed_at > decision_at`. A source that stores an event after its business occurrence is still unavailable until its recorded availability time. This prevents an apparently harmless backfill from becoming look-ahead.
+| Grain | one row per (account_id, cycle_id) at the planning cut; one outcome row per (account_id, cycle_id) at `t0`+90d |
+| Primary key | `account_id` (stable billing identifier), `cycle_id` (ISO week of the Monday cut) |
+| Entity key risk | parent-company rollups and re-billed accounts can share an `account_id` history; §5d handles it |
+| Time zone | all timestamps stored UTC; the planning cut is a local 06:00 converted to UTC per region |
+| Snapshot semantics | `as_of` query restricted to availability_time <= `t0`; late-arriving corrections kept as versions |
+| Feature windows | 30-day login window, 90-day ticket window, 180-day sponsor-meeting window, contract `days_remaining` at `t0` |
+| Label | `notice_submitted` within `(t0, t0+90d]`, excluding involuntary payment failure |
+| Label maturity | a `cycle_id` is mature only when `t0 + 90d + 14d` processing lag has elapsed |
+| Population | active accounts, MRR above floor, not in notice at `t0`, age ≥30 days |
+| Exclusions | fraud-suspended accounts, accounts in legal dispute, internal test tenants |
+| Volume | 24 cycles × 60,000 accounts ≈ 1.44 M account-cycles before exclusions |
+| Storage | features ≈ 120 columns × 8 bytes ≈ 0.96 KiB/row → ≈1.38 GiB uncompressed for 1.44 M rows |
+| Refresh | full rebuild per cycle; incremental backfill for corrected vintages |
+| Access control | row-level by region; support free-text excluded from the model artifact |
+
+The storage figure is payload-only: 120 columns at 8 bytes is 960 bytes per row, and 1.44 M rows is
+1,382,400,000 bytes ≈ 1.29 GiB (1 GiB = 1,073,741,824 bytes). Parquet compression and indexes are additional and
+are not estimated here.
+
 ### 5b. Tools & Stack
-The proposed stack is deliberately ordinary: versioned warehouse snapshots, SQL transformations with an availability-time column, a fold-scoped Python training pipeline, a calibrated gradient-boosted candidate, and a static queue export. No production deployment or run artifact is claimed. The stack is a design proposal, not evidence that any named organization uses it.
+
+| Layer | Tool class | Why | Failure if missing |
+|---|---|---|---|
+| Warehouse | columnar SQL engine with `AS OF` / snapshot support | point-in-time reconstruction is the case's core requirement | features silently read current state |
+| Feature build | scheduled SQL plus versioned transformation code | reproducible per cycle | no audit trail for a queue |
+| Modelling | gradient boosting and logistic regression with calibration | nonlinear fit plus an interpretable comparator | no credible baseline for explanation cost |
+| Evaluation | grouped, time-ordered splits; bootstrap intervals | dependence across account-months | optimistic uncertainty |
+| Serving | batch scoring job writing an immutable queue table | queue is consumed by humans, not by an API | no replayable artifact |
+| Monitoring | calibration and rank-drift dashboards per cycle | detects population shift | drift discovered by complaint |
+| Governance | feature availability ledger (name, source, availability rule, owner) | the artifact that makes leakage review possible | every audit restarts from zero |
+
 ### 5c. Method Summary
-1. Freeze an as-of snapshot for each planning instant and reject fields without an availability ledger.
-2. Derive trailing-window features only from events whose recorded time precedes that instant.
-3. Train baseline regularized logistic regression and a constrained boosted-tree candidate inside forward folds.
-4. Calibrate probabilities on a validation vintage, rank eligible accounts, and select exactly 900 when capacity is fixed.
-5. Attach reason codes, a feature-freshness flag, and a holdout assignment before exporting the queue.
-| Candidate | Status | Why it is considered | Disqualifier |
+
+1. Freeze the decision contract: `t0`, population, capacity, action set, label, horizon, comparator (§3.2).
+2. Build a feature availability ledger: for each candidate feature, record source table, maximum event time,
+   ingestion lag distribution, transform, and the rule that makes it legal at `t0` (§5d).
+3. Construct two evaluation worlds: **as-built** (whatever the pipeline produced) and **as-of** (rebuild with
+   `availability_time <= t0`).
+4. Split by time: train on cycles 1–18, validate on 19–21, hold out 22–24 untouched until one model is frozen.
+   Group all rows of an account into one partition.
+5. Fit three candidates on the as-of world: health-score re-ranker, logistic regression, gradient boosting.
+6. Calibrate on the validation cycles using isotonic regression fitted per cycle, never on holdout.
+7. Convert calibrated probability to a **rank-cut at 900**, because capacity binds; report the implied
+   probability at the cut so finance can check it against `p* = k/v`.
+8. Report precision at capacity, recall on the mature churner population, calibration by decile, and expected
+   net margin with `CH-02`, each with an interval.
+9. Compare on the frozen holdout; freeze the winner; specify the queue-build contract for serving (§8).
+10. Pre-register the randomized no-contact holdout for the *next* cycles; this is the only design that can
+    estimate save probability.
+
+### 5d. Data provenance, quality, exclusions and leakage controls
+
+**Leakage taxonomy used in the audit.** Four kinds appear in retention work, and each has a different check:
+
+| Kind | Mechanism | Check | Result here |
 |---|---|---|---|
-| Rules health score | baseline, not measured | familiar and available | no probability or freshness audit |
-| Logistic regression | proposed comparator | stable and inspectable | may miss interactions |
-| Boosted trees plus calibration | proposed candidate | nonlinear interactions | only valid after point-in-time reconstruction |
-| Unremediated model | rejected | high reported offline precision | cancellation and renewal fields are unavailable at scoring |
-### 5d. Provenance, quality, exclusions and leakage controls
-Every feature receives a lineage record with source table, event-time field, availability-time field, transformation version, maximum contributing timestamp, and owner. Missing availability time is a rejection condition, not an invitation to infer one. Transformations learn bins, imputations, and encodings from each training fold only.
-### 5e. Reproducibility and method-selection ledger
-| Artifact ID | Purpose | Accessibility | Limitation |
-|---|---|---|---|
-| ILL-CH-01 | constructed account-month table specification | included in prose only | no real rows exist |
-| ILL-CH-02 | hand calculation in Section 6 | reproducible by arithmetic | not a model run |
-| OPEN-CH-01 | source body and real workflow evidence | unavailable | no deployment or outcome may be inferred |
-**Takeaway:** a reproducible prediction begins with a reproducible decision-time row, not with a reproducible estimator call.
+| Target leakage | a feature records the outcome or its precursor | availability ledger + maximum feature event time inside the label window | found: `renewal_disposition` and `notice_flag` (§6.1) |
+| Temporal leakage | feature value computed from data after `t0` | rebuild with `availability_time <= t0` and diff | found: current-state joins on usage and tickets |
+| Group leakage | same account in train and holdout | partition by `account_id` | found in the earlier random split |
+| Selection leakage | the evaluation population depends on the label or on treatment | compare population built before scoring with population after | found: accounts in notice included at scoring time |
 
-## 6. Analysis Walkthrough
-### 6.1 Leakage audit trace
-| Step | Input | Operation | Output | Interpretation |
-|---:|---|---|---|---|
-| 1 | 60,000 eligible accounts | capacity ratio | 900 / 60,000 = 1.5% selected | this is the operating point, not a generic threshold |
-| 2 | reported top-900 precision 52% | inspect feature availability | renewal-conversation and post-notice fields found | reported score is invalid for deployment |
-| 3 | remediated forward holdout | apply availability ledger | hypothetical precision 18% | illustrative diagnostic number, not measured performance |
-| 4 | 900 contacts | expected true churners | 900 × 0.18 = 162 accounts | capacity converts probability quality into workload |
-| 5 | 13% illustrative save rate | expected incremental saves | 162 × 0.13 = 21.06 accounts | causal effect remains unmeasured without holdout |
-Validity before use: the next calculation assumes the queue has 18% precision, the save rate applies only to true churners contacted, and contact effects are additive. Those are illustrative planning assumptions, not an efficacy claim.
-```text
-FORMULA [CH-01]: N_churn = K * p
-WHERE: K=900 contacts [accounts]; p=0.18 precision [churners/contact].
-CONSTRAINT: precision is for the same eligible population and decision time.
-NUMERICAL EXAMPLE: N_churn=900*0.18=162 true churners.
-INTERPRETATION: the queue creates a review workload hypothesis, not retained customers.
-```
-```text
-FORMULA [CH-02]: N_save = K * p * s
-WHERE: s=0.13 assumed incremental save probability [saves/true churner contacted].
-CONSTRAINT: assumes no interference and a causal effect that has not been measured.
-NUMERICAL EXAMPLE: N_save=900*0.18*0.13=21.06 expected saves.
-INTERPRETATION: use this only to size a validation experiment.
-```
-The arithmetic check is independent: 162 × 0.13 = 21.06, and 21.06 / 900 = 0.0234 expected saves per contact. At p=0, expected saves are zero; at p=1, the model-implied upper bound is 117 saves under the same assumed effect. Neither boundary establishes a real intervention effect.
-### 6.2 Sensitivity
-| Stress | p | s | Expected saves | Decision consequence |
-|---|---:|---:|---:|---|
-| Low discrimination | 0.12 | 0.13 | 14.04 | require a smaller pilot or improved queue |
-| Base illustrative | 0.18 | 0.13 | 21.06 | run randomized holdout before scale |
-| Weak treatment | 0.18 | 0.04 | 6.48 | do not infer value from ranking alone |
-| Capacity 450 | 0.18 | 0.13 | 10.53 | recalculate marginal queue cut-off |
-The recommendation does not reverse on the precision number alone: it remains “validate with a holdout.” It reverses only if someone tries to describe these constructed results as an observed retention effect.
-**Takeaway:** leakage remediation may lower an offline metric while improving the truthfulness of the decision that metric is permitted to support.
+**Availability ledger (excerpt).** Twelve of the 120 candidate features are shown; the ledger entry that matters
+is the last column.
 
-## 7. The Finding
-The as-built model must not be adopted because some decisive inputs are unavailable at the planning instant. A point-in-time remediated pipeline is the only candidate eligible for a forward evaluation, but its illustrative 18% precision and calculated 21.06 expected saves are not outcomes. The owner should authorize a bounded randomized measurement cycle, not a broad replacement of the health-score queue. This conclusion is conditional on the timestamp ledger, the label-maturity audit, and the capacity remaining at 900 contacts.
-**Takeaway:** reject an undeployable score even when it appears highly accurate; the honest next action is measurement, not confidence.
-
-## 8. System/Solution Design
-```text
-[warehouse event] -> [availability-time validator] -> [as-of snapshot]
- -> [fold-scoped feature builder] -> [calibrated ranker] -> [capacity selector]
- -> [reason-code queue + holdout assignment] -> [customer-success workflow]
-                                      |
-                                      v
-                            [lineage and freshness audit]
-```
-The data platform owner owns snapshot creation; analytics owns the model and calibration record; operations owns queue acceptance; finance approves offers; no component can silently substitute a late feature. A failed freshness check produces a queue hold and a baseline fallback, not a score with missing provenance.
-At export, the selector sorts by stable `(risk_score descending, account_id ascending)` order. Deterministic ties prevent a capacity boundary from changing merely because a database returns equal values in a different order. The export carries snapshot ID, model version, threshold score, rank, reason codes, and holdout arm.
-The recovery path is bounded: if the snapshot is late, use the last validated baseline queue only after operations accepts its date; if calibration is missing, do not substitute raw scores; if more than a defined fraction of rows fails lineage checks, stop and investigate rather than silently dropping accounts.
-**Takeaway:** the serving contract is a timestamped queue with an auditable fallback, not an abstract model endpoint.
-
-## 9. Evaluation & Validation
-The validation protocol has two layers. First, a forward holdout verifies that every feature and transformation is available at scoring time and that ranking is stable. Second, a randomized queue holdout estimates the effect of contact versus no contact among accounts selected by the same policy. Neither AUC nor precision alone estimates the effect of outreach.
-| Metric | Numerator | Denominator | Window | Guardrail | Status |
+| Feature | Source | Event window | Ingestion lag | Legal at `t0`? | Note |
 |---|---|---|---|---|---|
-| Precision@900 | matured churn notices in selected queue | 900 selected accounts | 90 days | compare same eligibility rule | proposed |
-| Calibration | observed churn rate by score bin | accounts in bin | 90 days | enough matured rows per bin | proposed |
-| Incremental retention | treated retained minus control retained | randomized selected accounts | contract-defined horizon | pod interference check | not measured |
-| Queue usability | accepted reason-code records | exported records | cycle day | rejection reasons logged | proposed |
-The 9:1 randomization means 810 selected accounts receive outreach and 90 form the holdout, subject to ethics and operations approval. This is a design, not an executed experiment. The control result must be compared with a random arm from the same ranked population; comparing it with non-selected accounts confounds risk with treatment.
-Boundary: if cluster interference within customer-success pods is material, randomize by pod or do not interpret individual-level differences causally. A larger sample cannot repair a unit-of-randomization error.
-**Takeaway:** validation must test both scoring validity and intervention effect, because a correct ranker can still support an ineffective action.
+| `logins_30d` | product events | 30 d | ≤6 h p95 | yes | partial-day at cut; window is `[t0-30d, t0-1d]` |
+| `tickets_open` | CRM | point-in-time | ≤2 h p95 | yes | counts only, no text |
+| `days_since_sponsor` | CRM meetings | 180 d | ≤24 h | yes | missing for 11% of accounts → explicit null |
+| `days_remaining` | billing | point-in-time | 0 | yes | deterministic from contract |
+| `expansion_open` | CRM opportunity | 90 d | ≤24 h | yes | 4.2% of accounts change weekly |
+| `mrr` | billing | point-in-time | 0 | yes | versioned on amendment |
+| `support_sentiment` | free text | 90 d | ≤72 h | restricted | excluded from the model; lawful basis unresolved |
+| `renewal_disposition` | CRM call notes | 90 d | ≤24 h | **no** | recorded during the renewal conversation, after `t0` |
+| `notice_flag` | portal | point-in-time | 0 | **no** | records the outcome itself |
+| `contract_signed_date` | billing | point-in-time | 0 | yes | used only to derive age |
+| `usage_seats_active` | product | 14 d | ≤6 h p95 | yes | denominator drift when seats are added mid-window |
+| `credit_memo_count` | finance | 180 d | ≤48 h | yes, if no offer is attached | exclude memos created by the retention team |
 
-## 10. Action Taken
-In this illustrative design exercise, no production action was taken. The proposed decision is to withdraw the as-built model, keep the existing rules queue as a clearly labeled baseline, and authorize only the following preparatory actions: complete the availability ledger, rebuild matured historical snapshots, pre-register the holdout rule, and rehearse the stop/fallback path.
-The decision owner retains authority to reject the queue. A model score does not authorize a discount, a contact, or a customer treatment. Finance and operations may impose a stricter capacity or offer rule, which requires the value calculation and ranking threshold to be recomputed.
-**Takeaway:** “proposed” means a documented next step with an owner and stop condition, not an implied deployment.
+**Label maturity.** A cycle is scored mature when `t0 + 90d + 14d` has passed. In the 24-cycle history, 21 cycles
+are mature at 6.0% churn and 3 are immature, showing 4.1% observed churn because notices are still arriving. If
+those 3 cycles are pooled without a maturity filter, the pooled base rate is
+(21×6.0 + 3×4.1)/24 = 5.7625%, which is 0.2375 percentage points low. That distortion propagates into every
+precision denominator computed on the pool, and it is why §6.6 recomputes the headline comparison on mature
+cycles only.
 
-## 11. Outcome & Results
-No retained revenue, churn reduction, model lift, adoption rate, or production latency was measured for this teaching case. The only verified results are the arithmetic and the logical consequence that unavailable decision-time features invalidate a deployed-score claim. The projected counts in Section 6 are illustrative planning calculations and must not be promoted to outcomes.
-| Claim ID | Claim | Evidence | Does not establish |
+**Exclusions and their effect.** The revenue floor removes 8,400 accounts (14.0%), first-30-day accounts remove
+2,100 (3.5%), and notice-at-`t0` removes 900 (1.5%). The 900 removed for notice are not random: they are the
+highest-risk accounts in the file, so including them would inflate measured precision while contributing nothing,
+because their outcome is already fixed.
+
+### 5e. Reproducibility and method-selection ledger
+
+Reproducibility means: given `(cycle_id, model_version, transform_version, population_version)`, an independent
+engineer can regenerate the exact ordered queue of 900 account IDs and the reason codes behind each. The evidence
+is a diff of ordered IDs, not an aggregate metric.
+
+| Alternative | Considered because | Rejected because | Where revisited |
 |---|---|---|---|
-| CLM-CH-01 | 900 × 0.18 = 162 | verified arithmetic on illustrative inputs | real precision |
-| CLM-CH-02 | 162 × 0.13 = 21.06 | verified arithmetic on illustrative inputs | causal save effect |
-| CLM-CH-03 | late feature violates the serving contract | derived from timestamp definition | prevalence in any company |
-**Takeaway:** a transparent not-measured result is more useful than a fabricated business-impact number.
+| Keep health score | zero build risk, explainable | unmeasured and uncalibrated; cannot answer the capacity question | §11 if remediation fails |
+| Re-ranker on health score | cheapest change | inherits the leak and the uncalibrated scale | §12 failure 6 |
+| Random-split GBM (prior attempt) | best offline AUC | group and temporal leakage; top of queue already renewed | §6.1 |
+| Logistic regression on as-of features | interpretable, stable coefficients | forward precision 15.8% at capacity vs 18.0% for GBM — inside noise, so kept as the *explanation* fallback | §9.4 |
+| GBM on as-of features | captures interactions | less stable coefficients; needs reason codes | chosen, §6.3 |
+| Depth-limited GBM without calibration | simplest ranker | rank-cut needs an interpretable probability at the cut for finance | §5c step 6 |
+| Threshold rule instead of rank-cut | stable per-account action | at 6% base rate a fixed threshold yields 300–3,000 tasks across cycles | §6.5 |
+| Randomized no-contact holdout now | only way to estimate save probability | would cost a cycle of coverage before any queue change is justified | pre-registered for later cycles, §8.4 |
 
-## 12. Failure Modes & What Went Wrong
-| Failure | Competing causes | Diagnostic | Recovery | Verification |
-|---|---|---|---|---|
-| Implausibly high precision | genuine signal; direct leakage; random split leakage | feature availability and split audit | remove unavailable fields; use forward grouped split | score can be built at each decision instant |
-| Precision collapses forward | drift; label immaturity; lost leakage | vintage maturity curve and schema diff | mature labels; retrain only after root cause | stable metric definition across vintages |
-| Queue cannot be acted on | no reason codes; stale CRM identity | export acceptance audit | stable ID mapping and capped explanations | operations accepts sampled records |
-| Value estimate is inflated | noncausal save assumption; interference | randomized holdout and pod analysis | change randomization unit or narrow claim | pre-specified comparison passes |
-| Capacity boundary thrashes | nondeterministic ties; duplicate accounts | repeat-sort and identity audit | stable secondary key and deduplication | identical snapshot gives identical queue |
-An important recovery constraint is that deleting a feature is not proof that its proxy disappeared. The next audit checks proxy candidates and asks whether their availability timestamp is equally late.
-**Takeaway:** diagnose the data-time contract before retuning the estimator; most apparent model failures are evaluation-contract failures.
+**Takeaway:** the method ledger exists so that a later reader can tell which choices were tested and which were
+merely preferred; the rejected random-split model is the same family as the chosen one, differing only in
+protocol.
 
-## 13. Transferable Lesson
-A prediction workflow is defined by the information available when a decision is made, the action the decision changes, and the counterfactual needed to evaluate that action. The same rule applies to fraud queues, clinical risk flags, ranking interventions, and staffing forecasts: a late label-like signal may make a retrospective model look excellent while making a prospective decision impossible. Calibration, stable capacity selection, and a human-owned fallback make the boundary testable rather than aspirational.
-**Takeaway:** model quality is conditional on a temporal contract; without it, validation describes hindsight rather than decision support.
-
-## 14. Connections & Cross-References
-### 14.1 Interview pack
-**Q1. Why is a random row split unsafe?**
-**Answer:** Repeated accounts and future-derived features can appear on both sides, making the test easier than future scoring. Use a forward, entity-grouped split.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q2. Why is 52% precision suspicious rather than impossible?**
-**Answer:** It is not mathematically impossible, but a large gap from a 6% base rate demands a feature-availability and split audit before interpreting it as signal.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q3. What does calibration add to ranking?**
-**Answer:** A rank can prioritize work, while calibrated probabilities support expected-value and capacity decisions; calibration still requires matched population and time.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q4. Why not select every account above 0.18?**
-**Answer:** Capacity is fixed at 900. The operational rule is rank-and-cut, then measure the marginal value near the cut.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q5. What is the most dangerous leakage source here?**
-**Answer:** A renewal conversation or cancellation notice recorded after the planning instant directly exposes the future outcome and cannot exist at serving time.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q6. How do label delays distort training?**
-**Answer:** Immature 90-day windows mislabel future churners as negatives. Restrict evaluation to matured vintages or model censoring explicitly.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q7. What invalidates the holdout comparison?**
-**Answer:** Different eligibility rules, post-selection exclusions, or interference between arms destroy comparability; randomize before outreach and preserve assignments.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q8. When would logistic regression win?**
-**Answer:** When its forward performance is adequate and its simpler coefficients, stability, and explanation are more valuable than nonlinear lift.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q9. What is a plausible wrong fix?**
-**Answer:** Keeping the leaky field but masking it at serving time. That changes the feature distribution and preserves an invalid training/evaluation protocol.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q10. What changes if capacity doubles?**
-**Answer:** Recompute precision and expected value at 1,800 contacts; lower-ranked accounts may have materially lower risk, so linear extrapolation is not justified.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q11. Who may approve a customer offer?**
-**Answer:** The designated business and finance owners, not the model. A score prioritizes review but has no operational authority.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Q12. How is reproducibility checked?**
-**Answer:** Rebuild a named as-of snapshot, rerun transformations with recorded versions, verify maximum source timestamps, and compare deterministic queue ranks.
-**Reasoning:** The answer follows from the decision-time and causal-evaluation contracts above.
-**Follow-up / scoring:** Strong answers name a check and a boundary; red flag: treating an offline score as an intervention result.
-**Takeaway:** a defensible answer names the population, decision time, comparator, and evidence limit before proposing a model.
-
-
-### 14.2 Audit drills for the decision-time contract
-
-The following drills are design controls, not records of a live system. Each one translates the abstract temporal rule into an observable check so that an auditor can reject a persuasive but non-reproducible queue.
-
-#### Drill 01 — usage events control variant 1
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 02 — support tickets control variant 1
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 03 — billing records control variant 1
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 04 — CRM activities control variant 1
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 05 — contract schedule control variant 1
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 06 — account identity control variant 1
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 07 — reason codes control variant 1
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 08 — label maturity control variant 1
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 09 — capacity roster control variant 1
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 10 — offer eligibility control variant 1
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 11 — usage events control variant 2
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 12 — support tickets control variant 2
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 13 — billing records control variant 2
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 14 — CRM activities control variant 2
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 15 — contract schedule control variant 2
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 16 — account identity control variant 2
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 17 — reason codes control variant 2
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 18 — label maturity control variant 2
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 19 — capacity roster control variant 2
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 20 — offer eligibility control variant 2
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 21 — usage events control variant 3
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 22 — support tickets control variant 3
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 23 — billing records control variant 3
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 24 — CRM activities control variant 3
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 25 — contract schedule control variant 3
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 26 — account identity control variant 3
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 27 — reason codes control variant 3
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 28 — label maturity control variant 3
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 29 — capacity roster control variant 3
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 30 — offer eligibility control variant 3
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 31 — usage events control variant 4
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 32 — support tickets control variant 4
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 33 — billing records control variant 4
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 34 — CRM activities control variant 4
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 35 — contract schedule control variant 4
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 36 — account identity control variant 4
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 37 — reason codes control variant 4
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 38 — label maturity control variant 4
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 39 — capacity roster control variant 4
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 40 — offer eligibility control variant 4
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 41 — usage events control variant 5
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 42 — support tickets control variant 5
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 43 — billing records control variant 5
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 44 — CRM activities control variant 5
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 45 — contract schedule control variant 5
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 46 — account identity control variant 5
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 47 — reason codes control variant 5
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 48 — label maturity control variant 5
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 49 — capacity roster control variant 5
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 50 — offer eligibility control variant 5
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 51 — usage events control variant 6
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 52 — support tickets control variant 6
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 53 — billing records control variant 6
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 54 — CRM activities control variant 6
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 55 — contract schedule control variant 6
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 56 — account identity control variant 6
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 57 — reason codes control variant 6
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 58 — label maturity control variant 6
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 59 — capacity roster control variant 6
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 60 — offer eligibility control variant 6
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 61 — usage events control variant 7
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 62 — support tickets control variant 7
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 63 — billing records control variant 7
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 64 — CRM activities control variant 7
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 65 — contract schedule control variant 7
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 66 — account identity control variant 7
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 67 — reason codes control variant 7
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 68 — label maturity control variant 7
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 69 — capacity roster control variant 7
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 70 — offer eligibility control variant 7
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-#### Drill 71 — usage events control variant 8
-**Decision:** determine whether `usage events` may enter the score for a fixed planning instant.
-**Invariant:** an event arriving after the planning cut must be excluded even if its business date looks earlier.
-**Evidence needed:** persist the source snapshot identifier, `event timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare maximum contributing availability time with the cut; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rebuild the trailing window from frozen events. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a later backfill must not alter the historical score. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `usage events` is predictive, fair, permitted, or causally actionable.
-#### Drill 72 — support tickets control variant 8
-**Decision:** determine whether `support tickets` may enter the score for a fixed planning instant.
-**Invariant:** a ticket closed after the cut cannot make an earlier snapshot look resolved.
-**Evidence needed:** persist the source snapshot identifier, `ticket status timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit both created and state-change availability; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use only states materialized before scoring. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** status history must be append-safe. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `support tickets` is predictive, fair, permitted, or causally actionable.
-#### Drill 73 — billing records control variant 8
-**Decision:** determine whether `billing records` may enter the score for a fixed planning instant.
-**Invariant:** a payment posted after the cut is not known at planning time.
-**Evidence needed:** persist the source snapshot identifier, `invoice posting time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** diff as-of invoice snapshots; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** retain the latest pre-cut state only. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** late settlement corrections require a new score run. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `billing records` is predictive, fair, permitted, or causally actionable.
-#### Drill 74 — CRM activities control variant 8
-**Decision:** determine whether `CRM activities` may enter the score for a fixed planning instant.
-**Invariant:** a logged call can be entered days after it occurred.
-**Evidence needed:** persist the source snapshot identifier, `write timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare activity occurrence and write timestamps; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** use recorded availability or exclude the field. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** manual backfill is treated as unavailable. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `CRM activities` is predictive, fair, permitted, or causally actionable.
-#### Drill 75 — contract schedule control variant 8
-**Decision:** determine whether `contract schedule` may enter the score for a fixed planning instant.
-**Invariant:** future amendments cannot revise the old decision row.
-**Evidence needed:** persist the source snapshot identifier, `effective-date version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** version contract schedules by extraction time; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** select the latest version visible at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** retroactive amendments are a lineage alert. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `contract schedule` is predictive, fair, permitted, or causally actionable.
-#### Drill 76 — account identity control variant 8
-**Decision:** determine whether `account identity` may enter the score for a fixed planning instant.
-**Invariant:** a post-cut account merge must not consolidate historical entities.
-**Evidence needed:** persist the source snapshot identifier, `merge timestamp`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** audit key mapping version; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** keep original billing key for the old snapshot. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** identity reconciliation is separately versioned. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `account identity` is predictive, fair, permitted, or causally actionable.
-#### Drill 77 — reason codes control variant 8
-**Decision:** determine whether `reason codes` may enter the score for a fixed planning instant.
-**Invariant:** explanation text must correspond to the same feature snapshot as the rank.
-**Evidence needed:** persist the source snapshot identifier, `generation version`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** join rank, model and reason-code versions; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** regenerate all three together. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** a missing reason code blocks export. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `reason codes` is predictive, fair, permitted, or causally actionable.
-#### Drill 78 — label maturity control variant 8
-**Decision:** determine whether `label maturity` may enter the score for a fixed planning instant.
-**Invariant:** a cancellation notice not yet ingested cannot be a negative label.
-**Evidence needed:** persist the source snapshot identifier, `notice ingestion time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** plot observed rate by label age; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** exclude immature vintages. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** maturity policy is recorded with each evaluation. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `label maturity` is predictive, fair, permitted, or causally actionable.
-#### Drill 79 — capacity roster control variant 8
-**Decision:** determine whether `capacity roster` may enter the score for a fixed planning instant.
-**Invariant:** capacity changes after ranking do not retroactively validate the threshold.
-**Evidence needed:** persist the source snapshot identifier, `calendar publication time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** compare queue size to approved roster; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** rerank only under a newly versioned capacity. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** operators sign the final capacity value. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `capacity roster` is predictive, fair, permitted, or causally actionable.
-#### Drill 80 — offer eligibility control variant 8
-**Decision:** determine whether `offer eligibility` may enter the score for a fixed planning instant.
-**Invariant:** later policy changes cannot be encoded as historical feature values.
-**Evidence needed:** persist the source snapshot identifier, `finance approval time`, transformation revision, and the decision instant for every scored account.
-**Diagnostic:** retain policy version in the action record; report the count of rows that violate strict pre-cut availability rather than averaging the timestamp error away.
-**Recovery:** evaluate under the policy active at the cut. Do not impute a timestamp or retain the feature merely because it improves retrospective discrimination.
-**Verification:** policy changes trigger a fresh decision review. A rerun on identical frozen inputs must produce the same eligibility flag, score order, and reason-code payload.
-**Boundary:** this control establishes chronology, not that `offer eligibility` is predictive, fair, permitted, or causally actionable.
-## 15. Quick Reference Card
-| Field | Decision-ready statement |
-|---|---|
-| Decision | select a capacity-bounded outreach queue only from decision-time-available features |
-| Owner | customer-success operations; analytics recommends; finance governs offers |
-| Baseline | rules health score, outcome not measured |
-| Validity gate | `feature_available_at <= decision_at`; forward grouped evaluation |
-| Worked calculation | 900 × 0.18 × 0.13 = 21.06 illustrative expected saves |
-| Main risk | leakage or immature labels makes an offline metric describe hindsight |
-| Recovery | stop export, fall back with date disclosure, rebuild lineage and snapshot |
-| Evidence / stage | illustrative / proposed / draft; no company outcome or deployment asserted |
-| Recheck | source timestamps, label definition, capacity, save-effect evidence, and policy change |
+<!--PART2-->

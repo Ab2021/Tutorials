@@ -91,7 +91,27 @@ An abstention is valuable when false automation is more costly than delay.
 A guardrail needs a numerator, denominator, window, owner, and response.
 A capacity constraint applies to the downstream action, not just to scoring.
 
-**Takeaway:** Define the operational nouns precisely enough that two engineers select the same cohort and action.
+Three further terms are needed before the formulas make sense, because most framing failures hide in them.
+The first is decision frequency: a decision that occurs 2,000,000 times a day tolerates a different error rate than one that occurs twice a quarter, and the same accuracy figure is meaningless without the frequency.
+The second is reversibility: an action that can be undone within the workflow (a held order, a flagged ticket) has a different error calculus from an irreversible one (a denied payment, a terminated account).
+The third is the label's own provenance: whether the outcome is measured by the system, adjudicated by a human, or inferred from a downstream event that itself depends on the action.
+
+| Term | Meaning | Unit/type | Nonexample |
+|---|---|---|---|
+| Decision frequency | How often the decision recurs | decisions/period | a quarterly strategy choice treated as a per-record decision |
+| Reversibility | Whether the action can be undone after the fact | boolean with time bound | "mostly reversible" with no stated window |
+| Label provenance | Who or what produces the outcome | enumerated source | an outcome with no stated producer |
+| Cost of error | Consequence of a wrong action, by direction | currency/error | a single accuracy target for asymmetric errors |
+| Counterfactual | Outcome under the policy that was not executed | outcome unit | the historical average of a different population |
+| Coverage | Fraction of eligible units reachable by the action | proportion | model throughput |
+| Precision at capacity | Correct actions divided by acted-upon units | proportion | global accuracy |
+
+The asymmetry between error directions deserves an explicit entry because it drives threshold selection more than any model property.
+If failing to act on a true positive costs 320 units and acting on a false positive costs 9.6 units, then the ratio of those two costs, not the model's accuracy, determines where the action boundary belongs.
+That ratio is a business input and cannot be learned from data; a model trained on labels knows nothing about what a mistake costs.
+Similarly, decision frequency determines whether a small accuracy difference is worth engineering effort: at 2,000,000 decisions a day, one percentage point is 20,000 decisions, while at 200 decisions a quarter it is two.
+
+**Takeaway:** Define the operational nouns precisely enough that two engineers select the same cohort and action, and name the cost ratio and frequency that will govern the boundary.
 
 # 4. Core Formulas with Full Derivation
 
