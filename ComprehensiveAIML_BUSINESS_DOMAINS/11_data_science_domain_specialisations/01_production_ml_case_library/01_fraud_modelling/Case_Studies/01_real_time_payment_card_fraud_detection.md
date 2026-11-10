@@ -6,6 +6,7 @@ created: 2026-11-07
 last_reviewed: null
 status: proposed
 content_status: draft
+implementation_stage: proposed
 case_type: predictive-ml
 domain: Issuer payment-card fraud
 primary_pattern: evaluation-mismatch
@@ -363,59 +364,119 @@ A seed alone cannot ensure deterministic distributed training or reproduce an in
 Method choice is a proposal; no candidate has been fitted or compared.
 
 ## 6. Analysis Walkthrough
-The only supported finding is a conditional arithmetic comparison, not evidence that the proposed system improves a real portfolio.
-Consider an illustrative, fully labeled cohort of 100,000 authorization attempts under one fixed policy.
-Suppose 1,000 are truly fraudulent and 99,000 legitimate; prevalence is 1%.
-Suppose a decline-only rule flags 600 fraud and 1,400 legitimate attempts, for 2,000 total declines.
-The remaining 400 fraud and 97,600 legitimate attempts are approved.
-No challenges are included in this toy confusion matrix; it does not estimate the effect of introducing challenge.
-The truth labels are assumed known for every row solely to make arithmetic transparent; this assumption fails for actual declined transactions.
-Precision is confirmed fraudulent declines divided by all declines when truth is fully observed.
-Recall is confirmed fraudulent declines divided by all fraudulent attempts in the same cohort.
-False-positive rate is legitimate declines divided by all legitimate attempts in the same cohort.
-Derive each rate by partitioning the appropriate population, rather than dividing by only reviewed alerts.
+**Evidence declaration:** every count, probability, cost and capacity below is constructed for teaching. It is neither an observed portfolio nor a claim about the issuer's loss allocation, customer behaviour, challenge effectiveness, or model calibration.
+
+### 6a. Point-in-time decision record
+For decision `D`, freeze the request at issuer receipt time `t_D`. A feature `x` is eligible only when its underlying event occurred before `t_D` and its source made that value available by `t_D`. The score is therefore a function of the request and the eligible feature snapshot, not of a later dispute, investigation, final merchant mapping, or retry outcome.
+
 ```text
-FORMULA [F-01]: precision = TP / (TP + FP)
-WHERE: TP fraud declines [attempts]; FP legitimate declines [attempts].
-CONSTRAINT: mutually exclusive fully labeled rows; TP+FP > 0.
-NUMERICAL EXAMPLE: 600 / (600+1400) = 0.30 = 30%.
-INTERPRETATION: 30% of declines are fraud in this constructed cohort.
-FORMULA [F-02]: recall = TP / (TP + FN)
-WHERE: FN approved fraudulent attempts [attempts]; TP as above.
-CONSTRAINT: complete fraud labels; TP+FN > 0.
-NUMERICAL EXAMPLE: 600 / (600+400) = 0.60 = 60%.
-INTERPRETATION: 40% of fraudulent attempts pass this toy rule.
-FORMULA [F-03]: false-positive rate = FP / (FP + TN)
-WHERE: TN approved legitimate attempts [attempts]; FP as above.
-CONSTRAINT: complete legitimate labels; FP+TN > 0.
-NUMERICAL EXAMPLE: 1400 / (1400+97600) = 0.0141414 = 1.414%.
-INTERPRETATION: roughly 14.14 of every 1,000 legitimate attempts are declined.
+INVARIANT [PT-01]
+INPUT: request r_D, feature candidates (value, event_time, availability_time).
+STATE TRANSITION: retain a candidate iff event_time < t_D AND availability_time <= t_D;
+                  otherwise mark the feature unavailable and apply its documented default.
+OUTPUT: feature_snapshot_id, missing/stale indicators, score version, policy action.
+RECOVERY: a late event may affect a later decision, never recompute D's original action.
 ```
-Independent partition check: 600 + 400 = 1,000 fraud; 1,400 + 97,600 = 99,000 legitimate.
-The four cells sum to 100,000 and the decline count is 2,000, or 2% of requests.
-Accuracy is 98,200 / 100,000 = 98.2%, yet 400 fraud attempts pass and 1,400 legitimate attempts fail.
-An always-approve rule is 99% accurate in this artificial cohort but catches no fraud.
-The toy policy's lower accuracy does not imply a worse business decision.
-For a cost illustration only, assume $100 issuer loss per approved fraud, $5 friction cost per legitimate decline, and no other costs.
-The action cost is 400 × $100 + 1,400 × $5 = $47,000 per 100,000 attempts.
-Always approve costs 1,000 × $100 = $100,000 under the same simplified assumptions.
-The difference of $53,000 is a counterfactual calculation with identical underlying fraud, not a measured effect.
-The $5 is a stylized monetization, not observed customer harm or a justified price.
-If missed-fraud loss is only $10, this rule costs $4,000 + $7,000 = $11,000 while always approve costs $10,000.
-That reversal demonstrates why costs and action effects require validation rather than importing the first result.
-Break-even in this restricted example occurs when 600 prevented fraud losses equal $7,000 in friction: $11.67 per prevented fraud, approximately.
-This algebra excludes challenge costs, partial recoveries, transaction-value heterogeneity, and behavioral adaptation.
-The 600 declined frauds are presumed to have caused identical loss if approved; that is an unobserved counterfactual in real data.
-At a different base rate, precision changes even if sensitivity and false-positive rate stay fixed.
-For 100,000 attempts and 0.1% fraud, fixed 60% recall gives 60 fraud declines.
-Applying the original 1,400/99,000 false-positive rate to 99,900 legitimate attempts gives about 1,413 legitimate declines.
-Precision is about 60/(60+1,413) = 4.1%; this is a prevalence thought experiment, not a forecast.
+
+The distinction matters for identity. `card_token`, `merchant_namespace + merchant_id`, device pseudonym, and account linkage are distinct keys with different collision and consent boundaries. A new token is not necessarily a new customer; a shared device is not evidence of common control; and a merchant identifier without its namespace is not a merchant entity. The feature contract retains each key's version and linkage confidence. It uses an explicit “unlinked” state rather than merging identities optimistically.
+
+### 6b. Illustrative action-cost ledger
+Let `p_a` be a **constructed policy scenario** probability that an attempt is fraud if approved; it is not an observed label and must not be backfilled onto a declined attempt. Let `L` be issuer-borne loss if an approved fraud materializes. It is not purchase amount: recovery, network allocation, and liability can make either value higher or lower. Let `q` be challenge completion, `e` the assumed conditional prevention effect after completion, `c_c` the challenge operating cost, `b` challenge abandonment probability, `c_b` its friction valuation, `c_d` the expected legitimate-decline friction valuation, and `c_o` the decline operating cost.
+
+```text
+FORMULA [AC-01]: C_approve = n * p_a * L
+FORMULA [AC-02]: C_challenge = n * [p_a * (1 - q*e) * L + c_c + (1-p_a)*b*c_b]
+FORMULA [AC-03]: C_decline = n * [(1-p_a)*c_d + c_o]
+WHERE: n [attempts]; p_a, q, e, b [probabilities in 0..1];
+       L, c_c, c_b, c_d, c_o [currency per applicable attempt].
+CONSTRAINT: AC-02 is a scenario model, not a causal estimate; AC-03 counts immediate
+            modeled friction and operations only. It assigns no invented fraud label or
+            prevented-loss counterfactual to a declined attempt.
+```
+
+Use one constructed portfolio of 100,000 eligible attempts. The policy sends 95,000 to approve, 4,000 to a supported challenge, and 1,000 to decline. Assume `L=$120`, `q=0.80`, `e=0.70`, `c_c=$0.45`, `b=0.12`, `c_b=$4`, `c_d=$6`, and `c_o=$0.20`. The scenario probabilities are 0.0025, 0.0400, and 0.1200 respectively. They are inputs for arithmetic, not labels, scores, or observed calibration.
+
+| Action | Attempts `n` | Scenario `p_a` | Formula substitution | Scenario cost | What it does **not** establish |
+|---|---:|---:|---|---:|---|
+| Approve | 95,000 | 0.0025 | `95,000*0.0025*$120` | $28,500.00 | Actual fraud count or issuer loss |
+| Challenge | 4,000 | 0.0400 | `4,000*[.04*(1-.80*.70)*120+.45+.96*.12*$4]` | $12,091.20 | Completion, prevention, or abandonment effect |
+| Decline | 1,000 | 0.1200 | `1,000*[.88*$6+$.20]` | $5,480.00 | Fraud among declined attempts or fraud displaced later |
+| **Total** | **100,000** | — | Sum of constructed rows | **$46,071.20** | Net causal portfolio value |
+
+Independent arithmetic: challenge residual loss is `4,000*.04*.44*$120 = $8,448`; operating cost is `$1,800`; modeled legitimate abandonment friction is `4,000*.96*.12*$4 = $1,843.20`; their sum is `$12,091.20`. Total cost per 1,000 eligible attempts is `$46,071.20 / 100 = $460.712`, or `$460.71` rounded to cents. The action counts sum to 100,000. This ledger supports a requirement for a cost schedule before threshold selection; it does not prove that this policy beats rules-only.
+
+### 6c. Friction and capacity sensitivity
+The proposed friction budget is at most 5% challenged attempts and at most 500 challenge abandonments per 100,000 eligible attempts. At 4,000 challenges, the challenge rate is `4,000/100,000 = 4%`. With the scenario abandonment rate of 12%, expected abandoned challenges are `4,000*.12 = 480`, leaving only 20 events of budget headroom. That narrow headroom is a policy-calibration constraint, not a claim that 480 customers will abandon.
+
+| Scenario | Challenge count | Challenge rate | Abandonment assumption | Expected abandonments | Contact rate / contacts | Capacity consequence at 120 contacts/day |
+|---|---:|---:|---:|---:|---:|---|
+| Base | 4,000 | 4.0% | 12% | 480 | 4% / 160 | 1.33 days of one-day intake |
+| Lower friction | 4,000 | 4.0% | 8% | 320 | 2% / 80 | 0.67 day |
+| Higher friction | 4,000 | 4.0% | 16% | 640 | 6% / 240 | 2.00 days; breaches abandonment budget |
+| Higher volume | 5,000 | 5.0% | 12% | 600 | 4% / 200 | Budget breach; do not expand without a changed guardrail |
+
+The support calculation is `contacts / 120 contacts per day`; it assumes all contacts arrive at once, equal handling effort, and available staff. It is a deliberately crude capacity boundary, not an operations forecast. “Challenge succeeds” and “customer does not contact support” are different outcomes. A completed challenge can still be fraudulent; an abandoned challenge can be legitimate or fraudulent; neither can be converted into a fraud label.
+
+### 6d. Calibration and causal boundary
+For score band `k`, calibration is assessed only on a fixed mature, action-defined population:
+
+```text
+FORMULA [CAL-01]: observed_rate_k = mature_confirmed_fraud_k / eligible_attempts_with_mature_outcome_k
+WHERE: numerator [attempts]; denominator [attempts]; k is a frozen score band.
+CONSTRAINT: report unresolved outcomes separately; do not substitute approved-only labels for
+            all attempted authorizations, and do not interpret this association as action effect.
+NUMERICAL EXAMPLE: illustrative only; no mature cohort or calibration measurement exists.
+INTERPRETATION: a well-calibrated approval-risk estimate still does not tell us whether
+                challenge or decline changes loss more favorably than approval.
+```
+
+Approved-only outcomes select on the historic action: approved attempts may generate disputes and issuer-loss records, while declined attempts lack the unobserved “would have been approved” outcome. Challenges select on capability and policy as well as score. Investigation confirms a subset chosen for work; it is a downstream evidence process, not the authorization decision and not a synchronous substitute for it. Therefore the approved-only fraud rate, investigator precision, and challenge completion rate are each insufficient to estimate `e` or prevented loss.
+
+The safe experimental estimand is the difference in mature net cost per eligible **assigned** attempt between preapproved policies, using account-level random assignment where linked retries could interfere. Include score failures, fallbacks, unsupported challenge channels, and all terminal action paths in the assigned denominator. Exclude only predeclared ineligible requests before assignment. Never randomize mandatory controls away, never use an unbounded exploration policy, and stop/roll back on pre-agreed customer-harm, security, availability, or friction triggers. If randomization is unavailable, an observational comparison can prioritize questions but cannot identify the action-specific effect without additional defensible assumptions.
+
+### 6e. Mature-cohort measurement protocol
+The proposed comparison begins with one immutable assignment record per eligible attempt: assignment cohort, account randomization key, authorization attempt ID, policy version, challenge-eligibility flag, chosen action, fallback reason, and decision time. It is then linked to outcomes without changing the original population. A reversal, retry, dispute, customer contact, recovery, or investigation outcome is an event attached to that record, not a replacement decision.
+
+For reporting date `T`, define an attempt as mature only when `T - authorization_time >= 90 days` in the declared reporting time zone. This is a proposed administrative window. The dashboard must show three mutually exclusive states for every assigned attempt: mature with reconciled outcome, mature but unresolved, and not yet mature. A metric that drops the latter two without reporting them creates an artificial denominator improvement.
+
+```text
+FORMULA [MC-01]: mature_coverage = reconciled_mature_attempts / assigned_attempts_old_enough
+FORMULA [MC-02]: ITT_net_cost = sum(reconciled issuer loss + pre-agreed action costs)
+                              / all eligible assigned attempts
+WHERE: all terms are grouped by assigned policy; costs [currency]; denominator [attempts].
+CONSTRAINT: report unresolved mature records and not-yet-mature records separately;
+            no individual declined attempt receives an unobserved fraud label.
+NUMERICAL EXAMPLE: illustrative reporting shape only; no cohort has been measured.
+INTERPRETATION: coverage qualifies evidence completeness, while ITT retains every assignment.
+```
+
+Mature coverage should be reported by action, channel, fallback reason, and assignment cohort because a high aggregate rate can conceal one poorly observed pathway. For example, a decline path may have very sparse downstream loss evidence precisely because it stopped the initial purchase. That sparsity is a reason not to claim individual prevented loss, not a reason to remove declines from the policy denominator.
+
+The cost schedule is calibrated before a trial by the accountable owner, with finance or loss-accounting review for `L` and customer-operation review for friction valuations. Calibration means selecting and versioning assumptions that map outcomes to a decision objective; it does not mean that the risk score has been proved correct. Each schedule needs an effective date, currency, channel scope, loss-recovery convention, and explicit treatment of disputes still pending. Changing any of these produces a new policy analysis.
+
+Threshold selection proceeds in this order:
+
+1. Freeze point-in-time feature and label definitions on historical temporal folds.
+2. Select candidate model and calibration procedure without the final forward period.
+3. Enumerate policy thresholds subject to hard challenge, abandonment, decline, latency, and investigation-capacity constraints.
+4. Present surviving policies with cost components, action counts, channel eligibility, and uncertainty rather than a single “best” score cutoff.
+5. Freeze the rules-only comparator and proposed policy before the guarded prospective comparison.
+
+The historical stage may eliminate a policy that cannot meet friction or latency constraints. It cannot validate `e`, the action-specific prevention effect, when historic actions determined which outcomes were observable. A prospective experiment estimates an average policy effect for its eligible population; it does not license a claim that any particular decline “would have prevented” a known amount.
+
+### 6f. Fallback boundary trace
+Consider one illustrative request that reaches the gateway with 100 ms remaining. Gateway validation uses 8 ms, feature read waits 55 ms and reports a stale critical velocity feature, leaving 37 ms. The configured boundary says the model path requires at least 30 ms inference plus 10 ms policy/response reserve. Because 37 is less than 40 ms, the service must skip model inference and return the signed channel fallback; waiting for a perhaps-fast inference violates the reserve.
+
+The trace is: `REQUEST_RECEIVED -> VALIDATED -> FEATURE_STALE -> FALLBACK_SELECTED -> DECISION_PERSISTED -> RESPONSE_SENT -> ASYNC_AUDIT`. The audit record includes remaining budget, feature age, fallback reason, policy version, and terminal action. It must not invent a model score. On a valid retry with the same attempt key and request digest, the persisted action is returned even if the feature store has since recovered.
+
+This trace is a design oracle, not evidence of measured latency. Its boundary is intentional: if the fallback itself cannot be returned before the real contracted deadline, the design is not safe enough to operate; adding a faster model does not repair a failing authorization path.
 
 ## 7. The Finding
-The illustrative arithmetic shows that a decision policy can have lower accuracy than always-approve while producing lower assumed cost, and that the ranking can reverse when loss assumptions change.
-It does not establish the performance, calibration, fairness, or causal impact of any actual model.
-The appropriate next decision is to specify costs and maturity, audit labels and features, and compare the candidate with the existing policy under explicit safety constraints.
-Only a properly governed prospective evaluation can support a rollout decision.
+The constructed ledger demonstrates a design requirement, not a winning policy: issuer loss, purchase amount, challenge operating cost, abandonment friction, and decline friction must be separate terms with declared denominators.
+The decline row intentionally has no claimed prevented-fraud benefit because that counterfactual is unobserved.
+At the base scenario, the 4% challenge rate fits the 5% rate budget but its 480 expected abandonments leave only 20 events below the illustrative limit of 500; the 16% sensitivity breaches it.
+The appropriate next decision is to approve a measurable cost specification, mature-cohort definition, feature/identity audit, and guarded comparison against the actual rules-only policy.
+No performance, calibration, fairness, causal effect, or production benefit has been observed.
 
 ## 8. System/Solution Design
 ### Offline and online architecture
@@ -495,569 +556,229 @@ A deployment decision remains conditional on audited data, tested fallback, lega
 ## 11. Outcome & Results
 | Result type | Status | Evidence |
 |---|---|---|
-| Constructed confusion matrix | Arithmetic only | Section 6 assumptions; not sampled transactions |
+| Constructed action-cost and friction ledger | Arithmetic checked | Section 6 constructed inputs; not sampled transactions |
+| Mature-cohort measurement | Not executed | No authorization, outcome, or assignment extract |
 | Offline comparison | Not executed | No data or model artifacts |
-| Pilot | Not executed | No trial records |
-| Production impact | Not measured | No implementation or outcome feed |
-| Customer impact | Not measured | No complaints, false-decline, or appeal observations |
-| System latency and throughput | Not measured | Sizing inputs and deadline allocations are illustrative |
-| Return on investment | Not measured | No observed costs or attributable benefits |
-The example's $53,000 difference must never be presented as realized savings.
-Even an apparent offline gain would not establish the causal business result without a valid comparison and mature outcomes.
+| Pilot or prospective experiment | Not executed | No trial record |
+| Production/customer impact | Not measured | No deployment, complaints, or reconciled loss feed |
+| System latency, fallback, and throughput | Not measured | Deadline trace and sizing inputs are illustrative design checks |
+| Return on investment | Not measured | No attributable costs or benefits |
+
+The `$46,071.20` ledger total is a conditional sum of constructed assumptions, not realized savings and not a comparison with rules-only. The base scenario's 480 abandoned challenges and the fallback trace are likewise arithmetic/design consequences, not observed customer behaviour or availability. No action-specific effectiveness has been measured: declined attempts lack their unobserved approval outcome, and challenge outcomes mix capability, customer choice, and risk. A valid business result needs the mature, assigned-policy comparison described in Sections 6e and 9.
 
 ## 12. Failure Modes & What Went Wrong
-There is no reported incident and no observed failed implementation.
-The following are distinct hypothetical fault-injection or review scenarios, not historical events.
-Each states a competing explanation, a discriminating check, a bounded response, and a way to verify it.
-### Diagnostic 01: late velocity updates
-Observed-if-simulated symptom: Fraud bursts pass with unexpectedly low velocity.
-Competing explanations: Stream lag or a real quiet period.
-Discriminating evidence: Compare source event time, ingestion watermark and per-card history.
-Bounded response: Mark aggregates stale and use the approved fallback.
-Residual risk: Fallback can increase friction on legitimate traffic.
-Verification: Inject delayed events and verify stale flag plus versioned fallback.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 02: future feature leakage
-Observed-if-simulated symptom: Offline performance is implausibly strong.
-Competing explanations: Post-decision outcome joined as a feature or genuine predictive signal.
-Discriminating evidence: Inspect feature availability timestamps and rebuild as-of joins.
-Bounded response: Remove post-decision fields and retrain on frozen folds.
-Residual risk: Loss of apparent performance may trigger pressure to relax controls.
-Verification: Replay historical events in arrival order and compare serving values.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 03: label maturity drift
-Observed-if-simulated symptom: Recent fraud rate falls sharply.
-Competing explanations: Unmatured disputes or genuinely less fraud.
-Discriminating evidence: Compare cohort-age curves with prior cohorts and ingestion health.
-Bounded response: Censor immature outcomes and delay comparative decisions.
-Residual risk: Delayed reporting can mask an actual attack.
-Verification: Backfill mature cohorts and reconcile label-age distributions.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 04: decline label selection
-Observed-if-simulated symptom: Declines appear much cleaner than approvals.
-Competing explanations: Missing counterfactual labels or actual policy precision.
-Discriminating evidence: Audit label ascertainment by action and source.
-Bounded response: Report unknowns and use independent evidence where feasible.
-Residual risk: Review labels are also selected and cannot establish all counterfactuals.
-Verification: Check audit inclusion probabilities and unresolved bounds.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 05: inference timeout
-Observed-if-simulated symptom: Model scores are absent during a traffic spike.
-Competing explanations: Model saturation or feature-store latency.
-Discriminating evidence: Trace per-stage deadline and queue time.
-Bounded response: Return the preapproved channel fallback before deadline.
-Residual risk: A fallback can be less discriminating than the model.
-Verification: Load-test end-to-end timeouts and reconcile fallback counters.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 06: duplicate retry
-Observed-if-simulated symptom: One authorization attempt produces two actions.
-Competing explanations: Retry without a stable idempotency key or two genuinely separate attempts.
-Discriminating evidence: Compare network attempt ID, retry headers and decision IDs.
-Bounded response: Persist and reuse a terminal response under the agreed key.
-Residual risk: Overly broad deduplication may suppress a real second purchase.
-Verification: Replay retries and separate-attempt cases with expected action counts.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 07: currency mismatch
-Observed-if-simulated symptom: Foreign transactions dominate high-risk alerts.
-Competing explanations: Currency conversion units or real geographic attack.
-Discriminating evidence: Compare raw currency, conversion timestamp and converted amounts.
-Bounded response: Use versioned as-of currency conversion or explicit missing state.
-Residual risk: Using a current exchange rate creates historical leakage.
-Verification: Replay known amounts across currencies and rate boundaries.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 08: time-zone boundary
-Observed-if-simulated symptom: Daily velocity jumps around midnight.
-Competing explanations: Local-time conversion or real concentrated activity.
-Discriminating evidence: Compare UTC event timestamps and configured window boundaries.
-Bounded response: Use documented UTC windows and explicit customer-local derivations.
-Residual risk: A global UTC day may not match customer behavior.
-Verification: Test daylight-saving transitions and late events.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 09: out-of-order events
-Observed-if-simulated symptom: A velocity count changes after an authorization.
-Competing explanations: Late arrival or incorrect replay ordering.
-Discriminating evidence: Inspect event and availability timestamps for the affected key.
-Bounded response: Use only information actually available by decision time.
-Residual risk: Dropping late events forever can corrupt later aggregates.
-Verification: Replay late arrivals and verify subsequent but not earlier decisions.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 10: hot card key
-Observed-if-simulated symptom: One partition backs up while fleet averages look healthy.
-Competing explanations: A concentrated key or a generally underprovisioned cluster.
-Discriminating evidence: Compare partition-level rates and key frequency.
-Bounded response: Isolate or redesign hot-key aggregation while preserving semantics.
-Residual risk: Naive sharding can double-count or miss cross-shard velocity.
-Verification: Stress a hot key and compare with a single-key reference.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 11: calibration shift
-Observed-if-simulated symptom: Observed fraud by score band differs from predictions.
-Competing explanations: Population shift or delayed/selected labels.
-Discriminating evidence: Compare matured calibration by channel and label coverage.
-Bounded response: Recalibrate on representative prior cohorts only after approval.
-Residual risk: Recalibration on biased observed outcomes can worsen decisions.
-Verification: Check reliability bands on a frozen forward cohort.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 12: threshold misconfiguration
-Observed-if-simulated symptom: Decline rate jumps at release.
-Competing explanations: Changed threshold or a shifted score distribution.
-Discriminating evidence: Compare policy hashes and score histograms before and after.
-Bounded response: Roll back the policy independently of the model.
-Residual risk: Rolling back a needed security rule could expose fraud.
-Verification: Replay release requests against both signed policy versions.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 13: challenge unsupported
-Observed-if-simulated symptom: Policy requests authentication on an ineligible channel.
-Competing explanations: Bad capability mapping or changed network contract.
-Discriminating evidence: Inspect channel capability version and response code.
-Bounded response: Route unsupported traffic to its approved non-challenge policy.
-Residual risk: Fallback action may disproportionately burden one channel.
-Verification: Run contract tests for every channel and capability version.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 14: challenge abandonment
-Observed-if-simulated symptom: Apparent fraud falls after more challenges.
-Competing explanations: Attack deterrence or legitimate customer abandonment.
-Discriminating evidence: Compare randomized outcomes including abandonment and complaints.
-Bounded response: Adjust policy only after considering both loss and friction.
-Residual risk: Treating abandonment as fraud biases calibration.
-Verification: Trace all challenge terminal states by assigned cohort.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 15: merchant identifier collision
-Observed-if-simulated symptom: One merchant looks like a fraud hotspot.
-Competing explanations: Identifier collision or a genuinely risky merchant.
-Discriminating evidence: Inspect namespace, acquirer and identifier mapping history.
-Bounded response: Correct entity namespace and reconstruct affected features.
-Residual risk: Overmerging or oversplitting changes velocity counts.
-Verification: Test fixture with identical IDs from separate namespaces.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 16: token rotation
-Observed-if-simulated symptom: Card velocity unexpectedly resets.
-Competing explanations: Token rotation or genuinely new card activity.
-Discriminating evidence: Compare token lifecycle events with authorized linkage records.
-Bounded response: Use an approved stable pseudonymous linkage.
-Residual risk: Persistent linkage increases privacy exposure.
-Verification: Replay token rotation without crossing unrelated accounts.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 17: negative amounts
-Observed-if-simulated symptom: Refund-like events inflate purchase features.
-Competing explanations: Sign conversion or true reversal events.
-Discriminating evidence: Reconcile message type and signed amount against ledger.
-Bounded response: Exclude or separately represent reversals by contract.
-Residual risk: Discarding valid correction events can overstate exposure.
-Verification: Test purchase, partial reversal and full reversal sequences.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 18: missing amount
-Observed-if-simulated symptom: High missingness affects one merchant channel.
-Competing explanations: Schema migration or actual unavailable amount.
-Discriminating evidence: Check schema version and field-presence telemetry.
-Bounded response: Use explicit missingness and approved channel fallback.
-Residual risk: Zero imputation may imply a free transaction.
-Verification: Contract-test null, zero and absent values separately.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 19: feature skew
-Observed-if-simulated symptom: Offline replay diverges from online scores.
-Competing explanations: Different transformations or true unavailable online values.
-Discriminating evidence: Compare versioned feature vectors for sampled decision IDs.
-Bounded response: Unify the transformation contract and replay availability.
-Residual risk: Centralization alone does not fix clock or source timing differences.
-Verification: Verify identical input vectors produce identical scores.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 20: model artifact mismatch
-Observed-if-simulated symptom: Score distribution changes without a planned model release.
-Competing explanations: Wrong calibrator or changed population.
-Discriminating evidence: Compare model, calibration and schema digests in audit events.
-Bounded response: Restore a compatible signed bundle.
-Residual risk: Mixing old model and new calibrator can silently corrupt probabilities.
-Verification: Reject mismatched artifacts in a deployment rehearsal.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 21: poisoned merchant signal
-Observed-if-simulated symptom: Attacker causes benign merchants to appear risky.
-Competing explanations: Adversarial manipulation or organic fraud cluster.
-Discriminating evidence: Inspect concentration, source provenance and independent signals.
-Bounded response: Cap aggregate influence and investigate source integrity.
-Residual risk: Overaggressive caps may suppress real attack signals.
-Verification: Simulate an injected burst and measure bounded influence.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 22: training contamination
-Observed-if-simulated symptom: Test scores are suspiciously good.
-Competing explanations: Repeated accounts across time or future information.
-Discriminating evidence: Trace entity links and feature timestamps across folds.
-Bounded response: Use temporal holdout and appropriate account-aware sensitivity.
-Residual risk: Holding out every returning account may change the target population.
-Verification: Compare new-account and returning-account performance separately.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 23: appeal reversal
-Observed-if-simulated symptom: Reported false declines rise after initially clean reports.
-Competing explanations: Late appeal decisions or new policy harm.
-Discriminating evidence: Track label version histories and cohort age.
-Bounded response: Recompute mature metrics with revision lineage.
-Residual risk: Overwriting old labels destroys the ability to reproduce reports.
-Verification: Reconcile initial and revised outcome snapshots.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 24: score clipping
-Observed-if-simulated symptom: Many scores concentrate at exactly zero or one.
-Competing explanations: Numeric overflow or genuinely extreme predictions.
-Discriminating evidence: Inspect raw logits, calibrator inputs and serialization.
-Bounded response: Use numerically stable transformations and validated bounds.
-Residual risk: Blind clipping can hide an upstream artifact mismatch.
-Verification: Run boundary vectors and compare with a high-precision oracle.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 25: sensitive proxy
-Observed-if-simulated symptom: One customer segment experiences disproportionate friction.
-Competing explanations: Proxy feature or different underlying traffic mix.
-Discriminating evidence: Examine eligible population, threshold outcomes and uncertainty by slice.
-Bounded response: Escalate to governance and assess feasible mitigations.
-Residual risk: Removing a feature alone does not guarantee fair outcomes.
-Verification: Evaluate mature group outcomes and customer appeals after mitigation.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 26: feedback loop
-Observed-if-simulated symptom: A merchant risk signal worsens after elevated declines.
-Competing explanations: Selective investigation feedback or increased actual fraud.
-Discriminating evidence: Separate exposure, investigations and confirmation rates.
-Bounded response: Version labels and analyze action-specific ascertainment.
-Residual risk: Reweighting without known selection probabilities is unreliable.
-Verification: Compare audited samples with routine feedback by action.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 27: response lost
-Observed-if-simulated symptom: Decision is committed but network response is lost.
-Competing explanations: Network failure or policy-service crash.
-Discriminating evidence: Correlate durable decision ID with retry and response logs.
-Bounded response: Return the stored decision on retry within the valid contract.
-Residual risk: A stale decision may be invalid after an expiry or changed request.
-Verification: Inject loss between commit and response and reconcile actions.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 28: event log loss
-Observed-if-simulated symptom: A customer receives a decision absent from analytics.
-Competing explanations: Asynchronous logging loss or ingestion lag.
-Discriminating evidence: Reconcile gateway decisions against durable event offsets.
-Bounded response: Recover from durable source and page on reconciliation gaps.
-Residual risk: Backfill without deduplication inflates counts.
-Verification: Drop a consumer and confirm replay restores one canonical event.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 29: bad fallback
-Observed-if-simulated symptom: Fallback rate rises and legitimate declines spike.
-Competing explanations: Overly broad emergency rule or changing attack mix.
-Discriminating evidence: Slice actions by fallback reason and compare comparable channels.
-Bounded response: Restore the last approved fallback and limit blast radius.
-Residual risk: Turning off mandatory controls would be unsafe.
-Verification: Exercise fallback scenarios and measure action distributions.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 30: stale rule bundle
-Observed-if-simulated symptom: Different instances return inconsistent actions.
-Competing explanations: Partial rollout or nondeterministic inputs.
-Discriminating evidence: Compare bundle hashes and inputs per instance.
-Bounded response: Pin versions and stop the rollout until instances converge.
-Residual risk: Forceful restart may discard in-flight state.
-Verification: Use a canary and verify version convergence with trace IDs.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 31: sampling bias
-Observed-if-simulated symptom: Manual review precision looks excellent.
-Competing explanations: Only high-score alerts reviewed or real model improvement.
-Discriminating evidence: Compare review selection probability and score coverage.
-Bounded response: Sample within safe audited strata and disclose unresolved outcomes.
-Residual risk: Manual labels may still be erroneous or delayed.
-Verification: Reconcile sampling frame, weights and adjudication quality.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 32: training-serving schema
-Observed-if-simulated symptom: A category becomes unknown after a producer release.
-Competing explanations: Vocabulary drift or mapping regression.
-Discriminating evidence: Compare producer schema version and unknown-category rate.
-Bounded response: Route unknowns through an explicit safe representation.
-Residual risk: Treating unknown as a common category hides new attacks.
-Verification: Run forward-compatible schema contract tests.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 33: threshold overfit
-Observed-if-simulated symptom: Validation gains disappear on a new month.
-Competing explanations: Repeated threshold tuning or genuine seasonal shift.
-Discriminating evidence: Count tuning trials and compare untouched forward cohorts.
-Bounded response: Freeze selection and evaluate once on the final holdout.
-Residual risk: Repeatedly peeking at the holdout makes it another validation set.
-Verification: Reproduce the preregistered selection on independent time windows.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 34: base-rate change
-Observed-if-simulated symptom: Precision collapses while recall seems stable.
-Competing explanations: Lower prevalence or degraded ranking.
-Discriminating evidence: Compare mature prevalence and class-conditional score distributions.
-Bounded response: Reassess action thresholds with costs and capacity.
-Residual risk: Threshold movement before label maturity can amplify harm.
-Verification: Use the prevalence sensitivity calculation and mature holdout.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 35: manual override
-Observed-if-simulated symptom: Analysts reverse many automated declines.
-Competing explanations: A policy defect or different override eligibility.
-Discriminating evidence: Compare reason codes and independently adjudicated outcomes.
-Bounded response: Give operations a bounded override with audit trail.
-Residual risk: Override results are selected and cannot alone prove policy quality.
-Verification: Audit a sample of overrides and non-overrides.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 36: privacy leak
-Observed-if-simulated symptom: Debug traces contain sensitive card data.
-Competing explanations: Unsafe logging or a misconfigured upstream gateway.
-Discriminating evidence: Inspect redacted samples and access logs under incident procedures.
-Bounded response: Disable the leaking sink and rotate exposed credentials if required.
-Residual risk: Deleting evidence without incident coordination impairs response.
-Verification: Test redaction on representative nested error payloads.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 37: transaction splitting
-Observed-if-simulated symptom: Many small purchases evade amount rules.
-Competing explanations: Adversarial splitting or normal installment behavior.
-Discriminating evidence: Examine short-window linked attempts and merchant context.
-Bounded response: Add time-window velocity subject to false-positive review.
-Residual risk: Customer linkage and aggregate features create privacy risks.
-Verification: Evaluate on mature historical sequences and simulated split attempts.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 38: replay duplication
-Observed-if-simulated symptom: Feature counts double after consumer recovery.
-Competing explanations: At-least-once event delivery or legitimate repeated attempts.
-Discriminating evidence: Compare event IDs, source offsets and distinct transaction keys.
-Bounded response: Make state updates idempotent using event identity.
-Residual risk: Deduplication retention shorter than retry horizon permits repeats.
-Verification: Replay a checkpoint boundary and reconcile counts with a reference.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 39: false zero freshness
-Observed-if-simulated symptom: A store returns zero for an expired feature.
-Competing explanations: Expired value encoded as zero or true no-history customer.
-Discriminating evidence: Inspect feature age, missingness and store TTL.
-Bounded response: Return stale and absent indicators separately.
-Residual risk: Aggressive TTL may force too many fallback decisions.
-Verification: Test fresh zero, stale zero and absent feature cases.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 40: cohort interference
-Observed-if-simulated symptom: Treatment seems effective per attempt but users retry.
-Competing explanations: Retry displacement or measurement error.
-Discriminating evidence: Link eligible attempts by randomized account over a fixed horizon.
-Bounded response: Measure account-level outcomes including subsequent attempts.
-Residual risk: Entity linkage can be incomplete or violate privacy rules.
-Verification: Compare attempt and account estimands in the experiment.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 41: investigation overload
-Observed-if-simulated symptom: Review queue grows despite better alert precision.
-Competing explanations: Higher alert volume or reduced investigator throughput.
-Discriminating evidence: Measure arrivals, completions, aging and staffing separately.
-Bounded response: Throttle discretionary alerts under approved capacity rules.
-Residual risk: A throttle may suppress emerging high-loss cases.
-Verification: Run a surge exercise and reconcile queue aging and escalations.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 42: network timeout
-Observed-if-simulated symptom: Issuer p99 looks healthy but customers time out.
-Competing explanations: Unmeasured network path or issuer boundary definition.
-Discriminating evidence: Compare correlated network and issuer timestamps.
-Bounded response: Budget the complete contracted path and return before the external deadline.
-Residual risk: Client clocks may not be synchronized.
-Verification: Trace synthetic requests end to end with synchronized clocks.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 43: retrain regression
-Observed-if-simulated symptom: New model improves average loss but harms a channel.
-Competing explanations: Channel shift or unstable rare-category learning.
-Discriminating evidence: Inspect channel-level matured outcomes and uncertainty.
-Bounded response: Hold the release and examine support and feature differences.
-Residual risk: Tiny slices can produce noisy apparent regressions.
-Verification: Use a predefined slice gate and independent temporal test.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 44: risk score misuse
-Observed-if-simulated symptom: A calibrated score is treated as an action effect.
-Competing explanations: Confusion between fraud risk and intervention benefit.
-Discriminating evidence: Inspect whether policy uses action-specific outcome estimates.
-Bounded response: Evaluate policy causally rather than promising individual prevention.
-Residual risk: Unethical exploration could cause avoidable fraud or customer harm.
-Verification: Audit the decision specification and randomized policy comparison.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
-### Diagnostic 45: recovery overload
-Observed-if-simulated symptom: Lag grows again immediately after recovery.
-Competing explanations: Replay traffic competes with live ingestion or service capacity is insufficient.
-Discriminating evidence: Separate live, replay, backlog and processing rates.
-Bounded response: Reserve capacity for live deadlines and pace replay.
-Residual risk: Throttled replay prolongs feature staleness.
-Verification: Run recovery under concurrent peak load and confirm drain rate.
-Evidence state: hypothetical; no incident or experiment is claimed.
-Decision owner: platform and fraud owners jointly evaluate customer impact.
-Escalation: preserve the decision trace and use the approved incident process.
-Measurement: compare eligible denominators and versions before and after mitigation.
-Boundary: a single alert is not sufficient to establish root cause.
+No incident or failed deployment is reported. These are proposed fault-injection and review diagnostics; each is a distinct mechanism, not evidence that it occurred.
+
+### Diagnostic 01 — Late velocity state
+**Symptom:** burst attempts receive unexpectedly low velocity values.
+**Competing causes:** stream lag, hot-key skew, or a genuinely quiet history.
+**Discriminator:** compare source event time, availability watermark, partition lag, and the retained decision snapshot.
+**Bounded response:** mark state stale, use the approved channel fallback, and retain the stale reason.
+**Recovery:** repair/replay state only for future decisions; never overwrite the original decision snapshot.
+**Verification:** inject late events and confirm that only later requests see the repaired aggregate.
+**Owner:** platform owner; fraud product owner owns the friction consequence.
+**Boundary:** a fresh timestamp does not prove correct or complete state.
+
+### Diagnostic 02 — Future-information leakage
+**Symptom:** offline ranking or calibration is implausibly strong.
+**Competing causes:** a later dispute/mapping entered the feature join, or there is a real predictive signal.
+**Discriminator:** replay source arrivals and compare each serving feature vector with its offline equivalent.
+**Bounded response:** exclude values unavailable at decision time and refit preprocessing inside temporal folds.
+**Recovery:** invalidate affected offline reports and repeat selection before any policy change.
+**Verification:** a deliberately delayed source field must be absent from earlier reconstructed decisions.
+**Owner:** model risk owner.
+**Boundary:** event time without availability time is not sufficient proof against leakage.
+
+### Diagnostic 03 — Immature labels mistaken for improvement
+**Symptom:** a recent cohort shows lower confirmed fraud after a policy change.
+**Competing causes:** reporting delay, failed label ingestion, or a real change.
+**Discriminator:** plot label source and adjudication status by cohort age and assignment, including unresolved counts.
+**Bounded response:** censor immature cohorts from comparative conclusions and retain their denominator.
+**Recovery:** rerun the report only after its predeclared maturity window or an approved survival adjustment.
+**Verification:** later snapshots reconcile earlier unresolved rows rather than silently changing denominators.
+**Owner:** risk analytics owner.
+**Boundary:** a 90-day window is proposed, not proven adequate for this issuer.
+
+### Diagnostic 04 — Approved-only selection
+**Symptom:** approved transactions appear to have a different fraud rate than declines.
+**Competing causes:** policy selection, true risk separation, or different label ascertainment.
+**Discriminator:** tabulate action, label-source coverage, maturity, audit sampling probability, and missing outcomes together.
+**Bounded response:** report action-specific observed outcomes; do not label a decline as fraud/nonfraud from its score.
+**Recovery:** use an approved independent audit where safe, with its selection mechanism documented.
+**Verification:** every reported rate names its action-defined denominator.
+**Owner:** model risk owner.
+**Boundary:** an audit informs label gaps; it cannot reveal every declined counterfactual.
+
+### Diagnostic 05 — Challenge abandonment treated as fraud
+**Symptom:** challenge completion falls while apparent fraud falls.
+**Competing causes:** attack deterrence, checkout/customer abandonment, capability outage, or label delay.
+**Discriminator:** compare assigned cohorts' completion, abandonment, contact, mature loss, and capability rates.
+**Bounded response:** count abandonment as friction until independently adjudicated; do not relabel it as fraud.
+**Recovery:** freeze threshold expansion if the abandonment guardrail is breached.
+**Verification:** terminal challenge states reconcile to one eligible-assignment record.
+**Owner:** fraud product owner with customer operations.
+**Boundary:** an authentication success also does not prove legitimacy.
+
+### Diagnostic 06 — Identity collision or overlinking
+**Symptom:** a merchant or device feature becomes a concentrated risk hotspot.
+**Competing causes:** namespace collision, token rotation, shared device, or a real concentration.
+**Discriminator:** inspect identifier namespace, mapping version, linkage confidence, and collision samples.
+**Bounded response:** separate ambiguous identities and route them to explicit unknown/unlinked states.
+**Recovery:** rebuild only future aggregates under the corrected mapping; preserve historical mapping versions.
+**Verification:** fixtures cover equal local IDs across acquirers, shared devices, and rotated tokens.
+**Owner:** data owner with privacy review.
+**Boundary:** joining more identifiers can increase both signal and unjustified linkage harm.
+
+### Diagnostic 07 — Model/policy calibration mismatch
+**Symptom:** mature observed rates differ materially by score band or channel.
+**Competing causes:** population shift, delayed labels, action selection, or an artifact mismatch.
+**Discriminator:** use frozen mature cohorts, coverage counts, and model/calibrator/schema digests.
+**Bounded response:** hold threshold changes until the source of mismatch is isolated.
+**Recovery:** recalibrate only on approved representative historical data and revalidate forward.
+**Verification:** reliability reporting carries unresolved outcome rate and confidence intervals.
+**Owner:** model risk owner.
+**Boundary:** probability calibration does not estimate the benefit of challenge or decline.
+
+### Diagnostic 08 — Deadline breach and unsafe fallback
+**Symptom:** missing scores or issuer-boundary deadline expirations rise.
+**Competing causes:** model saturation, feature latency, transport delay, or queueing.
+**Discriminator:** trace absolute deadline remaining at gateway, feature, inference, policy, and response.
+**Bounded response:** return the preapproved per-channel rules fallback before expiry and record the reason.
+**Recovery:** shed optional enrichment, restore capacity, and separately evaluate fallback action distribution.
+**Verification:** end-to-end load fault injection proves fallback is returned within the contracted boundary.
+**Owner:** platform owner.
+**Boundary:** component p99 sums do not prove end-to-end p99.
+
+### Diagnostic 09 — Retry produces a second action
+**Symptom:** one network attempt has conflicting approve/challenge/decline records.
+**Competing causes:** missing idempotency persistence or two genuine attempts.
+**Discriminator:** compare stable attempt key, request digest, retry metadata, and durable decision ID.
+**Bounded response:** return the stored terminal response for a valid retry; reject digest conflict by contract.
+**Recovery:** reconcile action and response logs without retrospectively changing the authorization action.
+**Verification:** inject response loss after commit and assert one action across retries.
+**Owner:** authorization platform owner.
+**Boundary:** broker delivery semantics alone do not provide end-to-end exactly-once action.
+
+### Diagnostic 10 — Unsupported challenge emitted
+**Symptom:** policy selects challenge on a channel without a usable authentication route.
+**Competing causes:** stale capability map, parser regression, or policy configuration error.
+**Discriminator:** inspect channel capability version and network response code for each action.
+**Bounded response:** use that channel's approved non-challenge policy and alert on any forbidden action.
+**Recovery:** pin the last valid capability mapping and retest contracts before restoration.
+**Verification:** exhaustive capability fixtures reject challenge where eligibility is false.
+**Owner:** payment integration owner.
+**Boundary:** channel labels and challenge eligibility are related but not interchangeable.
+
+### Diagnostic 11 — Cost schedule is silently changed
+**Symptom:** an apparently optimal threshold moves without score-distribution change.
+**Competing causes:** altered loss allocation, friction valuation, or accidental configuration drift.
+**Discriminator:** compare signed cost schedule and policy hash alongside action counts.
+**Bounded response:** block unapproved cost changes; treat an approved schedule change as a new policy.
+**Recovery:** restore the last approved bundle while governance reviews the economic assumption.
+**Verification:** replay fixed requests against versioned schedules and explain each action difference.
+**Owner:** fraud product owner.
+**Boundary:** a purchase amount cannot substitute for reconciled issuer loss.
+
+### Diagnostic 12 — Decline friction exceeds budget
+**Symptom:** legitimate-decline complaints or appeals rise after a release.
+**Competing causes:** threshold change, traffic mix change, fallback expansion, or complaint-ingestion change.
+**Discriminator:** compare eligible denominators, policy/fallback reasons, mature outcomes, and complaint coverage.
+**Bounded response:** roll back the policy independently of the score artifact if a pre-agreed guardrail trips.
+**Recovery:** preserve the affected cohort and decision logs for review rather than deleting “bad” events.
+**Verification:** canary reporting separates primary-policy and fallback friction.
+**Owner:** fraud product owner with customer operations.
+**Boundary:** complaints are a guardrail signal, not a complete legitimate-decline label.
+
+### Diagnostic 13 — Investigation is confused with authorization
+**Symptom:** a proposal promises analysts will decide an in-flight authorization.
+**Competing causes:** unclear workflow ownership or an attempt to avoid policy calibration.
+**Discriminator:** measure the authorization deadline against actual investigation queue and handling times.
+**Bounded response:** keep authorization terminal; send post-decision investigation only where its separate objective permits.
+**Recovery:** define investigation referral, evidence, capacity, and feedback as a downstream workflow.
+**Verification:** process trace shows no analyst dependency on the synchronous response path.
+**Owner:** operations owner.
+**Boundary:** investigator confirmation is selected evidence, not a real-time action or universal truth label.
+
+### Diagnostic 14 — Investigation capacity overload
+**Symptom:** referral backlog grows despite high alert precision.
+**Competing causes:** high arrivals, reduced completions, duplicate referrals, or changed referral eligibility.
+**Discriminator:** measure queue arrivals, completions, age, staffing, and unique decision IDs separately.
+**Bounded response:** throttle discretionary referrals under a published capacity rule; do not alter authorization retrospectively.
+**Recovery:** prioritize by a separately validated investigation value policy and preserve deferred rows.
+**Verification:** surge exercise reconciles backlog conservation and escalation counts.
+**Owner:** operations owner.
+**Boundary:** referral capacity cannot be used to justify slower synchronous authorization.
+
+### Diagnostic 15 — Feature default changes meaning
+**Symptom:** a producer release raises unknown or zero-valued feature rates.
+**Competing causes:** schema drift, missing source, or genuine change in customer history.
+**Discriminator:** inspect producer schema version, field presence, stale flag, and default reason.
+**Bounded response:** route unknown, absent, stale, and genuine zero through distinct contract states.
+**Recovery:** pin or translate the schema only after replay against known fixtures.
+**Verification:** contract tests distinguish null, absent, zero, and expired values.
+**Owner:** data platform owner.
+**Boundary:** a silent zero can fabricate low velocity or a free purchase.
+
+### Diagnostic 16 — Currency conversion leakage or scale error
+**Symptom:** foreign-currency traffic dominates risk actions.
+**Competing causes:** decimal-scale defect, end-of-day rate leakage, or a real attack concentration.
+**Discriminator:** reconcile original minor units, currency reference version, as-of rate time, and converted value.
+**Bounded response:** retain original amount, make conversion missing explicitly, and route malformed values safely.
+**Recovery:** correct the feature definition and rerun point-in-time reconstruction before threshold review.
+**Verification:** boundary fixtures cover currencies, rate changes, zero, and malformed scale.
+**Owner:** data owner.
+**Boundary:** converted authorization amount is still not issuer-borne loss.
+
+### Diagnostic 17 — Hot key makes features stale
+**Symptom:** fleet throughput looks healthy while one token or merchant partition lags.
+**Competing causes:** concentrated fraud, normal merchant popularity, or poor partitioning.
+**Discriminator:** compare per-partition arrival/service rates and key concentration with freshness flags.
+**Bounded response:** redesign state partitioning without double-counting cross-shard history.
+**Recovery:** reserve recovery capacity for live requests and pace replay under the stale-feature policy.
+**Verification:** hot-key simulation checks count conservation before, during, and after recovery.
+**Owner:** platform owner.
+**Boundary:** adding buffer cannot drain a queue when arrival remains at service capacity.
+
+### Diagnostic 18 — Unsafe experimentation
+**Symptom:** proposed exploration would vary mandatory controls or expose high-risk requests without a stop rule.
+**Competing causes:** causal ambition outruns governance, or eligibility has not been bounded.
+**Discriminator:** inspect preregistration for exclusions, assignment unit, owner, guardrails, stop/rollback rules, and mature estimand.
+**Bounded response:** restrict randomization to approved eligible policies; retain mandatory protections and rules fallback.
+**Recovery:** pause assignment on a trigger and analyze intent-to-treat including fallback paths.
+**Verification:** dry-run assignment proves stable account assignment across retries and complete denominator logging.
+**Owner:** fraud product owner and model risk owner.
+**Boundary:** shadow mode validates mechanics, not action-specific effectiveness.
+
+### Diagnostic 19 — Observational effect is overstated
+**Symptom:** post-launch lower fraud is attributed to challenge or decline from before/after charts.
+**Competing causes:** seasonality, attacker adaptation, mix shift, label delay, or a true policy effect.
+**Discriminator:** compare predeclared randomized mature cohorts; if unavailable, expose confounders and no causal claim.
+**Bounded response:** phrase observational output as association and use it to prioritize a safe experiment.
+**Recovery:** retain raw cohorts, assignment, policy versions, and maturity snapshots for reanalysis.
+**Verification:** review checks that every effect claim names a comparator and assigned denominator.
+**Owner:** risk analytics owner.
+**Boundary:** no amount of approved-only adjustment identifies declined counterfactual fraud by itself.
+
+### Diagnostic 20 — Fallback masks policy availability
+**Symptom:** overall action metrics look stable while model-path availability falls.
+**Competing causes:** successful fallback, dashboard aggregation, or missing fallback telemetry.
+**Discriminator:** split every metric by model-path versus fallback reason, channel, and policy version.
+**Bounded response:** set a separate fallback-rate alert and review whether fallback action mix honors friction budgets.
+**Recovery:** restore healthy dependencies before re-enabling the primary policy; do not quietly reclassify fallback as scored.
+**Verification:** failure drill reconciles gateway requests, response actions, durable decisions, and analytics rows.
+**Owner:** platform owner with fraud product owner.
+**Boundary:** availability of a response is not availability of the intended risk policy.
 
 ## 13. Transferable Lesson
-Initial hypothesis: a better fraud ranker can improve an authorization decision only if the policy, labels, latency, and customer constraints align.
-The toy arithmetic supports the narrower statement that accuracy and assumed cost can rank policies differently.
-It does not verify that any trained ranker is better in production.
-Transfer the decision contract, time-aware data controls, and explicit fallback to other real-time risk settings.
-Do not transfer the 1% prevalence, $5 friction cost, $100 loss, 90-day maturity, or 100 ms budget as domain facts.
-A different rail may not offer challenge; a different issuer may bear a different fraction of loss.
-A process with delayed manual decisions requires a distinct queue and capacity design.
+A real-time risk score is an input to a constrained action policy, not the policy itself. Transfer the decision contract: name the unit, owner, baseline, allowed actions, deadline, hard friction/capacity boundaries, evidence state, and outcome denominator before choosing a model.
+
+Transfer point-in-time discipline as well. A feature must be available at the decision, identity joins must preserve namespace and uncertainty, and later investigations must not rewrite the facts used for an authorization. Use mature cohorts to separate “not yet known” from negative evidence. Keep approved-only selection visible rather than solving it by inventing declined labels.
+
+Transfer action accounting, but not its values. Purchase amount, realized issuer loss, operating cost, abandoned challenge friction, and false-decline harm have different owners and denominators. An action table is useful for exposing assumptions; it is not evidence of action effectiveness until a safeguarded comparison with mature outcomes tests those assumptions.
+
+Transfer the fallback as a first-class policy. A response returned on time may still be a different risk policy if it used stale features or rules-only routing. Measure fallback separately, preserve idempotent decisions, and test recovery under load.
+
+Do not transfer the constructed `$120` loss, `$6` friction value, 90-day maturity, 100-ms budget, challenge capability, 5% challenge budget, or 500-abandonment guardrail as facts. A rail without challenge needs a different action set; a delayed manual workflow needs a separate capacity and causal design. This case does not verify that any trained ranker or intervention improves production outcomes.
 
 ## 14. Connections & Cross-References
 ### 14a. Methods and contrasting cases
@@ -1114,45 +835,47 @@ Score 1: partially correct but missing the governing assumption.
 Score 2: correct with assumptions and a defensible check.
 Score 3: additionally explains a tradeoff or failure boundary.
 Answer support: Sections 5d and 12.
-#### Q04 — Confusion matrix
-Candidate prompt: Calculate precision and recall for 600 true positives, 1,400 false positives and 400 false negatives.
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: Precision is 600/2000 = 30%; recall is 600/1000 = 60%.
-Reasoning: Precision conditions on declines; recall conditions on all fraudulent attempts.
-Acceptable alternative: At zero denominator report undefined rather than zero without an agreed convention.
-Follow-up and answer: What happens if 200 additional fraud attempts become declines without other changes? Recall becomes 800/1000 = 80%.
-Red flag: Dividing 600 by 100,000 computes neither precision nor recall.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 6 F-01 and F-02.
-#### Q05 — Decision cost
-Candidate prompt: Under the toy assumptions, compare the decline rule with always approving.
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: The decline rule costs 400×$100 + 1400×$5 = $47,000; always approve costs $100,000.
-Reasoning: The $53,000 difference assumes equal counterfactual fraud loss and omits other costs.
-Acceptable alternative: Use heterogeneous loss and intervention effects if defensibly measured.
-Follow-up and answer: If fraud loss is $10, the decline rule costs $11,000 versus $10,000.
-Red flag: Calling the illustrative difference measured savings is unsupported.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 6.
-#### Q06 — Prevalence
-Candidate prompt: At 0.1% fraud in 100,000 attempts, what happens if recall and false-positive rate stay fixed?
-Clarify: use the stated toy cohort or proposed system; do not infer observed results.
-Strong answer: There are 100 fraud attempts and 60 fraud declines; about 1,413 of 99,900 legitimate attempts are declined.
-Reasoning: Precision becomes about 60/1473 = 4.1%, far below the 1% prevalence example.
-Acceptable alternative: An exact fractional expectation is acceptable because this is a rate calculation, not a realized count.
-Follow-up and answer: What assumption can fail? Conditional score distributions and error rates may shift too.
-Red flag: Assuming precision is invariant to prevalence confuses conditional denominators.
-Score 0: incorrect or unsafe conclusion.
-Score 1: partially correct but missing the governing assumption.
-Score 2: correct with assumptions and a defensible check.
-Score 3: additionally explains a tradeoff or failure boundary.
-Answer support: Section 6 F-01 to F-03.
+#### Q04 — Action-cost arithmetic
+Candidate prompt: Recompute the challenge row in the constructed ledger.
+Clarify: the inputs are scenario assumptions, not observed labels or a measured policy result.
+Strong answer: Residual issuer loss is `4,000*.04*(1-.80*.70)*$120=$8,448`; operating cost is `$1,800`; modeled abandonment friction is `4,000*.96*.12*$4=$1,843.20`; total is `$12,091.20`.
+Reasoning: the challenge action has completion, conditional-effect, operating, and friction terms, unlike a purchase amount shortcut.
+Acceptable alternative: An equivalent expansion of `AC-02` is correct if units and the legitimate fraction are explicit.
+Follow-up and answer: What does this prove? Only arithmetic under constructed assumptions, not prevention effectiveness.
+Red flag: Calling 160 scenario fraud attempts an observed challenge label count.
+Score 0: incorrect arithmetic or causal claim.
+Score 1: correct total without assumptions.
+Score 2: correct components, units, and constructed-evidence boundary.
+Score 3: also distinguishes issuer loss from purchase amount and action effect.
+Answer support: Section 6b AC-02.
+
+#### Q05 — Declined-attempt label boundary
+Candidate prompt: Why does the decline row omit a prevented-fraud benefit?
+Clarify: a decline prevents the modeled authorization path, but its approval counterfactual is not observed.
+Strong answer: The row counts immediate modeled friction and operating cost only. It must not assign fraud/nonfraud or a dollar prevented loss to an individual decline from its score.
+Reasoning: approved-only data are selected by the historic action, and declines lack the outcome under approval.
+Acceptable alternative: Estimate an average policy effect in a safeguarded randomized comparison with mature outcomes.
+Follow-up and answer: Can an investigator confirmation solve this? No; it is selected downstream evidence, not every declined counterfactual.
+Red flag: Filling declined labels with model probability and treating them as truth.
+Score 0: invents decline labels or claims realized savings.
+Score 1: notes missing labels but gives no decision consequence.
+Score 2: states the counterfactual boundary and the assigned-policy alternative.
+Score 3: additionally names approved-only selection and mature denominators.
+Answer support: Sections 5a, 6b, 6d, and 6e.
+
+#### Q06 — Friction/capacity sensitivity
+Candidate prompt: Does the base challenge policy meet the constructed friction budget?
+Clarify: use 4,000 challenges, a 5% rate cap, 12% abandonment, and 500-abandonment limit per 100,000 eligible attempts.
+Strong answer: The 4% challenge rate is under the 5% cap. Expected abandonment is `4,000*.12=480`, so it is under the limit by 20; at 16%, it becomes 640 and breaches the limit.
+Reasoning: rate and abandonment are separate constraints, and a near-boundary plan deserves no automatic expansion.
+Acceptable alternative: also compute support contacts: 160 at 4%, requiring `160/120=1.33` intake-days under the stated simplification.
+Follow-up and answer: What should happen at 640? Hold or reduce the policy until the owner changes the guardrail with evidence.
+Red flag: Treating an abandonment limit as proof that abandonments are fraud.
+Score 0: conflates percentages with counts.
+Score 1: computes one constraint only.
+Score 2: computes both and identifies the breach.
+Score 3: explains the capacity implication and evidence limitation.
+Answer support: Section 6c.
 #### Q07 — Serving and retries
 Candidate prompt: How do you avoid two distinct actions on a retried request?
 Clarify: use the stated toy cohort or proposed system; do not infer observed results.

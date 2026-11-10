@@ -6,10 +6,10 @@ Illustrative decision cases for applying orientation concepts. Case evidence, im
 
 ## 2. Case catalog
 
-| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation |
-|---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-001 | [Select an AI use-case portfolio](01_Select_AI_Use_Case_Portfolio.md) | AI portfolio | analytical | pilot selection | evidence-to-operation decision | human-in-the-loop | illustrative | proposed | null | hand-derived, not measured |
-| PLAN-01-002 | Evaluate a vendor claim | AI procurement | analytical | accept/pilot/reject | vendor review | — | proposed | proposed | null | not authored |
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-01-001 | [Select an AI use-case portfolio](01_Select_AI_Use_Case_Portfolio.md) | AI portfolio | analytical | pilot selection | evidence-to-operation decision | human-in-the-loop | illustrative inputs; derived arithmetic | proposed | null | 1,480 lines; 15 sections; 12 answered interviews; constructed queue and integer-scope calculations checked; operational evidence unavailable | authored draft; publication review open |
+| PLAN-01-002 | Evaluate a vendor claim | AI procurement | analytical | accept/pilot/reject | vendor review | — | not measured | proposed | null | not authored | planned |
 
 ## 3. Canonical reusable patterns
 
@@ -25,13 +25,14 @@ Author CASE-01-002 as a bounded vendor acceptance decision; add a source-grounde
 
 ## 6. Review / retirement log
 
-| Date | Item | Editorial event | Evidence/stage change |
+| Pass/date | Item | Editorial event | Evidence/stage change |
 |---|---|---|---|
 | 2026-11-09 | CASE-01-001 | draft authored | illustrative / proposed |
+| current authoring pass | CASE-01-001 | Completed Sections 12–15; corrected staffed-window queue units, burst/day distinction, audit denominators/budget, integer scope and audit-inclusive alternatives | illustrative/proposed unchanged; seven queue rows and 481,401 A/B scope combinations checked; no operational validation |
 
 ## 7. Pre-publish checks
 
 - [x] Catalog preserves both original case threads.
-- [x] Authored case has 15 ordered sections and final card.
-- [ ] Each authored case reaches 1,000 substantive lines.
+- [x] CASE-01-001 has 15 ordered sections, 12 answered interview questions and Section 15 last.
+- [x] The authored case has 1,480 physical lines, with no repeated long prose detected; substantive publication review remains open.
 - [ ] CASE-01-002, independent numerical/link review, and source verification.

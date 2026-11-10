@@ -10,7 +10,7 @@
 |---:|---|---|
 | 1 | AI adoption map | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); adoption measurement coverage drafted, manuscript expansion remains |
 | 2 | model families and deployment modes | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md); model-family and deployment scope drafted, manuscript expansion remains |
-| 3 | roles and career tracks | [AI market map draft](Cheat_Sheets/02_AI_Market_Map.md#111-roles-adoption-and-model-family-decision-drills); operating roles drafted, career-track scope remains planned |
+| 3 | roles and career tracks | Required coverage remains planned; the [market map draft](Cheat_Sheets/02_AI_Market_Map.md) is supporting decision-map material, not a completed career-track curriculum. |
 | 4 | problem framing | [AI use-case charter](Cheat_Sheets/01_AI_Use_Case_Charter.md); complete manuscript draft, unreviewed |
 | 5 | technology due diligence | [Technology due-diligence draft](Cheat_Sheets/03_Technology_Due_Diligence.md); claim-ledger extension drafted, candidate evidence remains OPEN |
 

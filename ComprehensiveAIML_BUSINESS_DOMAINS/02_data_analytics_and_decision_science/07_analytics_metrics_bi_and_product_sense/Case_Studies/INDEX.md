@@ -1,16 +1,29 @@
-# Module 07 Case Studies â€” Analytics, Metrics, BI and Product Sense
+# Module 07 Case Studies — Analytics, Metrics, BI and Product Sense
 
-## Authoring standard
+## 1. Collection metadata
+Illustrative decision cases for metric governance and product analysis. Evidence, implementation stage, and editorial status are independent; neither case claims a company deployment or measured outcome.
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 2. Case catalog
+| Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-2026-ANA001 | [Marketplace Conversion Diagnosis](01_Marketplace_Conversion_Diagnosis.md) | marketplace analytics | analytical | change conversion intervention | decision-ready-metric-contract | component-reconciliation, guardrail-governance | illustrative | proposed | null | checked arithmetic only; no company outcome |
+| CASE-2026-ANA002 | [Executive Metric Tree Decision](02_Executive_Metric_Tree.md) | product analytics | analytical | adopt versioned metric tree | decision-ready-metric-contract | component-reconciliation, guardrail-governance | illustrative | proposed | null | checked arithmetic only; no deployment |
 
-## Planned cases
+## 3. Canonical reusable patterns
+- **decision-ready-metric-contract:** bind owner, action, entity grain, eligibility, cutoff, numerator, denominator, and guardrail.
+- **component-reconciliation:** preserve identity-level components and independently recompute a decision-facing aggregate.
+- **guardrail-governance:** block or defer action when the declared adverse condition fails.
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Diagnose marketplace conversion decline | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | create an executive metric tree | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 4. Similarity and contrast map
+Both cases use a frozen snapshot and reversible action. The conversion case emphasizes an intervention decision; the metric-tree case emphasizes executive operating review. Neither provides causal attribution; Module 08 is the handoff for that question.
 
-## Suggested file naming
+## 5. Questions and future-case backlog
+Open questions: how an experiment changes the recommendation, how metric review scales under many segments, and how source-contract changes are approved. These are evidence/validation gaps, not claims of completed work.
 
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
+## 6. Review and retirement log
+Created 2026-11-09 as draft illustrative teaching cases. Recheck if metric definitions, population, decision policy, or external evidence changes. Independent technical review remains open.
+
+## 7. Pre-publish checks
+- [x] Catalog preserves all required fields and links.
+- [x] Cases use 15 ordered sections and final cards.
+- [ ] Independent source/evidence review; no reviewed or published status is claimed.

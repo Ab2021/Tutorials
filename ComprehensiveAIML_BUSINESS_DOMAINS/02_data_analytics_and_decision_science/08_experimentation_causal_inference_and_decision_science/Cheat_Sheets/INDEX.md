@@ -9,8 +9,9 @@ Every authored sheet must follow the [course authoring and numerical standards](
 | # | Reference | Coverage | Status |
 |---:|---|---|---|
 | 1 | [Experiment design and guardrails](01_Experiment_Design_and_Guardrails.md) | Assignment, estimand, lift, guardrails and analysis failures. | Draft; unreviewed. |
-| 2 | causal-method selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| 2 | [Causal diagrams and adjustment](02_Causal_Diagrams_and_Adjustment.md) | DAGs, backdoor criterion, standardisation/IPW/AIPW, front-door, IV, collider and over-adjustment failures, E-values. | Draft; unreviewed. |
 | 3 | guardrail metric list | Concise patterns, decision rules, assumptions, and common traps. | planned |
+| 5 | [Decision thresholds and value](05_Decision_Thresholds_and_Value.md) | Optimal threshold derivation, capacity-constrained quotas, three-action bands, uplift thresholds, base-rate shift and value accounting. | Draft; unreviewed. |
 
 ## Suggested file naming
 

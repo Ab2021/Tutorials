@@ -715,6 +715,275 @@ A review sample requires an ethics, safety, and operations design; it is not fre
 Governance trace oracle: a score version change without policy change and a policy change without score change are distinct release events.
 
 Takeaway: each surface needs its own observed state, allowed action, label path, and counterexample before shared modelling is defensible.
+## Appendix D — Decision-grain classification traces
+All entries are ILLUSTRATIVE taxonomy exercises. They define a boundary for analysis; none reports a real company workflow, incident, or result.
+### T-01 — card authorization
+- **Unit of analysis:** `transaction`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `approve/challenge/decline` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `approve/challenge/decline`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `authorization result plus mature dispute evidence`.
+- **Label boundary:** a dispute is not identical to confirmed fraud.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-02 — claim intake
+- **Unit of analysis:** `claim`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `queue/request/referral` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `queue/request/referral`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `investigation disposition with maturity state`.
+- **Label boundary:** referral is not a coverage determination.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-03 — password reset
+- **Unit of analysis:** `account event`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `allow/step-up/recovery` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `allow/step-up/recovery`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `verified recovery outcome and later report`.
+- **Label boundary:** a failed reset is not proof of takeover.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-04 — new application
+- **Unit of analysis:** `application`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `approve/verify/decline` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `approve/verify/decline`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `identity verification and mature account outcome`.
+- **Label boundary:** later credit loss is not automatically application fraud.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-05 — AML scenario
+- **Unit of analysis:** `transaction sequence`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `monitor/investigate/escalate` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `monitor/investigate/escalate`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `case status and external feedback if available`.
+- **Label boundary:** an alert is not a crime label.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-06 — marketplace payout
+- **Unit of analysis:** `seller payout`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `release/hold/review` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `release/hold/review`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `appeal, payment, and loss records`.
+- **Label boundary:** a shared device is not common control.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-07 — listing moderation
+- **Unit of analysis:** `listing`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `allow/request evidence/restrict` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `allow/request evidence/restrict`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `moderation outcome and appeal`.
+- **Label boundary:** image similarity is not intent.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-08 — buyer order
+- **Unit of analysis:** `order`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `allow/cancel/review` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `allow/cancel/review`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `delivery, dispute, and action history`.
+- **Label boundary:** cancellation source is ambiguous.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-09 — merchant onboarding
+- **Unit of analysis:** `merchant application`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `approve/verify/decline` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `approve/verify/decline`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `verification and later activity`.
+- **Label boundary:** an entity link can be stale.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-10 — account login
+- **Unit of analysis:** `session`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `allow/challenge/lock` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `allow/challenge/lock`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `authentication and recovery evidence`.
+- **Label boundary:** a challenge abandonment is selected evidence.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-11 — payment refund
+- **Unit of analysis:** `refund request`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `process/hold/review` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `process/hold/review`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `case and payment state`.
+- **Label boundary:** refund frequency is not a fraud label.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-12 — chargeback intake
+- **Unit of analysis:** `dispute`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `accept/contest/review` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `accept/contest/review`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `network decision and recovery state`.
+- **Label boundary:** chargeback reason codes can be noisy.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-13 — promotion abuse
+- **Unit of analysis:** `redemption event`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `grant/deny/review` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `grant/deny/review`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `eligibility and appeal record`.
+- **Label boundary:** high redemption is not abuse.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-14 — review integrity
+- **Unit of analysis:** `review`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `publish/hold/investigate` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `publish/hold/investigate`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `moderation and appeal state`.
+- **Label boundary:** coordination inference needs more than text similarity.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-15 — coupon account
+- **Unit of analysis:** `account`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `allow/verify/restrict` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `allow/verify/restrict`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `identity and action logs`.
+- **Label boundary:** household sharing is a competing explanation.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-16 — device link
+- **Unit of analysis:** `relationship edge`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `use/risk-route/ignore` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `use/risk-route/ignore`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `source, confidence, observation time`.
+- **Label boundary:** an edge can be a repair-shop artifact.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-17 — beneficiary change
+- **Unit of analysis:** `account change`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `allow/step-up/recovery` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `allow/step-up/recovery`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `verified authorization and subsequent report`.
+- **Label boundary:** a changed beneficiary is not itself fraud.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-18 — cash withdrawal
+- **Unit of analysis:** `transaction`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `approve/decline/challenge` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `approve/decline/challenge`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `authorization and later dispute`.
+- **Label boundary:** channel capability constrains action.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-19 — claim document
+- **Unit of analysis:** `document`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `accept/request/refer` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `accept/request/refer`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `provenance and investigator result`.
+- **Label boundary:** missing metadata is not deception.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-20 — call-center contact
+- **Unit of analysis:** `interaction`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `assist/verify/escalate` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `assist/verify/escalate`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `authentication and disposition`.
+- **Label boundary:** a short call is not a malicious signal.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-21 — graph component
+- **Unit of analysis:** `time-bounded component`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `prioritize/review/no action` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `prioritize/review/no action`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `typed edges and adjudication`.
+- **Label boundary:** future edges are leakage.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+### T-22 — case reopen
+- **Unit of analysis:** `case`; do not silently aggregate it to an entity, alert, or case.
+- **Decision owner:** identify the role that can execute one of `retain/reprioritize/close` within the stated deadline.
+- **Decision-time input rule:** include only fields available at the action timestamp and preserve their availability timestamps.
+- **Permitted actions:** `retain/reprioritize/close`; unavailable actions are infeasible rather than low-value choices.
+- **Outcome record:** `reopen reason and revised result`.
+- **Label boundary:** closure does not guarantee label finality.
+- **Selection path:** record whether the item was scored, routed, reviewed, overridden, appealed, or never observed.
+- **Minimum metric contract:** name numerator, denominator, unit, maturity window, comparator, and customer/operations guardrail.
+- **Counterexample:** a superficially similar event can have another grain, action owner, or outcome mechanism.
+- **State oracle:** decision ID must join to input snapshot, policy/version, execution, and later evidence without changing historical values.
+- **Evidence status:** DERIVED taxonomy contract; workflow facts and label validity are OPEN until verified for a specific use.
+
+Takeaway: classify the grain before choosing features, labels, metrics, or a threshold; each later calculation inherits this contract.
+
 ## 12. Quick Reference Card
 
 | Field | Fraud taxonomy card |

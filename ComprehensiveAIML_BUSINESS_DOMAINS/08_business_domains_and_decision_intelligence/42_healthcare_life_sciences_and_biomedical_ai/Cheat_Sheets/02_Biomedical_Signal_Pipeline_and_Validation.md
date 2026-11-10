@@ -3,7 +3,7 @@ collection: "healthcare-life-sciences-biomedical-ai"
 file_id: "02"
 topic: "Biomedical signal pipeline and validation"
 level: 1
-status: "draft — 12-section substantive expansion; below 1,000-line course threshold; acquisition, clinical-validity, and independent-review evidence remain OPEN"
+status: "draft — 12-section substantive manuscript; course line threshold met; acquisition, clinical-validity, and independent-review evidence remain OPEN"
 version: "1.0"
 created: "2026-11-09"
 reviewed: null
@@ -517,18 +517,68 @@ For reuse, copy the contract pattern rather than the illustrative thresholds. Th
 
 ## 11. Interview / Exam Questions
 
-1. **Calculate samples for 250 Hz over 10 seconds.** `250*10=2,500` per channel; state that drops violate the simple assumption.
-2. **Why is 250 Hz not enough information to judge suitability?** Modality, intended frequency content, anti-alias filter, sensor fidelity, and target use are missing.
-3. **What does a 40 ms gap equal at 250 Hz?** Ten nominal intervals; use timestamps if clock irregularity is material.
-4. **Why retain raw and derived lineage?** To audit whether a feature/model result follows from the acquisition and transformation contract.
-5. **Can interpolation repair aliasing?** No; it cannot recover frequency information lost at acquisition.
-6. **How can normalization leak?** Fitting normalization statistics on test/future data transmits distribution information into training.
-7. **What distinguishes a flatline from a stable physiology signal?** Device/channel quality checks, calibration, cross-channel context, and protocol—not a single heuristic.
-8. **A device changes channel order. What fails?** Schema/identity contract; pin a mapping version and reject unknown layouts.
-9. **What is a defensible quality-gate output?** pass/fail/abstain plus reason codes, measured signals, version, and fallback.
-10. **What evidence is OPEN here?** Local acquisition protocol, target labels, device behavior, clinical validity, and original source body.
+The fifteen questions in this section are deliberately different checks of the
+contract. Questions 1–10 are rapid oral checks; Questions 11–15 require a
+calculation or a design decision. A response earns credit only when it names
+the applicable boundary rather than treating a plausible array as evidence of
+clinical validity.
 
-**Takeaway:** Defend every signal result by its acquisition contract, temporal alignment, and evidence boundary.
+1. **Calculate samples for 250 Hz over 10 seconds.** **Answer:** `250*10=2,500`
+   samples per channel, conditional on fixed-rate acquisition without dropped
+   samples. **Reasoning:** hertz is samples per second, so multiply rate by
+   elapsed seconds. **Follow-up:** state what changes under timestamp jitter.
+   **Red flag:** treating the count as a clinical validation. **Scoring:** full
+   credit includes both the unit and the fixed-rate condition.
+2. **Why is 250 Hz not enough information to judge suitability?** **Answer:**
+   modality, retained band, anti-alias behavior, sensor/placement, calibration,
+   timestamps, target, and intended use are unspecified. **Follow-up:** ask
+   which of those a schema can check. **Red flag:** “the model accepts 250 Hz.”
+   **Scoring:** full credit separates rate from measurement meaning.
+3. **What does a 40 ms gap equal at 250 Hz?** **Answer:** ten nominal intervals
+   because `0.040 s/(1/250 s)=10`; use observed timestamps if the clock is not
+   demonstrably regular. **Follow-up:** decide a 12-interval gap under a
+   40 ms ceiling. **Red flag:** using a sample index when a clock reset exists.
+   **Scoring:** full credit names the timestamp boundary.
+4. **Why retain raw and derived lineage?** **Answer:** it permits an auditor to
+   reconstruct whether an output followed the declared acquisition and
+   transform contract. **Follow-up:** list raw ID, transform version, and
+   configuration hash. **Red flag:** retaining only feature values. **Scoring:**
+   full credit distinguishes replayability from clinical appropriateness.
+5. **Can interpolation repair aliasing?** **Answer:** no; interpolation creates
+   values between samples but cannot identify information lost through
+   inadequate sampling or undocumented anti-aliasing. **Follow-up:** name the
+   correction: approved reacquisition design. **Red flag:** smoother plotting.
+   **Scoring:** full credit distinguishes representation from measurement.
+6. **How can normalization leak?** **Answer:** fitting its statistics on
+   evaluation or future data lets those distributions influence training.
+   **Follow-up:** say where the fitted statistics are stored. **Red flag:**
+   “it is only preprocessing.” **Scoring:** full credit requires a training-only
+   fit and an unchanged later application.
+7. **What distinguishes a flatline from stable physiology?** **Answer:** a
+   protocol-specific quality check using channel behavior, calibration,
+   acquisition state, and cross-channel/context evidence; no single amplitude
+   heuristic is sufficient. **Follow-up:** give its disposition when the
+   calibration is unknown. **Red flag:** declaring a diagnosis. **Scoring:**
+   full credit returns abstain/review rather than a biological conclusion.
+8. **A device changes channel order. What fails?** **Answer:** the schema and
+   channel-identity contract; pin the named mapping version and reject an
+   unknown layout. **Follow-up:** why not infer order from waveform shape?
+   **Red flag:** “there are still twelve columns.” **Scoring:** full credit
+   protects identity rather than dimensionality.
+9. **What is a defensible quality-gate output?** **Answer:** pass, fail, or
+   abstain with reason codes, measured signals, record/segment identity,
+   configuration version, and an accountable fallback. **Follow-up:** state
+   whether `PASS` means a disease target is negative. **Red flag:** silently
+   dropping failures. **Scoring:** full credit says no and preserves auditability.
+10. **What evidence is OPEN here?** **Answer:** local acquisition protocol,
+    target labels, device behavior, clinical validity, and original source
+    bodies. **Follow-up:** distinguish a checked arithmetic fixture from a
+    device test. **Red flag:** converting an illustrative input into a
+    measurement. **Scoring:** full credit identifies the missing primary
+    evidence and the appropriate validation owner.
+
+**Takeaway:** A concise answer is strong only if it keeps measurement,
+decision-time information, and evidence maturity separate.
 
 ### 11.1 Illustrative pipeline oracle inputs
 
@@ -661,29 +711,8 @@ or test-distribution statistics influence an earlier training/evaluation input.
 **Red flag:** “filters are always safe.” **Scoring:** full credit names the
 point-in-time boundary.
 
-### 11.3 Judgment and diagnosis drills
-
-16. **A segment has 0.48% missing samples but a 48 ms contiguous gap; the policy allows 1% aggregate missing and at most 40 ms contiguous. Decide.** **Checked answer:** abstain with `GAP_EXCEEDS_LIMIT`. The aggregate and longest-gap checks are conjunctive; passing one does not override the other. **Follow-up:** interpolation does not make the gap observed. **Red flag:** reporting PASS from the aggregate alone. **Scoring:** full credit gives disposition, reason, and recovery boundary.
-
-17. **The evaluation score improves after random overlapping-window splitting. Is that evidence of a better model?** **Checked answer:** no. Near-duplicates and shared subject/session lineage can cross splits. Re-split independent units before windowing and refit transforms on training only. **Follow-up:** compare encounter-level and subject-level requirements. **Red flag:** retaining the higher score because windows are distinct rows. **Scoring:** full credit names the leakage mechanism and corrected protocol.
-
-18. **A centered offline filter raises retrospective performance for an online triage feature. What changes?** **Checked answer:** the feature may use post-decision samples, so the information contract changed. Use a permitted causal/history-only design or declare a different retrospective task. **Follow-up:** inspect availability delay as well as physical timestamps. **Red flag:** calling the filter non-learned and therefore leakage-free. **Scoring:** full credit distinguishes observation time and availability time.
-
-19. **Why can a quality-filtered cohort make a model look better while the service worsens?** **Checked answer:** difficult records may be disproportionately excluded, improving conditional accepted-case metrics while lowering end-to-end coverage or increasing review delay. **Follow-up:** report eligibility-to-disposition counts by subgroup. **Red flag:** hiding exclusions from the denominator. **Scoring:** full credit names selection and operational consequences.
-
-20. **A new export has the same twelve columns but a different order. What is the smallest safe response?** **Checked answer:** reject the unknown mapping; do not infer channel identity from shape or waveform appearance. Install a governed mapping version and rerun calibration/feature checks. **Follow-up:** why not permute after observing model confidence? Confidence is not identity evidence. **Red flag:** proceeding because dimensions match. **Scoring:** full credit preserves channel lineage and bounded fallback.
-
-21. **A device provides 500 Hz instead of 250 Hz. Which assumptions must be revisited?** **Checked answer:** sample counts per physical window, timestamp/gap thresholds, anti-alias and resampling design, filter/feature behavior, storage, and evaluation compatibility. **Follow-up:** 2,500 samples now span five seconds, not ten. **Red flag:** keeping a fixed 2,500-sample window while calling it ten seconds. **Scoring:** full credit covers both time semantics and downstream validation.
-
-22. **When may a later clinical adjudication be used?** **Checked answer:** as a declared evaluation target under its maturity/availability protocol, not as an earlier decision-time feature or eligibility input. **Follow-up:** what must be stored? Target definition, annotation unit/window, provenance, and availability time. **Red flag:** banning all future outcomes as labels or allowing them as features. **Scoring:** full credit separates legitimate labels from feature leakage.
-
-23. **Why is a zero unknown unit or missing calibration unacceptable as a default?** **Checked answer:** zero is an observed numeric value; unknown is missing evidence. Defaulting invents calibration and can silently change feature meaning. **Follow-up:** route to schema rejection or authorized review. **Red flag:** a finite model input proves validity. **Scoring:** full credit distinguishes measurement from provenance state.
-
-24. **A retry duplicates a record while another record legitimately repeats the same values. How should deduplication work?** **Checked answer:** use acquisition identity, timestamps, and replay lineage rather than value-only deduplication. Retain the retry linkage without counting duplicate observations twice. **Follow-up:** test both cases independently. **Red flag:** dropping every repeated array. **Scoring:** full credit protects idempotency and real repetition.
-
-25. **What can the arithmetic and paper oracle in this sheet establish?** **Checked answer:** count/unit conversions, threshold decisions, and split-disjointness behavior in constructed fixtures. They do not establish device performance, annotation truth, clinical efficacy, or regulatory acceptability. **Follow-up:** name the primary evidence still required. **Red flag:** converting executed arithmetic into a deployment claim. **Scoring:** full credit states both the verified scope and the open boundary.
-
-**Takeaway:** Strong answers name the decision unit, information boundary, quality disposition, and evidence limitation before proposing a model change.
+**Takeaway:** The oral pack contains exactly fifteen answered questions; its
+purpose is to test contract reasoning, not to authorize signal interpretation.
 
 ### 11.4 Acquisition contract worksheet
 
@@ -739,6 +768,241 @@ A separate in-memory paper oracle checked four dispositions: eleven present chan
 
 **Scope:** these checks execute constructed formulas and control flow only. They do not test a sensor, signal filter, clinical target, human workflow, storage system, or production implementation. Primary evidence and substantive independent manuscript review remain OPEN.
 
+### 11.8 Decision-time audit traces
+
+The following traces are compact enough to execute during a design review and
+are more useful than a generic “data quality passed” flag. They are
+ILLUSTRATIVE; neither trace establishes a clinical workflow.
+
+| Trace field | `R06` accepted research segment | `R07` rejected segment | Why it changes the decision |
+|---|---|---|---|
+| acquisition ID | immutable `R06` | immutable `R07` | prevents value-only de-duplication |
+| observed interval | `[10:00:00,10:00:10)` | `[10:05:00,10:05:10)` | defines the physical observation window |
+| availability time | `10:00:12` | `10:05:12` | must be no later than a proposed decision |
+| channel map | `CM-1`, complete | `CM-unknown` | unknown identity blocks interpretation |
+| unit/calibration | recorded | recorded, but mapping absent | units alone do not repair identity |
+| gap result | longest 8 ms | longest 8 ms | the quality metric is not the reason for rejection |
+| transform | `TR-4`, causal | not executed | a transform cannot normalize an invalid schema |
+| target | absent from feature path | absent from feature path | neither route may infer a diagnosis |
+| disposition | research-eligible pending target | abstain and recover mapping | action is bounded by evidence |
+
+**Trace A — availability check.** Suppose `R06` is observed through 10:00:10,
+arrives at 10:00:12, and a proposed operational decision is due at 10:00:11.
+Although the signal's event interval is before the deadline, the artifact is
+not available by it. The correct output is `NOT_AVAILABLE_AT_DECISION`, not a
+backfilled feature. If the decision instead occurs at 10:00:15 and the
+authorized access check succeeds, the timing predicate is true:
+
+```text
+usable_at(t_d) = (t_available <= t_d) AND schema_ok AND quality_ok AND authorized
+usable_at(10:00:11) = false
+usable_at(10:00:15) = true only if the remaining predicates are true
+```
+
+This is a mechanism/invariant block rather than a diagnostic formula. Its
+preconditions are comparable timestamps, an explicit time zone/clock source,
+and a declared decision deadline. A later event does not become earlier merely
+because it is stored beside an earlier encounter key. The counterexample is a
+retrospective research table: it may legitimately contain the later artifact,
+but it cannot be used to claim an earlier online decision was feasible.
+
+**Trace B — split lineage check.** Let `window_id -> acquisition_id -> encounter_id`
+be an immutable lineage map. A split is admissible only when the sets of
+independent encounter identifiers are disjoint:
+
+```text
+E_train ∩ E_eval = ∅
+```
+
+The executed teaching fixture used 80 training and 20 evaluation encounter
+identifiers and obtained an empty intersection. This checks the constructed
+mapping, not independence across people, sites, devices, or time. If two
+encounters belong to one person and person-level correlation matters, the
+independent unit must be changed before creating windows. Randomly assigning
+windows after overlap is a counterexample: the set of window IDs can be
+disjoint while the source physiology is shared.
+
+**Takeaway:** Audit records must expose why an input was usable at a given time,
+not merely that a later database query returned it.
+
+### 11.9 Four diagnostic failure dossiers
+
+#### Dossier SIG-D01 — apparent drop in accepted-case error
+
+**Trigger/environment:** a firmware or placement change increases quality
+abstentions while the accepted subset's model metric improves. **Symptom:** a
+dashboard shows lower accepted-case error but reviewers report more missing
+work. **Competing causes:** genuine model improvement; changed case mix due to
+quality exclusions; a denominator/reporting defect; target-label delay.
+**Discriminating diagnostic:** reconcile `eligible -> acquired -> quality pass
+-> output -> target-mature` counts by acquisition version and subgroup. The
+accepted-only denominator must be displayed beside end-to-end coverage.
+**Root-cause evidence:** a version transition aligned with a rise in
+`QUALITY_ABSTAIN` supports selection change, not a model claim.
+
+**Immediate mitigation:** freeze automated promotion and route abstentions to
+the governed fallback. **Correction:** restore/validate the acquisition
+contract, then re-evaluate a predeclared cohort with fixed denominators.
+**Prevention:** release gates require eligibility and disposition counts, not
+only conditional metrics. **Verification:** compare the same cohort and target
+maturity rule before/after a controlled acquisition version change. **Risk:**
+blocking promotion may delay a legitimate improvement; do not waive the
+denominator check to recover speed. **Escalation:** signal-science owner and
+workflow owner jointly decide whether to suspend intake.
+
+#### Dossier SIG-D02 — unexpectedly high score after a pipeline refactor
+
+**Trigger/environment:** a new normalizer, segmenter, or feature job is fit
+while all historical records are queryable. **Symptom:** evaluation score rises
+without a correspondingly plausible change in raw acquisition. **Competing
+causes:** genuine feature improvement; test/future-statistic leakage; duplicate
+acquisition replay; overlapping lineage; an altered target definition.
+**Discriminating diagnostic:** inspect every fitted artifact's input IDs and
+maximum availability timestamp; then compute intersections at the declared
+independent unit. A nonempty intersection or post-cutoff fit input invalidates
+the comparison.
+
+**Immediate mitigation:** mark the score non-comparable and stop downstream
+selection based on it. **Correction:** rebuild transforms from training-only
+inputs, reconstruct splits before windowing, and use the unchanged final
+evaluation holdout. **Prevention:** persist fit manifests and reject artifacts
+whose input set crosses the split boundary. **Verification:** an independent
+replay produces an empty lineage intersection and the same transform digest.
+**Risk:** a stricter split may reduce apparent sample size; that is an honest
+loss of unsupported precision. **Escalation:** evaluation owner resolves target
+or lineage ambiguity before reporting results.
+
+#### Dossier SIG-D03 — plausible waveform, wrong channel semantics
+
+**Trigger/environment:** an export retains the same number of columns after a
+vendor/gateway schema change. **Symptom:** array shape and basic statistics
+look ordinary, yet downstream feature distribution shifts. **Competing causes:**
+column permutation; polarity change; scaling/gain change; genuine population
+shift; corruption in one channel. **Discriminating diagnostic:** compare the
+signed channel-map and calibration versions to the approved acquisition
+manifest; visual inspection is insufficient because several channels can look
+plausible.
+
+**Immediate mitigation:** reject the mapping and use the non-signal baseline or
+reacquisition route. **Correction:** obtain the governed mapping, run a
+known-reference/calibration fixture, and version the compatibility decision.
+**Prevention:** schemas bind names, placement, polarity, units, and calibration
+to column positions, with fail-closed ingestion. **Verification:** a deliberately
+permuted fixture is rejected and the approved fixture preserves named-channel
+features. **Risk:** fail-closed handling increases review load; capacity must be
+owned explicitly. **Escalation:** acquisition-protocol owner, not the model
+owner, approves a new channel map.
+
+#### Dossier SIG-D04 — a clean retrospective feature fails online
+
+**Trigger/environment:** an offline pipeline uses a centered window or an
+outcome-adjacent field when evaluating a decision meant to occur earlier.
+**Symptom:** replayed retrospective results are strong, while a live-like
+simulation cannot produce the feature by the deadline. **Competing causes:**
+future sample use; delayed ingestion; unavailable enrichment; clock-zone
+conversion; confusion between label and feature.
+**Discriminating diagnostic:** for each feature, list observation end,
+transmission/availability time, transform look-ahead, and decision deadline.
+The feature is permitted only when all input availability times satisfy the
+contract; a causal-looking function can still use a late source.
+
+**Immediate mitigation:** remove the feature from the online route and issue an
+abstain/fallback disposition. **Correction:** redesign it as history-only,
+change the decision timing, or retain the method as retrospective research.
+**Prevention:** a feature registry records availability semantics separately
+from event timestamp and label maturity. **Verification:** a deadline-aware
+replay rejects every injected late feature and accepts the same record only
+after the declared deadline. **Risk:** removing information can reduce
+discrimination; that trade-off is preferable to claiming an impossible
+decision-time system. **Escalation:** workflow owner decides whether a later
+decision is operationally acceptable.
+
+**Takeaway:** Each diagnostic begins with a competing explanation and ends with
+an observable verification; a model retune alone is not a correction.
+
+### 11.10 Resource and review-capacity worksheet
+
+Capacity planning must keep measurement size separate from operational claims.
+For an illustrative batch of `R=1,000` ten-second records, `C=12` channels,
+`f_s=250 samples/s`, and signed 16-bit samples:
+
+```text
+values per record = C * f_s * T = 12 * 250 * 10 = 30,000 values
+raw sample bytes per record = 30,000 * 2 = 60,000 bytes
+raw sample bytes per batch = 1,000 * 60,000 = 60,000,000 bytes
+```
+
+The calculation assumes packed 2-byte samples and excludes headers, encryption,
+indexes, masks, retries, compression, and storage replication. It is therefore
+a lower-bound payload calculation, not a procurement estimate. Its independent
+unit check is `60,000 / (12*250*10) = 2 bytes/value`. If channel count doubles,
+the sample payload doubles; if only duration doubles, it also doubles. Neither
+sensitivity establishes a device's actual throughput.
+
+| Operation | Input-size notation | Time / space relation | Illustration | Boundary |
+|---|---|---|---|---|
+| schema check | `C` named channels | `O(C)` time, `O(C)` manifest lookup | 12 names | does not inspect physiological correctness |
+| sample/gap scan | `C*n` values | `O(C*n)` time; streaming state `O(C)` | 30,000 values | timestamp parsing may dominate if external |
+| feature window | `C*w` values/window | `O(C*w)` per simple aggregate | 12×2,500 | transform-specific cost varies |
+| lineage join | `R` records | expected `O(R)` with indexed immutable keys | 1,000 IDs | collision/duplicate policy is semantic |
+| split audit | `E_train+E_eval` IDs | `O(E)` set construction | 80+20 encounters | does not prove biological independence |
+| human review | `A` abstentions | `A*t_r` labor time | 20×3 min = 60 min | availability/queueing not modeled |
+
+For the last row, the validity condition is one reviewer doing sequential
+reviews with a stable three-minute service assumption. The arithmetic is
+`20*3=60` reviewer-minutes. With two equally available reviewers and no
+coordination cost, the idealized lower bound is 30 elapsed minutes, not a
+guarantee. A counterexample is a queue with specialty routing: matching volume
+does not imply that either reviewer is authorized or available. Record both
+abstention count and routing-time distribution before making a capacity claim.
+
+**Takeaway:** Linear byte or review arithmetic can size an illustrative
+workload, but it cannot establish device performance or operational readiness.
+
+### 11.11 Source and claim boundary register
+
+| ID | Statement supported | Evidence label | Support available here | Does not establish | Review trigger |
+|---|---|---|---|---|---|
+| SIG-CLM-01 | `n=f_s*T` under fixed-rate acquisition | DERIVED; arithmetic VERIFIED | dimensional derivation and fixture | actual device sampling regularity | changed rate/clock |
+| SIG-CLM-02 | 12×250×10 values imply 60,000 packed int16 bytes | ILLUSTRATIVE; VERIFIED | stated constructed inputs | storage/network cost | dtype/framing change |
+| SIG-CLM-03 | training-only transform fitting prevents one identified leakage route | DERIVED | explicit time/split contract | generalization or clinical validity | split/feature change |
+| SIG-CLM-04 | named mapping is required for positional-channel interpretation | HEURISTIC/contract | this sheet's invariant | vendor schema behavior | export/protocol change |
+| SIG-CLM-05 | quality pass is not a diagnosis | DERIVED from output definition | declared semantic separation | target validity | target/workflow change |
+| SIG-CLM-06 | particular device, filter, or patient outcome behavior | OPEN | no primary/local evidence in repository | any performance or safety claim | primary evidence supplied |
+
+The course's source inventory supplies topic labels, not source-body proof. The
+canonical detailed ECG/HRV/filter teaching commitment remains in Module 37; it
+must be consulted or independently sourced before a target-specific signal
+claim is made. This sheet deliberately does not turn that handoff into an
+assertion about a dataset, device, or clinical workflow.
+
+**Takeaway:** A claim register limits what a checked example means and tells the
+next reviewer exactly which evidence could widen the conclusion.
+
+### 11.12 Final pre-use gate
+
+Before reusing this pattern, the accountable owner should answer each question
+with an artifact rather than a verbal assurance:
+
+| Gate | Required artifact | Fail-closed disposition | Why a substitute is insufficient |
+|---|---|---|---|
+| observation identity | immutable acquisition and segment IDs | no feature/output | an array hash cannot identify a repeated acquisition |
+| channel semantics | approved versioned map, placement and polarity | schema rejection | equal column count does not show equivalent channels |
+| measurement meaning | units and calibration evidence | no unit-dependent feature | finite numeric values are not calibrated measurements |
+| timing | clock source plus availability trace | unavailable-at-decision | event time does not show arrival time |
+| quality | declared rules and observed reason codes | abstain/reacquire/review | a pass rate hides individual failures |
+| transformation | versioned causal/offline declaration | restrict to declared use | deterministic code can still look ahead |
+| evaluation | independent-unit split and target maturity protocol | no comparative score | a random row split can share source lineage |
+| action | owner, authorized route, timeout and fallback | baseline/manual route | a score does not allocate authority |
+
+The gate is intentionally conservative. It does not assert that a record
+failing one route is unusable for every retrospective research question; it
+asserts that the route must be declared and its information boundary preserved.
+An owner who cannot produce the artifact must preserve that uncertainty in the
+disposition rather than converting it to a default pass.
+
+**Takeaway:** The final decision is constrained by the weakest unproven
+contract component, not by the most convincing waveform or model score.
 ## 12. Quick Reference Card
 
 | Field | Rule |

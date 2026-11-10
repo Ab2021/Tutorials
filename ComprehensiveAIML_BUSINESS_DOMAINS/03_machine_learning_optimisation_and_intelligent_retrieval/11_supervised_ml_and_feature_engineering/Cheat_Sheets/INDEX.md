@@ -76,7 +76,7 @@ It does not certify fairness, causal effects, privacy compliance, online experim
 
 ## 11. Collection Acceptance Checklist
 
-- [ ] [Problem formulation and losses](02_Problem_Formulation_and_Losses.md) now has a restored File Header and final card, but extra `## 11.1`/`## 11.2` headings and repeated generic prompts remain; template and substantive acceptance are incomplete.
+- [x] [Problem formulation and losses](02_Problem_Formulation_and_Losses.md) has the required ordered sections, a final card, and locally checked illustrative arithmetic; it remains draft and independently unreviewed.
 - [x] The authored sheet links its source inventory and method references.
 - [ ] Every original family and topic outcome has an individual substantive artifact.
 - [ ] All individual artifacts meet the 1,000-substantive-line course gate.

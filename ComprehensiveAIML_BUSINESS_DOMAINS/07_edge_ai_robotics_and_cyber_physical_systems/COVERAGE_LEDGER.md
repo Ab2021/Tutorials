@@ -33,3 +33,15 @@ There are 75 visible source-specific technical commitments and 10 supporting sou
 ## Completion interpretation
 
 An authored file remains editorial draft until independent review. File existence, line count, a source title, or a planning checklist does not establish publication. Case intervention stage and evidence labels remain independent. Hardware timing, target memory use, clinical validity, closed-loop safety and field outcomes require real evidence; no authoring operation supplies them. Module collection indexes carry exact local manifests and source mappings. Part-level indexes aggregate without double-counting.
+
+## 2026-11-09 local reconciliation checkpoint
+
+| Artifact | Observed state after navigation reconciliation | What this establishes | What remains open |
+|---|---|---|---|
+| `Cheat_Sheets/INDEX.md` | 11-section part collection index; links only to existing module indexes/files and the actual part issue artifact | Part-level ladder, lookup, paths, glossary, card directory, issue locator and source boundary are navigable | Planned module sheets and local issue files are not authored by an index |
+| `Case_Studies/INDEX.md` | Seven-section part collection index; 14 original module case commitments retained as `PLAN-P07-*` rows | Every original case has a decision/pattern/evidence-stage limitation record without a false `CASE` ID | No individual part/module case is promoted by catalog work |
+| `Cheat_Sheets/99_35_Common_Issues.md` | Existing 1,637-line draft declares 35 cross-boundary issues | A part-level draft troubleshooting artifact exists | Independent technical review and the seven distinct module-local issue artifacts remain open |
+| M35 acquisition sheet | Existing 1,001-line draft | One authored individual sheet covers embedded acquisition/firmware/TinyML foundation | Remaining M35 reference families, cases and local issues remain open |
+| M37 ECG sheet | Existing 1,272-line draft | One authored individual sheet covers sampling/aliasing source commitments | Time/calibration draft is short; other M37 sheets, cases and local issues remain open |
+
+**Verification boundary:** line counts are inventory observations only, not quality, source, target or publication evidence. Arithmetic and navigation checks must be rerun after further authored-file changes; this checkpoint does not claim completion.

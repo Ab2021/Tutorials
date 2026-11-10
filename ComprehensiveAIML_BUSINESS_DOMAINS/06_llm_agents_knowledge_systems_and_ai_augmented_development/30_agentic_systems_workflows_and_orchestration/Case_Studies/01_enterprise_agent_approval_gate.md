@@ -505,6 +505,9 @@ An aggressive safety gate can reduce throughput; its business tradeoff must be m
 All protocols in this section are **planned and not executed**; no run ID, baseline value, observed confidence interval, or deployment result exists.
 The primary safety metric is unauthorized side effects per 1,000 attempted agent-originated writes, counting confirmed effects that violate applicable authorization at execution.
 The denominator includes allowed, denied, failed, timed-out and unresolved write attempts; list unresolved cases separately and adjudicate before declaring a pass.
+Report attack and legitimate-request denominators separately. The attack-control rate is confirmed unauthorized effects divided by adjudicated adversarial attempts; its denominator excludes ordinary requests because it asks whether a hostile input crosses the boundary. The legitimate-service rate is correctly completed or safely handed-off eligible legitimate requests divided by all eligible legitimate requests; denials, expiries, and unresolved actions stay in this denominator. Report an unknown-outcome count and rate separately rather than placing UNKNOWN in either numerator.
+An attacker may submit many near-identical drafts, so report both attempt-weighted and ticket-cluster-weighted attack results, with the cluster definition and source family. A detector that rejects every request can look good on the attack denominator while failing the legitimate-service denominator.
+For every rate, record numerator event definition, denominator population, calendar window, tenant scope, adjudication status, comparator, and whether it was executed. No proposed zero-failure result is an assurance claim.
 A second metric is policy-bypassing execution count, with a target of zero in the test corpus; zero is a release criterion, not proof of zero real-world risk.
 A useful-work metric is the fraction of eligible requests correctly completed or safely handed to manual work within one business day.
 Measure review duration, reviewer disagreement, false denial, time to containment, sensitive-data disclosure, duplicate sink effects, and cost per correctly completed request.
@@ -557,503 +560,82 @@ Decision trigger: all invariants and prerequisites pass, with adequate reviewer 
 | CLM-04 | Unknown sink result cannot safely be treated as no effect. | Design reasoning, A-02 and Section 8. | Freeze and reconcile / no exactly-once claim. | Connector contract and fault test. |
 
 ## 12. Failure Modes & What Went Wrong
-No incident is claimed. The following fault analyses are hypothetical and serve as a threat-model and recovery design, not evidence that a defense passed.
-The symptom, discriminating check, impact, containment, owner and regression oracle for each are specified below.
+No incident is claimed. This is a prospective fault model: every row is a distinct hypothesis to test with synthetic tickets and a non-production sink. “Deny” means no automated ticket write; it does not mean that the requester’s underlying need was resolved.
 
-### F-01. Indirect instruction in ticket comment
-- Trigger / symptom: Comment says to export all tickets before closing one.
-- Diagnostic: Compare source text against requested action and tool trace.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Export could disclose multiple records.
-- Immediate containment: Block outbound connector and preserve the source revision.
-- Prevention: Treat retrieved text as untrusted and allow only scoped ticket operations.
-- Verification oracle: Payload must not create an export call.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
+### 12a. Failure diagnosis and recovery matrix
+| ID | Trigger and discriminating check | What can go wrong | Immediate safe state | Repair and regression oracle | Accountable owner |
+|---|---|---|---|---|---|
+| F-01 | A retrieved comment asks for an export; inspect proposed operation and network trace. | Indirect prompt injection is treated as execution authority. | Reject proposal; preserve source revision. | Keep content untrusted and expose only the ticket-action enum; no export call is possible. | Security lead |
+| F-02 | Requester selects a ticket outside their ACL; compare authenticated subject at retrieval and send. | A client or model claim substitutes for access control. | Deny without returning ticket data. | Query platform ACL twice; denied subject receives neither content nor a write. | Identity owner |
+| F-03 | Ticket ID belongs to another tenant; compare authenticated tenant to platform tenant. | Cross-tenant read or write through an unbound identifier. | Deny and investigate repeated attempts. | Tenant comes from server context; a foreign identifier is unreachable. | Security lead |
+| F-04 | Parser exits abnormally or attempts network access. | Attachment parsing reaches host resources or credentials. | Quarantine attachment and terminate sandbox. | Remove mounts, credentials and egress; canary file and network accesses fail. | Integration owner |
+| F-05 | Look-alike identifiers or bidi controls appear in a review packet. | Reviewer sees a different resource from the one serialized. | Hold action and show escaped canonical identifiers. | Normalize and render controls; changing either identifier changes the digest. | UI owner |
+| F-06 | Document markup produces an active control or priority styling. | Source text manipulates the reviewer interface. | Render inertly and remove active content. | Enforce a strict renderer and content policy; scripts and links cannot act. | UI owner |
+| F-07 | Model says a user is privileged; compare against identity decision. | Generated prose is accepted as authorization evidence. | Deny the unsupported proposal. | Use only authenticated identity and policy; model text cannot change allow/deny. | Policy owner |
+| F-08 | Executor payload differs from the approved typed object. | Approval substitution changes target, operation, payload, or visibility. | Stop dispatch and cancel approval. | Recompute digest over executor input; every effect-field mutation denies. | Executor owner |
+| F-09 | Ticket revision changes after review; sink returns conditional conflict. | A stale action overwrites newer ticket state. | Mark FAILED, retain conflict details, require a new proposal. | Atomic `expected_revision` condition rejects revision eight after revision nine exists. | Ticket-platform owner |
+| F-10 | Reviewer role is revoked before dispatch. | Historical approval is mistaken for current authority. | CANCELLED, not CONFIRMED. | Fresh entitlement check denies revoked reviewer. | Identity owner |
+| F-11 | Requester access is revoked while work waits. | Agent continues acting for a user no longer entitled. | CANCELLED and manual handoff. | Execution rechecks requester access as well as reviewer access. | Identity owner |
+| F-12 | Material policy version changes while an approval is pending. | Unchanged bytes acquire an unauthorized policy interpretation. | Cancel affected approvals. | Current policy decision must match; changed material rule requires review again. | Policy owner |
+| F-13 | Server time is after the approval deadline or clock health is unknown. | An old intent executes after its validity window. | EXPIRED or deny on time uncertainty. | Trusted-time check immediately precedes dispatch; no sink request follows expiry. | Platform operations |
+| F-14 | Two tabs or workers race to claim one action ID. | Duplicate local dispatch is created before the sink sees a key. | One worker claims; loser records no send. | Transactional compare-and-swap permits one APPROVED-to-DISPATCHING transition. | Executor owner |
+| F-15 | Sink commits but response is lost; receipt lookup finds matching key. | A timeout is falsely labeled failure and blindly resent. | UNKNOWN until lookup. | Reconcile same action key and matching digest to CONFIRMED without a new operation. | Integration owner |
+| F-16 | Worker crashes before known transmission; transport cannot prove non-receipt. | System fabricates success or sends a new key. | UNKNOWN and frozen. | Retain action/key before dispatch; retry only the same key under verified semantics. | Executor owner |
+| F-17 | Key is older than sink deduplication retention. | Same-key replay may no longer deduplicate. | Remain UNKNOWN; prohibit automatic replay. | Compare key age to contract; route evidence to human reconciliation. | Integration owner |
+| F-18 | Sink has neither receipt lookup nor authoritative action history. | Commit status cannot be distinguished from absence. | Disable automated confirmation and retry. | Exclude this sink from unattended writes; manual reconciliation is the only recovery. | Service owner |
+| F-19 | Ticket automation inventory changes after approval. | An internal update now creates an unreviewed downstream effect. | Cancel action class until re-reviewed. | Bind material automation category/version; changed effect inventory blocks dispatch. | Ticket-platform owner |
+| F-20 | Retrieved runbook contradicts policy registry or has changed revision. | Poisoned source is treated as policy. | Quarantine source and re-review. | Policy comes from its registry; source revision cannot alter authorization. | Policy owner |
+| F-21 | Search returns restricted ticket material. | Retrieval leaks data before the approval gate. | Stop retrieval path and notify data owner. | ACL-filter at query and render; restricted text never reaches model context. | Retrieval owner |
+| F-22 | Summary lacks a contradictory source; inspect authorized original. | Reviewer approves from incomplete evidence. | Escalate rather than force approval. | Packet exposes provenance and authorized original; missing evidence is visible. | Operations owner |
+| F-23 | Fast approvals cluster by reviewer; sample decisions and durations. | Fatigue, coercion, or poor UI creates rubber-stamping. | Pause that review queue and audit recent decisions. | Capacity limits and blinded calibration detect unsafe throughput; speed alone proves nothing. | Operations owner |
+| F-24 | Session or MFA provenance is anomalous, then account is revoked. | A compromised reviewer creates apparently valid approvals. | Revoke session and suspend its pending actions. | Fresh session/role check blocks dispatch; investigate rather than infer intent. | Security lead |
+| F-25 | Requester and reviewer resolve to the same stable subject. | Separation of duties exists only in the UI. | Reject and assign an independent reviewer. | Policy denies self-approval even when both roles are present. | Policy owner |
+| F-26 | Executor secret appears in model trace or is used from a non-executor path. | Model environment can bypass the gate. | Revoke credential and block connector egress. | Secrets remain only in executor; model runtime cannot read or use the credential. | Security lead |
+| F-27 | Policy service returns unavailable rather than explicit deny. | Availability pressure converts unknown authorization into allow. | Deny automated send; manual handling. | No permissive cache is accepted; outage produces zero automated writes. | Policy owner |
+| F-28 | Ledger restore predates a sink commit. | Missing ledger state is interpreted as no external effect. | Freeze workers and reconcile action keys. | Sink audit identifies committed key; record is repaired without a new send. | Platform operations |
+| F-29 | Sink audit has a write with no approval chain. | Direct bypass, delayed audit, or restoration loss is prematurely misclassified. | Disable writes; preserve ledger, sink, and credential evidence. | Reconcile event ordering before attribution; every confirmed write eventually has a verifiable chain. | Security lead |
+| F-30 | Secret canary appears in routine logs or alerts. | Observability multiplies source-data exposure. | Restrict access and rotate any exposed secret. | Logs retain IDs and decisions, not raw source; canary is absent from routine stores. | Privacy owner |
+| F-31 | Valid record is replayed under a different tenant context. | Action ID or approval is not tenant-bound. | Reject and isolate client path. | Tenant is in digest, key scope, and authenticated context; cross-tenant replay fails. | Executor owner |
+| F-32 | Old approval is decoded by a new schema or connector. | Identical bytes take on new semantics. | Hold or expire pending work. | Compatibility proof is required; otherwise generate a new proposal and approval. | Release owner |
+| F-33 | Trusted time source reports unacceptable skew. | Expiry check uses a stale local clock. | Stop sends until clock health returns. | Bound skew monitoring makes an out-of-range clock fail closed. | Platform operations |
+| F-34 | Schema review finds an effect-bearing field absent from digest. | Payload or destination can mutate while hash still matches. | Disable action type and audit prior effects. | Schema completeness test mutates every effect-bearing field and expects denial. | Security lead |
+| F-35 | Model emits unknown fields or an unsupported operation. | Connector interprets output beyond allowed schema. | Reject before ledger approval. | Strict enum and unknown-field rejection keep it from executor. | Model integration owner |
+| F-36 | Injection is split across languages, comments, or attachments. | Detection misses composition and reviewer follows content. | Keep only exact allowed effect eligible for review. | Evaluate mixed-language cases; policy prevents disallowed effect even if detector misses. | Security lead |
+| F-37 | Issued token reaches queues outside intended scope. | Least privilege is asserted but not enforced downstream. | Revoke and replace token. | Platform denies an unrelated queue write using the actual issued grant. | Integration owner |
+| F-38 | Queue depth or oldest age exceeds staffed boundary. | Backlog drives review bypass or unsafe speed. | Throttle intake and route to manual triage. | Admission control preserves approval; overload never silently skips it. | Operations owner |
+| F-39 | User-facing status says complete without a matching receipt. | Safe denial, accepted request, or unknown outcome is mislabeled success. | Correct disposition and retain investigation state. | Only verified matching receipt creates CONFIRMED. | Service owner |
+| F-40 | Comment contains data prohibited for its audience. | An approved private note still leaks to authorized ticket readers. | Block comment and contain disclosure. | Classification/output rule runs independently of approval; prohibited secret cannot be added. | Privacy owner |
+| F-41 | Review serialization and captured sink call differ. | UI/executor use separate interpretations of intent. | Stop dispatch and invalidate affected approvals. | One typed object supplies display and request; property test finds no divergence. | Executor owner |
+| F-42 | Rollback cannot interpret pending newer records. | Recovery replays or drops work with changed meaning. | Freeze pending work. | Bundle compatibility test requires reapproval for incompatible records. | Release owner |
+| F-43 | Response claims success but lacks authenticated, matching receipt. | Forged receipt produces false audit certainty. | Mark UNKNOWN and investigate. | Authenticated transport plus receipt/action/key comparison blocks confirmation. | Integration owner |
+| F-44 | One principal submits many plausible drafts. | Review capacity is exhausted without a policy bypass. | Rate-limit principal and preserve priority manual route. | Quotas bound queue share; flood cannot create unbounded review work. | Operations owner |
+| F-45 | Material evidence revision changes after review. | Correctly bound action rests on obsolete facts. | Cancel and require fresh review when policy marks evidence material. | Evidence revision is bound where needed; changed source forces re-review. | Policy owner |
 
-### F-02. Direct user privilege escalation
-- Trigger / symptom: Requester asks to change a ticket they cannot access.
-- Diagnostic: Inspect requester ACL decision at retrieval and execution.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Unauthorized ticket modification.
-- Immediate containment: Deny proposal and record policy reason.
-- Prevention: Enforce platform ACL independently of model intent.
-- Verification oracle: No ticket content or write is returned to requester.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
+### 12b. Recovery procedure for an uncertain external effect
+1. Stop further dispatch for the action ID; preserve its tenant, canonical intent, digest, version bundle, approval, key, worker lease, and observed timestamps.
+2. Move it to UNKNOWN, not FAILED or CONFIRMED. FAILED is appropriate only when the sink authoritatively says the conditional write did not occur.
+3. Query the sink with the original tenant-scoped idempotency key and inspect an authenticated receipt or authoritative audit record.
+4. Confirm only if target, operation, payload digest, key, and resulting revision agree with the approved intent. A generic “200” response is insufficient evidence.
+5. If the sink proves no commit while its deduplication window is still valid, repeat fresh authorization checks and make at most a controlled same-key retry.
+6. If lookup is inconclusive, key retention elapsed, or receipt semantics are unknown, retain UNKNOWN and assign human reconciliation. Do not generate a corrective ticket update automatically.
+7. Any correction is a new proposal with its own expected revision, current authorization, review, key, and receipt chain.
 
-### F-03. Cross-tenant ticket identifier
-- Trigger / symptom: Proposal supplies another tenant’s ticket ID.
-- Diagnostic: Compare server-bound tenant with ticket ownership.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Cross-tenant read or write.
-- Immediate containment: Deny and alert security on repeated attempts.
-- Prevention: Bind tenant from authentication, never from model output.
-- Verification oracle: Other tenant resource is unreachable.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-04. Malicious attachment parser
-- Trigger / symptom: Crafted attachment exploits the document parser.
-- Diagnostic: Review sandbox process exit and denied network events.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Parser compromise and potential credential theft.
-- Immediate containment: Quarantine attachment and terminate sandbox.
-- Prevention: Isolate parser without credentials or network and apply resource caps.
-- Verification oracle: Canary network access and host file access fail.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-05. Unicode display ambiguity
-- Trigger / symptom: Two visually similar identifiers refer to different tickets.
-- Diagnostic: Compare canonical identifiers and rendered code points.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Reviewer authorizes the wrong target.
-- Immediate containment: Hold action and display unambiguous identifiers.
-- Prevention: Normalize per schema and render canonical ID with escaped controls.
-- Verification oracle: Different targets cannot share an approval digest.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-06. Hidden reviewer-interface instruction
-- Trigger / symptom: Source includes HTML suggesting an urgent approve button.
-- Diagnostic: Inspect rendering for markup interpreted as active content.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Reviewer manipulation or browser compromise.
-- Immediate containment: Sanitize and isolate the review packet.
-- Prevention: Render source as inert text with a strict content security policy.
-- Verification oracle: Script and link payloads are inert.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-07. Model-produced false authorization
-- Trigger / symptom: Model output claims the user is an administrator.
-- Diagnostic: Compare claim with identity-provider entitlements.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Unprivileged requester receives a write.
-- Immediate containment: Deny and discard model role assertion.
-- Prevention: Authority comes only from signed identity and policy decisions.
-- Verification oracle: A model claim cannot change policy result.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-08. Approval substitution
-- Trigger / symptom: Attacker swaps a benign approved payload with a harmful payload.
-- Diagnostic: Recompute digest over exact executor input.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Action differs from what reviewer saw.
-- Immediate containment: Stop dispatch and invalidate approval.
-- Prevention: Bind approval to canonical fields and compare at execution.
-- Verification oracle: Any changed effect field fails digest check.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-09. Stale ticket revision
-- Trigger / symptom: Another operator updates the ticket after review.
-- Diagnostic: Compare approval revision with conditional sink response.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Overwriting newer information.
-- Immediate containment: Reject stale update and request a fresh review.
-- Prevention: Use sink-side conditional update against revision.
-- Verification oracle: Concurrent change prevents the old write.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-10. Approver role revoked
-- Trigger / symptom: Reviewer loses approval rights while an action waits.
-- Diagnostic: Query current entitlements at dispatch.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Former reviewer authorizes a current action.
-- Immediate containment: Expire approval and route to another reviewer.
-- Prevention: Recheck role and revocation before sending.
-- Verification oracle: Revoked role denies dispatch.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-11. Requester loses access
-- Trigger / symptom: Requester access is removed after the proposal.
-- Diagnostic: Compare requester authorization at proposal and execution.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Agent continues acting for an unauthorized user.
-- Immediate containment: Hold and expire approval.
-- Prevention: Require current requester entitlement at send.
-- Verification oracle: Revoked requester cannot initiate the write.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-12. Policy changes while pending
-- Trigger / symptom: Policy owner prohibits a previously permitted operation.
-- Diagnostic: Compare current policy version and decision with approval record.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Stale rule allows a disallowed action.
-- Immediate containment: Invalidate affected approvals.
-- Prevention: Version policy and require fresh decision and review on material change.
-- Verification oracle: New denial blocks old approval.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-13. Approval expired
-- Trigger / symptom: A delayed worker resumes after approval TTL.
-- Diagnostic: Compare trusted server clock with expiry.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Old intent executes outside its allowed window.
-- Immediate containment: Mark EXPIRED and stop execution.
-- Prevention: Server-side expiry check immediately before send.
-- Verification oracle: Expired record never reaches sink.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-14. Double-click approval
-- Trigger / symptom: Reviewer submits approval twice from two tabs.
-- Diagnostic: Check unique transition and approval event sequence.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Duplicate dispatch may cause repeated side effects.
-- Immediate containment: Deduplicate approval and pause duplicate worker.
-- Prevention: Transactional compare-and-swap for state change.
-- Verification oracle: Exactly one worker claims the approval.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-15. Lost response after commit
-- Trigger / symptom: Sink applies the update but response is lost.
-- Diagnostic: Query sink receipt and platform audit by stable key.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Blind retry could repeat a side effect.
-- Immediate containment: Mark UNKNOWN and freeze further dispatch.
-- Prevention: Use sink idempotency and authoritative reconciliation.
-- Verification oracle: One effect or unresolved manual case, never a second key.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-16. Timeout before send
-- Trigger / symptom: Executor crashes before transmitting the request.
-- Diagnostic: Inspect durable send state and sink key lookup.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Assuming success can hide unfinished work.
-- Immediate containment: Reconcile before deciding whether retry is safe.
-- Prevention: Persist action ID and key before dispatch.
-- Verification oracle: No fabricated receipt is recorded.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-17. Dedupe retention elapsed
-- Trigger / symptom: Reconciliation occurs after sink forgets an idempotency key.
-- Diagnostic: Compare key age with contractual retention window.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Old retry can create a second action.
-- Immediate containment: Disable automatic retry and require human review.
-- Prevention: Bound retries to verified retention period.
-- Verification oracle: Expired key is never resent automatically.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-18. Opaque sink outcome
-- Trigger / symptom: Sink cannot look up a receipt or action history.
-- Diagnostic: Inspect connector API and audit contract.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: No safe way to distinguish applied from absent.
-- Immediate containment: Keep action unresolved and use manual reconciliation.
-- Prevention: Exclude sink from automated write path without evidence.
-- Verification oracle: Release gate fails for unqueryable sink.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-19. Changed ticket automation
-- Trigger / symptom: A new automation sends external notifications on closure.
-- Diagnostic: Inspect versioned automation inventory and change record.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: One approved status change leaks data downstream.
-- Immediate containment: Disable that action class until impact is reviewed.
-- Prevention: Bind approval to known automation category and recheck.
-- Verification oracle: New unreviewed automation blocks dispatch.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-20. Source document poisoning
-- Trigger / symptom: Attacker changes retrieved runbook to misstate ticket policy.
-- Diagnostic: Compare provenance and trusted policy registry.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Reviewer sees false justification for action.
-- Immediate containment: Quarantine source and re-review affected actions.
-- Prevention: Separate policy authority from retrieved business context.
-- Verification oracle: Source text cannot modify policy decision.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-21. Retrieval permission leak
-- Trigger / symptom: Search index returns an inaccessible confidential ticket.
-- Diagnostic: Check retrieval ACL and index snapshot lineage.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Sensitive context reaches model or reviewer.
-- Immediate containment: Stop retrieval and notify data owner.
-- Prevention: Apply ACL at query and before rendering.
-- Verification oracle: Unauthorized document never enters model context.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-22. Summary omits adverse evidence
-- Trigger / symptom: Model reports only benign comments and ignores a conflict.
-- Diagnostic: Compare summary with linked original source excerpts.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Reviewer approves with incomplete information.
-- Immediate containment: Pause review and inspect source.
-- Prevention: Display evidence provenance and relevant counterevidence.
-- Verification oracle: Reviewer can inspect original authorized evidence.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-23. Approval fatigue
-- Trigger / symptom: Reviewer approves unusually fast across many distinct tickets.
-- Diagnostic: Compare review durations, disagreement and sampled quality.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Repeated harmful approvals.
-- Immediate containment: Pause reviewer queue and sample recent actions.
-- Prevention: Capacity limits, calibrated review and escalation.
-- Verification oracle: Human evaluation detects and stops unsafe throughput.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-24. Compromised reviewer account
-- Trigger / symptom: Valid reviewer session approves attacker-controlled actions.
-- Diagnostic: Check session provenance, MFA and unusual activity.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Valid-looking but unauthorized approvals.
-- Immediate containment: Revoke session and suspend pending approvals.
-- Prevention: Strong authentication and independent role checks.
-- Verification oracle: Revoked session cannot approve or dispatch.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-25. Self-approval conflict
-- Trigger / symptom: Requester also holds reviewer role.
-- Diagnostic: Compare requester and reviewer stable identities.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Separation-of-duties failure.
-- Immediate containment: Reject and assign independent reviewer.
-- Prevention: Enforce conflict rule in policy not UI alone.
-- Verification oracle: Same identity cannot approve own request.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-26. Service credential leaked to model
-- Trigger / symptom: Credential appears in context or model trace.
-- Diagnostic: Search access-controlled secrets audit for credential use.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Model or attacker can call the sink directly.
-- Immediate containment: Revoke credential and block connector network path.
-- Prevention: Keep secrets exclusively in executor and use short scopes.
-- Verification oracle: Model environment cannot read or use executor secret.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-27. Policy service outage
-- Trigger / symptom: Authorization endpoint times out.
-- Diagnostic: Distinguish deny from unavailable via structured status.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Availability pressure leads to fail-open writes.
-- Immediate containment: Stop sends and use manual path.
-- Prevention: Fail closed on unknown authorization.
-- Verification oracle: Unavailable policy service yields zero automated writes.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-28. Approval ledger restore
-- Trigger / symptom: Ledger restored to a point before an external commit.
-- Diagnostic: Compare sink audit against restored action records.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Replay duplicates an already completed operation.
-- Immediate containment: Freeze workers and reconcile before resumption.
-- Prevention: Stable operation keys and restore runbook.
-- Verification oracle: Committed action is not resent as a new action.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-29. Audit log omission
-- Trigger / symptom: Write exists without corresponding approval event.
-- Diagnostic: Join sink audit to approval by scoped action key.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Untraceable potentially unauthorized action.
-- Immediate containment: Disable write access and open an incident.
-- Prevention: Durable append-only transition and sink reconciliation.
-- Verification oracle: Every confirmed write has a verifiable approval chain.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-30. Audit log contains secrets
-- Trigger / symptom: Raw malicious source text copied into routine logs.
-- Diagnostic: Inspect samples and access controls for sensitive fields.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Broader exposure through observability systems.
-- Immediate containment: Restrict logs, rotate exposed secrets and notify owner.
-- Prevention: Log identifiers and redacted excerpts only.
-- Verification oracle: Test secret canary is absent from routine logs.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-31. Replay across tenants
-- Trigger / symptom: Valid approval record is replayed under another tenant.
-- Diagnostic: Verify tenant binding in digest and authenticated context.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Cross-tenant unauthorized write.
-- Immediate containment: Reject, isolate client and inspect audit.
-- Prevention: Scope all keys and approvals by tenant.
-- Verification oracle: Same action ID in another tenant cannot authorize a write.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-32. Schema version mismatch
-- Trigger / symptom: Old approval is decoded with a new action schema.
-- Diagnostic: Compare schema and connector semantic versions.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Identical bytes may acquire a different meaning.
-- Immediate containment: Invalidate approval and route for re-review.
-- Prevention: Version schemas and explicitly verify compatibility.
-- Verification oracle: Unknown schema version fails closed.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-33. Policy clock skew
-- Trigger / symptom: Executor clock is behind approval service.
-- Diagnostic: Compare trusted time source health and expiry checks.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Expired approval may remain usable.
-- Immediate containment: Stop sends when clock health is uncertain.
-- Prevention: Monitor skew and evaluate expiry with trusted time.
-- Verification oracle: Out-of-bound clock skew denies execution.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-34. Action field omitted from hash
-- Trigger / symptom: Destination or comment body is not in digest.
-- Diagnostic: Compare schema effect fields with canonicalization coverage.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Payload can change without invalidating approval.
-- Immediate containment: Disable affected action type and audit prior writes.
-- Prevention: Require schema-level completeness checks.
-- Verification oracle: Mutation of every effect field invalidates digest.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-35. Compromised model endpoint
-- Trigger / symptom: Model returns tool instructions outside expected schema.
-- Diagnostic: Inspect validated output and rejected extra fields.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Arbitrary action or exfiltration request.
-- Immediate containment: Reject output and investigate endpoint.
-- Prevention: Treat model output as untrusted data and deny unknown fields.
-- Verification oracle: Out-of-schema operation never reaches executor.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-36. Adversarial language mixing
-- Trigger / symptom: Injection is split between languages and comments.
-- Diagnostic: Inspect source versions and final proposed intent.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Detector may miss compositional attack.
-- Immediate containment: Require exact-effect review and reject unauthorized tools.
-- Prevention: Evaluate multilingual and split payloads independently.
-- Verification oracle: Policy still blocks disallowed effect even if detector misses.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-37. Overbroad service account
-- Trigger / symptom: Executor token can edit every queue despite one intended queue.
-- Diagnostic: Compare issued token scope with intended policy.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Compromise affects unrelated business units.
-- Immediate containment: Revoke and replace token with narrowed grants.
-- Prevention: Scope credentials to tenant, queue, operation and time.
-- Verification oracle: Unrelated queue write is denied by platform.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-38. Backlog overload
-- Trigger / symptom: Review queue grows beyond staffed capacity.
-- Diagnostic: Monitor oldest age and queue depth separately.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Delayed decisions and reviewer fatigue.
-- Immediate containment: Stop intake or switch to manual triage.
-- Prevention: Bound queue and define ownership for overload.
-- Verification oracle: Overload never bypasses human review.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-39. Misleading safe completion
-- Trigger / symptom: System calls a denied action completed successfully.
-- Diagnostic: Reconcile response status with actual sink receipt.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: False reporting hides unfinished work.
-- Immediate containment: Correct status and notify operations.
-- Prevention: Distinguish confirmed, denied, unknown and manual states.
-- Verification oracle: Only a verified receipt produces confirmed status.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-40. Malicious benign-looking comment
-- Trigger / symptom: Approved private comment contains attacker-selected secret.
-- Diagnostic: Compare comment text to data classification and purpose.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Secret leaks to ticket readers.
-- Immediate containment: Block comment and contain exposed content.
-- Prevention: Validate data access and output classification independently.
-- Verification oracle: Prohibited secret cannot be added even with approval.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-41. UI to executor mismatch
-- Trigger / symptom: Review screen displays one status while executor sends another.
-- Diagnostic: Compare canonical intent, UI serialization and captured sink request.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Reviewer approves a different action than executed.
-- Immediate containment: Stop dispatch and invalidate affected approvals.
-- Prevention: Single typed intent feeds both rendering and execution.
-- Verification oracle: Property test finds no display/execution divergence.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-42. Downstream rollback incompatibility
-- Trigger / symptom: Old gateway cannot read approvals made by new schema.
-- Diagnostic: Test rollback against pending-record fixtures.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Pending work may be lost or wrongly interpreted.
-- Immediate containment: Freeze pending work rather than reinterpret.
-- Prevention: Release bundle declares forward/backward compatibility.
-- Verification oracle: Incompatible pending record requires reapproval.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-43. Forged receipt
-- Trigger / symptom: Attacker injects a success response into the execution path.
-- Diagnostic: Verify authenticated sink response and query platform history.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Audit falsely claims an action occurred.
-- Immediate containment: Mark UNKNOWN and investigate integration.
-- Prevention: Authenticate transport and bind receipt to action key.
-- Verification oracle: Invalid receipt cannot transition to confirmed.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-44. Adversary sends many distinct drafts
-- Trigger / symptom: Attacker floods reviewer queue with plausible proposals.
-- Diagnostic: Track request rate by tenant and requester with benign controls.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Denial of service and review fatigue.
-- Immediate containment: Rate-limit intake and route priority incidents manually.
-- Prevention: Admission control and per-principal quotas.
-- Verification oracle: Flood cannot consume unbounded review or bypass policy.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
-
-### F-45. Change of source after review
-- Trigger / symptom: Ticket evidence changes but action digest remains identical.
-- Diagnostic: Compare source revision and policy-required evidence freshness.
-- Hypothesized cause: trust boundary or state invariant fails; this is not an observed incident.
-- Impact: Reviewer decision may rely on obsolete facts.
-- Immediate containment: Invalidate approval when evidence revision matters.
-- Prevention: Bind necessary evidence versions to intent.
-- Verification oracle: Changed material evidence triggers fresh review.
-- Owner: security lead coordinates with the relevant platform or operations owner.
-- Evidence status: hypothetical; the control and detection have not been tested.
+### 12c. Planned recovery and boundary drills
+These drills use synthetic tickets and a non-production sink. They are planned validation work, not observed control results.
+| Drill | Setup | Pass condition | Failure decision |
+|---|---|---|---|
+| D-01 Retrieval isolation | Two users have different access to one synthetic ticket. | Denied user’s model trace and packet contain no restricted text. | Stop retrieval release. |
+| D-02 Principal substitution | Authenticated user A is paired with client claim B. | Policy uses A and rejects inconsistent identity. | Fix identity binding. |
+| D-03 Self-approval | Requester also has reviewer role. | Same stable subject cannot approve; independent reviewer can. | Fix separation policy. |
+| D-04 Payload mutation | Change one approved private-comment character before send. | Digest mismatch causes no sink call. | Disable write path. |
+| D-05 Stale revision | Approve revision 8, independently move ticket to revision 9. | Atomic conditional write conflicts; revision 9 is intact. | Require sink conditional update. |
+| D-06 Duplicate claim | Deliver one approval event to two workers. | One claim and at most one sink request use the stable key. | Repair ledger claim transaction. |
+| D-07 Commit then response loss | Test sink commits then discards response. | UNKNOWN reconciles to matching CONFIRMED without a second key. | Repair receipt query path. |
+| D-08 No receipt | Sink offers no receipt or history after dispatch timeout. | No retry or automatic confirmation occurs. | Keep draft-only/manual operation. |
+| D-09 Revocation and expiry | Revoke role and separately advance trusted clock before send. | Both paths cancel/expire with zero sink calls. | Repair fresh authorization/time checks. |
+| D-10 Automation change | Add synthetic notification after approval. | Material inventory change invalidates approval before notification. | Expand effect inventory. |
+| D-11 Restore race | Restore ledger to before a known test commit. | Reconciliation finds the key and prevents replay. | Freeze recovery release. |
+| D-12 Capacity overload | Submit more synthetic drafts than admission and review bounds. | Bounded queue/manual route; no approval bypass. | Adjust staffing/admission plan. |
 
 ### Planned recovery and boundary drills
 These drills are prospective, use synthetic tickets and a non-production sink, and are not assertions of observed behavior.

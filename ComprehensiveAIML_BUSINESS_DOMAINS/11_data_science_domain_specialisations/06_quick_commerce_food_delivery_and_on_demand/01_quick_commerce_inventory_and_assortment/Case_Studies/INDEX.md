@@ -1,81 +1,47 @@
-# Quick Commerce Inventory and Assortment - Case Study Collection
-
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+# Quick Commerce Inventory and Assortment — Case Studies
 
 ## 1. Collection metadata
-
 | Field | Value |
 |---|---|
-| Collection owner | Curriculum maintainer |
-| Last reviewed | 2026-11-06 |
-| Review cadence | Quarterly and on material market/regulatory change |
-| Index version | 2.0-planned |
-| Canonical case-ID format | CASE-06-01-NNN |
-| Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
-| Source of truth | This directory |
+| Owner | Curriculum maintainer |
+| Index version | 3.0-planned |
+| Case ID format | CASE-06-01-NNN |
+| Evidence boundary | illustrative or not-measured unless a primary source is cited |
+| Review trigger | inventory decision contract, source access, or course template changes |
 
 ## 2. Case catalog
-
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-06-01-01 | Substitution recommendation | Quick Commerce Inventory and Assortment | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-01-02 | Local assortment optimisation | Quick Commerce Inventory and Assortment | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-01-03 | Perishable waste forecast | Quick Commerce Inventory and Assortment | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-01-04 | Availability-promise accuracy | Quick Commerce Inventory and Assortment | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-01-05 | Stockout root-cause analysis | Quick Commerce Inventory and Assortment | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| Case ID | Case title / link | Domain | Type | Decision | Primary pattern | Secondary | Evidence | Stage | Last reviewed | Result / limitation | Editorial status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| PLAN-06-01-01 | Substitution recommendation | inventory | predictive-ml | choose eligible substitute | evaluation-mismatch | human-in-the-loop | not-measured | proposed | null | no result | planned |
+| PLAN-06-01-02 | Local assortment optimisation | inventory | analytical | choose local SKU set | cost-latency-tradeoff | evaluation-mismatch | not-measured | proposed | null | no result | planned |
+| PLAN-06-01-03 | Perishable waste forecast | inventory | predictive-ml | order with expiry risk | distribution-shift | label-delay | not-measured | proposed | null | no result | planned |
+| PLAN-06-01-04 | Availability-promise accuracy | inventory | analytical | publish availability promise | evaluation-mismatch | model-monitoring | not-measured | proposed | null | no result | planned |
+| PLAN-06-01-05 | Stockout root-cause analysis | inventory | incident | diagnose stockout | incident-postmortem | data-leakage | not-measured | proposed | null | no result | planned |
+| PLAN-2026-IR027 | Exact inventory range totals | inventory | analytical | select update/snapshot contract | snapshot-consistency | correctness-contract | not-measured | proposed | null | source-derived method only | planned |
 
 ## 3. Canonical reusable patterns
-
-| Tag | Diagnostic signature | Use when | Boundary |
-|---|---|---|---|
-| data-leakage | Information unavailable at decision time inflates performance | Unexpectedly strong predictive result | Feature is truly available before the cutoff |
-| label-delay | Outcome truth arrives late or changes | Fraud, claims, retention, downstream operational labels | Immediate, stable labels |
-| distribution-shift | Operating population differs from training/evaluation | New market, season, channel, or rollout | Change is sampling noise only |
-| evaluation-mismatch | Offline metric does not represent the business decision | Ranking, forecast, LLM, agent, or multi-objective products | Metric captures decision and guardrails |
-| cost-latency-tradeoff | Quality, cost, and response time conflict | Online, real-time, or edge operation | Cost/latency are non-binding |
-| human-in-the-loop | Qualified review changes risk/quality trade-off | High-impact, uncertain, or regulated work | Review is infeasible or ineffective |
-| rollout-regression | Release degrades a live guardrail despite tests | Canary, A/B, feature-flag, or migration work | No rollout comparison exists |
-| model-monitoring | Production signals reveal drift or degradation | Deployed model/system with feedback | No meaningful feedback signal |
-| causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
-| incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
-
-## 4. Planned cross-case map
-
-| Pattern | Supporting planned cases | Theory/method links | Boundary to test |
-|---|---|---|---|
-| evaluation-mismatch | All planned cases | Relevant method and evaluation modules | Whether proxy metric changes decision quality |
-| distribution-shift | Market, season, policy, or user changes | Forecasting, MLOps, and domain indexes | Population and operational conditions |
-| human-in-the-loop | High-impact operational cases | Governance, UX, and domain workflows | Review capacity and override quality |
-
-## 5. Backlog and review
-
-Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
-
-## 6. Pre-publish checks
-
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
-- [ ] Decision, metric, action, and outcome refer to the same population.
-- [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR027 | Maintain exact inventory range totals under point updates | Supporting curriculum; shared brief | analytical | Which update and snapshot contract makes range totals correct and efficient? | `snapshot-consistency` | `correctness-contract` | not-measured | proposed | 2026-11-06 |  |
-
-### Reference and transfer notes
-
-| Planning ID | Example reference only | Scope boundary |
+| Pattern | Use when | Boundary |
 |---|---|---|
-| PLAN-2026-IR027 | [REF-IR027](../../../../../INTERVIEW_CASES/DSA/index_basics/Range_Queries/fenwick_inventory_totals.md) | Fixed ordering and one logical writer are reference assumptions; a Fenwick tree alone does not provide distributed stock correctness |
+| evaluation-mismatch | proxy differs from promise/customer outcome | metric and action share population/window |
+| snapshot-consistency | a query reads a multi-cell update | atomic cells alone do not isolate a snapshot |
+| correctness-contract | exact totals are required | fixed order and one logical writer are assumptions |
+| distribution-shift | season/store/assortment changes | distinguish from sampling noise |
+| incident-postmortem | reconstructing a failure | a hypothetical replay is not an observed incident |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity / contrast map
+Substitution and promise cases optimize customer-facing decisions; assortment and waste cases optimize stock decisions; stockout analysis diagnoses a failure; IR027 supplies an exact total mechanism rather than distributed inventory truth. Every authored case must link to the relevant sheet and explicitly state whether values are illustrative.
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 5. Questions and future-case backlog
+Before promotion, each plan needs a unique CASE ID, bounded owner/action/unit/time/baseline, 15 ordered sections including 5a–5e, input-output architecture where applicable, checked numerical walkthrough and sensitivity, honest evidence/stage/results, 12–18 answered Section-14 prompts, and final Section 15 card. Open question: which public primary source, if any, supports a real implementation claim?
+
+## 6. Review / retirement log
+| Date | Event | Decision |
+|---|---|---|
+| 2026-11-09 | Reconciled local catalog with REF-IR027 | retained as planned; no source result inferred |
+
+## 7. Pre-publish checks
+- [ ] Every CASE link resolves and contains the complete 15-section template.
+- [ ] Owner, action, unit, baseline, deadline, evidence, stage, and editorial state are distinct.
+- [ ] Illustrative calculations are labeled and independently checked.
+- [ ] Case outcomes are not implied where no measurement exists.
+- [ ] Local links, source boundaries, and final-card placement are verified.

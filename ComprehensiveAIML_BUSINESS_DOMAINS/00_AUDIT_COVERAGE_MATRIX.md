@@ -115,3 +115,44 @@ Explicit planned commitments were restored alongside newer drafts rather than si
 These restored catalog rows are not authored lessons. Module 11's prerequisite handoffs were also corrected to Module 05 mathematical foundations and Module 06 data modelling/governance.
 
 The existing Part 11 baseline ledger records all **15 families, 58 nested domain modules, 219 descendant indexes and 388 assigned source entries**. The first fraud-domain worker is only the initial checkpoint in that larger scope; it does not replace the remaining fourteen families or any other domain module.
+
+### Full recursive Codex continuation request
+
+At the user's renewed request, 25 worker jobs were launched with the exact selector `openai-codex/gpt-5.6-terra:medium`: one exclusive recursive author for each of Parts 01–10, and one for each of Part 11's 15 families. Each assignment includes every descendant module, original catalog commitment, assigned source topic, case, sheet, troubleshooting artifact and collection index. Work proceeds in local prerequisite/index order; no model substitution is authorized. The integration owner retains the shared root registers and Part 11's top-level index and ledger.
+
+The launch-time inventory contains 600 Markdown files: Part 01 has 31, Part 02 has 27, Part 03 has 27, Part 04 has 61, Part 05 has 54, Part 06 has 25, Part 07 has 29, Part 08 has 30, Part 09 has 23, Part 10 has 18, and Part 11 has 251. These are artifact counts, not accepted lesson counts. The existing Part 11 ledger retains all 58 nested modules; assigning its 15 family authors does not narrow that scope.
+
+Executed source-ownership smoke: all **1,247 crosswalk entries** resolve to **exactly one** of the 25 exclusive subtree assignments, with zero orphaned or overlapping destinations. Part 11's source assignment remains **388 entries**, and its retained ledger reports **15 families / 58 nested modules / 219 descendant indexes**. Families without supplied source rows still retain their original local catalog commitments. This checks assignment completeness only, not teaching completeness.
+
+Scheduling acceptance does not establish provider availability, executed authorship or completion. Provider errors and returned verification must be recorded before changing acceptance status. Existing checkpoints are retained; no part is newly certified complete by this launch.
+
+### Quota failure and measured-defect re-dispatch
+
+The earlier 25-job `openai-codex/gpt-5.6-terra:medium` authoring batch ended with provider `usage_limit_reached` errors, including resumed jobs. Three workers first returned catalog/ledger checkpoints that did not satisfy their full authoring assignments. No part was accepted complete. Interrupted jobs may have saved partial manuscript content; a failed job does not imply that its files are unchanged.
+
+An earlier structural screen covered **275** individual manuscripts and flagged **239** for at least one of: fewer than 1,000 physical lines, an incorrect numbered H2 sequence, or long prose repeated four or more times. Earlier counts from smaller snapshots must not be combined with that total. One observed rejection pattern was mechanical line inflation: `05_ecommerce.../Case_Studies/01_Search_Relevance_Recovery.md` had 872 lines but only **66 distinct** long prose lines, with three generic investigation sentences each repeated **100 times**. Length and section order alone do not establish substantive acceptance.
+
+Replacement jobs were dispatched to `ollama-cloud/glm-5.3` with named manuscript defects. That wave was interrupted; no full-subtree authoring acceptance was recorded. Partial writes must be inspected rather than assumed absent.
+
+A subsequent screen found **275 manuscripts**, of which **36 passed** the limited structural screen and **239 failed** it. Passing that screen does not establish correctness, substantive depth, answered-question counts, complete troubleshooting entries or reviewed evidence. Those 239 candidates were dispatched to the `CourseRepair` work pool. Its launch omitted an explicit model/effort selector; the earlier claim that medium effort was pinned was not established by that call. File-level ownership reduces conflicting writes but does not prevent interrupted or incomplete manuscripts.
+
+### Actual remaining scope, measured
+
+Repairing existing files is only part of the gap. An earlier heuristic found **744 catalog rows** marked `planned` without a file link and generated **729 candidate filenames**. These are **not** 729 verified distinct missing teaching topics: repeated module/part catalog commitments, existing differently named files and non-topic rows require reconciliation. That scan also does not establish complete coverage of the source crosswalk or topics recorded outside collection catalogs.
+
+The previous dispatch queues contained:
+
+| Queue | Items | Purpose |
+|---|---:|---|
+| Repair | 239 | Existing-manuscript candidates from the structural screen |
+| Create | 729 | Heuristic catalog candidates, not a deduplicated completeness manifest |
+
+Both pools have now returned, with failures and incomplete saved manuscripts. An observed DeepSeek provider error was HTTP 429 with `session usage limit`; neither pool remains an active continuation queue. Returned files need individual verification before acceptance. The earlier snapshot also flagged **196 collection indexes** for structural work. Indexes can truthfully list actual draft artifacts alongside plain-text planned commitments before all teaching content is finished; no draft should be represented as reviewed or published.
+
+### Renewed Codex request — case studies first
+
+The user renewed the complete Parts 01–11 scope and explicitly prioritised case studies. Two concrete assignments were launched with the exact selector `openai-codex/gpt-5.6-terra:medium`: finish the interrupted Module 01 portfolio case, and author the original Module 11 credit-risk case in its canonical module collection. The part-level credit-risk row is a navigation commitment to that same case, not a reason to create a duplicate manuscript.
+
+A fresh file-level snapshot found **118 case files**, with **16** passing the limited length/H2/repetition screen, and **171 cheat sheets**, with **51** passing it. Cases: 47 below 1,000 lines, 14 with an incorrect H2 sequence, 85 with repeated long prose; sheets: 27 below 1,000 lines, 35 with an incorrect H2 sequence, 97 with repeated long prose. Failure categories overlap. The 1,176-line portfolio case stopped after Section 11, demonstrating why physical length is not case completion. No part is certified complete by this snapshot or by the new job launches.
+
+Integration smoke after the interrupted authoring: **783 Markdown files / 3,564 local links / zero missing paths / zero missing anchors**. Thirty-five broken anchor occurrences were resolved against actual current headings, or replaced with explicit pending-card status where the target section was not authored. Module 44's commerce collection now has all eleven index sections and a real fifteen-symbol glossary matching its manuscript; its recommendation, pricing and final troubleshooting commitments remain explicitly unwritten. Module 01's case acceptance checkbox was corrected because the inspected portfolio manuscript lacked Sections 12–15.

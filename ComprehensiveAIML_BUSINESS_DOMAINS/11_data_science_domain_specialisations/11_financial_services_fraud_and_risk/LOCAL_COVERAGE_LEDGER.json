@@ -1,0 +1,7 @@
+{
+  "scope": "11_financial_services_fraud_and_risk",
+  "as_of": "2026-11-09",
+  "evidence_policy": "Illustrative examples are derived teaching calculations; no company deployment or regulatory conclusion is asserted.",
+  "source_assignments": [{"id":"PLAN-2026-IR036","home":"01_payments_aml_and_financial_crime","status":"authored in entity-resolution and AML-ring materials","limit":"Reference narrative unavailable; delayed and selective labels remain an open evidence limit."}],
+  "artifacts": []
+}

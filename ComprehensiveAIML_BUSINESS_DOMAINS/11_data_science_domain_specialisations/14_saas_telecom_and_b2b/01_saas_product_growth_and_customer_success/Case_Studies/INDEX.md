@@ -59,3 +59,16 @@ Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relat
 - [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
 - [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
 - [ ] Local links resolve and the review trigger is actionable.
+
+## 7. Review and retirement log
+
+| Date | Scope | Evidence observed | Editorial decision | Trigger for recheck |
+|---|---|---|---|---|
+| 2026-11-09 | Five catalog rows | All remain un-authored planning rows; no company outcome or case evidence was found in this collection. | Preserve `PLAN` status and do not imply a local case exists. | A template-complete case with its source ledger and checked examples. |
+[Train/ComprehensiveAIML_BUSINESS_DOMAINS/11_data_science_domain_specialisations/14_saas_telecom_and_b2b/02_telecom_network_customer_and_operations/Case_Studies/INDEX.md#81BF]
+
+## 7. Review and retirement log
+
+| Date | Scope | Evidence observed | Editorial decision | Trigger for recheck |
+|---|---|---|---|---|
+| 2026-11-09 | Five catalog rows | All remain un-authored planning rows; no operator deployment or measured result is claimed. | Preserve `PLAN` status and do not imply a local case exists. | A template-complete case with a source ledger, bounded telemetry, and checked sizing. |

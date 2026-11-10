@@ -567,7 +567,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Genuine fraud reduction versus delayed chargebacks.
 - **Discriminating check:** Plot positive rate by event age and label source.
 - **Expected signal:** Rates rising with cohort age support delay.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Cohort-age growth makes maturity mismatch the leading explanation; it does not estimate fraud that never becomes visible.
 - **Immediate response:** Hold comparisons until comparable maturity; mark unresolved outcomes unknown.
 - **Verification:** Recompute same-age cohorts after the horizon.
 - **Limitation:** A stable mature cohort can still have unreported fraud.
@@ -580,7 +580,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Strong model versus selective ascertainment.
 - **Discriminating check:** Compare reviewed events with randomly audited nonreviews by score band.
 - **Expected signal:** Positive findings in the audit indicate missing support in ordinary labels.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Audit discoveries quantify ordinary-label blind spots only to the extent the audit design covers the target population.
 - **Immediate response:** Maintain a randomized audit with logged inclusion probabilities.
 - **Verification:** Check weighted estimates and audit coverage.
 - **Limitation:** Review effects and imperfect adjudication can remain.
@@ -593,7 +593,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Intervention prevented losses versus no underlying fraud.
 - **Discriminating check:** Compare randomized or otherwise justified action alternatives with comparable follow-up.
 - **Expected signal:** A difference in outcome under comparable actions supports an action effect.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** A controlled action contrast supports incremental value, whereas a score/outcome association does not.
 - **Immediate response:** Define counterfactual estimand and collect intervention evidence.
 - **Verification:** Audit treatment assignment and outcomes.
 - **Limitation:** An unobserved counterfactual is never individually verified.
@@ -606,7 +606,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Future data leakage versus genuine distribution shift.
 - **Discriminating check:** Replay feature timestamps relative to the decision timestamp.
 - **Expected signal:** Features first available after scoring support leakage.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Post-decision availability invalidates the evaluation even if the feature is predictive in retrospect.
 - **Immediate response:** Rebuild snapshots with availability-time constraints.
 - **Verification:** Evaluate a later untouched cohort.
 - **Limitation:** A correct timestamp does not prove every upstream feature is causal.
@@ -619,7 +619,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Lower base rate versus increased FPR.
 - **Discriminating check:** Compare mature prevalence, TPR and FPR at the same policy.
 - **Expected signal:** Lower prevalence with stable rates predicts lower PPV by E2.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** The direction follows the stated base-rate relationship; verify that operating conditions have not also changed.
 - **Immediate response:** Reforecast workload and review value for the new cohort.
 - **Verification:** Compare predicted with realized mature alert composition.
 - **Limitation:** Class-conditional stability itself is an assumption to test.
@@ -632,7 +632,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Pure prior shift versus changing fraud behavior.
 - **Discriminating check:** Compare feature and score distributions separately within mature classes.
 - **Expected signal:** Material within-class changes contradict pure prior shift.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Within-class movement points beyond a simple prevalence shift and makes prior-only correction unsafe.
 - **Immediate response:** Refit or recalibrate with representative recent data.
 - **Verification:** Validate on later held-out cohorts.
 - **Limitation:** Small fraud samples may not reveal a real change.
@@ -645,7 +645,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Arrival surge versus slower case handling.
 - **Discriminating check:** Separate incoming alerts, completions, available reviewer minutes and age.
 - **Expected signal:** Arrivals exceeding completions explain positive backlog growth.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Net positive arrivals identify a capacity imbalance; they do not identify whether staffing, routing, or case duration is responsible.
 - **Immediate response:** Apply approved prioritization and protect urgent queues.
 - **Verification:** Track arrivals, completion and oldest case age.
 - **Limitation:** Average rates conceal bursts and deadline violations.
@@ -658,7 +658,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Threshold ties versus duplicate events.
 - **Discriminating check:** Count scores equal to the boundary and deduplicate event IDs.
 - **Expected signal:** A large boundary mass or duplicate IDs distinguishes the causes.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Boundary concentration implicates selection mechanics; distinguish an intentional policy tie from accidental duplication.
 - **Immediate response:** Apply a reproducible tie lottery or deterministic secondary key.
 - **Verification:** Replay selection and reconcile exactly K unique events.
 - **Limitation:** Tie policy may create unequal access or missed priority.
@@ -671,7 +671,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Zero denominator default versus genuine perfect precision.
 - **Discriminating check:** Inspect selected count and metric null handling.
 - **Expected signal:** Zero selected events makes precision undefined.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** An empty selected set makes the conditional metric undefined, rather than evidence of perfect or failed precision.
 - **Immediate response:** Display undefined and alert on unexpected empty queues.
 - **Verification:** Test a zero-selection cohort.
 - **Limitation:** A deliberate no-review policy can be appropriate.
@@ -684,7 +684,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** No observed positive denominator versus missed positive events.
 - **Discriminating check:** Show TP+FN and label maturity for the segment.
 - **Expected signal:** A zero positive denominator makes recall undefined.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** No mature positives means sensitivity cannot be learned for that cohort; it is not zero recall.
 - **Immediate response:** Aggregate cautiously or collect more audited outcomes.
 - **Verification:** Check that dashboard labels denominator and uncertainty.
 - **Limitation:** Combining segments can hide localized harm.
@@ -697,7 +697,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Offsetting subgroup miscalibration versus small-sample noise.
 - **Discriminating check:** Compare calibration by prespecified group with counts and intervals.
 - **Expected signal:** Opposite signed subgroup gaps can cancel in aggregate.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Offset subgroup errors can conceal material slice harm, so the aggregate is insufficient for a calibration claim.
 - **Immediate response:** Investigate data and recalibrate only with adequate support.
 - **Verification:** Evaluate subgroup calibration on independent later data.
 - **Limitation:** Subgroup estimates can be unstable and sensitive.
@@ -710,7 +710,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Real ordering change versus increased ties.
 - **Discriminating check:** Compare full-precision rank and rounded displayed values.
 - **Expected signal:** Identical raw ordering with extra rounded ties points to quantization.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Quantization can change who receives the last slots without changing the underlying score order.
 - **Immediate response:** Select using documented full precision and explicit tie rule.
 - **Verification:** Replay the same cohort with pinned versions.
 - **Limitation:** A non-strict isotonic mapping can legitimately create ties.
@@ -723,7 +723,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Improved capture with costly friction versus higher losses.
 - **Discriminating check:** Attribute review hours and customer harm by action.
 - **Expected signal:** Costs rising faster than avoided loss contradict capture-only optimization.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Capture is a proxy; the decision changes when review, friction, and avoided-loss terms are included.
 - **Immediate response:** Include incremental review and friction costs in E3.
 - **Verification:** Compare total utility and guardrails against the baseline.
 - **Limitation:** Intangible harm may not have an agreed monetary value.
@@ -736,7 +736,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Different loss amounts versus miscalibrated probabilities.
 - **Discriminating check:** Compare p, conditional loss and action efficacy for ranked cases.
 - **Expected signal:** High-risk low-loss cases can have lower E3 benefit.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Risk is not value: a lower-probability event can deserve priority when its credible prevented loss is larger.
 - **Immediate response:** Rank by credible incremental benefit under E5 conditions.
 - **Verification:** Backtest benefit estimates by exposure segment.
 - **Limitation:** Expected loss is not necessarily collectible loss.
@@ -749,7 +749,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Long cases versus unexpected staffing loss.
 - **Discriminating check:** Measure per-case handling-time distribution and available skills.
 - **Expected signal:** A few long investigations consuming time support duration mismatch.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Long cases break the equal-slot assumption; case counts cannot certify a feasible time schedule.
 - **Immediate response:** Use a time-budgeted scheduling formulation.
 - **Verification:** Compare workload feasibility and deadline misses.
 - **Limitation:** A simple benefit-per-minute greedy rule can be suboptimal.
@@ -762,7 +762,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Model error versus policy-dependent investigation.
 - **Discriminating check:** Compare random audit label rates across score bands and policy periods.
 - **Expected signal:** Different observation probability can explain label-rate changes.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** A label-rate shift may be observation selection rather than risk shift, requiring a shared observed population.
 - **Immediate response:** Record action, observation and sampling probability.
 - **Verification:** Repeat evaluation on a common audited population.
 - **Limitation:** Audit coverage may still miss some fraud types.
@@ -775,7 +775,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Overfit mapping versus genuine reliable probabilities.
 - **Discriminating check:** Compare calibration fit with a later untouched validation cohort.
 - **Expected signal:** Much worse held-out reliability supports overfit.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Calibration deterioration on untouched data supports fitted-map overflexibility, subject to separating temporal drift.
 - **Immediate response:** Reduce flexibility or gather more calibration data.
 - **Verification:** Reassess held-out reliability and discrimination.
 - **Limitation:** Temporal shift can mimic overfit.
@@ -788,7 +788,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Sampling-distorted prior versus incorrect preprocessing.
 - **Discriminating check:** Compare training sampling prior, deployment prevalence and class-conditional distributions.
 - **Expected signal:** A balanced training prior with low deployment prevalence signals prior mismatch.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Training prevalence is not a deployment probability; correction remains conditional on stable class-conditional behavior.
 - **Immediate response:** Apply E6 only if its class-conditional assumptions hold.
 - **Verification:** Validate corrected probabilities on representative data.
 - **Limitation:** Prior adjustment cannot fix arbitrary covariate or concept drift.
@@ -801,7 +801,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Very small inclusion probabilities versus random outcome variability.
 - **Discriminating check:** Inspect weights, effective sample concentration and unsampled bands.
 - **Expected signal:** A few large weights dominating totals indicates fragility.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Dominant inverse-probability weights signal weak support and unstable population extrapolation.
 - **Immediate response:** Increase audit sampling in underrepresented regions.
 - **Verification:** Report uncertainty and predeclared weight diagnostics.
 - **Limitation:** Weight clipping changes the estimand and introduces bias.
@@ -814,7 +814,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Repeated delivery versus genuine repeated attempts.
 - **Discriminating check:** Compare immutable event IDs, authorization IDs and replay markers.
 - **Expected signal:** Repeated event IDs under the same decision support duplication.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Repeated decision IDs inflate event-level counts; confirm whether retries are distinct decision opportunities.
 - **Immediate response:** Deduplicate at the correct decision grain.
 - **Verification:** Reconcile unique and raw counts after replay.
 - **Limitation:** Distinct retries can be legitimate separate decisions.
@@ -827,7 +827,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Late adjudication versus pipeline corruption.
 - **Discriminating check:** Inspect label version, effective time and correction history.
 - **Expected signal:** A rise in late corrected labels supports revision.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Label revisions require an explicit vintage; neither the early nor late view is automatically the sole truth.
 - **Immediate response:** Use as-of snapshots and report both vintage and mature views.
 - **Verification:** Recompute a frozen cohort against versioned labels.
 - **Limitation:** A clean revision history does not guarantee label correctness.
@@ -840,7 +840,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Different eligibility or action definitions versus arithmetic error.
 - **Discriminating check:** Reconcile cohort IDs, time window, policy and label definition.
 - **Expected signal:** Set differences isolate denominator mismatch.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Reconciled sets localize a denominator disagreement before comparing model quality.
 - **Immediate response:** Publish a versioned metric contract and shared cohort.
 - **Verification:** Recompute both values from the same event set.
 - **Limitation:** Common definitions still require reliable underlying data.
@@ -853,7 +853,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Shared identities or future information versus stable repeat behavior.
 - **Discriminating check:** Inspect entity overlap and feature availability across the split.
 - **Expected signal:** Future-derived aggregates or duplicate decisions support leakage.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** A future aggregate can leak through joins even when the raw event timestamp appears acceptable.
 - **Immediate response:** Use point-in-time joins and an entity-aware sensitivity split.
 - **Verification:** Evaluate both realistic future traffic and new-entity cohorts.
 - **Limitation:** A strict entity split can misrepresent recurring real customers.
@@ -866,7 +866,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Score mass near cutoff versus upstream distribution shift.
 - **Discriminating check:** Plot score histogram around the boundary and daily counts.
 - **Expected signal:** A large spike at the threshold indicates tie or quantization sensitivity.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Threshold spikes make the marginal selected population policy-sensitive and warrant a tie-rule audit.
 - **Immediate response:** Use exact top-K selection and stable tie handling when allowed.
 - **Verification:** Monitor selection rate and threshold movement.
 - **Limitation:** Top-K can force low-value cases unless positivity is enforced.
@@ -879,7 +879,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Correlated customer events versus independent observations.
 - **Discriminating check:** Measure repeated customer or merchant contributions to outcomes.
 - **Expected signal:** Strong within-entity dependence reduces effective independent information.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Dependent entities provide fewer independent observations than raw event counts suggest.
 - **Immediate response:** Bootstrap entities or appropriate time blocks.
 - **Verification:** Compare interval sensitivity to block definitions.
 - **Limitation:** Few independent clusters limit interval reliability.
@@ -892,7 +892,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Pipeline outage versus truly lower risk.
 - **Discriminating check:** Measure missing-score rate by input path and compare raw eligibility counts.
 - **Expected signal:** A simultaneous score-coverage drop points to a pipeline issue.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Concurrent coverage loss points first to pipeline availability, not necessarily risk or discrimination change.
 - **Immediate response:** Apply an approved safe fallback and escalate.
 - **Verification:** Reconcile scored, fallback and eligible counts.
 - **Limitation:** A fallback can impose different customer harms.
@@ -905,7 +905,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Improvement outside the operating region versus cost shift.
 - **Discriminating check:** Compare recall and benefit at the same actual capacity.
 - **Expected signal:** AUC gain with lower top-K capture indicates a local ranking loss.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Global ranking improvement can coexist with worse operational capture at the actual review cutoff.
 - **Immediate response:** Select using prespecified capacity-aligned metrics.
 - **Verification:** Repeat on later comparable cohorts with uncertainty.
 - **Limitation:** No single offline metric identifies prevented loss.
@@ -918,7 +918,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Review occurs after loss deadline versus ineffective actions.
 - **Discriminating check:** Measure event-to-review completion relative to actionable deadline.
 - **Expected signal:** Many reviews after the deadline support timing mismatch.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** A late decision cannot prevent a time-sensitive loss; latency is part of the intervention definition.
 - **Immediate response:** Prioritize actionable deadlines or redesign intervention timing.
 - **Verification:** Track on-time completion and experimental loss effect.
 - **Limitation:** A fast review alone does not establish prevention.
@@ -931,7 +931,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Wrong calibrator paired with a score version versus population change.
 - **Discriminating check:** Join scored events to exact model and calibrator artifact IDs.
 - **Expected signal:** Unexpected version pairs indicate deployment mismatch.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Unexpected artifact pairs isolate compatibility risk before attributing a change to the model itself.
 - **Immediate response:** Roll back to an approved compatible pair.
 - **Verification:** Enforce version compatibility at deployment.
 - **Limitation:** Correct artifact pairing does not guarantee calibration.
@@ -944,7 +944,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Review harm versus investigators targeting high-risk cases.
 - **Discriminating check:** Inspect pre-action risk distributions and action assignment mechanism.
 - **Expected signal:** Large assignment imbalance makes raw outcome differences confounded.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Different treatment exposure confounds raw outcomes, so the comparison needs a causal design or qualified conclusion.
 - **Immediate response:** Use randomization or a justified causal design.
 - **Verification:** Check covariate balance and sensitivity to unmeasured confounding.
 - **Limitation:** Observational adjustment cannot guarantee identification.
@@ -957,7 +957,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Mix shift versus true within-cohort gains.
 - **Discriminating check:** Standardize by a fixed cohort mix and report each prespecified slice.
 - **Expected signal:** Aggregate change with declines in each slice indicates composition effects.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Composition can reverse aggregate trends; slice-standardized reporting separates mix change from performance change.
 - **Immediate response:** Monitor segment and standardized performance together.
 - **Verification:** Reconcile segment weights with overall metrics.
 - **Limitation:** Small slices may be too noisy for a confident conclusion.
@@ -970,7 +970,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Different target definitions versus wrong joins.
 - **Discriminating check:** Match a sample to adjudication source and define each outcome.
 - **Expected signal:** Disagreements concentrated by label source support definition differences.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Source-specific disagreement means the outcome definition, not just the model, differs across reports.
 - **Immediate response:** Publish separate outcome-specific measures.
 - **Verification:** Audit a blinded adjudication sample.
 - **Limitation:** Even expert adjudication can disagree.
@@ -983,7 +983,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** More legitimate reviews versus unrelated service incident.
 - **Discriminating check:** Measure action-specific complaint and abandonment rates by cohort.
 - **Expected signal:** Concentrated increases after review support a friction hypothesis.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Concentration after review is compatible with friction but needs an appropriate comparison group before attribution.
 - **Immediate response:** Set explicit guardrails and consider lower-friction action.
 - **Verification:** Compare guardrails with a suitable control group.
 - **Limitation:** Complaint reporting is incomplete and selective.
@@ -996,7 +996,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Overbroad analyst access versus necessary linkage.
 - **Discriminating check:** Review fields, permissions and access logs against the metric contract.
 - **Expected signal:** Unused raw identifiers or excess access support overcollection.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Unused identifiers create avoidable exposure; utility must be demonstrated for each retained field.
 - **Immediate response:** Minimize fields and restrict access with approved controls.
 - **Verification:** Review access and retention against policy.
 - **Limitation:** Pseudonymization alone is not anonymity.
@@ -1009,7 +1009,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Independent cases versus one investigation resolving both.
 - **Discriminating check:** Trace case linkage and investigator disposition.
 - **Expected signal:** Shared investigation outcomes show nonadditive benefits or costs.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Linked investigations violate additive item value, so independent top-K optimization may double count benefit.
 - **Immediate response:** Allocate at case level or explicitly model interactions.
 - **Verification:** Compare predicted and realized workloads by linked group.
 - **Limitation:** Entity resolution errors can merge unrelated customers.
@@ -1022,7 +1022,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Changing incoming mix versus new reviewer policy.
 - **Discriminating check:** Stratify by model version, eligibility, action and reviewer workflow.
 - **Expected signal:** Change aligned to a workflow release indicates a policy component.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** A release-aligned shift identifies a policy-change candidate, not a uniquely identified policy effect.
 - **Immediate response:** Version policies and evaluate on a shared frozen cohort.
 - **Verification:** Reconcile policy-specific outcomes after maturity.
 - **Limitation:** Several simultaneous changes may not be separable.
@@ -1035,7 +1035,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Weekly average capacity versus daily shift constraints.
 - **Discriminating check:** Compare arrivals and staffing by shift and deadline.
 - **Expected signal:** Days with overload despite weekly spare capacity support granularity mismatch.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Weekly spare capacity cannot repair intraday deadline failures; the constraint must match operational granularity.
 - **Immediate response:** Allocate within daily or shift-level constraints.
 - **Verification:** Simulate the historical arrival sequence with timestamps.
 - **Limitation:** Retrospective simulation does not identify intervention benefit.
@@ -1048,7 +1048,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Sampling variation versus real improvement.
 - **Discriminating check:** Compute paired differences on the same events and resample dependence units.
 - **Expected signal:** An interval including meaningful losses prevents a confident superiority claim.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** A wide interval preserves plausible harm, so it cannot justify a superiority assertion at the chosen decision threshold.
 - **Immediate response:** Use the prespecified uncertainty and practical-effect criteria.
 - **Verification:** Evaluate a later independent cohort.
 - **Limitation:** A nonsignificant difference is not proof of equivalence.
@@ -1061,7 +1061,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Selection after sampling versus truly low fraud prevalence.
 - **Discriminating check:** Compare completion rates and characteristics of audited cases.
 - **Expected signal:** Unequal adjudication completion suggests second-stage selection.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Unequal completion creates second-stage selection; observed adjudications need not represent reviewed cases.
 - **Immediate response:** Record completion probabilities and improve follow-up.
 - **Verification:** Report missingness and sensitivity bounds.
 - **Limitation:** Unknown missing-not-at-random effects remain open.
@@ -1074,7 +1074,7 @@ The proposed checks discriminate mechanisms; none alone proves a causal explanat
 - **Competing explanations:** Selection overfit versus genuine regime shift.
 - **Discriminating check:** Separate threshold-search period from untouched test period.
 - **Expected signal:** Large development-to-test deterioration is consistent with selection overfit.
-- **Interpretation:** Treat the signal as evidence about this mechanism, not as proof of all downstream effects.
+- **Interpretation:** Development-to-test decay is consistent with selection overfit, while repeated temporal splits test its persistence.
 - **Immediate response:** Use nested temporal selection and final holdout.
 - **Verification:** Repeat across rolling temporal splits.
 - **Limitation:** Even proper separation cannot eliminate future shift.

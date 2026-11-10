@@ -1,36 +1,76 @@
-# Enterprise Knowledge, Support and Sales - Cheat Sheets
+# Enterprise Knowledge, Support and Sales — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+> **Collection state:** navigation and reuse register. This collection has no locally authored sheet yet. The linked canonical artifacts are external teaching homes, not evidence that the proposed enterprise deployment, tenant count, or results exist.
 
-## Purpose
+## 1. Overview
+This collection supports a knowledge-platform owner deciding how to ingest, authorize, retrieve, generate, route, audit, and retire enterprise answers. It assumes basic search, probability, document access control, and event-time reasoning. Readiness means a learner can state an answer contract, trace evidence and permissions at request time, calculate retrieval measures, reject unsafe use, and specify a validation plan; it does not mean that any proposed assistant is production-ready.
 
-These planned reference cards support repeatable decisions in Enterprise Knowledge, Support and Sales. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
-
-## Planned references
-
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | Enterprise RAG controls | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Support quality rubric | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | CRM integration checklist | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-
-## Required card fields
-
-Every card must state: intended decision and reader; preconditions and inputs; default recommendation; metrics/formulas or architecture pattern; trade-offs; failure signals; security/privacy/governance constraints; and links to deeper material. Review tool-, market-, and regulation-sensitive cards quarterly.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 2. Topic ladder
+| Level | File / canonical teaching home | Outcome | Prerequisites | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR003 | Authorized retrieval; effective policy versions; claim-level citations; embedding migrations | Unsupported-claim rate, eligible-span recall, abstention quality and policy-version errors against expert labels. Boundary: Citations and entailment checks require validation; never transfer the example refund window into a new business. | [REF-IR003](../../../../../INTERVIEW_CASES/Agentic_AI_System/Applied_AI_engineering/grounded_policy_rag.md) | planned; not written |
-| PLAN-2026-IR004 | LoRA lifecycle; tenant-scoped data; adapter cache keys; session pinning; compatible base checkpoints | Cross-tenant negative tests, domain-task quality, adapter-swap races and latency under a measured tenant mix. Boundary: Adapters do not establish isolation or keep changing facts current; tenant counts and SLOs need new requirements. | [REF-IR004](../../../../../INTERVIEW_CASES/Agentic_AI_System/Finetuning_LLM/multi_tenant_adapter_platform.md) | planned; not written |
-| PLAN-2026-IR012 | Structure-aware chunking; actual tokenizer limits; HNSW and exact filtered baselines; CDC; deletion propagation | All-required-span success, filtered recall, duplicate context, ACL violations, freshness lag and per-tenant latency. Boundary: Reranking cannot recover a missing candidate; the source embedding limit and tenant count are not platform requirements. | [REF-IR012](../../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Chunking_And_Vector_Index.md) | planned; not written |
-| PLAN-2026-IR015 | Product/date eligibility; grounded generation; native-language review; source dependencies; supersession triggers | Unsupported product claims, expired evidence, read-aloud time, reviewer agreement and agent usability. Boundary: Human approval and source maintenance remain necessary; the example word target is not a compliance standard. | [REF-IR015](../../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md) | planned; not written |
+| 1 | [RAG: evidence before answers](../../../02_data_science_method_playbooks/05_nlp_llm_playbook/Cheat_Sheets/13_RAG_Retrieval_Augmented_Generation.md) | Trace document-to-citation retrieval and diagnose missing evidence. | Tokens, ranked lists, ACLs | external draft |
+| 2 | Same, Sections 4–5 | Calculate eligible recall and reason about chunk/context budgets. | Level 1 | external draft |
+| 3 | Same, Sections 7–9 | Select filters, reranking, abstention and monitor cost/latency boundaries. | Levels 1–2 | external draft |
+| 4 | Local planned: tenant adapter lifecycle (PLAN-2026-IR004) | Specify tenant-scoped adapter selection, pinning and rollback. | Model/version lifecycle | planned |
+| 5 | Local planned: structure-aware retrieval (PLAN-2026-IR012) | Evaluate all-required-span success, deletion propagation and filtered recall. | Levels 1–3 | planned |
+| 6 | Local planned: reviewed coaching registry (PLAN-2026-IR015) | Publish only eligible, reviewed, current scripts. | Evidence/version governance | planned |
+| Final | Common Issues | Diagnose recurring retrieval, policy, CRM and review failures. | All applicable sheets | not authored |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 3. Quick topic lookup
+| Question | Teaching home | Section | Use condition | Failure warning |
+|---|---|---|---|---|
+| Why did a relevant answer disappear? | RAG sheet | 2, 8 | Trace every retrieval stage | Reranking cannot restore an absent candidate |
+| Is a citation enough? | RAG sheet | 3, 7 | Claim has a source span | Citation is not entailment or authorization |
+| How is retrieval quality measured? | RAG sheet | 4–5 | Gold eligible spans exist | Do not mix unauthorized items into denominator |
+| When should the assistant abstain? | RAG sheet | 7–8 | Evidence conflicts or is missing | Refusal must not reveal protected existence |
+| How do we handle policy versions? | Local planned IR003 | planned | Time-effective policy matters | A current index may contain superseded content |
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 4. Reading paths — three options
+- **Beginner:** RAG Sections 1–3, 5, and 12; objective: distinguish document, chunk, candidate, citation, and authorization.
+- **Practitioner:** Beginner path plus Sections 4, 7, 8, and 9; objective: define an evaluation set and answer/abstain contract.
+- **Advanced:** Practitioner path plus planned IR003, IR004, IR012, and IR015 when authored; objective: defend lifecycle, tenant isolation, freshness, and human-release boundaries.
+
+## 5. Prerequisite skills
+| Area | Concrete skill | Reference |
+|---|---|---|
+| Search | Interpret precision, recall, ranking and candidate sets | RAG sheet Sections 3–5 |
+| Security | Separate authentication, authorization and policy evaluation time | RAG sheet Sections 2–3 |
+| Data engineering | Track document IDs, versions, offsets, deletions and CDC | planned IR012 |
+| Operations | Define a request trace and a rollback condition | RAG sheet Sections 8–9 |
+
+## 6. What this collection does NOT cover
+It does not establish legal compliance, a universal model choice, proprietary CRM behavior, autonomous financial/HR actions, or safety of tool execution. Contract interpretation and policy approval remain owner decisions. Fine-tuning mechanics belong to the model-training curriculum; local IR004 is a proposed application boundary, not that curriculum’s replacement.
+
+## 7. Master symbol glossary
+| Symbol / term | Meaning | Units / type | Domain | First appearance |
+|---|---|---|---|---|
+| q | request/question | text event | authenticated request | RAG sheet §2 |
+| d | source document/version | versioned object | corpus | RAG sheet §3 |
+| c | chunk with stable source locator | text object | derived from d | RAG sheet §3 |
+| E(q) | eligible evidence set for q | set | policy and time scoped | RAG sheet §4 |
+| k | retrieved candidate count | count | non-negative integer | RAG sheet §4 |
+| ACL | authorization policy | rule set | request-time principal/resource | RAG sheet §2 |
+
+## 8. Quick Reference Card directory
+| Card | Rule | Use condition | Critical assumption | Avoid when |
+|---|---|---|---|---|
+| [RAG card](../../../02_data_science_method_playbooks/05_nlp_llm_playbook/Cheat_Sheets/13_RAG_Retrieval_Augmented_Generation.md#12-quick-reference-card) | authorize → retrieve → support → answer/abstain | evidence-backed QA | policy decision is current | source or permission freshness is unknown |
+
+## 9. Common Issues locator
+No local Common Issues artifact exists. Do not infer that a generic RAG failure list covers tenant adapters, CRM writes, reviewed scripts, or local policy semantics. Required final count: at least 25 complete distinct issues after the local sheets are authored.
+
+## 10. Empirical sources, versions and maintenance
+| ID | Source / claim scope | Status | Review trigger |
+|---|---|---|---|
+| CAN-RAG-13 | Canonical RAG teaching artifact; illustrative examples, no local benchmark | external draft | corpus, ACL, embedding, or evaluation change |
+| REF-IR003 | grounded policy-RAG interview reference; examples are not transferable facts | source reference only | policy/version contract change |
+| REF-IR004 | multi-tenant adapter reference; not evidence of isolation | source reference only | base/adaptor lifecycle change |
+| REF-IR012 | chunking/index reference; not a local SLO | source reference only | tokenizer/index/delete semantics change |
+| REF-IR015 | reviewed scripts reference; not a compliance determination | source reference only | product evidence/review workflow change |
+
+## 11. Collection acceptance checklist
+- [x] Eleven required index sections and real canonical links are present.
+- [x] Proposed source commitments retain uncertainty and remain visibly planned.
+- [ ] Local focused sheets satisfy the 12-section, 1,000-line contract.
+- [ ] A local Common Issues file contains at least 25 complete issues.
+- [ ] Local numerical examples, interview packs, and link checks are authored and independently reviewed.

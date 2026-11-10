@@ -1,1560 +1,1883 @@
 # Graph ML for Fraud and AML Ring Detection
 
-## Section 1 — File Header
+## 1. File Header
 
-> **Purpose:** Design, evaluate, and operate a time-correct graph-assisted fraud investigation queue.
-> **Prerequisites:** Basic probability, classification metrics, relational joins, timestamps, and graph adjacency lists.
-> **Outcome:** Given an event ledger, construct an eligible graph, compute a neighbor feature, and evaluate a capacity-limited ranking without future knowledge.
-> **Scope exclusions:** Legal reporting decisions, a complete anti-money-laundering program, and vendor-specific graph APIs are outside this sheet.
-> **Level:** Advanced / production.
-> **Version / reviewed:** Draft 0.1; not independently reviewed.
-> **Evidence:** DERIVED and ILLUSTRATIVE teaching material; no production results are claimed.
-> **Retrieval cue:** For suspiciously strong offline results, begin with the point-in-time checks in Sections 3 and 8.
+> **Purpose:** Build, audit and defend a time-correct graph-assisted investigation queue — deciding which accounts, payments or case bundles an analyst should examine next, and proving the score could have been computed when it was issued.
+> **Prerequisites:** Adjacency-list thinking, directed versus undirected connectivity, classification precision/recall, as-of joins over a transaction ledger, and the review-capacity argument in [Fraud Evaluation, Calibration and Capacity](../../../11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md).
+> **Key outcome:** Given an event ledger with event and availability timestamps plus a fixed review budget, you can construct an eligible graph snapshot, compute a neighbor aggregate and a normalized propagation score, rank deduplicated cases, report precision and recall at capacity with an honest denominator, and name the leakage check that would falsify the result.
+> **This file does NOT cover:** Legal reporting obligations, a complete anti-money-laundering programme, Cypher or vendor-specific graph query syntax, or the separate production case study in the case library.
+> **Level:** 3 Advanced / production.
+> **Version / reviewed:** Draft 0.2; review OPEN, not independently reviewed.
+> **Evidence:** Formula identities are DERIVED and shown with arithmetic; every scenario, ledger and outcome is ILLUSTRATIVE; no deployment measurement, throughput figure or loss saving is claimed. Unresolved items are marked OPEN.
+> **Retrieval cue:** If a graph model looks far better offline than online, start at Section 4.4 (limits) and Section 8 entries F-03, F-04, F-17 and F-25.
 
-The directory inventory names “01_GNN_Fraud_AML_Ring_Detection” under Graph_ML and “05_GNN_Marketplace_Fraud_Ring_Detection” among production cases; these titles are scope references, not evidence of their contents.
-The crosswalk maps those entries to separate graph-method and case-library homes; this sheet lives in the graph-method home.
-No detailed claim about the unavailable files is attributed to their authors.
-A risk score supports prioritization; it is not proof, a legal finding, or a reason to deny service by itself.
-The actionable unit might be a transaction, account, or deduplicated investigation case; the unit must be fixed before model selection.
-The investigator owns the review decision; policy owners define permissible actions and appeal processes.
+Graph structure earns its place in a fraud workflow only when a relationship carries evidence that the account's own history does not. That is a claim about incremental value at a fixed review budget, not a claim that graphs are modern or that connectivity is suspicious. Two accounts sharing a device may be a household, a public kiosk, a corporate-issued handset pool, or a recycled identifier; two accounts exchanging funds may be a supplier and its customer. The graph tells you the relationship was observed. Everything else — intent, common control, criminal association — is an inference that needs separate evidence.
 
-**Takeaway:** Build a defensible decision queue, not an automated guilt-by-association machine.
+The decision this sheet supports is narrow and operational: at 18:00 today, which `k` deduplicated cases should enter tomorrow's review queue, given the relationships that had actually reached the serving path before 18:00? `k` is set by investigator labour, not by the model. The sheet therefore treats graph learning as a ranking problem under a hard capacity constraint and an information-availability constraint, and treats the graph as one feature source among several.
 
-## Section 2 — Concept Map / Mental Model
+Two constraints govern every calculation that follows. First, the **point-in-time constraint**: a record may enter a feature only if its availability timestamp precedes the decision timestamp, regardless of its event timestamp. Second, the **capacity constraint**: the queue's size is fixed by human throughput, so improvements must show up as better use of a fixed number of reviews, not as a larger number of alerts.
+
+A third constraint is often forgotten and matters just as much: a score is a prioritisation signal. It is not proof, not a legal finding, and not by itself a permissible reason to deny service, close an account or file a report. The investigator owns the review decision; the policy owner defines which actions are permitted and how appeals work. Any sentence in this sheet that sounds like an automated verdict should be read as shorthand for "a human considers this case earlier than the others".
+
+**Takeaway:** A defensible graph fraud system is a decision queue with a provenance trail, not a guilt-by-association engine.
+
+## 2. Concept Map / Mental Model
 
 ```text
-Ledger + identity evidence + known outcomes
-        |  observed and available by decision time
-        v
-Versioned typed graph snapshot -----> time-safe feature calculation
-        |                                      |
-        |                                      v
-        +----------------------------> baseline or graph model
-                                               |
-                                               v
-                             ranked, deduplicated case queue
-                                               |
-                              capacity + human review + appeal
-                                               |
-                                               v
-                        delayed and selectively observed outcomes
-                                               |
-                                               +--> future training only
+   source ledger          identity evidence        adjudicated outcomes
+ (payments, logins,      (account-to-person,       (confirmed fraud,
+  device sightings)       device ownership)         closed-no-finding)
+        |                        |                        |
+        +-----------+------------+                        |
+                    |                                     |
+                    v                                     v
+        [ typed, versioned graph snapshot ]      [ label store, with
+         nodes: account/person/device/merchant   availability timestamps ]
+         edges: transfer / owns / used / shares            |
+                    |                                      |
+                    |  (as-of decision time t ONLY)         |
+                    v                                      |
+        [ eligible feature computation ] <-----------------+
+         degree, mean, weighted mean, PPR, motif counts
+                    |
+                    v
+        [ scorer: rules | tabular | graph | hybrid ]
+                    |
+                    v
+        [ case deduplication at the investigation grain ]
+                    |
+                    v
+        [ rank + capacity policy ] --> queue of k cases
+                    |
+                    v
+        [ human review + evidence pack + appeal ]
+                    |
+                    v
+        [ delayed, selectively observed outcomes ] ----+
+                    |                                   |
+                    +--> next training window -----------+
+                         (never backward into an older snapshot)
 ```
 
-Arrows denote data flow, not causation.
-The feedback arrow cannot travel backward into an earlier decision's feature snapshot.
-Identity evidence is not itself a verified identity.
-An edge says that the specified relationship was observed, not that it was illicit.
-Typed and directed edges distinguish shared-device use from transfers of money.
-A time-safe snapshot reflects the information the serving system could actually access.
-The model ranks candidates while the queue policy decides which ones fit within capacity.
-A case may contain many graph nodes and transactions, so candidate scores need a deduplication policy.
-A confirmed fraud outcome is delayed and can be missing for people who were never reviewed.
-An apparent model improvement may reflect changed review behavior rather than better detection.
-A graph model should beat simpler approaches on the same eligible candidate population and review budget.
+The map has four distinct arrow kinds and they should not be blended. The vertical arrows from sources into the snapshot are **dataflow**: bytes moving, subject to ingestion latency. The dashed-in arrow from the label store is also dataflow, but it carries the most dangerous payload in the system, because a label is downstream of the very behaviour being predicted. The arrow from scorer to queue is a **policy transformation**: many scores are reduced to `k` cases by a rule that includes deduplication and tie-breaking. The return arrow from outcomes to the next training window is a **control loop**, and it is the only legitimate direction for learning; the loop must never run backwards into an already-issued decision.
 
-**Takeaway:** The key invariant is that no input crosses backward over its availability time.
+The central invariant is monotone in time: for any decision issued at `t`, every input to that decision must have been available at `t` or earlier. Call this the *eligibility invariant*. It is necessary but not sufficient, because a permitted record can itself be a derived artifact of a disallowed one — a device-ownership flag set by an investigator after a confirmed outcome is available early but is contaminated by provenance. Timestamp filtering catches the first class of leak; lineage review catches the second.
 
-## Section 3 — Foundational Definitions
+What changes across variants is only the *message function* and the *neighborhood definition*. A hand-built aggregate fixes the message as "mean of a neighbor feature over one hop". A learned message-passing network replaces the mean with a parameterised function and repeats it over layers. A propagation score replaces the hard neighborhood with a decayed probability mass over walks. A motif rule replaces the average with a count of local subgraph shapes. The snapshot, the eligibility rule, and the capacity policy are identical in all four cases, which is why the same failure catalogue in Section 8 applies to each.
 
-### Entities and relationships
+The most important boundary is between *observable structure* and *adjudicated association*. Structure is a property of the snapshot: this device was seen with these accounts, this payment moved along this directed path. Association is a claim about the world: these people act together. The model operates entirely on structure. The human supplies association, with evidence, and the review record must keep the two separable so that a later audit can ask "did the analyst's association actually follow from the structure, or did it come from outside the graph?"
 
-A node is a typed entity represented by an identifier within an explicitly defined namespace.
-An account is not automatically a person: one person can own multiple accounts and an account can have several authorized users.
-An identifier collision can merge unrelated people and generate spurious paths.
-A split identity can hide paths between accounts that actually belong together.
-A device is a shared resource, not a legal person.
-A household address can legitimately connect several unrelated legal account holders.
-An edge is a typed relationship between two identifiers, with provenance and time attributes.
-A transfer edge is directed from sender account to receiving account.
-A device-use edge connects an account to a device observation, not necessarily to the device owner.
-Repeated transactions can be distinct multiedges; collapsing them loses amounts, counts, and timestamps unless retained as aggregates.
-A relationship type defines which endpoint types and directions are allowed.
-A reverse transfer edge used for message passing is a derived relation, not another payment.
-A component is a maximal set connected under a stated connectivity definition and graph snapshot.
-A connected component is not necessarily a fraud ring; common infrastructure can make it enormous.
-A motif is a local pattern of typed nodes and edges, not an adjudicated criminal organization.
-Entity resolution is the reversible, evidence-based mapping of records to candidate entities.
-A confidence score for a possible match is not an established identity without appropriate validation.
-
-### Time and availability
-
-Event time is when the source asserts that an event happened.
-Availability time is when the model-serving path could first use that event.
-Decision time is when a prediction must be made.
-Outcome time is when the target event actually occurred.
-Label availability time is when the outcome became available to the learner or reviewer.
-A point-in-time graph for a decision contains only permitted records available by that decision time.
-A later correction can change the current ledger without changing what was knowable for the earlier decision.
-An as-of join selects the version valid under both event and availability constraints.
-A late-arriving transaction can have an old event time but a new availability time.
-A post-decision chargeback must not contribute to the decision's neighborhood label feature.
-A training cutoff controls which labels may enter model fitting; it is distinct from each example's decision time.
-A mature label is one for which a specified observation horizon has elapsed and the feedback process has had time to operate.
-An unlabeled case is not automatically a negative case.
-
-### Learning and evaluation
-
-A feature is a numeric or categorical representation computed from eligible information.
-A message is a neighbor-derived value passed along an allowed relation in a graph model.
-An aggregation combines messages from a defined eligible neighbor set.
-A graph neural network (GNN) repeatedly combines node representations with neighbor messages.
-A one-hop representation depends on direct eligible neighbors; a two-hop representation can depend on their eligible neighbors.
-Fanout is the maximum number of neighbors sampled per node per layer and relation under a specified sampling algorithm.
-A seed is the node or edge whose score is being computed.
-Inductive evaluation assesses whether the method can handle new nodes or graphs without requiring a learned identifier embedding for each one.
-Transductive evaluation permits certain unlabeled test nodes during training; its permitted information must be declared.
-Leakage is use of information unavailable under the intended decision or evaluation contract.
-Label leakage includes using an outcome or its downstream consequences as a feature.
-Target contamination includes computing a training example's neighborhood label aggregate using that example's own label.
-Precision at capacity is confirmed positives among the top eligible reviewed cases divided by the number reviewed.
-Recall at capacity is confirmed positives found in that queue divided by all positives in the defined evaluation population.
-Recall cannot be estimated from reviewed cases alone without assumptions or additional outcome collection.
-A score calibrated in one population or policy may not remain calibrated after selection or distribution change.
-Investigation capacity includes case handling, evidence gathering, documentation, and appeals, not just score generation.
-
-**Takeaway:** Define the entity, relation, clock, candidate unit, and label before selecting a model.
-
-## Section 4 — Core Formulas with Full Derivation
-
-### 4.1 Simplest / Base Case
-
-For an eligible nonempty neighbor set, each neighbor contributes equally to a mean feature.
-The sum of scalar features has feature units; division by the count preserves those units.
 ```text
-FORMULA [G1]: m_v(t) = sum(x_u for u in N_v(t)) / |N_v(t)|
-WHERE: v is the seed; t is decision time; N_v(t) is the eligible neighbor set;
-       x_u is a scalar feature measured in a stated unit; m_v has that unit.
-CONSTRAINT: |N_v(t)| > 0; each edge and feature version was available by t.
-NUMERICAL EXAMPLE: features 2 and 4 -> m_v=(2+4)/2=3 feature units.
-INTERPRETATION: the two available neighbors have mean feature value 3.
-```
-If there are no eligible neighbors, the mean is undefined, not automatically zero.
-A model can use an explicit missing-neighborhood indicator alongside a documented default.
-A default should be fitted and evaluated under the same serving convention.
-Duplicated edges can implicitly reweight a neighbor; define whether the set consists of unique nodes or edge occurrences.
+State of one case through the pipeline (ILLUSTRATIVE):
 
-### 4.2 General Case
+  candidate ---> scored ---> deduplicated ---> selected ---> reviewed
+     |              |             |               |            |
+     |              |             |               |            +--> confirmed / not confirmed / unknown
+     |              |             |               +--> not selected: outcome UNOBSERVED
+     |              |             +--> merged into another case: score retained, counted once
+     |              +--> snapshot id, model id, feature version recorded
+     +--> eligibility determined by decision time, not by arrival in the warehouse
+```
 
-For multiple relation types and vector features, aggregate separately before combining.
-Let each message depend on the source embedding, permitted edge attributes, and a relation-specific transformation.
-The weighted mean is obtained by summing weighted messages and normalizing by the sum of nonnegative weights.
+The state diagram makes the evaluation problem visible. Only the rightmost branch produces a label, and it is reached only for cases the queue selected. Everything to the left of "selected" is a region where the outcome exists in the world but not in the data. That asymmetry — not model capacity — is the binding constraint on measuring recall, and it is why Section 9 budgets audit sampling as a first-class cost rather than an afterthought.
+
+**Takeaway:** Fix the snapshot, the eligibility rule and the capacity policy first; then any of the four scoring families can be compared on equal terms.
+
+## 3. Foundational Definitions
+
+### 3.1 The entity layer
+
+**Node.** A node is a typed entity identified within an explicitly declared namespace. An account node and a person node are different types even when they share a numeric-looking identifier, and joining them because both render as eight digits is a defect, not a feature. The namespace matters because vendor identifiers, internal customer numbers and card tokens all look like integers.
+
+**Account.** A financial relationship with the institution. One person may hold several accounts; one account may have several authorised users; a business account may have dozens of signatories. Treating the account as a proxy for the person is a modelling decision with an error rate, and the sheet will always say which of the two the target refers to.
+
+**Device.** A shared technical resource — a handset, a browser profile, a hardware token. A device is not a legal person and possession is not ownership. Device identifiers get recycled when a handset is resold, and they collapse to a constant sentinel when instrumentation fails, which is why a single device token can acquire tens of thousands of accounts without any of them being related.
+
+**Edge.** A typed, directed-or-undirected, time-stamped relationship between two identifiers, carrying provenance. `transfer(A -> B, amount, currency, event_time, availability_time, source)` and `used_device(A, d, first_seen, last_seen)` are different relations with different semantics, even though both are "links". Collapsing them into a single untyped adjacency loses the distinction between money moving and hardware being shared.
+
+**Multigraph.** Repeated events between the same endpoints are distinct multiedges. Collapsing them loses amounts, counts and inter-arrival times; retaining them changes what "degree" means. A feature contract must state whether the neighbor set is a set of distinct nodes or a multiset of event occurrences, because the two produce different aggregates from the same data.
+
+**Entity resolution.** The reversible, evidence-based mapping from source records to candidate entities. Reversible means original identifiers and the merge decision are retained so a bad merge can be undone. Evidence-based means the merge used declared attributes with measured accuracy on an adjudicated pair sample — not a fuzzy match threshold chosen because it produced a convenient number of merges.
+
+**Component.** A maximal connected set under a stated connectivity definition on a stated snapshot. Weak connectivity ignores edge direction; strong connectivity requires a directed path in both directions for every ordered pair. A three-node chain A→B→C is one weakly connected component and three strongly connected components. A component is a mathematical object, not an organisation.
+
+**Motif.** A small induced or non-induced subgraph pattern over typed nodes — a directed 3-cycle of transfers, a star of five accounts on one device. Motif counts become evidence only against a null model that preserves degree, because a star is unsurprising on a hub.
+
+### 3.2 The time layer
+
+**Event time.** When the source asserts the event happened. Recorded in the source system's own clock, which may be skewed by seconds or, in badly configured exporters, by hours.
+
+**Availability time.** When the serving path could first read the record. For a payment this might be the authorisation commit; for a device sighting it might be the batch landing in the stream. Availability is strictly downstream of event time and the gap is the ingestion latency, which is heavy-tailed: most records land in seconds, a tail lands in hours.
+
+**Decision time.** When the score must be returned. For a nightly queue this is a batch boundary; for an authorisation decision it is inside the payment round trip and measured in milliseconds. The decision time fixes the cutoff for every input.
+
+**Outcome time and label availability time.** Outcome time is when the target event occurred in the world (the chargeback was filed). Label availability time is when that fact became readable by a learner or reviewer (the case was adjudicated and written back). The second is usually much later than the first, and it is the one that governs training eligibility.
+
+**Point-in-time snapshot.** The subgraph containing exactly those records whose availability time is at or before the decision time, restricted to permitted relation types, tenants and purposes. `OPEN`: the completeness contract for a snapshot — which partitions must report a watermark before the snapshot may be promoted — is a design decision this sheet does not specify for any particular store.
+
+**Late arrival.** A record with an early event time and a late availability time. It is invisible to the earlier decision and must stay invisible in any replay of that decision. Backdating its availability to match its event time is the single most common way a "reproducible" historical study becomes unreproducible.
+
+### 3.3 The learning layer
+
+**Message.** A vector computed for a neighbour and passed toward a seed. In a hand-built feature the message is the neighbour's stored attribute; in a learned layer it is a transformation of the neighbour's representation.
+
+**Aggregation.** A permutation-invariant reduction of a message multiset — mean, sum, max, or a learned pooling. Permutation invariance is required because adjacency has no canonical order; a function whose output depends on neighbour ordering is not a graph function.
+
+**Fanout.** The maximum number of neighbours retained per node per layer per relation under a named sampling rule. Fanout is a serving contract, not a modelling preference, because it determines latency at the tail of the degree distribution.
+
+**Inductive versus transductive.** An inductive model computes a representation for a node it has never seen, using its features and its neighbours at inference time. A transductive model used the test nodes' structure during training and can only be evaluated under a declared protocol that says so. Fraud populations churn, so inductive behaviour is usually the requirement, and any transductive convenience must be priced in.
+
+**Leakage.** Any use of information that the deployed system could not have had at decision time. Four distinct families recur: temporal (a later record), target (the outcome itself), provenance (a derived artifact of the outcome), and selection (a label that exists only because the model chose that case).
+
+**Selective labels.** A labelling process in which whether you observe `Y` depends on the score. Reviewer-supplied labels are the textbook case: high scores get examined, so positives are visible; low scores are never examined, so their positives are invisible. Selective labels do not disappear with more data — they get worse, because the model keeps choosing what to label.
+
+### 3.4 The decision layer
+
+**Candidate unit versus case unit.** The scored object (an account, a payment) and the investigated object (a case, which may bundle twenty accounts) are different grains. Metrics computed at one grain and reported at the other are wrong by an unknown factor.
+
+**Capacity.** The number of distinct cases the team can complete in the interval, derived from labour minutes and per-case effort — including evidence gathering, documentation and appeal handling, not just the initial review.
+
+**Precision at capacity.** Confirmed positives among the selected `k`, divided by `k`. **Recall at capacity.** Confirmed positives among the selected `k`, divided by all positives in the defined population. The second denominator is the one that requires an outside source or a designed audit.
+
+| Term | Formal meaning | Units / type | Valid domain | Common confusion | Glossary anchor |
+|---|---|---|---|---|---|
+| Node | Typed entity in a declared namespace | identifier | non-empty namespace | merged with "person" | this section, 3.1 |
+| Edge | Typed, time-stamped, provenance-bearing relation | record | availability time ≤ cutoff | treated as proof of association | 3.1 |
+| Degree `d_v` | Count of incident eligible edge occurrences | edges | ≥ 0 | read as unique neighbours | 4.1 |
+| Snapshot | Records available at `t` under policy | graph | watermark satisfied | rebuilt from end-of-period data | 3.2 |
+| Fanout `f` | Retained neighbours per layer | neighbours | ≥ 1 | treated as complete degree | 9a |
+| Selective labels | `Y` observed with probability depending on score | mechanism | review is score-driven | treated as missing at random | 3.3 |
+| Case | Investigated bundle | case | dedup rule fixed | equated with account | 3.4 |
+| Capacity `k` | Completable cases per interval | cases / interval | ≤ labour throughput | set by model alert volume | 3.4 |
+
+**Takeaway:** Name the entity, the relation, the clock, the grain and the label mechanism before touching a model.
+
+## 4. Core Formulas with Full Derivation
+
+### 4.1 Simplest / Base Case: the eligible-neighbour mean
+
+Start from a definition rather than a formula. For seed `v` at decision time `t`, define the eligible neighbourhood as the set of distinct neighbours reachable by at least one record that passed both the event-time and availability-time filters:
+
 ```text
-FORMULA [G2]: m_v,r = sum(w_uv * msg_r(u,v) for u in N_v,r) / sum(w_uv)
-WHERE: r is relation type; w_uv >= 0 is dimensionless;
-       msg_r(u,v) and m_v,r are vectors of the same length.
-CONSTRAINT: sum(w_uv)>0; all weights, edges, and messages are available by t.
-NUMERICAL EXAMPLE: messages 2 and 4, weights 1 and 3 -> (2+12)/4=3.5.
-INTERPRETATION: the second message receives three times the relative weight.
+FORMULA [G1a] (neighbourhood definition):
+  N_v(t) = { u : exists an eligible record r with endpoints (v,u), r.relation in R_allowed,
+                 r.event_time <= t, r.availability_time <= t, r.tenant = tenant(v) }
+WHERE: v is the seed identifier; t is decision time [timestamp]; R_allowed is the
+       declared relation whitelist; N_v(t) is a set of node identifiers.
+CONSTRAINT: the existence test quantifies over the ledger restricted to r.availability_time <= t;
+            a record that fails the filter is absent, not present-with-a-null-flag.
+NUMERICAL EXAMPLE: with the Section 5 ledger at 18:00, N_B(18:00) = {A, C, D}.
+INTERPRETATION: membership is a statement about evidence availability, not about closeness.
 ```
-Equal weights reduce G2 to G1 for scalar messages.
-A weighted mean is not a probability unless the message semantics justify that interpretation.
-A separate seed representation preserves individual features when neighbors are uninformative.
+
+Given a scalar attribute `x_u` in a stated unit, the equal-weight mean over that set is
+
 ```text
-FORMULA [G3]: h_v = a*x_v + b*m_v
-WHERE: x_v and m_v are scalar feature units; a and b are dimensionless.
-CONSTRAINT: both terms exist; coefficients are declared rather than inferred from labels.
-NUMERICAL EXAMPLE: x_v=1, m_v=3, a=b=0.5 -> h_v=2 feature units.
-INTERPRETATION: the illustrative representation mixes self and neighbor information equally.
+FORMULA [G1b] (mean aggregate):
+  m_v(t) = ( 1 / |N_v(t)| ) * sum over u in N_v(t) of x_u
+WHERE: x_u has unit U (e.g. confirmed adverse events per account);
+       |N_v(t)| is a count (dimensionless);
+       m_v therefore has unit U — it is an average, never a count and never a probability.
+CONSTRAINT: |N_v(t)| >= 1 and every x_u is finite and computed under the same unit definition.
+NUMERICAL EXAMPLE: x_A = 1, x_C = 0, x_D = 5 with |N_B| = 3, so m_B = (1+0+5)/3 = 2 U.
+INTERPRETATION: the seed's three available neighbours average 2 adverse events each.
 ```
-This linear teaching rule is not a trained fraud probability.
-A practical network may use learned matrices, nonlinearities, relation-specific parameters, residuals, and multiple layers.
-Those choices require training data and deployment validation; none is guaranteed to improve ranking.
+
+Derivation. Write the mean as a normalised sum of indicator-weighted contributions:
+
+```text
+  m_v = sum_u x_u * 1{u in N_v} / sum_u 1{u in N_v}
+```
+
+The numerator is the total attribute mass over eligible neighbours; the denominator counts them. Dividing by a *count* makes the result scale-free in neighbourhood size, which is the property that distinguishes a mean from a sum. The unit check is immediate: `[U] * [count] / [count] = [U]`.
+
+The reason this specific aggregate is the right base case is that it is the maximum-entropy reduction of a multiset given only its total and its size. It also has a bounded range — for non-negative `x`, `m_v` lies in `[min x_u, max x_u]` — which makes an out-of-range value an immediate defect signal rather than a modelling curiosity.
+
+Two consequences follow immediately and both are operational. First, dividing by `|N_v|` implements *degree dilution*: a strongly suspicious neighbour among ninety neutral ones contributes one ninetieth of its signal. That is desirable when the neighbourhood is a population and undesirable when it is a list of incidents. Second, the empty neighbourhood makes the expression undefined, not zero. `0/0` is not a measurement of calm; it is an absence of evidence, and the model needs a separate missing indicator so the two cases can be distinguished downstream.
+
+```text
+FORMULA [G1c] (seed representation, linear mix):
+  h_v = a * x_v + b * m_v
+WHERE: a, b are dimensionless, non-negative, declared coefficients;
+       x_v and m_v share unit U, so h_v has unit U.
+CONSTRAINT: m_v defined; a + b = 1 if the mix is to be interpreted as a convex combination.
+NUMERICAL EXAMPLE: x_B = 2, m_B = 2, a = b = 0.5, so h_B = 0.5*2 + 0.5*2 = 2 U.
+INTERPRETATION: with equal weights the seed's own history and its neighbourhood agree exactly.
+```
+
+`G1c` is a teaching rule, not a fitted fraud probability. Its purpose is to force an explicit statement of how much of the representation comes from the node itself — a quantity that matters disproportionately for new accounts, where `N_v` is empty and `h_v` collapses to `a * x_v`.
+
+### 4.2 General Case: symmetric normalisation, relations and attention
+
+The mean has one arbitrary feature: it weights every neighbour equally. The general layer replaces the count `|N_v|` with a normaliser derived from the graph, and replaces the scalar attribute with a transformed vector.
+
+Derivation of the symmetric normaliser. Suppose we want a propagation operator that (i) reduces to `m_v` for a regular graph, (ii) is symmetric as an operator so its spectrum is real, and (iii) has eigenvalues bounded by one so repeated application cannot explode. Consider the scaled adjacency `S = D^{-1/2} A D^{-1/2}` with `D = diag(d)`. For a regular graph of degree `d`, `S = A/d`, whose row sums are exactly one — so `S x` computes the neighbour mean for every node simultaneously. For an irregular graph, `(S x)_v = sum_u A_vu x_u / sqrt(d_v d_u)`, which is not exactly the mean but is the symmetric choice that satisfies all three requirements. The trade-off is explicit: symmetry buys a real spectrum and stability, at the cost of no longer being exactly an average.
+
+```text
+FORMULA [G2a] (symmetric-normalised propagation, one layer):
+  (S x)_v = sum over u in N_v of x_u / sqrt(d_v * d_u)
+WHERE: d_v, d_u are eligible degrees (counts); x_u is a scalar in unit U;
+       the result has unit U.
+CONSTRAINT: d_v >= 1 and d_u >= 1 for every included u; isolated nodes are handled separately.
+NUMERICAL EXAMPLE: seed B with d_B = 3, neighbours A(d=2,x=1), C(d=3,x=0), D(d=2,x=5):
+  1/sqrt(6) + 0 + 5/sqrt(6) = 6/2.449489743 = 2.449489743 U.
+INTERPRETATION: the low-degree neighbour D is boosted relative to the mean-of-3 value of 2 U,
+because a neighbour with few alternatives is more informative about this seed.
+```
+
+The generalisation to typed relations and vector representations follows the same structure with a relation-specific parameter matrix per edge type:
+
+```text
+FORMULA [G2b] (relation-aware message passing, R-GCN form):
+  h_v^(l+1) = sigma( W_self^(l) h_v^(l) + sum over r in R of sum over u in N_v,r of
+                      (1 / c_v,r) * W_r^(l) h_u^(l) )
+WHERE: h^(l) in R^d (dimensionless representation); W in R^(d x d) parameters per relation;
+       c_v,r is a declared normaliser (|N_v,r|, or sqrt(d_v,r d_u,r));
+       sigma is a pointwise nonlinearity.
+CONSTRAINT: parameters are fit only on data available before the training cutoff;
+            the normaliser must be computed from the eligible snapshot, never the full graph.
+NUMERICAL EXAMPLE: d = 2, c_v,r = |N_v,r| = 2, h_u1 = (1, 0), h_u2 = (0, 1),
+       W_r = [[1, 2], [0, 1]]; W_r h_u1 = (1, 0), W_r h_u2 = (2, 1);
+       sum = (3, 1); divided by 2 gives (1.5, 0.5) as the relation message.
+INTERPRETATION: separate matrices let "shares a device" and "sent money" learn different weights.
+```
+
+Attention replaces the fixed normaliser with data-dependent, non-negative weights:
+
+```text
+FORMULA [G2c] (attention weights):
+  alpha_vu = softmax over u' in N_v of ( LeakyReLU( a^T [ W h_v || W h_u' ] ) )
+  h_v' = sigma( sum over u in N_v of alpha_vu * W h_u )
+WHERE: a in R^(2d) is a parameter vector; || denotes concatenation;
+       alpha_vu is dimensionless and sum over u of alpha_vu = 1.
+CONSTRAINT: softmax is over the *eligible* neighbourhood only; adding a neighbour after
+            scoring changes the denominator and therefore every other weight.
+NUMERICAL EXAMPLE: raw scores (2.0, 0.0) over two neighbours give e^2/(e^2+e^0) = 7.389056/8.389056
+            = 0.880797 for the first and 0.119203 for the second.
+INTERPRETATION: attention redistributes weight within a fixed neighbourhood; it cannot invent a neighbour.
+```
+
+The derivation of the softmax step is the standard exponential-family argument: it is the unique distribution over the neighbourhood that is differentiable, sums to one, and increases monotonically in each raw score. That is why every attention implementation uses it, and also why a large `alpha_vu` describes the model's internal allocation of weight rather than a causal contribution — Section 8 entry F-40 exists because that distinction is routinely lost in an investigator-facing UI.
 
 ### 4.3 Key Special Cases / Variants
 
-| Variant | Change | Use when | Avoid when |
-|---|---|---|---|
-| Unique-neighbor mean | One vote per distinct adjacent node | Repeated events should not multiply influence | Event frequency is the important signal and is omitted |
-| Edge-event mean | One vote per eligible event | Repeated event activity is meaningful | Retries or duplicates are not deduplicated |
-| Relation-specific mean | Separate messages by type and direction | Transfers and device use have different meaning | Relation provenance is unreliable |
-| Weighted mean | Declared nonnegative relative weights | Confidence or age weighting is justified | Weight creation uses future information |
-| Sampled mean | Aggregate a bounded neighbor sample | Full neighborhoods exceed the serving budget | Sampling exclusions erase rare informative relations |
-| Self-only model | No neighbor messages | Graph freshness or identity quality is insufficient | Graph context has shown incremental value within constraints |
+| Variant | What changes | Assumptions | Use when | Avoid when | Equation |
+|---|---|---|---|---|---|
+| Distinct-neighbour mean | One vote per distinct node | Identity links are reliable | Repeated events are noise | Event frequency is the signal | G1b |
+| Event-occurrence mean | One vote per eligible event | Deduplicated by source event id | Retry traffic is meaningful | Duplicates are not removed | G1b on multiset |
+| Degree-normalised propagation | Weights `1/sqrt(d_v d_u)` | Degrees from eligible snapshot | Degree varies widely across the population | Degree carries the fraud signal itself | G2a |
+| Relation-aware passing | One matrix per relation type | Relation provenance trustworthy | Device and money edges mean different things | Relation types are miscoded | G2b |
+| Attention | Learned weights within the neighbourhood | Enough labelled edges to fit `a` | Neighbour relevance genuinely varies | Labelled data is sparse relative to parameters | G2c |
+| Temporal decay weighting | `w_uv = exp(-(t - tau_uv)/tau_half)` | Decay constant chosen a priori | Recency plausibly increases relevance | `tau_uv` is itself a label-derived quantity | G5 |
+| Max pooling | `max_u x_u` instead of mean | At least one neighbour | A single strong lead should surface | Noisy extremes dominate | below |
+| Propagation score (PPR) | Decayed mass over walks | Transition matrix row-normalised | Reach beyond one hop matters at fixed depth | Cycles create feedback the analyst will misread | G6 |
+| Motif count / z-score | Local subgraph census | Degree-preserving null model | Ring-shaped structure is the target | Hub-dominated graph generates spurious stars | G11 |
+| Component rule | Full connectivity partition | Connectivity definition stated | Triage of small closed groups | One shared processor joins most of the population | 3.1 |
+
+Max pooling deserves its own note because it is the cheapest fix for degree dilution and the cheapest way to import a new failure. With `x_u` non-negative, `max` is invariant to how many neutral neighbours were added, so a single high-value neighbour survives arbitrarily large neighbourhoods. The cost is that a single erroneous attribute — one mis-keyed dispute — propagates at full strength with nothing to average it down. Mean and max therefore fail in opposite directions, and a robust hybrid (`mean` plus a capped `max`, or a quantile) is often the honest compromise.
+
+Temporal decay formalises "recent relationships matter more":
+
+```text
+FORMULA [G5] (decayed weighted mean):
+  m_v = sum over u of w_uv x_u / sum over u of w_uv ,  w_uv = exp( -(t - tau_uv) / tau )
+WHERE: t is decision time [timestamp]; tau_uv is the edge's reference time [timestamp];
+       tau > 0 is a decay constant [same unit as the time difference]; w_uv is dimensionless.
+CONSTRAINT: t - tau_uv >= 0 for every included edge, and the sum of weights is > 0.
+NUMERICAL EXAMPLE: tau = 30 days; ages 0 and 60 days give w = 1 and e^{-2} = 0.135335;
+       with x = 4 and x = 1: (1*4 + 0.135335*1)/(1 + 0.135335) = 4.135335/1.135335 = 3.642 U.
+INTERPRETATION: the stale neighbour retains about 13.5% of a fresh neighbour's influence.
+```
+
+The constraint `t - tau_uv >= 0` is not pedantry: a negative age produces a weight above one and silently up-weights a record that has not happened yet. Section 8 entry F-56 covers the sign bug that arises when the difference is written the other way round.
+
+Propagation beyond one hop needs a definition that does not explode, and personalised PageRank is the standard one:
+
+```text
+FORMULA [G6] (personalised PageRank):
+  p = alpha * s + (1 - alpha) * W^T p ,  solved as p = alpha * (I - (1-alpha) W^T)^{-1} s
+WHERE: s is the seed indicator (unit mass on v, zero elsewhere); W is the row-normalised
+       eligible adjacency (W_ij = A_ij / sum_k A_ik); alpha in (0,1] is the restart
+       probability; p is a probability distribution over nodes.
+CONSTRAINT: every row of W with a non-zero out-degree sums to 1; dangling nodes need an
+            explicit rule (self-loop or uniform restart), otherwise mass leaks.
+NUMERICAL EXAMPLE: alpha = 0.15 restart; the Neumann expansion
+            p = alpha * sum_{j>=0} ((1-alpha) W^T)^j s
+            is the sum over walk lengths of 0.15 * 0.85^j times the mass at length j,
+            so a path of length 2 carries 0.15 * 0.85^2 = 0.108375 of the restart budget
+            before degree normalisation.
+INTERPRETATION: influence decays geometrically with hop count at a fixed, declared rate.
+```
+
+The derivation is a Neumann series: since `W^T` is row-stochastic, its spectral radius is one, so `(1-alpha) W^T` has spectral radius `1-alpha < 1` and `I - (1-alpha)W^T` is invertible with the geometric-series inverse. That is the formal reason the truncation at hop `j` loses a bounded amount of mass, `(1-alpha)^(j+1)`, and therefore why a depth cap is a principled approximation rather than a hack.
+
+The evaluation formulas are short but carry the sheet's weight:
+
+```text
+FORMULA [G7] (precision and recall at capacity):
+  precision@k = |P intersect Top_k| / k
+  recall@k    = |P intersect Top_k| / |P|
+WHERE: Top_k is the set of k deduplicated cases selected; P is the set of positives in the
+       defined evaluation population; k is the review capacity [cases/interval].
+CONSTRAINT: |Top_k| = k exactly (ties resolved by a declared rule); P must be enumerated
+            over the whole population, not only over reviewed cases.
+NUMERICAL EXAMPLE: k = 3, Top_3 contains 2 positives, |P| = 3:
+            precision@3 = 2/3 = 0.666667; recall@3 = 2/3 = 0.666667.
+INTERPRETATION: the two metrics coincide here only because k equals |P|; in general they do not.
+```
+
+```text
+FORMULA [G8] (lift over base rate):
+  lift@k = precision@k / (|P| / N)
+WHERE: N is the size of the evaluation population [cases].
+CONSTRAINT: N and P defined on the same population and window as Top_k.
+NUMERICAL EXAMPLE: N = 6, |P| = 3, so base rate = 0.5 and lift@3 = 0.666667/0.5 = 1.333.
+INTERPRETATION: the queue is 1.33 times as dense in positives as a random draw of three cases.
+```
 
 ### 4.4 Limiting Behaviour and Counterexample
 
-A mean over an empty set has no mathematical value because its denominator is zero.
-A high-degree shared device may dominate a raw sum even if its users have no suspicious relationship.
-A mean avoids linear growth with degree but can dilute a small suspicious neighborhood.
-A single mistaken entity merge can create many false paths, regardless of how accurately aggregation is computed.
-A later-discovered edge cannot be made time-safe merely by setting its event timestamp to the past.
-A graph snapshot can be time-safe but still encode a downstream action derived from a future label if provenance is incomplete.
-If two sampled neighbors differ greatly, one sample can give an unstable estimate even when the sample is unbiased.
-Sampling with a fixed random seed improves reproducibility but does not eliminate sampling uncertainty.
+**Limit 1 — empty neighbourhood.** As `|N_v| -> 0`, `G1b` is undefined. Any implementation that returns zero has decided, silently, that absent evidence equals benign evidence. For a new account with no eligible neighbours the correct output is a representation plus a `no_neighbourhood` flag, and the model must have been evaluated on that slice; Section 8 entry F-45 covers the cold-start consequence.
 
-**Takeaway:** Aggregation is meaningful only after the neighbor set, weighting, missingness, and timestamps are specified.
+**Limit 2 — degree dilution.** As `d_v -> infinity` with one suspicious neighbour, `m_v -> 0` in the ordinary mean. The seed's *risk* is unchanged; only the estimator saturates. This is a counterexample to the claim that a low mean score means a benign neighbourhood: it may mean a large one. The discriminating check is to compare the mean against the max and against the degree itself.
 
-## Section 5 — Worked Numerical Example
+**Limit 3 — over-smoothing.** For the linear propagation operator `S = D^{-1/2} A D^{-1/2}` with eigenvalues `1 = lambda_1 >= lambda_2 >= ... >= lambda_n >= -1`, the `L`-fold application multiplies the component along eigenvector `i` by `lambda_i^L`. For a connected non-bipartite graph with `|lambda_i| < 1` for `i >= 2`, every non-constant component decays geometrically and `S^L x` converges to a vector proportional to the degree-weighted mean. Adding layers therefore increases the receptive field and decreases the distinguishability of nodes simultaneously. The practical implication is that depth in a fraud model is bounded by information, not by compute, and that a two-layer model on a well-built snapshot often beats a five-layer model that has averaged the population together.
 
-### Illustrative decision and input ledger
+**Limit 4 — hub domination.** A device with `d = 40,000` contributes a message to every one of its neighbours. Under a sum aggregator with no normalisation, its total contribution scales with `d`, so a single instrumentation default — the empty device token — can dominate a batch by itself. Under the mean it contributes one vote out of forty thousand. Neither behaviour is right for all cases, which is why the relation type must carry a reliability attribute and the fanout must have a documented cap.
 
-An analyst must choose two of four account cases for a same-day review.
-The score is a simple hand-designed teaching ranking, not an estimated probability.
-At 12:00 the eligible account features are A=1, B=2, C=4, D=0 feature units.
-All features below were available before the decision.
-The edge ledger records endpoint pairs, event time, and availability time.
-| Edge | Event time | Availability | Eligible at 12:00? |
-|---|---|---|---|
-| A—B | 10:00 | 10:01 | yes |
-| A—C | 11:00 | 11:01 | yes |
-| A—D | 11:30 | 12:05 | no: late arrival |
-| B—C | 12:10 | 12:11 | no: future event |
-| C—D | 09:00 | 09:01 | yes |
+**Limit 5 — bipartite oscillation.** When the graph is bipartite, `S` has eigenvalue `-1` and alternating layers flip sign instead of smoothing. Two-layer propagation on a bipartite account–device graph is the classic instance. The observable symptom is a representation whose sign changes between layer counts; the fix is a relation-aware or residual formulation, not more layers.
 
-Use the eligible edges as undirected only for this toy feature aggregation.
-This simplification does not erase direction for real payment flows.
-The adjacency sets are A:{B,C}, B:{A}, C:{A,D}, and D:{C}.
-All four sets are nonempty, so G1 is defined for every seed.
-Compute A's mean: (2+4)/2 = 3 feature units.
-Compute B's mean: 1/1 = 1 feature unit.
-Compute C's mean: (1+0)/2 = 0.5 feature units.
-Compute D's mean: 4/1 = 4 feature units.
-Apply G3 with equal self and neighbor coefficients.
-A has h=(1+3)/2=2.
-B has h=(2+1)/2=1.5.
-C has h=(4+0.5)/2=2.25.
-D has h=(0+4)/2=2.
-Sort descending by h, breaking equal scores by ascending account identifier.
-The order is C, A, D, B; the two selected cases are C and A.
-Tie breaking matters: without a stable rule, A and D can swap at the capacity boundary.
-Assume eventual mature labels A=positive, B=negative, C=positive, D=negative.
-These outcomes are introduced only for evaluation, not as input features.
-The selected queue contains two positive cases out of two reviews.
-Illustrative precision at two is 2/2 = 1.0, or 100%.
-The population contains two positives, both reviewed.
-Illustrative recall at two is 2/2 = 1.0, or 100%.
-This tiny constructed example does not establish real-world quality or calibration.
+**Counterexample to "more hops is more signal".** In the Section 5 fixture, the two-hop neighbourhood of `C` is identical to its one-hop neighbourhood, because every neighbour of `C` returns only to `C` and its other neighbours. Doubling the traversal budget produced no new accounts. Hop count is a budget, not a source of information, and a depth increase must be justified by a measured change in the feature distribution, not by intuition.
 
-### Independent checks and counterfactual
+**Counterexample to "connectivity is suspicion".** A shared payment processor, a landlord's address, an employer's device pool and a marketplace's escrow account all produce high-degree hubs connecting unrelated parties. Any component rule applied to such a graph returns a component containing most of the population. The mathematical statement "these nodes are connected" is true and evidentially empty; only the relation type and its provenance can separate infrastructure from association.
 
-The undirected eligible ledger contains three edges.
-The adjacency degree total is 2+1+2+1=6, equal to twice the edge count.
-For A, equal weights make G2 reduce to G1: (2+4)/(1+1)=3.
-For A, self plus neighbor units are compatible before multiplying by dimensionless coefficients.
-The ranking selects exactly two distinct account cases, matching the capacity.
-If the late A—D edge is incorrectly included, A's mean changes to (2+4+0)/3=2.
-The resulting A representation falls from 2 to (1+2)/2=1.5.
-That erroneous result is reproducible but unavailable to the real 12:00 decision.
-If A's mature label were revealed only after 12:00, including it in a neighbor-label feature would likewise leak.
-If the positive count were unknown because unreviewed cases lacked labels, recall would be unidentified from this queue alone.
-If the review budget were one, C alone would be selected; precision is 1/1 and recall is 1/2 under the illustrative complete labels.
-If the self coefficient changed, the ordering could change; the weights are not learned or validated here.
+| Result | Required assumption | Diagnostic | Violating example | Correct alternative |
+|---|---|---|---|---|
+| `m_v` in `[min x, max x]` | weights non-negative, sum > 0 | range check per batch | negative decay weight | clamp or reject the record |
+| `S^L` smooths toward the dominant eigenvector | connected, `abs(lambda_i) < 1` | per-layer variance collapse | bipartite graph, `lambda = -1` | residual or relation-aware layer |
+| PPR truncation loses `(1-alpha)^(j+1)` | row-stochastic `W`, `alpha` fixed | compare truncated vs converged | dangling node leaking mass | explicit dangling-node rule |
+| `precision@k = \|P ∩ Top_k\| / k` | `k` completed distinct cases | count distinct case ids | alerts counted as cases | dedup before the division |
+| Mean is not a probability | none | value may lie in `[0,1]` by accident | score 0.5 with 90% base rate | calibrate before interpreting |
 
-### Production interpretation
+**Takeaway:** Every aggregate has a regime where it says nothing; state the regime before quoting the number.
 
-A real ledger requires an immutable event identifier, source namespace, event time, and availability time.
-Real features must be recovered as of the original score decision, including correction history.
-Case-level deduplication must occur before applying a case-level capacity constraint.
-For a million candidates, hand sorting becomes a selection and data-access workload rather than a manual exercise.
-Entity resolution, time zones, retries, and source outages can change the eligible graph.
-The little ledger is a correctness oracle, not an estimate of operational fraud loss.
+## 5. Worked Numerical Example
 
-**Takeaway:** The same graph feature can be arithmetically correct and operationally invalid if the edge was unavailable at scoring time.
+**Example title and evidence label:** "Six-account device-and-transfer fixture, decision at 18:00" — ILLUSTRATIVE throughout; the arithmetic is DERIVED and independently checked below. No step describes a real customer, institution or incident.
 
-## Section 6 — Visual / Geometric Intuition
+**Workflow and decision:** rank six candidate accounts and select `k = 3` cases for tomorrow's review queue, using an eligible one-hop neighbour mean, then repeat the selection under a leaked (post-decision) edge to show the effect.
 
-```text
-Decision clock, illustrative and not to scale:
-09:01            10:01            11:01       12:00       12:05
-  |                |                |            |            |
- C—D available   A—B available    A—C available  SCORE      A—D available
-                                                    ^
-                                           eligibility boundary
-```
+**Valid assumptions and intentional simplifications:** all edges are treated as undirected for the aggregate, which is a teaching simplification — real money flow is directed and the direction changes the meaning. Each account is its own case. Review effort is constant at 12 minutes. Time zone is single and synchronised. Decay, currency and amount are ignored except where stated.
 
-The event A—D occurred at 11:30 but reached the serving system at 12:05.
-The scoring boundary excludes it despite the earlier event time.
-A later historical rebuild that includes A—D would not reproduce the online decision.
+### Inputs
 
-```text
-Eligible graph at 12:00, illustrative and not to scale:
-    B(x=2)
-      |
-    A(x=1) --- C(x=4) --- D(x=0)
-```
+Own-history feature `x` = confirmed adverse events in the trailing 90 days (unit: events per account). All six values were computed under the same definition and were available before 18:00.
 
-The link from A to D is absent, not merely hidden in the picture.
-A one-hop mean at A sees B and C, but not D.
-A two-hop model can see D through C, subject to the same edge and feature time rules.
-That two-hop reachability is not a claim that A and D are the same person or members of a ring.
+| Account | `x` (events) | Notes |
+|---|---|---|
+| A | 1 | established, low activity |
+| B | 2 | established |
+| C | 0 | newly opened, moderate activity |
+| D | 5 | repeated disputes, under review |
+| E | 0 | dormant |
+| F | 3 | established |
 
-**Takeaway:** A temporal graph is a snapshot of available evidence, not a retrospective diagram of everything later learned.
+Edge ledger. "Eligible at 18:00" requires both event time and availability time at or before 18:00.
 
-## Section 7 — Comparison / Selection Table
-
-| Method | Preconditions | Cost/quality boundary | Best for | Avoid when | Evidence |
+| Edge | Type | Event time | Availability | Eligible at 18:00 | Why |
 |---|---|---|---|---|---|
-| Existing rules | Documented, time-safe rules | Simple and auditable; coverage is rule-dependent | Safety fallback and baseline | Rules use unavailable labels | DERIVED |
-| Tabular model | Time-safe transaction and account features | No graph fetch; may miss relational signal | Strong non-graph comparison | The only useful evidence is relational | HEURISTIC |
-| Graph feature model | Reliable, bounded graph aggregates | Interpretable features; misses some complex patterns | Incremental graph value with limited serving budget | Graph snapshots cannot be reconstructed | HEURISTIC |
-| Sampled GNN | Stable time-safe neighborhoods and model serving | Can learn relational representations; sampling adds variance | Adequate graph infrastructure and demonstrated incremental value | Graph freshness or latency is unacceptable | HEURISTIC |
-| Component/motif rules | Typed, bounded graph and graph-aware review | Easy to explain patterns; shared infrastructure causes false positives | Investigator leads | Connectivity is treated as proof | DERIVED |
+| e1 A–B | device d1 | 09:10 | 09:12 | yes | both before cutoff |
+| e2 A–C | transfer A→C | 10:05 | 10:06 | yes | both before cutoff |
+| e3 B–C | transfer B→C | 11:20 | 11:22 | yes | both before cutoff |
+| e4 C–D | device d2 | 14:40 | 14:41 | yes | both before cutoff |
+| e5 D–E | transfer D→E | 17:50 | 18:30 | **no** | arrived 30 min after the decision |
+| e6 E–F | device d3 | 15:00 | 15:02 | yes | both before cutoff |
+| e7 F–D | device d1 | 18:40 | 18:41 | **no** | event itself is in the future |
+| e8 B–D | device d1 | 08:00 | 08:01 | yes | both before cutoff |
 
-First disqualify any method that violates information availability, permissions, or required latency.
-Next compare the rules and tabular baselines at identical review capacity and outcome maturity.
-Add graph aggregates when a point-in-time graph is reliable and adds value over those baselines.
-Consider a GNN only when its incremental benefit justifies operational cost and investigation burden.
-Do not claim a method is best without a comparable time-split evaluation and confidence intervals.
-Benchmark plan: record candidate cohort, policy, feature cutoff, model version, hardware, load, and uncertainty.
-No workload-specific speed or accuracy results have been measured for this sheet.
+### Step-by-step computation
 
-**Takeaway:** Reject unsafe options first, then demand incremental value against the simplest credible baseline.
+| Step | Rule | Inputs with units | Intermediate (full precision) | Reported result | Independent check |
+|---|---|---|---|---|---|
+| 1 | snapshot filter | 8 ledgers rows | keep e1,e2,e3,e4,e6,e8 | 6 eligible edges | 8 − 2 excluded = 6 |
+| 2 | degree count | eligible adjacency | A2 B3 C3 D2 E1 F1 | degrees | sum = 12 = 2 × 6 ✓ |
+| 3 | G1b, seed A | x_B=2, x_C=0 | (2+0)/2 | 1.000000 | between 0 and 2 ✓ |
+| 4 | G1b, seed B | x_A=1, x_C=0, x_D=5 | (1+0+5)/3 | 2.000000 | between 0 and 5 ✓ |
+| 5 | G1b, seed C | x_A=1, x_B=2, x_D=5 | 8/3 | 2.666667 | between 1 and 5 ✓ |
+| 6 | G1b, seed D | x_C=0, x_B=2 | (0+2)/2 | 1.000000 | between 0 and 2 ✓ |
+| 7 | G1b, seed E | x_F=3 | 3/1 | 3.000000 | equals the single neighbour ✓ |
+| 8 | G1b, seed F | x_E=0 | 0/1 | 0.000000 | equals the single neighbour ✓ |
+| 9 | G1c, a=b=0.5 | per seed | `h = 0.5x + 0.5m` | see table below | unit U preserved ✓ |
+
+Representation table with the arithmetic written out:
+
+```text
+h_A = 0.5*1 + 0.5*1.000000 = 0.5 + 0.500000 = 1.000000
+h_B = 0.5*2 + 0.5*2.000000 = 1.0 + 1.000000 = 2.000000
+h_C = 0.5*0 + 0.5*2.666667 = 0.0 + 1.333333 = 1.333333
+h_D = 0.5*5 + 0.5*1.000000 = 2.5 + 0.500000 = 3.000000
+h_E = 0.5*0 + 0.5*3.000000 = 0.0 + 1.500000 = 1.500000
+h_F = 0.5*3 + 0.5*0.000000 = 1.5 + 0.000000 = 1.500000
+```
+
+Ranking descending with ties broken by ascending account identifier:
+
+```text
+D 3.000000  >  B 2.000000  >  E 1.500000  =  F 1.500000  >  C 1.333333  >  A 1.000000
+tie at 1.500000 resolved by identifier: E before F
+selected queue (k=3): D, B, E
+```
+
+### Evaluation at capacity
+
+Suppose a mature independent outcome source establishes that the positives in this six-account population are B, D and E. `|P| = 3`, `N = 6`.
+
+```text
+precision@3 = |{B,D,E} intersect {D,B,E}| / 3 = 3/3 = 1.000000
+recall@3    = 3 / 3 = 1.000000
+base rate   = 3/6 = 0.500000
+lift@3      = 1.000000 / 0.500000 = 2.000
+```
+
+A self-only baseline that ranks purely on `x` yields the order D(5), F(3), B(2), A(1), C(0), E(0) and selects {D, F, B}:
+
+```text
+precision@3 = |{D,F,B} intersect {B,D,E}| / 3 = 2/3 = 0.666667
+recall@3    = 2/3 = 0.666667
+```
+
+The graph aggregate selects one additional true positive in this fixture. That is a statement about six constructed rows, not evidence that graph features generalise — a single case difference across six accounts carries essentially no information.
+
+### The leaked variant
+
+Now recompute the ranking with the post-decision edge `e7 (F–D)` wrongly included, which is what happens when a replay uses the end-of-day graph.
+
+```text
+N_F becomes {E, D}:  m_F = (0 + 5)/2 = 2.500000
+h_F = 0.5*3 + 0.5*2.500000 = 1.5 + 1.250000 = 2.750000
+
+new rank: D 3.000000 > F 2.750000 > B 2.000000 > E 1.500000 > C 1.333333 > A 1.000000
+new selection (k=3): D, F, B
+
+precision@3 = |{D,F,B} intersect {B,D,E}| / 3 = 2/3 = 0.666667
+recall@3    = 2/3 = 0.666667
+```
+
+The leaked edge displaced a true positive from the queue and replaced it with a false positive. Both queues have the same size, so the capacity constraint is satisfied in each case and nothing in the operational metrics looks anomalous. This is precisely why leakage is dangerous in a capacity-limited system: the queue length absorbs the error silently.
+
+### Wrong path and correction
+
+A plausible mistake is to filter on event time only. Under that rule `e5 (17:50)` enters, because 17:50 is before 18:00, and the availability timestamp of 18:30 is ignored. The result:
+
+```text
+N_E becomes {D, F}:  m_E = (5 + 3)/2 = 4.000000
+h_E = 0.5*0 + 0.5*4.000000 = 2.000000
+N_D becomes {C, B, E}: m_D = (0 + 2 + 0)/3 = 0.666667
+h_D = 0.5*5 + 0.5*0.666667 = 2.5 + 0.333333 = 2.833333
+```
+
+`E` rises from 1.5 to 2.0 and ties `B`; `D` falls from 3.0 to 2.833. The selected set under ascending-identifier tie-breaking is still {D, B, E}, so a careless analyst comparing only queue membership would conclude that the event-time-only filter was harmless. The feature values changed by up to 0.5 U — enough to move a threshold, a downstream explanation or a banding rule — and the two accounts whose values changed are exactly the ones an appeal would scrutinise. The correction is to filter on `min(event_time, availability_time)` being at or before the decision, which in practice means filtering on availability alone.
+
+### Independent checks
+
+The degree sum equals twice the eligible edge count (12 = 2 × 6). Every mean lies inside its neighbourhood's attribute range. The convex-mix weights sum to one, so `h` also lies within the per-account attribute range and the global range `[0, 5]`. The `k` selected rows are distinct, so the capacity count is exact. The leaked and baseline selections differ by exactly one account, consistent with a single changed representation.
+
+Recomputing `h_C` by the alternate route — `G2a` with `d_C = 3` — gives `1/sqrt(9) + 2/sqrt(9) + 5/sqrt(6) = 0.333333 + 0.666667 + 2.041241 = 3.041241` for the normalised sum, which is *not* comparable to `m_C`; the two normalisers answer different questions and must not be cross-checked against each other. This is itself the lesson: an alternate-calculation check is only valid when the alternate computes the same estimand.
+
+### Weighted variant, for contrast
+
+Declare relation weights of 2 for transfers and 1 for device sightings, with `C`'s neighbourhood `{A(transfer), B(transfer), D(device)}`:
+
+```text
+weighted numerator = 2*1 + 2*2 + 1*5 = 2 + 4 + 5 = 11
+weight denominator  = 2 + 2 + 1 = 5
+m_C(weighted) = 11/5 = 2.200000  (versus 2.666667 unweighted)
+h_C(weighted) = 0.5*0 + 0.5*2.2 = 1.100000
+```
+
+The rank of `C` is unchanged at this capacity, but the value moved by 0.23 U. Near a threshold, that is the difference between an alert and silence. Weights are a modelling claim about provenance reliability and must be declared before evaluation — deriving them from observed outcomes would import the label into the feature.
+
+### Production-scale interpretation
+
+At production volume nothing about the formula changes; the surrounding engineering does. Degrees are fetched from a store with a p99 latency, not from a literal in-code list. The deduplication step is a real join against the case system. The tie-break rule has to be deterministic under concurrent insertion. And the snapshot identifier for each row has to be persisted, because a replay six months later is only meaningful if it reconstructs the same snapshot.
+
+**Remaining uncertainty and what the example does not establish:** the labels were chosen to make the mechanism visible, so neither precision figure estimates real performance; the fixture has no true ring, no entity-resolution error and no label delay; and no latency, throughput or cost is measured.
+
+**Takeaway:** The same arithmetic produces a valid online score and an invalid retrospective one; only the availability filter distinguishes them.
+
+## 6. Visual / Geometric Intuition
+
+```text
+Availability timeline (schematic, not to scale). The bracket marks the decision cutoff.
+
+09:00   10:00   11:00   12:00   13:00   14:00   15:00   16:00   17:00   18:00   19:00
+  |       |       |       |       |       |       |       |       |       |       |
+ e1 ----+
+         e2 ----+
+                 e3 ----+
+                         |                                        e4 ----+
+                         |                                                e6 ----+
+                         |                                                        |
+                         |                                                        |
+ 08:00 e8 ---------------+                                                        |
+                                                    e5 event 17:50 ----+           |
+                                                             e5 available --------+ 18:30
+                                                                          |
+                                                                    18:00 CUTOFF
+                                                                          |
+                                                              e7 event 18:40 -------> (next day)
+
+Records counted for the 18:00 decision:  e1 e2 e3 e4 e6 e8
+Records not counted:                      e5 (late availability), e7 (future event)
+```
+
+Read the timeline as a filter, not as a story. `e5` happened before the cutoff and still does not count, because the *system* could not see it. `e7` fails both tests. A replay that uses a single timestamp per row cannot express this distinction, which is why the ledger schema stores two.
+
+```text
+Eligible graph at 18:00 (undirected rendering of the Section 5 ledger):
+
+     A(1) --------- B(2) --------- D(5)
+       |              |  \           |
+       |              |   \          |
+       +--------------C(0) \---------+
+                      |               (e5 D-E omitted: not available)
+                      |               (e7 F-D omitted: future)
+                     (e4)
+                      |
+   E(0) ----------- F(3)
+        e6
+
+degrees:  A=2  B=3  C=3  D=2  E=1  F=1     sum = 12 = 2 x 6 edges
+```
+
+The drawing is deliberately undirected, which is the simplification flagged in Section 5. In a real payment graph `e2` and `e3` would both point into `C`, and that directional convergence — two independent senders into one receiver — is a different and more interesting pattern than an undirected triangle. Drawing it undirected hides exactly the structure an investigator would find most relevant.
+
+```text
+One-hop versus two-hop from seed C:
+
+   hop 1:  { A, B, D }                                  |  hop 2: { A, B, D }
+                                                         |
+        A --- C --- B                                    |  A's nbrs: {B, C}
+              \                                          |  B's nbrs: {A, C, D}
+               \                                         |  D's nbrs: {C, B}
+                D                                        |  union minus C = {A, B, D}
+
+   New accounts discovered by doubling traversal budget: 0
+```
+
+This is the sheet's most useful geometric fact and it is uncomfortable: additional depth did not extend the reachable set at all. The fixture is small, but small fixtures are where intuition is built, and the intuition that "two hops reach further" is simply false in dense local clusters. Depth pays off in sparse, chain-like graphs and costs latency everywhere.
+
+```text
+Neighbourhood expansion tree used for the Section 9 sizing (branching factors 10 then 5):
+
+                     seed (1)
+                    /  |  ...  \            10 first-hop nodes
+                   *   *       *            = 1,000 occurrences over 100 seeds
+                  /|\  ...                   each expands to 5
+                 * * *  ...                 = 5,000 second-hop occurrences
+                (5 children per first-hop node)
+
+   layer-1 edge occurrences: 100 x 10          = 1,000
+   layer-2 edge occurrences: 1,000 x 5         = 5,000
+   total sampled occurrences                   = 6,000
+   node occurrences incl. seeds: 100+1,000+5,000 = 6,100   (upper bound, pre-dedup)
+```
+
+The tree is an upper bound on work only if every branch is full; real degree distributions are heavy-tailed, so most seeds have fewer than ten neighbours and a few have thousands. The cap therefore binds on a small fraction of seeds and produces a long tail of requests that hit the cap exactly — which is where latency peaks and where the incompleteness flag matters most.
+
+```text
+Community partition used for the modularity check in Section 10:
+
+   +----------------------+        +----------+
+   |   A    B    C    D   |        |   E   F  |
+   |   internal edges: 5  |        |  internal: 1
+   |   degree sum: 10     |        |  degree sum: 2
+   +----------------------+        +----------+
+        Q contribution 0.138889         Q contribution 0.138889
+        total modularity Q = 0.277778
+```
+
+Modularity near 0.28 is a weak partition by the usual reading, and in a six-node graph it is not evidence of anything. The visual is included because it shows where the number comes from — two dense-ish blocks joined by a single edge — and because it warns that a community label is a property of a chosen algorithm on a chosen snapshot.
+
+**Takeaway:** Draw the availability cutoff and the eligible subgraph before drawing the network; the second picture is only meaningful inside the first.
+
+## 7. Comparison / Selection Table
+
+| Method | Preconditions | Quality / guarantee | Time / memory / cost | Best for | Avoid when | Evidence |
+|---|---|---|---|---|---|---|
+| Existing rules | documented, time-safe thresholds | auditable; coverage limited by rule count | negligible compute; high analyst maintenance | safety fallback and mandatory baseline | rules reference unavailable labels | DERIVED |
+| Tabular gradient boosting | time-safe account and transaction features | strong on per-account history; no relational signal | one row per candidate; low serving cost | the honest comparator every graph claim must beat | the only informative evidence is relational | ILLUSTRATIVE |
+| Hand-built graph aggregates | reliable snapshot and bounded fetch | interpretable; misses multi-hop and typed nuance | one fetch per candidate; latency-dominated | adding graph signal with a small team | snapshots cannot be reconstructed | DERIVED |
+| Degree-normalised propagation (PPR) | row-stochastic eligible adjacency | smooth reach over many hops at fixed cost | iterative or truncated power iteration | reach matters but depth budget is fixed | cycles will be presented to investigators as rings | DERIVED |
+| Sampled GNN (GraphSAGE-style) | stable neighbourhoods, serving-equivalent sampling | learns relational representation; sampling adds variance | subgraph sampling memory and tail latency | adequate infrastructure and measured incremental value | fanout instability or graph freshness unacceptable | ILLUSTRATIVE |
+| Relation-aware GNN (R-GCN-style) | trustworthy relation typing | separates device from money semantics | one parameter block per relation | several heterogeneous relations with reliable provenance | relation types are miscoded or sparse | ILLUSTRATIVE |
+| Component / motif rules | typed bounded graph and graph-aware review | easy to explain small closed groups | near-linear in edges | investigator leads on candidate rings | connectivity treated as proof | DERIVED |
+
+Selection guide, applied in order:
+
+```text
+IF any option requires information unavailable at decision time
+   -> disqualify it; no amount of offline lift repairs an ineligible input.
+ELSE IF the graph store cannot return a reproducible snapshot id per request
+   -> use tabular features; a non-reproducible graph score cannot be defended on appeal.
+ELSE IF the tabular baseline is not yet measured at the real review capacity
+   -> measure it first; there is nothing to beat.
+ELSE IF one-hop aggregates show incremental value at equal capacity and pass the leak tests
+   -> ship aggregates; they are the cheapest defensible graph signal.
+ELSE IF two-hop reach adds value and cycles are rare in the candidate population
+   -> try truncated PPR with a declared alpha and depth.
+ELSE IF typed relational structure is the mechanism and labelled edges are plentiful
+   -> evaluate a sampled or relation-aware GNN against the aggregate baseline.
+ELSE -> keep the simpler model; record the measurement gap as OPEN rather than guessing.
+```
+
+The ordering is not a claim that simpler is always better. It is a claim about the burden of proof: each step rightward adds a failure mode, an operational dependency and an explanation obligation, so it must buy measured value at the same budget. A GNN that ties a one-hop mean is a loss, because it costs a sampling service, a fanout contract, a drift monitor and a story an investigator cannot verify.
+
+Empirical comparison record — the required fields are listed with their honest status rather than invented values:
+
+| Field | Required content | Status in this sheet |
+|---|---|---|
+| workload / data | candidate cohort, period, population size | OPEN — no dataset accompanies this sheet |
+| hardware / software | store, model server, versions | OPEN |
+| metric definition | numerator, denominator, grain, window | defined in G7/G8 |
+| sample / repetitions | seeds, folds, bootstrap units | OPEN |
+| result / uncertainty | point estimate with interval | OPEN — none measured |
+| primary source | paper, internal report, reproduction | not applicable |
+| reproduced? | yes / no / partially | no |
+| date | measurement date | not applicable |
+
+Nothing in this table should be filled with a plausible number. An unmeasured comparison plan is more useful than a fabricated benchmark, because it tells the next engineer exactly what to go and run.
 
 ### Temporal reconstruction: adversarial clock trace
-The following transaction and review timeline is ILLUSTRATIVE; none of its events describe a real investigation.
-A decision for account A occurs at 10:00, and all times below use the same synchronized time zone.
-Transfer T1 occurs at 09:40 and reaches the feature service at 09:43, so it is eligible for A's 10:00 snapshot.
-Transfer T2 occurs at 09:50 but reaches the feature service at 10:04, so it is ineligible even though its event time is earlier.
-A shared-device observation occurs at 10:03 and arrives at 10:03, so it is ineligible on event time and availability time.
-A device record observed yesterday is corrected at 10:08; a replay at 10:00 must use the version available at 10:00.
-The serving service learns of a neighbor's confirmed outcome at 09:55, and that fact can be considered only if its target and policy allow it.
-An investigator confirms A at 10:30; that confirmation is A's outcome, not an input to the 10:00 decision.
-A graph edge manually created at 10:35 during that investigation is likewise unavailable to the earlier decision.
-At 10:10, a new decision for A may use T2, subject to its own window and authorization rules.
-That later decision must not inherit the 10:35 investigator-created edge or the 10:30 label.
-For each historical prediction, join to the last committed record version whose availability is no later than that prediction's cutoff.
-If timestamps tie at the cutoff, specify whether a committed sequence number orders the event before the decision.
-Without a reliable tie order, conservatively exclude ambiguous records rather than retrospectively inventing their availability.
-Use a serving-path availability clock rather than a source export timestamp when exports precede production ingestion.
-A warehouse arrival time is insufficient if the online graph could not yet read the corresponding write.
-Conversely, warehouse arrival after serving availability does not by itself prove that the online model lacked the event.
-For distributed snapshots, record a consistent watermark or per-partition offsets rather than a single unsupported wall clock.
-A watermark expresses a completeness claim under a specific ingestion contract, not a guarantee against all future corrections.
-Preserve the request-level snapshot identifier when available; it can be more precise than the service's nominal refresh schedule.
-If a source clock is untrusted, record uncertainty and prevent a record with an uncertain future timestamp from entering historical evaluation.
-Never repair an earlier snapshot by backdating a late-arriving record to the time it allegedly occurred.
-A historical rebuild should distinguish source facts, graph publication, cache visibility, and model fetch as separate transitions.
-The earliest possible serving time is the latest required transition, not the earliest timestamp among those systems.
-Deleting a record today may restrict retention of the old snapshot; replay design must obey the applicable deletion policy.
-When an authorized replay is impossible, report the resulting reproducibility limitation rather than synthesizing evidence.
-A useful negative-control test inserts a future-only edge into a test fixture and checks that earlier features remain unchanged.
-A second control changes a future label while holding all permitted historical data fixed and checks that the old prediction remains unchanged.
-A third control moves a permitted edge's availability across the decision boundary and checks the feature changes exactly at the declared ordering boundary.
-These tests establish specific invariants for the fixture; they do not prove that every production path is leak-free.
-### Typed-path reasoning and network structure
-A transfer path A→B→C encodes two directed payments, not proof that A controls C.
-Reversing A→B to B→A changes the economic interpretation even if an undirected connectivity algorithm gives the same component.
-A derived reverse message edge can be used computationally if its relation type is distinct from an actual reverse payment.
-A two-hop account→device→account path captures shared observed device use, not necessarily shared device ownership.
-A merchant, employer, household, or public terminal can induce a legitimate shared-device or shared-address pattern.
-A low-frequency identifier may be informative, but its rarity is not proof of a reliable identity linkage.
-If an identifier is assigned by a vendor, assess its collision, recycling, and missing-value behavior before using its degree.
-A default identifier such as an empty token should not form a normal edge connecting all affected accounts.
-A node that appears highly central because of a data integration default can dominate message aggregation without carrying meaningful evidence.
-A component analysis must say whether it treats edges as directed, which relation types it includes, and what time interval it covers.
-Weak connectivity ignores direction; strong connectivity requires directed paths in both directions between every pair of nodes in the component.
-A three-node chain A→B→C is weakly connected, but its three nodes are separate strongly connected components absent reverse paths.
-A temporal path needs an additional ordering rule: each edge's event and availability constraints must be consistent with the question asked.
-For an alleged transfer chain, an earlier outgoing transfer cannot be financed by a later incoming transfer without additional funds or evidence.
-Even correctly ordered transfers are not sufficient to trace specific money if balances and other payments are not accounted for.
-A cycle A→B→C→A can reflect circular movement, ordinary settlement, or unrelated transfers; context and amounts matter.
-A motif count should state whether repeated transfers create multiple occurrences and whether reciprocal edges count separately.
-Normalize counts by exposure when appropriate, but do not divide by a tiny exposure without an uncertainty or stability check.
-An account receiving from many senders can be a marketplace, payroll processor, charity, or mule account; profile the business context.
-A high out-degree can represent ordinary disbursement, while low out-degree can be suspicious in another workflow; neither sign is universal.
-The appropriate comparison group depends on account type, age, business model, geography, and observed opportunity to form edges.
-A network score may change when a benign bridge edge is removed; investigate that sensitivity before interpreting membership as stable.
-The time at which a link is detected can differ from the time the underlying relationship actually began.
-Store evidence provenance for both endpoints and the relation, including source, confidence, and permitted purpose.
-Record the distinction between an asserted relationship, a validated link, and an analyst hypothesis.
-An entity merge should retain original identifiers and reversible lineage so an incorrect linkage can be corrected.
-Entity resolution thresholds should be assessed on separately adjudicated pairs, including hard negatives from shared infrastructure.
-Do not use a final outcome to retrospectively establish an identity merge and then call the resulting historical feature independent evidence.
-A risk contribution assigned to a link is a model sensitivity or aggregation effect, not a measured causal effect of that link.
-### Worked examples: graph statistics and queue decisions
-All numerical inputs in this subsection are ILLUSTRATIVE; the computations are DERIVED and do not claim production performance.
-Consider one device used by four accounts, with eligible transaction counts 1, 2, 3, and 6 in a fixed window.
-The equal-weight mean count is (1+2+3+6)/4 = 3 transactions per account.
-The total count is 12 transactions, so the mean is not the total exposure of the device.
-If the account with count 6 appears twice because of a duplicate edge, the naive five-edge mean is 18/5 = 3.6.
-Whether that is an error depends on whether the intended unit is unique accounts or device-use events; the feature contract must decide.
-Suppose the same four account values have nonnegative reliability weights 1, 1, 2, and 2.
-Their weighted sum is 1+2+6+12 = 21, and the sum of weights is 6.
-The weighted mean is therefore 21/6 = 3.5 transactions per weighted account unit.
-This weighted result is defined only if the total weight is positive and every included value is finite.
-Changing weights changes the represented population; it does not automatically correct identity errors.
-Now suppose a device has 100 eligible neighbor accounts, and a uniform sample without replacement contains 10.
-Each account has inclusion probability 10/100 = 0.1 under that exact design.
-A single account present in the sample is not proof of importance, and 90 accounts remain unseen in that draw.
-If 20 of the 100 eligible accounts have a property, the expected sample count is 10×20/100 = 2.
-The actual sample count varies; treating the expectation as a guaranteed observed result would be incorrect.
-Under uniform sampling without replacement, the sample mean is unbiased for the fixed finite-neighborhood mean.
-That statement does not imply that a nonlinear fraud score based on the sample mean is unbiased.
-If relation-specific sampling probabilities differ, retain the probabilities and analyze whether an inverse-probability estimator fits the target.
-An account's zero inclusion probability prevents design-based recovery of its contribution without additional assumptions.
-Suppose a full queue has 80 candidates, of which 20 are mature confirmed positives under complete ascertainment.
-At capacity 10, model X selects 6 positives, so precision@10 is 6/10 = 0.60 and recall@10 is 6/20 = 0.30.
-At the same capacity, model Y selects 7 positives, yielding precision@10 of 0.70 and recall@10 of 0.35.
-The difference of one positive is illustrative and is not evidence that Y generalizes better.
-A paired comparison must use the same eligible candidate pool, decision time, outcome definition, and case deduplication policy.
-If two of X's selected positives are members of the same investigation case, account-level precision is not distinct-case yield.
-For example, six positive account alerts might represent only five distinct positive cases after deduplication.
-The exact case denominator must be frozen before reporting a metric, because later merges can alter historical totals.
-If only reviewed cases have labels, the 20-positive population denominator is unknown and the preceding recall calculation is unavailable.
-A stratified random audit of unreviewed cases can estimate missed positives when every relevant stratum has known positive inclusion probability.
-In a hypothetical unreviewed stratum of 100 cases, a simple random audit of 10 finds 2 positives.
-The estimated stratum positive total is 100×2/10 = 20, before accounting for uncertainty and nonresponse.
-That estimate is not the actual number of positives, and ten audited cases provide limited precision.
-If the review yields 6 confirmed positives and the audit estimate for unreviewed cases is 20, the plug-in recall estimate is 6/(6+20), approximately 0.231.
-The ratio is an estimate rather than an unbiasedness guarantee; uncertainty must account for the audit design and both numerator and denominator.
-If audit participation depends on hidden outcomes, known selection probabilities alone do not solve nonresponse bias.
-A mature independent outcome source can supplement the audit only for the fraud target and population it actually covers.
-### Evaluation design and delayed outcomes
-Define the prediction target before constructing the graph, including the target entity, outcome horizon, and adjudication standard.
-State the target's unit explicitly: a suspicious transaction, an account, a loss event, and an investigation case are different objects.
-Use an observation horizon long enough for the outcome process and disclose residual uncertainty about later discoveries.
-Do not call a no-chargeback transaction legitimate if chargeback coverage excludes a relevant fraud type.
-Separate event occurrence from discovery and from the time the discovery becomes available to training.
-A case closed without a finding can mean insufficient evidence, not a verified negative, depending on policy.
-Freeze training labels at the training cutoff and do not backfill a later adjudication into an earlier model build.
-Apply the same historical eligibility rules to unsupervised graph features; future topology is information even when it has no labels.
-Fit scalers, vocabularies, and thresholds only on permitted training data unless a deployment-valid transductive protocol is explicitly defined.
-For each evaluation seed, use the graph available to that seed rather than one graph built at the end of the evaluation period.
-A random split of adjacent transactions may leak case identity or later behavior even if each row has a separate identifier.
-A chronological split estimates future performance under the chosen historical overlap; it does not guarantee generalization to unseen entities.
-An entity-disjoint holdout probes a different question and may remove realistic historical relationships available in deployment.
-A component-disjoint holdout can be too severe when common infrastructure creates huge components; state the graph used to define components.
-Compare chronological and disjoint stress tests instead of presenting one as universally correct.
-When repeat customers span a temporal split, ensure their historical information is allowed and future outcomes do not flow backward.
-Deduplicate repeated labels from the same case when computing uncertainty, since observations within a ring can be correlated.
-A case- or cluster-level bootstrap can reflect dependence when its sampling units match the evaluation design and are sufficiently numerous.
-A confidence interval for one metric does not account for searching many models and selecting the best reported result.
-Use a held-out period or nested selection when comparing many graph variants, and disclose the number of variants explored.
-Randomized auditing should cover low scores as well as the selected queue when estimating missed outcomes.
-Track the audit sampling frame, selection probability, review completion, outcome maturation, and any excluded groups.
-An audit sample with zero inclusion probability for a region cannot identify that region's outcome prevalence by weighting alone.
-Performance measured after a blocking intervention can differ from untreated risk because the intervention changes subsequent outcomes.
-Do not interpret fewer observed losses among blocked transactions as proof that the model's untreated predictions were well calibrated.
-If a controlled policy experiment is permitted, predefine eligibility, randomization, safeguards, monitoring, and an analysis plan.
-Ethics, legal requirements, and customer protection may constrain randomization; an observational estimate then needs explicit assumptions.
-Compute calibration only against outcomes that match the prediction target and action policy, with maturity and coverage reported.
-A score trained for ranking is not necessarily an estimated probability even when it lies between zero and one.
-Monitor reviewer agreement and appeal reversals because label quality can shift with staffing, evidence access, or policy.
+
+The following timeline is ILLUSTRATIVE. No event describes a real investigation or a real system.
+
+Decision for account `A` is issued at 10:00. All times share one synchronised zone.
+
+Transfer `T1` occurs 09:40 and reaches the feature service 09:43 — eligible, because availability precedes the decision by 17 minutes.
+
+Transfer `T2` occurs 09:50 and reaches the feature service 10:04 — ineligible, despite the earlier event time. A replay that uses `T2` produces a score the live system could not have produced.
+
+A device sighting occurs 10:03 and arrives 10:03 — ineligible on event time alone, so availability does not rescue it.
+
+A device record observed yesterday is corrected at 10:08. A faithful replay at 10:00 uses the pre-correction version, even though today's readers see only the corrected row.
+
+A neighbour's confirmed outcome becomes known at 09:55. Whether it may enter a feature depends on the target and the policy: if the neighbour's outcome is a different event from the seed's target and the policy permits label features, it may; if it is the same adjudication propagated, it may not.
+
+An investigator confirms `A` at 10:30. That confirmation is `A`'s outcome, and it is unavailable at 10:00 by construction.
+
+A graph edge hand-created at 10:35 during that investigation is unavailable at 10:00 for two reasons: it did not exist, and its content encodes the outcome.
+
+At 10:10 a new decision for `A` may use `T2`. That decision still may not use the 10:30 label or the 10:35 edge, because neither existed yet.
+
+The general rule: for each historical prediction, join to the last committed record version whose availability time is at or before that prediction's cutoff. When multiple versions share a timestamp, a committed sequence number must order them; without one, exclude the ambiguous records rather than inventing an order.
+
+Record the availability clock of the *serving path*, not the source export time. If exports run hourly but the online graph reads a stream, the export timestamp will make every feature look later than it was, and the resulting replay will understate what the model knew. The reverse error — trusting a warehouse landing time when the online service read the record earlier — overstates eligibility and creates leakage.
+
+For distributed snapshots record a consistent watermark or per-partition offsets, not a single wall clock. A watermark is a completeness claim under a specific ingestion contract; it is not a promise that no correction will ever arrive. Preserve the request-level snapshot identifier when the store exposes one, because it is more precise than the nominal refresh schedule.
+
+Never repair an older snapshot by backdating a late record to its event time. If a correction arrived after the decision, the honest record is "the value was X at decision time and became Y later", and both versions belong in lineage.
+
+Three negative-control tests make the invariant checkable: insert a future-only edge into a fixture and confirm earlier features do not change; change a future label while holding permitted history fixed and confirm the old prediction is unchanged; move one edge's availability across the cutoff and confirm the feature changes exactly at the declared boundary. Passing all three establishes those invariants for that fixture, not for every production path.
+
+### Typed-path reasoning
+
+A path `A -> B -> C` encodes two directed payments. It does not encode control, common ownership or intent. Reversing the direction changes the economic reading completely, even though an undirected connectivity algorithm returns the same component — which is why "component" answers a different question from "who sent money to whom".
+
+A two-hop path `account -> device -> account` records observed shared device use. It does not establish that one person controls both accounts. Merchants, employers, households, internet cafés and public terminals all produce this pattern legitimately.
+
+A low-frequency identifier is informative but not conclusive. Rarity is a property of the population, and a token that is rare because instrumentation changed last week is not evidence of a relationship.
+
+If an identifier is vendor-assigned, assess collision, recycling and missing-value behaviour before using its degree. A sentinel value such as the empty string or the all-zeros token must never form a normal edge: it will connect an arbitrary subset of the population and dominate every aggregate that uses it.
+
+Component analysis must state three things: whether edges are directed, which relation types are included, and the time interval covered. Without all three the number is uninterpretable.
+
+A chain `A -> B -> C` is one weakly connected component and three strongly connected components. A cycle `A -> B -> C -> A` may be circular movement, ordinary settlement, or unrelated transfers that happen to close; amounts and timing decide.
+
+For an alleged funding chain, an outgoing transfer cannot be financed by a later incoming transfer unless additional funds or evidence exist. Time-ordered reachability is necessary for a money-flow claim and far from sufficient, because balances and other obligations are not in the graph.
+
+Motif counts must state whether repeated transfers create multiple occurrences, whether reciprocal edges count separately, and whether the pattern is induced. Normalising by exposure is usually right, but do not divide by a tiny exposure without an uncertainty check.
+
+Directionality of suspicion is not universal. High out-degree can be ordinary disbursement for a payroll processor; low out-degree can be suspicious in a peer-to-peer marketplace. The comparison group has to match account type, age, geography and opportunity to form edges.
+
 ### Production operations and investigator workflow
-A decision record should identify the candidate, decision timestamp, graph snapshot, feature version, model artifact, and queue policy.
-Record whether graph retrieval completed, timed out, or returned a deliberately truncated neighborhood.
-A zero neighbor count after a successful complete fetch differs from a zero inserted after a graph-service failure.
-Use an explicit missingness indicator and an approved fallback whose behavior has been evaluated for missing-graph traffic.
-A fallback score is not automatically comparable to the graph model's score; queue calibration and routing must reflect that distinction.
-Define an operational maximum for traversal depth, per-relation fanout, scanned edges, and request wall time.
-Returned-edge limits alone do not bound storage scans if selecting a sample requires examining a much larger adjacency list.
-Preserve sampling seeds or sampled edge identifiers when reproducibility is required and permitted by retention policy.
-If a query hits its work budget, return an incomplete flag instead of silently representing the partial neighborhood as complete.
-Track freshness separately for each source because one delayed edge type can alter a model even when aggregate ingestion looks healthy.
-Compare source offsets, publication watermarks, and serving visibility to distinguish upstream lag from cache propagation delay.
-A snapshot should not be promoted until required source partitions meet the declared completeness contract.
-A correction should be append-only or otherwise historically versioned so that older snapshots are not silently rewritten.
-A rollback must pin the graph schema and feature transformations compatible with the older model artifact.
-A model rollback alone does not repair a corrupted graph snapshot or an authorization defect in the graph service.
-When access control fails, stop unauthorized graph retrieval and follow the incident procedure rather than merely suppressing the displayed score.
-Apply tenant and purpose restrictions during traversal, including intermediate nodes, not only when formatting the final explanation.
-A deleted identifier may persist in cached edges, precomputed features, embeddings, training exports, and investigator attachments.
-Deletion handling must follow applicable retention and remediation policy rather than promising that all trained model influence can be removed instantly.
-An investigation package should identify the seed, permitted relationships, source timestamps, and why each item is relevant to the queue decision.
-The package should separate raw evidence from model-generated hypotheses and later analyst annotations.
-Show legitimate alternative explanations, including shared infrastructure and ordinary commercial relationships, alongside risk indicators.
-An investigator should be able to challenge an incorrect link and request correction without asserting a definitive alternative identity.
-Keep a history of case merges and splits so that duplicated work and outcome attribution can be reconstructed.
-A case-level positive finding should not automatically label every connected account as independently fraudulent.
-Where permitted, capture adverse-action explanations, review decisions, and appeal outcomes under the relevant governance process.
-A sudden backlog increase can arise from higher arrivals, slower handling, duplicates, or staffing loss; compare all four before changing thresholds.
-For a simple illustration, 55 new cases and 40 completed cases add 15 cases to the backlog in one period if no cases are otherwise removed.
-The next period begins with that added backlog; changing a score threshold cannot retroactively create investigator capacity.
-An incident runbook should specify who owns data repair, customer impact assessment, decision review, and service restoration.
-After recovery, reconcile missed requests and separately assess whether reprocessing old decisions is permissible and useful.
-Graph latency and fraud yield are workload-dependent; no throughput or lift is claimed without a measured deployment study.
-### Additional answered design questions
-**Question:** A future edge is removed but its effect remains in a precomputed embedding; is the replay safe?
-**Answer:** No; the embedding itself is a derived artifact and must be generated only from information permitted at the historical cutoff.
-**Question:** Can a transaction from 09:50 be used at 10:00 if its graph write is committed at 10:04?
-**Answer:** Not for the graph-serving path described above, because the 10:04 availability is after the decision.
-**Question:** Can the same transaction be used by a different model that independently received it at 09:51?
-**Answer:** Potentially, if that model's actual serving path and all other policy and time constraints permit the record.
-**Question:** A two-hop path includes a public kiosk; does it prove common control of the endpoints?
-**Answer:** No; a shared kiosk is a plausible benign bridge, and identity or intent requires independent evidence.
-**Question:** Why can a high-degree device dilute a mean even when one neighbor is strongly suspicious?
-**Answer:** Equal weighting divides the suspicious neighbor's contribution by the full eligible degree, so many other neighbors can reduce its influence.
-**Question:** If one message is 10 and nine are zero, what is their equal-weight mean?
-**Answer:** The mean is 10/10 = 1, although one neighbor's message is 10; neither number alone is a fraud probability.
-**Question:** Should the nine zero messages be removed to recover the value 10?
-**Answer:** Not without a separately justified eligibility rule; deleting inconvenient observations changes the estimand.
-**Question:** What does a component-disjoint holdout measure that a chronological holdout may not?
-**Answer:** It stresses generalization to graph regions excluded from training, under the chosen component definition and split construction.
-**Question:** Why might that holdout be unrealistic for an existing customer?
-**Answer:** Deployment may legitimately know earlier neighbors, while an entirely disjoint split removes that historical information.
-**Question:** If five reviewed cases are positive and unreviewed labels are missing, is recall 100%?
-**Answer:** No; the number of positive unreviewed cases is unknown, so population recall cannot be computed from those five alone.
-**Question:** A 10-case sample finds two positives; is the population prevalence exactly 20%?
-**Answer:** No; 20% is the sample proportion and an estimate under the sampling design, with substantial sampling uncertainty.
-**Question:** A reviewer confirms a ring; should every connected node inherit a positive label?
-**Answer:** No; preserve case-level findings and entity-level adjudication separately, leaving unsupported individual outcomes unknown.
-**Question:** Can a score explanation include a relationship discovered after the original decision?
-**Answer:** It can be presented as later investigative evidence if labeled as such, but not as an input explaining the earlier score.
-**Question:** Does attention weight prove that removing an edge will change a score by that weight?
-**Answer:** No; attention is an internal model quantity, and an edge-removal sensitivity is a separate intervention on the model input.
-**Question:** What must be compared when an edge-removal test is performed?
-**Answer:** Hold the model and remaining permissible snapshot fixed, specify how normalization changes, and report the resulting score difference as model sensitivity.
-**Question:** A new system claims a higher alert hit rate after halving the queue; is that a fair comparison?
-**Answer:** Not by itself; compare on the same eligible cohort and labor capacity, and show how many distinct cases and positives are selected.
-**Question:** How should an investigator handle an access-denied edge in an explanation?
-**Answer:** Do not disclose or traverse unauthorized data; use permitted evidence and record any explanation limitation under the access policy.
-**Question:** What happens when a graph service is unavailable and an empty graph is returned without a flag?
-**Answer:** The model may interpret an outage as genuine lack of connections, producing misleading features and invalid monitoring.
-**Question:** What evidence is needed to claim a real deployment improvement?
-**Answer:** A documented comparable evaluation or controlled rollout with population, period, outcome maturity, capacity, uncertainty, and operational constraints.
-
-## Section 8 — Failure Modes & Edge Cases
-
-Every diagnostic below is HYPOTHETICAL, not a report of an observed incident. Preserve the decision time, graph snapshot, model version, and affected IDs; coordinate data, model, and policy owners. Associations are leads, not findings of fraud.
-The first three fields describe a symptom, a competing explanation, and a discriminating test.
-A negative diagnostic does not prove that all other failure modes are absent.
-A fix is complete only when a replay or a controlled production observation confirms the intended invariant.
-
-### F-01: Late edge ingestion
-
-- **Trigger:** Offline graph contains a pre-decision transaction missing online.
-- **Competing hypotheses:** The event arrived after scoring, or the online fetch dropped an already available event.
-- **Discriminating check:** Compare source event and serving-availability timestamps with the request trace.
-- **Expected signal:** A late availability timestamp supports temporal leakage; a missing successful write supports serving loss.
-- **Bounded correction:** Enforce both event and availability cutoffs; separately repair dropped writes.
-- **Verification:** Replay the frozen request from an append-only availability log.
-
-### F-02: Post-outcome relationship
-
-- **Trigger:** A strong edge appears only in positives.
-- **Competing hypotheses:** An investigator added it after a confirmed outcome, or it truly preceded the decision.
-- **Discriminating check:** Trace the edge creator and creation timestamp against adjudication time.
-- **Expected signal:** Edges created by the case system after adjudication are downstream artifacts.
-- **Bounded correction:** Exclude downstream artifacts from predecision features and preserve audit provenance.
-- **Verification:** Show that removing those edges changes offline features to the online values.
-
-### F-03: Future label in neighborhood
-
-- **Trigger:** Neighbor fraud rate predicts almost perfectly.
-- **Competing hypotheses:** The feature uses labels learned after scoring, or it captures genuinely early known alerts.
-- **Discriminating check:** Inspect each label availability timestamp used in the aggregate.
-- **Expected signal:** Any label availability after the seed decision violates the feature contract.
-- **Bounded correction:** Recompute from labels available before each seed decision.
-- **Verification:** Compare a historical feature replay to the online feature log.
-
-### F-04: Self-label contamination
-
-- **Trigger:** Training performance exceeds validation sharply.
-- **Competing hypotheses:** The seed label contributed to its own neighborhood statistic, or the model is overfit.
-- **Discriminating check:** Remove the seed label and trace all aggregate paths to the seed.
-- **Expected signal:** A direct or cyclic path returning the seed label demonstrates contamination.
-- **Bounded correction:** Use out-of-fold, self-excluded label aggregates with temporal eligibility.
-- **Verification:** Unit-test a tiny cycle with unique labels to verify exclusion.
-
-### F-05: Entity overmerge
-
-- **Trigger:** One identity suddenly has thousands of peers.
-- **Competing hypotheses:** An identifier collision merged unrelated people, or a legitimate enterprise operates many accounts.
-- **Discriminating check:** Inspect match evidence and identifier cardinality before and after the merge.
-- **Expected signal:** Weak common attributes across dissimilar records support an overmerge.
-- **Bounded correction:** Split the identity using reversible provenance and conservative matching.
-- **Verification:** Replay prior scores and quantify customer and alert impact.
-
-### F-06: Entity undersplit
-
-- **Trigger:** Repeated fraud actors remain disconnected.
-- **Competing hypotheses:** One actor has fragmented identifiers, or the apparent similarity reflects a shared service.
-- **Discriminating check:** Inspect validated linkage evidence and downstream investigation outcomes.
-- **Expected signal:** Repeated strong independent identity evidence supports missed linkage.
-- **Bounded correction:** Add a reviewed, time-versioned linkage rather than a global fuzzy merge.
-- **Verification:** Check link precision and recall on an independently adjudicated sample.
-
-### F-07: Shared-device supernode
-
-- **Trigger:** Thousands of accounts share one device identifier.
-- **Competing hypotheses:** A public kiosk or default device token created a hub, or the device is genuinely controlled by a ring.
-- **Discriminating check:** Inspect token generation, diversity, site context, and the time distribution.
-- **Expected signal:** A default token across many unrelated sessions suggests instrumentation or shared infrastructure.
-- **Bounded correction:** Represent device reliability and relation type; cap or sample expansion.
-- **Verification:** Check that hub treatment does not erase confirmed small-ring signals.
-
-### F-08: Transfer direction reversal
-
-- **Trigger:** Money-flow patterns appear backwards.
-- **Competing hypotheses:** The ingestion schema inverted sender and receiver, or an analyst interpreted a derived reverse relation as a payment.
-- **Discriminating check:** Compare source transaction IDs and endpoint roles to stored directed edges.
-- **Expected signal:** Systematic reversal against source records identifies a mapping error.
-- **Bounded correction:** Correct the mapping and distinguish computational reverse edges from transactions.
-- **Verification:** Replay a known sender-receiver ledger and compare flow conservation.
-
-### F-09: Duplicate events
-
-- **Trigger:** Degree and transaction counts jump after a retry.
-- **Competing hypotheses:** At-least-once delivery duplicated writes, or the source emitted legitimate repeated payments.
-- **Discriminating check:** Group by immutable source event ID and compare source payloads.
-- **Expected signal:** Identical source IDs with repeated writes indicate ingestion duplication.
-- **Bounded correction:** Make edge ingestion idempotent while preserving distinct source events.
-- **Verification:** Replay the same batch twice and compare graph state.
-
-### F-10: Correction overwritten
-
-- **Trigger:** Historical feature replay differs from old serving logs.
-- **Competing hypotheses:** A source correction overwrote the earlier value, or the original online result was stale.
-- **Discriminating check:** Compare the version history and correction arrival time to the decision timestamp.
-- **Expected signal:** A correction recorded after the decision explains retrospective disagreement.
-- **Bounded correction:** Store version history and select the version available at the decision.
-- **Verification:** Replay both before and after correction availability boundaries.
-
-### F-11: Clock skew
-
-- **Trigger:** Events appear to arrive before they happened.
-- **Competing hypotheses:** Source and ingestion clocks differ, or event-time semantics are misunderstood.
-- **Discriminating check:** Compare clock synchronization telemetry and representative source payloads.
-- **Expected signal:** A common offset across a source suggests clock skew.
-- **Bounded correction:** Fix clock discipline and define conservative uncertainty handling.
-- **Verification:** Check ordering on monitored test events after the correction.
-
-### F-12: Timezone conversion
-
-- **Trigger:** Daily graph changes at an unexpected hour.
-- **Competing hypotheses:** A local timestamp was parsed as UTC, or the reporting window uses a different zone.
-- **Discriminating check:** Trace the raw timestamp, zone, daylight-saving rule, and normalized value.
-- **Expected signal:** A consistent zone offset or DST discontinuity supports a parsing defect.
-- **Bounded correction:** Normalize explicit zone-aware timestamps and preserve the original.
-- **Verification:** Test timestamps around both daylight-saving transitions.
-
-### F-13: Mutable device token
-
-- **Trigger:** One device appears to switch users impossibly often.
-- **Competing hypotheses:** A recycled token represents multiple devices, or a shared device really has many users.
-- **Discriminating check:** Compare token lifetime, app version, and platform generation policy.
-- **Expected signal:** Known recycling or default token behavior weakens identity inference.
-- **Bounded correction:** Version token namespaces and treat device use as a weak edge.
-- **Verification:** Validate with independently reviewed device ownership evidence.
-
-### F-14: Train-test component overlap
-
-- **Trigger:** Validation precision looks unusually optimistic.
-- **Competing hypotheses:** Near-duplicate entities span the split, or legitimate historical graph structure is usable in deployment.
-- **Discriminating check:** Compare entity overlap and connected components across train and test.
-- **Expected signal:** Duplicated customer records or outcome-derived edges across folds indicate contamination.
-- **Bounded correction:** Use temporal holdout and report entity-disjoint or component-disjoint stress tests.
-- **Verification:** Explain which known historical neighbors remain permissible at deployment.
-
-### F-15: Full-graph normalization
-
-- **Trigger:** Test nodes influence training despite a time split.
-- **Competing hypotheses:** Normalization statistics were computed on the full graph, or a declared transductive setup allowed them.
-- **Discriminating check:** Trace when degree and normalization statistics were calculated.
-- **Expected signal:** Future topology in training-time statistics violates an inductive historical simulation.
-- **Bounded correction:** Fit transformations on permitted training snapshots and replay evaluation snapshots.
-- **Verification:** Check that altering future edges cannot alter earlier training features.
-
-### F-16: Unreviewed cases labeled negative
-
-- **Trigger:** Precision seems stable while recall collapses.
-- **Competing hypotheses:** Unreviewed positives were assigned negative, or the underlying fraud mix truly changed.
-- **Discriminating check:** Compare label provenance and the fraction of unreviewed candidates by score bucket.
-- **Expected signal:** Large policy-dependent unknown buckets indicate selective labels.
-- **Bounded correction:** Keep unknown outcomes distinct and collect randomized audit labels.
-- **Verification:** Report audited estimates with inclusion probabilities and uncertainty.
-
-### F-17: Delayed chargebacks
-
-- **Trigger:** Recent test cohorts appear cleaner than older ones.
-- **Competing hypotheses:** Outcomes have not matured, or controls reduced fraud.
-- **Discriminating check:** Plot outcome discovery against decision age by cohort.
-- **Expected signal:** An increasing cumulative outcome curve indicates delayed feedback.
-- **Bounded correction:** Restrict primary comparison to mature cohorts and report censoring.
-- **Verification:** Recompute older cohorts at matched observation ages.
-
-### F-18: Changed review policy
-
-- **Trigger:** Model precision rises after a threshold change.
-- **Competing hypotheses:** Reviewers selected a different case mix, or model ranking actually improved.
-- **Discriminating check:** Compare models on the same pre-policy candidate cohort and fixed capacity.
-- **Expected signal:** A lift that disappears under a shared candidate pool suggests selection effects.
-- **Bounded correction:** Separate ranking changes from review-policy changes.
-- **Verification:** Use a controlled shadow or randomized comparison where ethically permitted.
-
-### F-19: Top-k duplicates
-
-- **Trigger:** A queue is full but few distinct networks are investigated.
-- **Competing hypotheses:** Many account alerts refer to one case, or the incident genuinely requires multiple independent reviews.
-- **Discriminating check:** Cluster alerts by explicit case identity and inspect the queue before and after deduplication.
-- **Expected signal:** Many repeated case identifiers demonstrate capacity being consumed by duplicates.
-- **Bounded correction:** Rank or diversify at the investigator case grain with traceable member alerts.
-- **Verification:** Measure distinct cases reviewed and fraud found under the same labor budget.
-
-### F-20: Case merge after review
-
-- **Trigger:** Case metrics change retroactively.
-- **Competing hypotheses:** Multiple alerts were merged into one investigation, or outcomes were corrected.
-- **Discriminating check:** Track case-merge versions and outcome attribution at each reporting cutoff.
-- **Expected signal:** A change in case identity without score changes points to metric grain.
-- **Bounded correction:** Freeze the evaluation unit or version case memberships for reproducible reports.
-- **Verification:** Reconcile counts of alerts, cases, and outcomes at each snapshot.
-
-### F-21: High-degree traversal timeout
-
-- **Trigger:** Tail latency spikes on a small fraction of seeds.
-- **Competing hypotheses:** One hub causes fanout explosion, or the graph store has an unrelated I/O bottleneck.
-- **Discriminating check:** Correlate examined edges and hub degrees with per-request timing.
-- **Expected signal:** Latency tracking examined-edge count supports expansion as the cause.
-- **Bounded correction:** Bound per-relation fanout and total work; return explicit incomplete status.
-- **Verification:** Load-test degree-stratified traffic and compare tail latency with quality.
-
-### F-22: Sampling bias
-
-- **Trigger:** A bounded neighborhood misses a known fraud cluster.
-- **Competing hypotheses:** Sampling systematically favors recent or frequent edges, or the cluster is absent at decision time.
-- **Discriminating check:** Record sampled and eligible neighbor IDs and selection probabilities.
-- **Expected signal:** A rare relation consistently excluded by policy indicates sampling bias.
-- **Bounded correction:** Stratify samples by relation or reserve budget for rare evidence.
-- **Verification:** Measure recall and variability against full neighborhoods on a feasible audit set.
-
-### F-23: Sampling instability
-
-- **Trigger:** The same account gets different scores on repeated requests.
-- **Competing hypotheses:** Random sampling changes neighbors, or features changed between requests.
-- **Discriminating check:** Fix snapshot and model version, then repeat with controlled sampling seeds.
-- **Expected signal:** Variance under a fixed snapshot indicates sampling-induced instability.
-- **Bounded correction:** Use reproducible sampling or average within an explicit latency budget.
-- **Verification:** Measure ranking changes near the investigation threshold.
-
-### F-24: Stale graph cache
-
-- **Trigger:** Online predictions use old relationships.
-- **Competing hypotheses:** The cache missed invalidation, or ingestion was legitimately delayed.
-- **Discriminating check:** Compare source availability, cache version, and request snapshot timestamp.
-- **Expected signal:** A newer committed version absent from cache implicates cache propagation.
-- **Bounded correction:** Repair invalidation and expose graph freshness to the serving policy.
-- **Verification:** Inject a known edge and trace its visibility end to end.
-
-### F-25: Online-offline feature skew
-
-- **Trigger:** Training and serving values disagree for the same example.
-- **Competing hypotheses:** Different aggregation code or a mismatched as-of snapshot is in use.
-- **Discriminating check:** Replay the same entity, cutoff, source versions, and model version in both paths.
-- **Expected signal:** Differences with identical inputs isolate transform or serialization divergence.
-- **Bounded correction:** Unify feature semantics and preserve an offline-online parity fixture.
-- **Verification:** Compare exact feature values on edge cases including empty neighborhoods.
-
-### F-26: Missing neighborhood default
-
-- **Trigger:** New accounts score strangely low.
-- **Competing hypotheses:** An empty neighborhood was silently mapped to zero, or genuinely low-risk evidence is present.
-- **Discriminating check:** Inspect missing flags separately from numeric aggregate values.
-- **Expected signal:** A spike in exact default values for new accounts suggests missingness confusion.
-- **Bounded correction:** Add a missing indicator and a documented fallback policy.
-- **Verification:** Evaluate cold-start slices and outage scenarios independently.
-
-### F-27: Zero-weight aggregation
-
-- **Trigger:** A weighted mean yields NaN or infinity.
-- **Competing hypotheses:** All eligible weights are zero, or numeric precision overflowed.
-- **Discriminating check:** Log the denominator and individual finite weights for failed requests.
-- **Expected signal:** A zero denominator confirms an undefined weighted mean.
-- **Bounded correction:** Use a missing-neighborhood representation instead of dividing by zero.
-- **Verification:** Test empty, all-zero, extreme, and mixed weights.
-
-### F-28: Graph drift
-
-- **Trigger:** Model performance declines on a stable volume.
-- **Competing hypotheses:** Relation composition changed, or labels matured differently across cohorts.
-- **Discriminating check:** Compare degree, node types, edge types, freshness, and outcome maturity by cohort.
-- **Expected signal:** Structural shift preceding performance decline motivates a graph-drift investigation.
-- **Bounded correction:** Reassess relation construction and retrain only with valid mature data.
-- **Verification:** Compare a stable tabular baseline and audited cohort slices.
-
-### F-29: Proxy discrimination
-
-- **Trigger:** One community receives disproportionate alerts.
-- **Competing hypotheses:** A weak shared-location feature proxies protected status, or underlying exposure differs.
-- **Discriminating check:** Audit score, review, and confirmed-outcome rates by legally appropriate group and context.
-- **Expected signal:** Large disparities require investigation but do not alone prove the cause.
-- **Bounded correction:** Engage fairness, legal, and domain owners; restrict unsupported proxy use.
-- **Verification:** Monitor appeals and subgroup errors after any policy change.
-
-### F-30: Investigator overload
-
-- **Trigger:** Backlog rises despite high model precision.
-- **Competing hypotheses:** Arrivals exceed review throughput, or case complexity increased.
-- **Discriminating check:** Measure incoming distinct cases, completed cases, and handling time distributions.
-- **Expected signal:** Sustained arrival above completion explains persistent backlog growth.
-- **Bounded correction:** Reduce workload, increase capacity, or revise prioritization with risk ownership.
-- **Verification:** Track aging, throughput, and unresolved high-risk cases.
-
-### F-31: Leak through blocking action
-
-- **Trigger:** Downstream account closure is a powerful feature.
-- **Competing hypotheses:** Closure was triggered by the same risk label, or a prior independent closure is legitimate evidence.
-- **Discriminating check:** Trace action trigger, execution time, and causal dependency.
-- **Expected signal:** An action triggered by the outcome being predicted is downstream leakage.
-- **Bounded correction:** Exclude downstream actions and keep independent prior actions only if time-safe.
-- **Verification:** Use a causal provenance review and retrospective feature replay.
-
-### F-32: Outcome leakage through component
-
-- **Trigger:** A component suddenly becomes highly predictive.
-- **Competing hypotheses:** A later network investigation created links among confirmed accounts, or earlier connections were already present.
-- **Discriminating check:** Compare edge creation times and provenance with the first investigation timestamp.
-- **Expected signal:** A wave of investigator-created edges after confirmation indicates leakage.
-- **Bounded correction:** Separate observed transactional relations from later investigative annotations.
-- **Verification:** Demonstrate identical predictions when future annotations are removed.
-
-### F-33: Incorrect negative horizon
-
-- **Trigger:** Many negatives later become positive.
-- **Competing hypotheses:** The fixed label horizon is too short, or the target definition changed.
-- **Discriminating check:** Compare late positive discovery rates by cohort age and target policy.
-- **Expected signal:** Substantial late discovery indicates immature negative labeling.
-- **Bounded correction:** Lengthen the horizon or explicitly model unresolved outcomes.
-- **Verification:** Reassess performance after the chosen maturity period.
-
-### F-34: Fraud ring double counting
-
-- **Trigger:** Reported detected loss exceeds plausible account exposure.
-- **Competing hypotheses:** Losses were summed across overlapping ring members, or payments really have independent losses.
-- **Discriminating check:** Join losses to unique transaction and recovery IDs.
-- **Expected signal:** The same loss ID attributed to multiple accounts confirms double counting.
-- **Bounded correction:** Deduplicate at the loss-event grain and account for recoveries.
-- **Verification:** Reconcile the final loss ledger with finance totals.
-
-### F-35: Unstable threshold
-
-- **Trigger:** Alert volume oscillates around the budget.
-- **Competing hypotheses:** Tied scores or bursty candidate arrivals dominate the boundary.
-- **Discriminating check:** Inspect score ties, candidate arrival profile, and threshold update schedule.
-- **Expected signal:** Large tie blocks near the cutoff explain unstable selected sets.
-- **Bounded correction:** Use deterministic tie breaks and a documented batch or pacing policy.
-- **Verification:** Measure daily capacity utilization and rank churn.
-
-### F-36: Unavailable graph service
-
-- **Trigger:** Scoring failures increase during an upstream incident.
-- **Competing hypotheses:** Graph storage is unavailable, or the model server itself is failing.
-- **Discriminating check:** Compare graph-fetch errors and latency with model process health.
-- **Expected signal:** Graph-specific errors with healthy inference identify the dependency.
-- **Bounded correction:** Use an approved tabular or rules fallback with missing-graph status.
-- **Verification:** Exercise recovery and monitor decisions by serving path.
-
-### F-37: Model-version mismatch
-
-- **Trigger:** Replayed scores do not match historical scores.
-- **Competing hypotheses:** The model artifact differs, or the feature snapshot differs.
-- **Discriminating check:** Pin artifact checksum and feature snapshot separately in a controlled replay.
-- **Expected signal:** A mismatch only after model substitution identifies artifact drift.
-- **Bounded correction:** Record immutable model, feature, and graph versions for each score.
-- **Verification:** Reproduce a stored request with its original artifacts.
-
-### F-38: Hidden fanout cap
-
-- **Trigger:** Offline graph model outperforms online.
-- **Competing hypotheses:** Serving silently truncates neighborhoods, or its graph freshness differs.
-- **Discriminating check:** Compare fetched neighbor IDs, fanout limits, and snapshot versions.
-- **Expected signal:** Systematic missing neighbors at exactly the cap indicate truncation.
-- **Bounded correction:** Train and evaluate with serving-equivalent sampling and report incompleteness.
-- **Verification:** Measure quality and latency over the actual degree distribution.
-
-### F-39: Explainer path includes future edge
-
-- **Trigger:** An analyst sees a plausible but historically impossible rationale.
-- **Competing hypotheses:** The explanation used the current graph rather than the scoring snapshot.
-- **Discriminating check:** Compare every explanation edge availability with the decision timestamp.
-- **Expected signal:** Any edge unavailable at scoring invalidates the purported historical explanation.
-- **Bounded correction:** Generate explanation paths from the exact versioned scoring snapshot.
-- **Verification:** Replay explanations after adding a later edge and confirm they do not change.
-
-### F-40: Misread attention weights
-
-- **Trigger:** Reviewers treat a large attention weight as proof of causation.
-- **Competing hypotheses:** Weights were presented as explanations, or reviewers overinterpreted a ranking cue.
-- **Discriminating check:** Check interface language and test whether perturbing the edge changes the prediction.
-- **Expected signal:** A high weight without a stable score effect shows why the weight alone is insufficient.
-- **Bounded correction:** Present provenance and model sensitivity as leads, not legal evidence.
-- **Verification:** Validate explanations with investigators and preserve appeal channels.
-
-### F-41: Privacy-boundary traversal
-
-- **Trigger:** A graph query crosses a tenant boundary.
-- **Competing hypotheses:** An authorization filter was omitted, or entity identifiers collided across tenants.
-- **Discriminating check:** Trace tenant-scoped keys and graph-fetch authorization decisions.
-- **Expected signal:** A fetched edge outside the permitted tenant confirms an access-control defect.
-- **Bounded correction:** Enforce authorization at data access and isolate identifier namespaces.
-- **Verification:** Test adversarial cross-tenant paths and audit access logs.
-
-### F-42: Deletion not propagated
-
-- **Trigger:** A deleted identifier remains in a derived embedding.
-- **Competing hypotheses:** The deletion reached the source but not caches or training datasets.
-- **Discriminating check:** Trace deletion requests through graph, cache, features, embeddings, and lineage.
-- **Expected signal:** A retained derived artifact after its deletion deadline indicates propagation failure.
-- **Bounded correction:** Apply the approved deletion and model-remediation policy across derivatives.
-- **Verification:** Verify removal with lineage-based checks and independent access audit.
-
-### F-43: Contradictory graph labels
-
-- **Trigger:** A node has both confirmed fraud and confirmed legitimate labels.
-- **Competing hypotheses:** Labels refer to different events or times, or adjudications conflict.
-- **Discriminating check:** Inspect label target grain, effective time, and adjudication history.
-- **Expected signal:** Different transaction targets can coexist without a contradiction.
-- **Bounded correction:** Represent target and version explicitly; route real disputes to review.
-- **Verification:** Test outcome joins on multiple transactions per account.
-
-### F-44: Component explosion
-
-- **Trigger:** Most of the population joins one graph component.
-- **Competing hypotheses:** A shared payment processor or device hub connects many benign entities, or linkage rules overmerged accounts.
-- **Discriminating check:** Break down edges responsible for component growth by relation type.
-- **Expected signal:** Removing a generic infrastructure relation in analysis fragments the component.
-- **Bounded correction:** Define relation-aware components or bounded motifs rather than declaring one giant ring.
-- **Verification:** Audit retained and lost links against known cases.
-
-### F-45: Cold-start distribution
-
-- **Trigger:** New entities are underrepresented in training.
-- **Competing hypotheses:** Graph methods require historical edges, or the candidate population changed.
-- **Discriminating check:** Report degree-zero rates and performance by entity age.
-- **Expected signal:** A concentrated decline for new nodes indicates cold-start weakness.
-- **Bounded correction:** Combine self features and a separate cold-start policy.
-- **Verification:** Hold out new entities by time and monitor their outcomes.
-
-### F-46: Circular review evidence
-
-- **Trigger:** Model features include reviewer suspicion from a prior model.
-- **Competing hypotheses:** The prior decision reflects a model score, or it is independent investigator evidence.
-- **Discriminating check:** Trace reviewer annotation provenance and the information presented to reviewers.
-- **Expected signal:** Annotations made after viewing the model score can encode feedback.
-- **Bounded correction:** Separate independently observed facts from model-generated suggestions.
-- **Verification:** Use blinded or randomized review when feasible and ethically approved.
-
-### F-47: Outcome attribution error
-
-- **Trigger:** A ring investigation credits all linked accounts as confirmed fraud.
-- **Competing hypotheses:** The case outcome was incorrectly broadcast to members, or each member was separately adjudicated.
-- **Discriminating check:** Compare entity-level evidence and adjudication records to case-level status.
-- **Expected signal:** Only case-level evidence with no member findings does not establish member guilt.
-- **Bounded correction:** Keep case and entity labels distinct and retain unknown member outcomes.
-- **Verification:** Audit a sample of case-to-member label assignments.
-
-### F-48: Threshold calibration shift
-
-- **Trigger:** A score labeled 0.8 no longer corresponds to observed frequency.
-- **Competing hypotheses:** Base rates changed, or label ascertainment changed with the review policy.
-- **Discriminating check:** Compare calibration on mature randomly audited cases across periods.
-- **Expected signal:** A shift on an unbiased audit set supports changed calibration.
-- **Bounded correction:** Recalibrate on a representative mature sample and document uncertainty.
-- **Verification:** Monitor reliability by cohort and action policy.
-
-### F-49: Graph build partial failure
-
-- **Trigger:** A scheduled snapshot has unexpectedly low degree.
-- **Competing hypotheses:** A source partition failed, or actual activity dropped.
-- **Discriminating check:** Compare source offsets, partition completion markers, and edge counts by source.
-- **Expected signal:** Missing completion markers identify an incomplete build.
-- **Bounded correction:** Mark the snapshot incomplete and use a documented fallback.
-- **Verification:** Rebuild idempotently and reconcile source counts before activation.
-
-### F-50: Community detection instability
-
-- **Trigger:** Small data changes substantially alter assigned rings.
-- **Competing hypotheses:** The clustering algorithm is unstable, or a high-impact bridge is real.
-- **Discriminating check:** Vary seed and perturb uncertain edges while holding the snapshot fixed.
-- **Expected signal:** Large membership changes across seeds indicate algorithmic instability.
-- **Bounded correction:** Report uncertainty and avoid treating a cluster assignment as a finding.
-- **Verification:** Review stability and investigator utility before operational use.
-
-### F-51: Loss-of-label signal
-
-- **Trigger:** Neighbor label feature suddenly becomes mostly missing.
-- **Competing hypotheses:** The label pipeline is delayed, or fraud has decreased.
-- **Discriminating check:** Compare label stream lag, availability watermark, and case outcomes.
-- **Expected signal:** A stalled watermark with stable event volume supports pipeline delay.
-- **Bounded correction:** Use a missingness-aware fallback and repair the label stream.
-- **Verification:** Check that recovered labels do not retroactively enter old predictions.
-
-### F-52: Data poisoning
-
-- **Trigger:** Many accounts intentionally share a benign high-degree identifier.
-- **Competing hypotheses:** Adversaries are manipulating a graph feature, or the identifier is a legitimate public service.
-- **Discriminating check:** Inspect sudden coordination, relation provenance, and independently verified activity.
-- **Expected signal:** A coordinated burst with weak evidence suggests manipulation but is not proof.
-- **Bounded correction:** Limit weak-edge influence and add analyst review for coordinated changes.
-- **Verification:** Test adversarial edge insertion against both ranking and false positives.
-
-### F-53: Score gaming
-
-- **Trigger:** Fraudsters split transfers across new accounts to evade thresholds.
-- **Competing hypotheses:** The rule is vulnerable to fragmentation, or behavior changed innocently.
-- **Discriminating check:** Compare aggregate flow patterns and account creation sequences under time-safe windows.
-- **Expected signal:** A shift from large transfers to coordinated small transfers is a lead, not proof.
-- **Bounded correction:** Use bounded multi-entity features alongside policy review.
-- **Verification:** Evaluate on later cohorts and monitor unintended impact on legitimate users.
-
-### F-54: Wrong capacity unit
-
-- **Trigger:** A top-100 account ranking exceeds daily investigator capacity.
-- **Competing hypotheses:** Accounts were equated with cases, or cases have variable review effort.
-- **Discriminating check:** Measure distinct investigations and handling minutes for the selected accounts.
-- **Expected signal:** More than the available handling minutes demonstrates a capacity mismatch.
-- **Bounded correction:** Rank case bundles with effort estimates and retain an escalation path.
-- **Verification:** Compare actual labor minutes and outcomes against the budget.
-
-### F-55: Score censoring by intervention
-
-- **Trigger:** Observed fraud loss falls for the high-score group.
-- **Competing hypotheses:** Intervention prevented loss, or high scores were false positives.
-- **Discriminating check:** Compare treatment and outcomes under an authorized randomized or quasi-experimental design.
-- **Expected signal:** A policy-driven gap in observation prevents naive loss comparisons.
-- **Bounded correction:** Estimate intervention effects with a defensible design and legal oversight.
-- **Verification:** Report policy, uncertainty, and any remaining confounding.
-
-### F-56: Feature decay bug
-
-- **Trigger:** Older relationships receive more weight than recent relationships.
-- **Competing hypotheses:** The decay sign is reversed, or event ages were computed with the wrong timezone.
-- **Discriminating check:** Calculate weights for two known ages with fixed decision time.
-- **Expected signal:** Older weight exceeding newer weight under a decreasing rule indicates a defect.
-- **Bounded correction:** Correct age calculation and verify nonnegative eligible ages.
-- **Verification:** Test equal ages, future events, and very old events.
-
-### F-57: Cross-relation normalization
-
-- **Trigger:** A generic device hub overwhelms rare bank-transfer links.
-- **Competing hypotheses:** All relation types share one denominator, or message scales differ.
-- **Discriminating check:** Inspect per-relation counts and contribution magnitudes before combination.
-- **Expected signal:** Dominance by one relation despite small per-edge signals supports scale imbalance.
-- **Bounded correction:** Normalize by relation and validate relation-specific weights.
-- **Verification:** Run ablations and inspect both quality and subgroup false positives.
-
-### F-58: Evaluation cohort mismatch
-
-- **Trigger:** Graph model appears better than baseline.
-- **Competing hypotheses:** Different eligible candidates or label maturity were used, or the improvement is real.
-- **Discriminating check:** Join candidate IDs and decision windows across model evaluations.
-- **Expected signal:** Nonidentical candidate sets prevent a clean paired comparison.
-- **Bounded correction:** Re-evaluate both models on the same time-safe cohort and capacity.
-- **Verification:** Report paired uncertainty and cohort exclusions.
-
-### F-59: Unbounded two-hop expansion
-
-- **Trigger:** Memory rises sharply after adding one GNN layer.
-- **Competing hypotheses:** Fanout multiplies across layers, or tensors are retained unnecessarily.
-- **Discriminating check:** Trace distinct sampled nodes, sampled edges, and activation memory by layer.
-- **Expected signal:** Growth matching fanout expansion supports graph expansion as the dominant mechanism.
-- **Bounded correction:** Reduce fanout or layers and test the lost relational coverage.
-- **Verification:** Measure memory and quality at each workload percentile.
-
-### F-60: Stale intervention policy
-
-- **Trigger:** A historically good model generates costly low-value alerts.
-- **Competing hypotheses:** Fraud tactics changed, or the old action policy no longer matches capacity.
-- **Discriminating check:** Compare case mix, review effort, and mature outcomes against historical periods.
-- **Expected signal:** Quality decline restricted to a changed action path suggests policy mismatch.
-- **Bounded correction:** Revisit decision thresholds and graph features with policy owners.
-- **Verification:** Monitor both fraud outcomes and customer harm after change.
-
-### Evaluation design: a concrete review protocol
-
-1. Fix the intended decision: rank cases for review at the start of each investigation shift.
-2. Fix the eligibility population before scores are examined.
+
+A decision record should contain: candidate id, decision timestamp, graph snapshot id, feature version, model artifact checksum, queue policy version, and whether graph retrieval completed, timed out, or was truncated at a cap.
+
+`neighbours = 0 after a successful fetch` and `neighbours = 0 inserted by a fallback after a failure` must be distinguishable downstream. They look identical in a feature vector and mean opposite things.
+
+A fallback score is not comparable to a graph score. If both enter the same queue, the ranking mixes two different scales and the calibration claim silently becomes false. Either calibrate the fallback separately or route fallback traffic to a different, smaller queue with its own capacity.
+
+Define operational maxima for traversal depth, per-relation fanout, total edges examined and wall time. A returned-edge cap alone does not bound the work, because selecting a sample from a large adjacency list may require scanning far more edges than are returned.
+
+If a query hits its work budget, return an incomplete flag. A silently partial neighbourhood is worse than a refused request, because the partial result is plausible and therefore survives review.
+
+Track freshness per source. Aggregate ingestion health can look green while one relation type is fourteen hours stale, and that relation may be the one carrying the signal.
+
+Corrections should be append-only or versioned so that old snapshots remain reconstructible. Where retention policy forbids keeping them, record the reproducibility limitation explicitly rather than synthesising a substitute.
+
+Rollbacks must pin the graph schema and the feature transformations compatible with the older model. Rolling back a model against a newer schema produces a crash or, worse, a silent misparse.
+
+Access control applies during traversal, including intermediate nodes, not only when formatting the explanation. A multi-tenant graph with a filter applied at output time has already read data it should not have read.
+
+Deletion must propagate through caches, precomputed features, embeddings, training exports and investigator attachments, under the applicable retention policy. Where full model remediation is impossible, say so instead of promising instantaneous removal.
+
+An investigation package should state the seed, the permitted relationships, the source timestamps, and why each item is relevant. It should separate raw evidence from model-generated hypotheses and later analyst annotations, and it should present benign alternative explanations — shared infrastructure, commercial relationships — alongside the risk indicators.
+
+A sudden backlog rise can come from higher arrivals, slower handling, duplicates, or lost staffing. Measure all four before touching a threshold. As a trivial illustration: 55 arrivals and 40 completions add 15 cases in a period, and a threshold change cannot retroactively create investigator hours.
+
+**Takeaway:** Reject unsafe methods first, then demand measured incremental value against the simplest credible baseline at the real budget.
+
+## 8. Failure Modes & Edge Cases
+
+Every entry is HYPOTHETICAL. Each names a competing-cause set, a check that discriminates between them, a bounded fix and a verification. A negative diagnostic does not prove the absence of other failures, and a fix counts as complete only when a replay or controlled observation confirms the intended invariant.
+
+### F-01 Late edge ingestion
+
+Symptom: the offline graph contains a pre-decision transaction that the online feature never saw, so replay and production disagree.
+
+Competing causes: the record arrived after scoring (genuine late availability), or the online fetch dropped an already-available record (serving defect). The first is a data-contract issue; the second is an availability incident.
+
+Discriminating check: compare the source event timestamp, the serving-availability timestamp and the request trace for the same account. A late availability stamp with a successful upstream write supports the first cause; a missing write or a failed fetch with an early availability stamp supports the second.
+
+Bounded fix: enforce both event and availability cutoffs in the feature path, and repair dropped writes as a separate change. Do not fix a serving defect by loosening the cut.
+
+Verification: replay the frozen request from an append-only availability log and confirm byte-identical feature values.
+
+### F-02 Post-outcome relationship
+
+Symptom: a relationship type appears almost exclusively among confirmed positives and is highly predictive.
+
+Competing causes: the edge was created by the investigation after adjudication (downstream artifact), or the relationship genuinely existed before the decision and carries real signal.
+
+Discriminating check: join edge creation timestamp and creator identity against adjudication time. Edges authored by the case system after the outcome are artifacts.
+
+Bounded fix: exclude investigation-derived relation types from pre-decision features while retaining them for post-hoc review.
+
+Verification: removing those edges should restore offline features to the values in the online log.
+
+### F-03 Future label in a neighbourhood aggregate
+
+Symptom: a neighbour-label rate feature produces near-perfect offline discrimination.
+
+Competing causes: labels learned after each seed's decision entered the aggregate, or the feature captures genuinely early known alerts that were available at the time.
+
+Discriminating check: list every label's availability timestamp used in the aggregate for a sample of seeds and compare against each seed's decision time.
+
+Bounded fix: recompute using only labels available before each individual seed's decision — not before the training cutoff, which is a different and weaker constraint.
+
+Verification: compare a historical feature replay to the online feature log across a stratified sample of seeds.
+
+### F-04 Self-label contamination
+
+Symptom: training performance far exceeds validation, and the gap survives regularisation.
+
+Competing causes: the seed's own label reached its neighbourhood statistic through a self-loop or cycle, or the model is simply over-parameterised.
+
+Discriminating check: remove the seed label from the store and recompute; trace every aggregation path that returns to the seed.
+
+Bounded fix: compute label aggregates out-of-fold with explicit seed exclusion and temporal eligibility.
+
+Verification: build a fixture with unique labels per node and assert that changing a held-out seed's label cannot change its own feature.
+
+### F-05 Entity overmerge
+
+Symptom: one identity suddenly acquires thousands of peers and its scores collapse toward the population mean.
+
+Competing causes: an identifier collision merged unrelated people, or a legitimate enterprise genuinely operates many accounts.
+
+Discriminating check: inspect match evidence per merged pair — the attributes that triggered the match and their agreement rate — and the identifier's cardinality before and after.
+
+Bounded fix: split using reversible provenance and tighten the match rule; keep the old and new mappings.
+
+Verification: replay prior scores, quantify the alert and customer impact, and re-check the merge on an adjudicated pair sample.
+
+### F-06 Entity undersplit
+
+Symptom: known repeat actors remain in separate components with no shared neighbourhood.
+
+Competing causes: one actor fragmented across identifiers, or the apparent similarity reflects a shared service rather than a shared person.
+
+Discriminating check: inspect independently validated linkage evidence and downstream investigation findings for the candidate pairs.
+
+Bounded fix: add a reviewed, time-versioned linkage rather than a global fuzzy merge.
+
+Verification: measure link precision and recall on an independently adjudicated pair sample, including hard negatives from shared infrastructure.
+
+### F-07 Shared-device supernode
+
+Symptom: tens of thousands of accounts share one device token and every aggregate on those accounts is dominated by it.
+
+Competing causes: a public kiosk or corporate device pool (real sharing), a default sentinel token (instrumentation), or a genuinely coordinated ring.
+
+Discriminating check: inspect token generation rules, session diversity, site context and the time distribution of first sightings.
+
+Bounded fix: represent relation reliability explicitly, cap expansion per relation, and treat sentinel values as absent rather than as edges.
+
+Verification: confirm that hub treatment does not erase confirmed small-ring signal, by measuring recall on a known small-ring audit set.
+
+### F-08 Transfer direction reversal
+
+Symptom: money-flow patterns look economically backwards to an investigator.
+
+Competing causes: ingestion inverted sender and receiver, or an analyst read a computed reverse edge as a real payment.
+
+Discriminating check: compare stored edge endpoints against source transaction records by transaction id.
+
+Bounded fix: correct the mapping, and give computational reverse edges a distinct relation type.
+
+Verification: replay a known sender/receiver ledger and check flow conservation per account.
+
+### F-09 Duplicate events
+
+Symptom: degree and event counts jump after a retry, and means shift without any new activity.
+
+Competing causes: at-least-once delivery duplicated writes, or the source emitted legitimately repeated payments.
+
+Discriminating check: group by immutable source event id and compare payloads; identical ids with repeated rows indicate duplication.
+
+Bounded fix: make edge ingestion idempotent on source event id while preserving genuinely distinct events.
+
+Verification: replay the same batch twice and assert graph state is unchanged.
+
+### F-10 Correction overwritten
+
+Symptom: historical feature replay disagrees with the original serving log.
+
+Competing causes: a source correction overwrote the earlier value in place, or the original online result was itself stale.
+
+Discriminating check: compare version history and correction arrival time against the decision timestamp.
+
+Bounded fix: store versions and select the one available at the decision; make corrections append-only.
+
+Verification: replay on both sides of the correction's availability boundary and confirm the feature only changes after it.
+
+### F-11 Clock skew
+
+Symptom: events appear to arrive before they occurred.
+
+Competing causes: source and ingestion clocks disagree, or event-time semantics were misunderstood (for example, a scheduled rather than executed timestamp).
+
+Discriminating check: compare clock-synchronisation telemetry with representative source payloads; a consistent offset across one source indicates skew.
+
+Bounded fix: fix clock discipline and define conservative handling for uncertain timestamps.
+
+Verification: assert ordering on monitored synthetic events after correction.
+
+### F-12 Time zone and daylight saving
+
+Symptom: the daily graph changes at an unexpected hour, or a one-hour discontinuity appears in degree counts.
+
+Competing causes: a local timestamp parsed as UTC, or a reporting window defined in a different zone.
+
+Discriminating check: trace one raw timestamp through zone assignment, DST rule and normalised value.
+
+Bounded fix: store explicit zone-aware timestamps and preserve the original representation.
+
+Verification: test timestamps on both sides of a DST transition.
+
+### F-13 Recycled device token
+
+Symptom: one device appears to change hands implausibly often.
+
+Competing causes: a recycled token represents successive physical devices, or a shared device genuinely has many users.
+
+Discriminating check: compare token lifetime, app version and platform generation policy.
+
+Bounded fix: version token namespaces and downgrade device use to a weak relation.
+
+Verification: validate against independently reviewed ownership evidence for a sample.
+
+### F-14 Train/test component overlap
+
+Symptom: validation precision looks far better than the following month's production precision.
+
+Competing causes: near-duplicate entities span the split, or legitimate historical structure is genuinely available at deployment and the split was unrealistically harsh.
+
+Discriminating check: measure entity and component overlap between train and test, and compare against the overlap the deployment actually has.
+
+Bounded fix: use a temporal holdout as primary and report entity-disjoint and component-disjoint tests as stress tests, not as the headline.
+
+Verification: state which known historical neighbours remain permissible at deployment and confirm the test split reflects it.
+
+### F-15 Full-graph normalisation
+
+Symptom: test-node features change when future edges are added, despite a time-based split.
+
+Competing causes: degree and normalisation statistics were computed on the full graph, or a declared transductive protocol allowed it.
+
+Discriminating check: record when degree statistics and scalers were computed and on which snapshot.
+
+Bounded fix: fit every transformation on permitted training snapshots and recompute per evaluation snapshot.
+
+Verification: assert that altering a future edge cannot change any earlier training feature.
+
+### F-16 Unreviewed cases labelled negative
+
+Symptom: precision looks stable while recall quietly collapses.
+
+Competing causes: unreviewed positives were written as negatives, or the underlying fraud mix genuinely shifted.
+
+Discriminating check: join label provenance and compare the unknown fraction by score band and by cohort.
+
+Bounded fix: keep unknown distinct from negative, and collect randomised audit labels.
+
+Verification: report audited estimates with inclusion probabilities and intervals, and compare against the naive figure.
+
+### F-17 Delayed outcomes
+
+Symptom: recent cohorts look cleaner than older cohorts at the same decision age.
+
+Competing causes: outcomes have not matured, or controls genuinely reduced fraud.
+
+Discriminating check: plot cumulative outcome discovery against decision age for each cohort.
+
+Bounded fix: restrict the primary comparison to mature cohorts and report censoring explicitly.
+
+Verification: recompute older cohorts at matched observation ages and confirm the gap narrows or persists.
+
+### F-18 Changed review policy
+
+Symptom: reported model precision rises immediately after a threshold or routing change.
+
+Competing causes: reviewers now see a different case mix, or ranking genuinely improved.
+
+Discriminating check: compare both models on the same pre-policy candidate cohort at fixed capacity.
+
+Bounded fix: separate ranking changes from policy changes and version the policy.
+
+Verification: use a shadow queue or an authorised randomised comparison to isolate the two effects.
+
+### F-19 Top-k duplicates
+
+Symptom: the queue is full but only a handful of distinct networks were investigated.
+
+Competing causes: many account alerts belong to one case, or the incident genuinely needs several independent reviews.
+
+Discriminating check: cluster alerts by case identity and inspect the queue before and after deduplication.
+
+Bounded fix: rank at the case grain with traceable member alerts, and report distinct cases as the capacity unit.
+
+Verification: measure distinct cases reviewed and positives found under the same labour budget.
+
+### F-20 Case merge after review
+
+Symptom: historical case metrics change retroactively with no score change.
+
+Competing causes: multiple alerts were merged into one investigation, or outcomes were corrected.
+
+Discriminating check: track case-merge versions and outcome attribution at each reporting cutoff.
+
+Bounded fix: freeze the evaluation unit per report, or version case membership.
+
+Verification: reconcile alert, case and outcome counts at each snapshot.
+
+### F-21 High-degree traversal timeout
+
+Symptom: tail latency spikes on a small fraction of seeds.
+
+Competing causes: one hub causes fanout explosion, or the store has an unrelated I/O bottleneck.
+
+Discriminating check: correlate edges examined and hub degree with per-request timing, stratified by degree bucket.
+
+Bounded fix: bound per-relation fanout and total work, and return an explicit incomplete status.
+
+Verification: load-test degree-stratified traffic and compare tail latency against quality loss.
+
+### F-22 Sampling bias
+
+Symptom: a bounded neighbourhood consistently misses a known cluster.
+
+Competing causes: sampling favours recent or frequent edges, or the cluster genuinely was not present at decision time.
+
+Discriminating check: log sampled and eligible neighbour ids with selection probabilities.
+
+Bounded fix: stratify samples by relation or reserve budget for rare evidence.
+
+Verification: measure recall and variance against full neighbourhoods on a feasible audit set.
+
+### F-23 Sampling instability near the threshold
+
+Symptom: the same account receives different scores on repeated requests within one snapshot.
+
+Competing causes: random neighbour sampling changes the aggregate, or a feature dependency changed between requests.
+
+Discriminating check: fix snapshot and model version, repeat with controlled seeds, and separate variance components.
+
+Bounded fix: use reproducible sampling, or average several draws inside an explicit latency budget.
+
+Verification: measure rank churn near the capacity boundary, which is where churn costs a review slot.
+
+### F-24 Stale graph cache
+
+Symptom: online predictions use relationships that the store has already superseded.
+
+Competing causes: cache invalidation failed, or ingestion is legitimately delayed and the cache is correct.
+
+Discriminating check: compare source availability, cache version and the request's snapshot timestamp.
+
+Bounded fix: repair invalidation and expose graph freshness to the serving policy so it can degrade deliberately.
+
+Verification: inject a known edge and trace its visibility end to end through every layer.
+
+### F-25 Online–offline feature skew
+
+Symptom: training and serving values differ for the same entity at the same nominal cutoff.
+
+Competing causes: different aggregation code, a mismatched as-of snapshot, or a serialisation difference.
+
+Discriminating check: replay the same entity, cutoff, source versions and model version through both paths and diff intermediates.
+
+Bounded fix: unify feature semantics and keep a parity fixture in the test suite.
+
+Verification: compare exact values on edge cases including empty neighbourhoods, single neighbours and hub neighbours.
+
+### F-26 Missing-neighbourhood default
+
+Symptom: new accounts score uniformly low, and a spike of identical values appears for accounts under thirty days old.
+
+Competing causes: empty neighbourhood mapped silently to zero, or genuinely thin history.
+
+Discriminating check: inspect the missing indicator separately from the numeric aggregate and count exact-default values by tenure.
+
+Bounded fix: add an explicit indicator and a documented, evaluated fallback.
+
+Verification: evaluate the cold-start slice and the outage slice as separate populations, not pooled with the main result.
+
+### F-27 Zero-weight aggregation
+
+Symptom: the weighted mean returns `NaN` or infinity.
+
+Competing causes: all eligible weights are zero, or numeric precision overflowed on extreme values.
+
+Discriminating check: log the denominator and the individual finite weights for failed requests.
+
+Bounded fix: emit a missing-neighbourhood representation instead of dividing by zero.
+
+Verification: test empty, all-zero, extreme and mixed-weight cases in one parametrised test.
+
+### F-28 Graph drift
+
+Symptom: model performance declines at stable volume.
+
+Competing causes: relation composition changed (new instrumentation, new product), or labels matured differently across cohorts.
+
+Discriminating check: compare degree distribution, relation mix, freshness and outcome maturity by cohort.
+
+Bounded fix: reassess relation construction and retrain only on valid mature data.
+
+Verification: run a stable tabular baseline alongside to separate graph drift from general population drift.
+
+### F-29 Proxy discrimination
+
+Symptom: one community receives a disproportionate share of alerts.
+
+Competing causes: a weak shared-location or shared-device feature proxies a protected characteristic, or underlying exposure genuinely differs.
+
+Discriminating check: audit score, review and confirmed-outcome rates by legally appropriate group and context, with counsel.
+
+Bounded fix: engage fairness, legal and domain owners; restrict unsupported proxy features.
+
+Verification: monitor appeals and subgroup error rates after any change.
+
+### F-30 Investigator overload
+
+Symptom: backlog rises despite high reported precision.
+
+Competing causes: arrivals exceed completion, or case complexity increased so each case takes longer.
+
+Discriminating check: measure incoming distinct cases, completed cases and handling-time distributions separately.
+
+Bounded fix: reduce workload volume, add capacity, or revise prioritisation with the risk owner — not silently.
+
+Verification: track aging, throughput and unresolved high-risk count.
+
+### F-31 Leak through the action
+
+Symptom: "account closed" or "card blocked" is a powerful feature.
+
+Competing causes: closure was triggered by the very risk assessment being predicted, or a prior independent closure is legitimate evidence.
+
+Discriminating check: trace the action's trigger, execution time and causal dependency on the label.
+
+Bounded fix: exclude downstream actions; retain prior independent actions only when time-safe and independently sourced.
+
+Verification: causal provenance review plus retrospective feature replay.
+
+### F-32 Outcome leakage through a component
+
+Symptom: a component becomes highly predictive immediately after a large investigation.
+
+Competing causes: the investigation created links among the confirmed accounts, or the connections genuinely predated it.
+
+Discriminating check: compare edge creation times and provenance with the first investigation timestamp.
+
+Bounded fix: separate observed transactional relations from investigative annotations at the schema level.
+
+Verification: demonstrate identical predictions when future annotations are removed.
+
+### F-33 Immature negatives
+
+Symptom: many "legitimate" negatives later become positive.
+
+Competing causes: the fixed label horizon is too short for this fraud type, or the target definition changed.
+
+Discriminating check: compare late discovery rates by cohort age for each fraud type.
+
+Bounded fix: lengthen the horizon for that type, or model unresolved outcomes explicitly.
+
+Verification: reassess performance after the chosen maturity period elapses, and report the change.
+
+### F-34 Ring-level double counting
+
+Symptom: reported detected loss exceeds plausible exposure.
+
+Competing causes: losses summed across overlapping ring members, or payments genuinely carry independent losses.
+
+Discriminating check: join losses to unique transaction and recovery ids.
+
+Bounded fix: deduplicate at the loss-event grain and net recoveries.
+
+Verification: reconcile the final ledger against finance totals.
+
+### F-35 Unstable selection threshold
+
+Symptom: alert volume oscillates around the budget and the selected set churns daily.
+
+Competing causes: large blocks of tied scores sit at the boundary, or candidate arrivals are bursty.
+
+Discriminating check: inspect tie mass at the cutoff, arrival profile and threshold update schedule.
+
+Bounded fix: deterministic tie-breaks plus a documented batching or pacing policy.
+
+Verification: measure capacity utilisation and rank churn per period.
+
+### F-36 Graph service unavailable
+
+Symptom: scoring failures rise during an upstream incident.
+
+Competing causes: the graph store is down, or the model server itself is failing.
+
+Discriminating check: compare graph-fetch error rates and latency against inference process health.
+
+Bounded fix: an approved fallback with an explicit missing-graph status, calibrated separately.
+
+Verification: exercise recovery and monitor the decision mix by serving path.
+
+### F-37 Model-version mismatch in replay
+
+Symptom: replayed scores differ from stored scores.
+
+Competing causes: the model artifact differs, or the feature snapshot differs.
+
+Discriminating check: pin artifact checksum and snapshot id separately, and vary one at a time.
+
+Bounded fix: record immutable model, feature and graph versions with every score.
+
+Verification: reproduce a stored request with its original artifacts and match exactly.
+
+### F-38 Hidden fanout cap
+
+Symptom: offline graph model outperforms online by a wide margin at identical candidates.
+
+Competing causes: serving silently truncates neighbourhoods, or serving reads a fresher graph.
+
+Discriminating check: compare fetched neighbour ids, applied caps and snapshot versions for the same seeds.
+
+Bounded fix: train with serving-equivalent sampling and report incompleteness in the feature contract.
+
+Verification: measure quality and latency across the actual degree distribution, not a uniform sample.
+
+### F-39 Explanation built from the current graph
+
+Symptom: an investigator sees a rationale containing a relationship that could not have been known at scoring.
+
+Competing causes: the explanation was generated against today's graph, or the decision used a different snapshot than recorded.
+
+Discriminating check: compare every explanation edge's availability against the decision timestamp.
+
+Bounded fix: generate explanations from the recorded snapshot id only.
+
+Verification: add a later edge and confirm explanations for old decisions are unchanged.
+
+### F-40 Attention misread as causation
+
+Symptom: reviewers treat a large attention weight as proof that an edge caused the score.
+
+Competing causes: the interface presents weights as evidence, or reviewers import their own causal reading of a ranking cue.
+
+Discriminating check: perturb the edge and observe the score change; a stable weight with no score movement demonstrates the gap.
+
+Bounded fix: present provenance and sensitivity as leads, with explicit language about what a weight is.
+
+Verification: usability review with investigators plus preserved appeal channels.
+
+### F-41 Cross-tenant traversal
+
+Symptom: a graph query returns an edge the tenant should not see.
+
+Competing causes: an authorisation filter was omitted at traversal, or identifiers collided across tenants.
+
+Discriminating check: trace tenant-scoped keys and the authorisation decision at each hop.
+
+Bounded fix: enforce authorisation at data access and isolate identifier namespaces.
+
+Verification: adversarial cross-tenant path tests plus access-log audit.
+
+### F-42 Deletion not propagated
+
+Symptom: a deleted identifier is still retrievable through a derived artifact.
+
+Competing causes: deletion reached the source but not caches, feature tables, embeddings or exports.
+
+Discriminating check: trace deletion requests through every derivative with lineage.
+
+Bounded fix: apply the approved deletion and model-remediation policy across derivatives.
+
+Verification: lineage-based removal checks plus an independent access audit.
+
+### F-43 Contradictory labels on one node
+
+Symptom: a node carries both a confirmed-fraud and a confirmed-legitimate label.
+
+Competing causes: the labels refer to different targets or times, or the adjudications genuinely conflict.
+
+Discriminating check: inspect label target grain, effective time and adjudication history.
+
+Bounded fix: represent target and version explicitly and route real disputes to review.
+
+Verification: test outcome joins with multiple events per account.
+
+### F-44 Component explosion
+
+Symptom: most of the population falls into one component.
+
+Competing causes: a shared processor or device hub joins benign entities, or linkage rules overmerged accounts.
+
+Discriminating check: decompose component growth by relation type and test removal of generic infrastructure relations.
+
+Bounded fix: relation-aware components or bounded motifs instead of declaring one ring.
+
+Verification: audit retained and lost links against known cases.
+
+### F-45 Cold-start distribution shift
+
+Symptom: performance is strong overall but collapses for accounts younger than thirty days.
+
+Competing causes: graph methods need history that new accounts lack, or the candidate population's tenure mix changed.
+
+Discriminating check: report degree-zero rates and performance by entity age, and compare cohorts over time.
+
+Bounded fix: combine self features with a separate cold-start policy and a documented prior.
+
+Verification: hold out new entities by time and monitor their outcomes separately.
+
+### F-46 Circular review evidence
+
+Symptom: features containing "reviewer suspicion" from a prior model keep the model self-confirming.
+
+Competing causes: the prior annotation reflects a model score, or it reflects independent investigator evidence.
+
+Discriminating check: trace annotation provenance and what information was on screen when it was written.
+
+Bounded fix: separate independently observed facts from model-generated suggestions at the schema level.
+
+Verification: blinded or randomised review where ethics and policy permit.
+
+### F-47 Outcome attribution across a case
+
+Symptom: every account in a confirmed ring is labelled fraudulent.
+
+Competing causes: the case outcome was broadcast to members, or each member was separately adjudicated.
+
+Discriminating check: compare entity-level evidence and adjudication records to the case-level status.
+
+Bounded fix: keep case and entity labels distinct; leave unsupported member outcomes unknown.
+
+Verification: audit a sample of case-to-member assignments.
+
+### F-48 Calibration shift
+
+Symptom: a score of 0.8 no longer corresponds to an 80% observed rate.
+
+Competing causes: base rates changed, or ascertainment changed with the review policy.
+
+Discriminating check: compare calibration on mature randomly audited cases across periods.
+
+Bounded fix: recalibrate on a representative mature sample and document uncertainty.
+
+Verification: monitor reliability by cohort and by action policy.
+
+### F-49 Partial snapshot build
+
+Symptom: a scheduled snapshot has unexpectedly low degree.
+
+Competing causes: a source partition failed, or activity genuinely dropped.
+
+Discriminating check: compare source offsets, partition completion markers and edge counts per source.
+
+Bounded fix: mark the snapshot incomplete and use a documented fallback; do not promote it.
+
+Verification: rebuild idempotently and reconcile counts before activation.
+
+### F-50 Community instability
+
+Symptom: small data changes substantially reassign ring membership.
+
+Competing causes: the clustering algorithm is unstable, or a high-impact bridge edge is real.
+
+Discriminating check: vary the seed and perturb uncertain edges at a fixed snapshot.
+
+Bounded fix: report stability alongside membership and never present a cluster as a finding.
+
+Verification: review stability and investigator utility before any operational use.
+
+### F-51 Label-stream stall
+
+Symptom: the neighbour-label feature becomes mostly missing overnight.
+
+Competing causes: the label pipeline is delayed, or fraud genuinely decreased.
+
+Discriminating check: compare label-stream lag and availability watermark against stable event volume.
+
+Bounded fix: use a missingness-aware fallback and repair the stream.
+
+Verification: confirm recovered labels do not retroactively enter old predictions.
+
+### F-52 Coordinated graph manipulation
+
+Symptom: many accounts intentionally share a benign high-degree identifier.
+
+Competing causes: adversaries are manipulating a graph feature, or the identifier is a legitimate public service.
+
+Discriminating check: inspect coordination signatures, relation provenance and independently verified activity.
+
+Bounded fix: limit weak-edge influence and add review for sudden coordinated changes.
+
+Verification: adversarial insertion tests measuring both ranking and false positives.
+
+### F-53 Fragmentation evasion
+
+Symptom: large transfers split into coordinated small transfers across new accounts.
+
+Competing causes: the threshold rule is vulnerable to fragmentation, or behaviour changed innocently.
+
+Discriminating check: compare aggregate flow and account-creation sequences under time-safe windows.
+
+Bounded fix: bounded multi-entity features alongside policy review.
+
+Verification: evaluate on later cohorts and monitor unintended impact on legitimate users.
+
+### F-54 Wrong capacity unit
+
+Symptom: a top-100 account ranking exceeds daily investigator capacity.
+
+Competing causes: accounts were equated with cases, or cases vary in effort.
+
+Discriminating check: measure distinct investigations and handling minutes for the selected accounts.
+
+Bounded fix: rank case bundles with effort estimates and keep an escalation path.
+
+Verification: compare actual labour minutes and outcomes against the budget.
+
+### F-55 Censoring by intervention
+
+Symptom: observed loss falls for the high-score group.
+
+Competing causes: intervention prevented loss, or high scores were false positives.
+
+Discriminating check: compare treatment and outcomes under an authorised randomised or quasi-experimental design.
+
+Bounded fix: estimate intervention effects with a defensible design and legal oversight.
+
+Verification: report policy, uncertainty and residual confounding.
+
+### F-56 Decay sign error
+
+Symptom: older relationships receive more weight than recent ones.
+
+Competing causes: the decay sign is reversed, or ages were computed across a time-zone boundary.
+
+Discriminating check: compute weights for two known ages at a fixed decision time.
+
+Bounded fix: correct the age computation and assert non-negative eligible ages.
+
+Verification: test equal ages, zero age, future events and very old events.
+
+### F-57 Cross-relation scale imbalance
+
+Symptom: a generic device hub overwhelms rare transfer links in a joint representation.
+
+Competing causes: all relations share one denominator, or message magnitudes differ by orders of magnitude.
+
+Discriminating check: inspect per-relation counts and contribution magnitudes before combination.
+
+Bounded fix: normalise within relation and validate relation weights.
+
+Verification: relation ablations reporting both quality and subgroup false positives.
+
+### F-58 Cohort mismatch in comparison
+
+Symptom: a graph model appears better than the baseline.
+
+Competing causes: different eligible candidates or label maturity were used, or the improvement is real.
+
+Discriminating check: join candidate ids and decision windows across both evaluations.
+
+Bounded fix: re-evaluate both on one time-safe cohort at one capacity.
+
+Verification: report paired uncertainty and the exclusion log.
+
+### F-59 Unbounded two-hop expansion
+
+Symptom: memory rises sharply after adding one layer.
+
+Competing causes: fanout multiplies across layers, or activations are retained unnecessarily.
+
+Discriminating check: trace distinct sampled nodes, edges and activation memory per layer.
+
+Bounded fix: reduce fanout or layers and measure the lost relational coverage.
+
+Verification: measure memory and quality at each workload percentile.
+
+### F-60 Stale intervention policy
+
+Symptom: a historically good model generates costly, low-value alerts.
+
+Competing causes: fraud tactics changed, or the action policy no longer matches capacity.
+
+Discriminating check: compare case mix, effort and mature outcomes against historical periods.
+
+Bounded fix: revisit thresholds and features with policy owners, at the case grain.
+
+Verification: monitor fraud outcomes and customer harm after the change.
+
+### A concrete review protocol
+
+1. Fix the decision being evaluated: rank cases for review at the start of each shift.
+2. Freeze the eligibility population before looking at scores.
 3. Record which accounts and transactions are legally and operationally eligible.
-4. Exclude records unavailable at the decision cutoff, and record the number excluded by reason.
-5. Freeze the candidate-generation logic shared by baseline and challenger.
-6. Freeze case construction rules, including how many alerts can map to one investigation.
-7. Specify a deterministic tie-break rule before selecting the evaluation queue.
-8. Define the comparison budget in case-minutes or an agreed case-count approximation.
-9. Preserve the baseline's original serving features rather than adding challenger-only evidence.
-10. Reconstruct each candidate's graph from records available at its own decision time.
-11. Reconstruct feature versions using the same availability rule.
+4. Exclude records unavailable at the cutoff and count exclusions by reason.
+5. Freeze candidate generation so baseline and challenger share it.
+6. Freeze case-construction rules, including how many alerts may map to one case.
+7. Declare a deterministic tie-break before selecting the queue.
+8. Express the budget in case-minutes, or an agreed case-count approximation.
+9. Preserve the baseline's original serving features; do not add challenger-only evidence.
+10. Reconstruct each candidate's graph at its own decision time.
+11. Reconstruct feature versions under the same availability rule.
 12. Separate graph ingestion time from source event time in the replay ledger.
-13. Record entity-resolution version and any provisional links used for the score.
-14. Do not use later identity corrections to rewrite earlier model inputs.
-15. If such corrections change a label, version the label independently of the features.
-16. Fit scaling, imputation, feature selection, and model parameters only on the training period.
-17. Make early-stopping and hyperparameter decisions using a validation period.
-18. Keep the final later test period untouched until selection is complete.
-19. Fit neighbor-label aggregates using only allowed labels available at each decision.
-20. Exclude the seed's own target and all paths that return it to the feature.
-21. Declare whether previously seen accounts can appear in the test graph.
-22. Treat that recurring-account setting as distinct from an unseen-account stress test.
-23. Preserve historical context that would genuinely be available for an unseen account.
-24. Test the ability to represent a new node without a prelearned node identifier.
-25. Evaluate the same candidate set under both models before choosing top cases.
-26. Deduplicate candidate alerts into the same case unit for both queues.
-27. Report queue overlap so investigators can see how the proposed model changes workload.
-28. Report the number of distinct cases and distinct accounts in each queue.
-29. Record actual or defensible estimated review effort for each selected case.
-30. State the time horizon for outcomes and the date through which labels are available.
-31. Separate confirmed positives, confirmed negatives, and unresolved cases.
-32. Report the fraction unresolved in each score band and each reviewed cohort.
-33. Compute top-k precision only when its label policy and denominator are explicit.
-34. Avoid replacing unresolved selected cases with negative outcomes.
-35. If outcomes are incomplete, publish the known-positive fraction as a lower bound only under the stated label assumptions.
-36. Recognize that even a valid lower bound does not identify the true precision.
-37. Calculate recall only when the total-positive denominator is observed or estimated using a defensible design.
-38. Collect a randomized sample of otherwise unreviewed cases if policy permits.
-39. Record each sampled case's probability of selection.
-40. Record nonresponse and investigation completion separately from sampling.
-41. Use a sampling-aware estimate only if its selection and response assumptions are justified.
-42. Escalate unsupported positivity assumptions: cases with zero sampling probability cannot be recovered from that sample alone.
-43. Compare results on matched calendar windows so changing base rates do not masquerade as lift.
-44. Report the precision-recall tradeoff across several plausible review budgets.
-45. Do not select a budget after inspecting test labels without accounting for that selection.
-46. Report absolute differences as well as ratios between challenger and baseline.
-47. Attach uncertainty intervals that reflect dependence among cases where feasible.
-48. Group overlapping accounts by investigation or network when choosing resampling units.
-49. Explain that grouping choices affect uncertainty and can themselves be uncertain.
-50. Report time-slice variation rather than relying on one aggregate number.
-51. Compare new entities and established entities separately.
-52. Compare low-degree, medium-degree, and hub-connected cases using declared bins.
-53. Compare relation types without claiming that an ablation proves a causal mechanism.
-54. Inspect slices with high missing-neighborhood rates or stale graph snapshots.
-55. Audit whether false positives concentrate around common benign infrastructure.
+13. Record the entity-resolution version and any provisional links used.
+14. Do not rewrite earlier model inputs with later identity corrections.
+15. If a correction changes a label, version the label independently of features.
+16. Fit scaling, imputation, selection and parameters only on the training period.
+17. Make early stopping and hyperparameter choices on a validation period.
+18. Keep the final test period untouched until selection is complete.
+19. Fit neighbour-label aggregates only from labels available at each decision.
+20. Exclude the seed's own target and every path that returns it.
+21. Declare whether previously seen accounts may appear in the test graph.
+22. Treat that setting as distinct from an unseen-account stress test.
+23. Preserve historical context an unseen account would genuinely have.
+24. Test representation of a new node without a prelearned identifier embedding.
+25. Score the same candidate set with both models before choosing.
+26. Deduplicate both queues into the same case unit.
+27. Report queue overlap so investigators can see the workload change.
+28. Report distinct cases and distinct accounts in each queue.
+29. Record actual or defensible estimated effort per selected case.
+30. State the outcome horizon and the date through which labels are available.
+31. Separate confirmed positive, confirmed negative and unresolved.
+32. Report the unresolved fraction by score band and cohort.
+33. Compute precision@k only with an explicit label policy and denominator.
+34. Never substitute a negative for an unresolved selected case.
+35. If outcomes are incomplete, publish a lower bound only under stated assumptions.
+36. Recognise that even a valid lower bound does not identify true precision.
+37. Compute recall only with an observed or defensibly estimated denominator.
+38. Collect a randomised sample of otherwise unreviewed cases where policy allows.
+39. Record each sampled case's selection probability.
+40. Record non-response and completion separately from sampling.
+41. Use a sampling-aware estimator only where its assumptions are justified.
+42. Escalate cases with zero sampling probability; they cannot be recovered from that sample.
+43. Compare on matched calendar windows so base-rate change is not read as lift.
+44. Report the precision–recall trade-off across several plausible budgets.
+45. Do not choose the budget after inspecting test labels without accounting for it.
+46. Report absolute differences alongside ratios.
+47. Attach intervals that reflect within-case dependence where feasible.
+48. Group overlapping accounts by investigation or network as resampling units.
+49. Explain how that grouping choice affects the interval.
+50. Report time-slice variation, not a single pooled number.
+51. Compare new and established entities separately.
+52. Compare low-, medium- and hub-degree cases using declared bins.
+53. Compare relation types without claiming an ablation proves a mechanism.
+54. Inspect slices with high missing-neighbourhood rates or stale snapshots.
+55. Audit whether false positives concentrate on benign infrastructure.
 56. Examine appeal outcomes and erroneous actions under approved privacy protections.
-57. Measure investigator time spent gathering evidence, not just initial queue size.
+57. Measure investigator time gathering evidence, not just queue size.
 58. Record whether review quality changes when analysts see graph explanations.
-59. Distinguish action prevented from outcome observed when interventions suppress later loss.
-60. Do not estimate prevented fraud by simply multiplying model scores by transaction value.
-61. Where permissible, use a controlled policy comparison for incremental impact.
-62. Include customer harm, case aging, and operational availability as guardrails.
-63. Measure graph-store fetch latency and model inference latency on representative traffic.
-64. Measure end-to-end latency directly instead of summing marginal percentiles.
-65. Capture the proportion of scores served by fallback logic.
-66. Compare fallback performance on the specific traffic affected by the fallback.
-67. Predefine a stop condition for stale data, cross-tenant access, or capacity overload.
-68. Preserve an audit record tying the score to model and graph versions.
-69. Archive the evaluation dataset manifest without implying indefinite retention is allowed.
-70. Obtain legal, security, and investigation-owner approval before any action-changing rollout.
+59. Distinguish prevented from observed when interventions suppress later loss.
+60. Do not estimate prevented fraud by multiplying scores by transaction value.
+61. Where permissible, use a controlled comparison for incremental impact.
+62. Include customer harm, case aging and operational availability as guardrails.
+63. Measure graph fetch and inference latency on representative traffic.
+64. Measure end-to-end latency directly rather than summing marginal percentiles.
+65. Capture the share of scores served by fallback logic.
+66. Evaluate fallback quality on the traffic it actually serves.
+67. Predefine a stop condition for stale data, cross-tenant access or capacity overload.
+68. Preserve an audit record tying each score to model and graph versions.
+69. Archive the evaluation manifest without implying indefinite retention is lawful.
+70. Obtain legal, security and investigation-owner approval before an action-changing rollout.
 
-### Worked outcome ascertainment example
+**Takeaway:** Diagnose the mechanism before applying the fix; every fix needs its own verification.
 
-All values in this example are ILLUSTRATIVE and describe a complete hypothetical evaluation.
-A daily candidate pool contains 100 deduplicated cases.
-An independent mature outcome source identifies 10 positive cases across the entire pool.
-The baseline sends 20 cases for review and finds four positives among them.
-The graph challenger sends a different set of 20 cases and finds six positives.
-Assume that both queues use the same candidate pool, decision cutoff, and outcome definitions.
-Assume that each case consumes equal review effort for this simplified comparison.
-The baseline precision at 20 is four positives divided by 20 reviews, equal to 0.20.
-The challenger precision at 20 is six positives divided by 20 reviews, equal to 0.30.
-The absolute difference is 0.10, or ten percentage points.
-The relative increase over the baseline is 0.10 divided by 0.20, equal to 0.50.
-That relative quantity is 50%, conditional on a nonzero baseline precision.
-The baseline recall is four detected positives divided by ten total positives, equal to 0.40.
-The challenger recall is six detected positives divided by ten total positives, equal to 0.60.
-The independently known denominator is essential to this recall calculation.
-The two queues can overlap, so their uncertainty is not determined by these marginal totals alone.
-No confidence interval can be inferred from the table without an appropriate statistical design.
-Two additional confirmed positives are found in this constructed cohort, not necessarily two cases of prevented loss.
-If two challenger outcomes are unresolved, the previous 0.30 precision claim is unsupported.
-If those unresolved cases are distinct from six confirmed positives, the confirmed-positive share remains 6/20.
-Their final outcomes could increase the number of positives among the selected cases.
-If labels for unreviewed cases are unavailable, the total of ten positives is not established.
-Consequently the challenger recall of 0.60 cannot be recovered from its selected queue alone.
-If the graph queue takes 400 minutes and the baseline queue takes 240 minutes, equal case count is not equal labor.
-The comparison must then use a shared labor budget or explicitly value the additional effort.
-Those review-minute values are also illustrative and do not imply a real operational measurement.
-
-### Point-in-time algorithm trace and invariant
-
-Input is a candidate seed, decision timestamp, source ledger, identity version history, and allowed relation policy.
-Output is a versioned feature vector and a completeness status for that single decision.
-First, determine the identity mapping that was available when the score was requested.
-Second, fetch relationship records whose event and availability timestamps meet the decision contract.
-Third, select feature versions available by the same cutoff.
-Fourth, discard disallowed relation types and inaccessible tenants.
-Fifth, deduplicate using the appropriate event or neighbor identity for each feature.
-Sixth, apply a declared and bounded neighbor sampling rule, if sampling is needed.
-Seventh, compute relation-specific aggregates and explicit missingness indicators.
-Eighth, persist snapshot identifiers, model version, and sampled-neighbor provenance.
-At every stage, a retained record must satisfy the cutoff and access rules.
-Each stage filters or transforms the retained records without introducing a later record.
-By induction over the finite stages, the output contains no direct contribution from an excluded later record.
-This invariant does not rule out a permitted record that was itself derived from an impermissible outcome.
-Provenance analysis is therefore required in addition to timestamp filtering.
-Termination requires finite ledger pages, explicit maximum traversal work, or both.
-When a work limit is hit, the output must identify partial evidence rather than pretending to be complete.
-On a transient graph failure, an approved fallback can score from permitted self features.
-Recovery should reproduce the original decision snapshot rather than silently rescore with future edges.
-Any later reassessment must be labeled as a new decision at a new timestamp.
-
-**Takeaway:** Diagnose the observable mechanism before applying a fix; preserve time, provenance, and investigation context.
-
-## Section 9 — Complexity & Cost Analysis
+## 9. Complexity & Cost Analysis
 
 ### 9a. Algorithmic complexity
 
-Let V denote the number of nodes and E the number of stored edge records in a snapshot.
-Let d denote representation width, L the number of message-passing layers, and B the seed batch size.
-Let f_l be the maximum sampled fanout per seed-side node at layer l.
-Let S be the number of sampled edge occurrences actually processed in a batch.
-An adjacency-list representation requires storage proportional to V+E, excluding feature payloads and indexes.
-A full scan to construct adjacency from an already materialized edge list takes O(V+E) work under ordinary constant-time indexing assumptions.
-External sorting, distributed shuffles, identity joins, and storage I/O can dominate that simplified build bound.
-A single layer with scalar messages must inspect O(S) sampled edge occurrences.
-With d-dimensional elementwise messages, aggregation work is O(Sd), excluding transformations.
-A dense d-by-d transformation per node can add O(V_sampled d²) work for the sampled nodes.
-The actual implementation may reuse transformations, fuse operators, or incur extra communication.
-Full-neighborhood processing makes S depend on the degree distribution and may be much larger than the number of seeds.
-Under fixed fanouts, a naive upper bound on one-hop sampled occurrences is B times f_1.
-The next layer can add up to B times f_1 times f_2 edge occurrences before deduplication.
-Repeated neighbors may reduce the number of distinct nodes without reducing every edge operation.
-Sampling with replacement can repeat neighbors and changes the effective weighting.
-Sampling without replacement has a different variance and cannot exceed the degree of the node.
-The sampled subgraph is an execution artifact, not necessarily the complete evidence available to an investigator.
-Layer activation memory grows with sampled node count, width, dtype, and saved training intermediates.
-Training requires backward-pass state and optimizer storage that an inference-only estimate excludes.
-An index for historical graph versions adds storage beyond one current adjacency list.
-Recovery cost includes rebuilding snapshots, verifying lineage, and warming caches.
-Update cost depends on indexing, transaction semantics, and whether embeddings are recomputed or invalidated.
-No asymptotic expression alone predicts network latency, p99 response time, or cloud expense.
+Notation: `V` nodes, `E` eligible edge records, `d` representation width, `L` layers, `B` seeds per batch, `f_l` the fanout cap at layer `l`, `S` sampled edge occurrences, `R` relation types, `k` review capacity, `h` hub degree.
 
-### 9b. Illustrative sizing
+| Operation | Input sizes | Time | Space | I/O / communication | Assumptions and dominant bottleneck |
+|---|---|---|---|---|---|
+| Snapshot materialisation | `V`, `E` | `O(V + E)` scan, dominated by sort/shuffle | `O(V + E)` | full ledger read per period | constant-time indexing; external sort may dominate |
+| Degree computation | `E` | `O(E)` | `O(V)` | one pass | multiedge multiplicity must be declared |
+| One-hop mean, per seed | `d_v` | `O(d_v * d)` | `O(d)` per seed | one adjacency read | latency, not arithmetic, dominates |
+| Full two-hop, per seed | `f_1`, `f_2` | `O(f_1 + f_1 f_2)` edge ops | `O(f_1 f_2 * d)` | two round trips minimum | hub degree can multiply examined edges |
+| Relation-aware layer | `S`, `R`, `d` | `O(S d + \|N\| d²)` | `O(\|N\| d)` | parameter tensors per relation | `d²` transform dominates at large width |
+| GraphSAGE-style batch | `B`, `f_1`, `f_2`, `d` | `O(B f_1 f_2 d + B d²)` | `O(B f_1 f_2 d)` | subgraph sampling service | sampling memory and tail latency |
+| PPR, truncated to `J` iterations | `E`, `J` | `O(J E)` per source, `O(J * E * seeds)` in the worst case | `O(V)` per source | sparse matrix–vector | convergence depends on `1 - alpha` |
+| Motif census, 3-node | `E`, max degree `h` | `O(E h)` naive | `O(V)` | neighbourhood reads | hub degree dominates |
+| Modularity of a partition | `E`, `C` communities | `O(E)` | `O(C)` | none | community labels already given |
+| Rank and select top `k` | `N` candidates | `O(N log N)` sort, `O(N log k)` heap | `O(k)` | none | ties near the boundary |
 
-Assume a batch of B=100 seed accounts, with at most 10 sampled first-hop neighbors per seed.
-Assume each first-hop node contributes at most five sampled second-hop neighbors.
-Assume sampling is without replacement within each local neighborhood, but do not assume global deduplication.
-These are illustrative limits, not measured production fanouts.
-The maximum number of first-hop edge occurrences is 100 × 10 = 1,000.
-The maximum number of second-hop edge occurrences is 1,000 × 5 = 5,000.
-The maximum sampled edge-occurrence total for the two expansions is 6,000.
-An upper bound on node occurrences including seeds is 100+1,000+5,000 = 6,100.
-Repeated nodes can reduce the number of distinct nodes, but the bound does not assume that benefit.
-Suppose each node occurrence has a 64-component float32 representation.
-Each component occupies four bytes under the stated representation assumption.
-One raw representation per occurrence requires 6,100 × 64 × 4 = 1,561,600 bytes.
-That is 1,561,600 / 1,048,576 = 1.4892578125 MiB, approximately 1.49 MiB.
-An independent multiplication check is 6,100 × 256 = 1,561,600 bytes.
-This is raw representation payload only, not peak process or device memory.
-It omits edge features, indices, graph storage, batching buffers, activations, gradients, optimizer state, and allocator overhead.
-It also omits cache behavior, RPC payloads, replication, and simultaneous requests.
-If the second-hop cap doubles to ten, the second-hop bound doubles to 10,000 occurrences.
-The new total node-occurrence upper bound becomes 100+1,000+10,000 = 11,100.
-At the same width and dtype, raw representations require 11,100 × 256 = 2,841,600 bytes.
-That equals approximately 2.71 MiB; it is still not a measured allocation.
-If neighborhood sizes are smaller than the caps, actual sampled work is lower.
-If the graph store pages or scans more edges than returned, actual examined-edge work can be higher.
-Choose limits using measured tail latency and investigation quality, not this payload-only estimate.
+Three observations matter more than the asymptotics. First, the arithmetic is trivial at fraud scale: a batch of a hundred seeds with fanout 10 then 5 performs a few million floating-point operations, which is microseconds of compute and milliseconds of network. Every interesting cost is I/O, memory for sampled subgraphs, and human review.
 
-### Capacity and economics
+Second, the worst-case cost of a `k`-hop expansion is governed by the maximum degree, not the mean. A traversal bound expressed as "fanout 10" bounds retained neighbours per node, but a query that must *choose* ten neighbours from a forty-thousand-entry adjacency list still examines up to forty thousand entries unless the store maintains an index or a precomputed sample.
 
-The queue's required resource is investigator effort, measured in case-minutes rather than account count alone.
-A fixed top-k policy is appropriate only when case effort is sufficiently predictable or conservatively budgeted.
-Suppose a team has 480 investigator-minutes per day available for a constructed queue.
-Suppose each selected case consumes exactly 12 minutes, including documentation, with no interruptions.
-The resulting capacity is 480 / 12 = 40 cases per day.
-The numerator is labor-minutes per day and the denominator is labor-minutes per case.
-The quotient therefore has units of cases per day.
-At 20 minutes per case, the same team capacity becomes 480 / 20 = 24 cases per day.
-Actual handling times vary; capacity planning should include the observed distribution and service-level requirements.
-A high-complexity case may be valuable but prevent multiple simpler cases from being reviewed.
-Use a policy-approved allocation and monitor outcome, aging, fairness, and reviewer workload.
-The cost of a detected case includes review labor, graph storage, inference, data engineering, and customer remediation.
-Currency, date, cost boundaries, and measured usage must be specified before quoting monetary efficiency.
-No monetary cost, hardware benchmark, or production service-level objective has been measured here.
+Third, sampling changes the statistical object. The sampled subgraph is an execution artifact; the neighbourhood the investigator would see is larger. A model trained on fanout-10 samples and evaluated on full neighbourhoods is being evaluated on inputs it will never receive.
 
-**Takeaway:** Bound graph expansion and investigator work separately; neither node count nor model throughput alone defines cost.
+### 9b. Back-of-envelope sizing
 
-## Section 10 — Key Theorems / Results Reference
+**Workload.** `B = 100` seeds per batch; fanout `f_1 = 10`; fanout `f_2 = 5`; width `d = 64`; float32 (4 bytes per component). Sampling without replacement inside each local neighbourhood, no global deduplication.
 
-| Result | Statement and assumptions | Implication | Does not imply |
-|---|---|---|---|
-| Undirected degree sum | Every undirected edge contributes two endpoint incidences, including two for a self-loop under the usual convention | Check adjacency consistency against edge count | That edges represent distinct people or fraud |
-| Mean within range | A nonnegative weighted mean with positive total weight lies between the smallest and largest scalar message | Detect impossible aggregate values | A mean preserves rare extreme neighbors |
-| Historical eligibility | Removing records unavailable by the decision prevents those records from directly entering that feature | Supports point-in-time replay | All downstream or target leakage is eliminated |
-| Fixed-budget precision | For a fully labeled top-k list, precision is positives in the list divided by k | Quantifies yield per review at that fixed count | Recall or net economic value without additional information |
-| Neighbor expansion bound | Multiplying per-layer fanout caps bounds edge occurrences under the stated sampling algorithm | Supports rough compute budgeting | Distinct-node count or wall-clock latency equals the bound |
+```text
+layer-1 edge occurrences          = 100 * 10                = 1,000
+layer-2 edge occurrences          = 1,000 * 5               = 5,000
+total sampled edge occurrences    = 1,000 + 5,000           = 6,000
+node occurrences incl. seeds      = 100 + 1,000 + 5,000     = 6,100   (upper bound)
 
-These are derived identities or conditional invariants, not empirical claims of model performance.
-The degree-sum check assumes the graph and adjacency views use the same edge multiplicity and self-loop convention.
-The weighted-mean bound fails when negative weights are permitted or the denominator is zero.
-The historical eligibility invariant is necessary but not sufficient for a valid study.
-For example, a predecision feature can encode a prior model action caused by a downstream label elsewhere in the workflow.
-The fixed-budget precision denominator is cases reviewed, not the number of accounts in the entire graph.
-A label that has not matured is unknown, not a counted false positive or true negative.
-A performance difference between correlated cases requires uncertainty methods that respect the sampling and dependence structure.
-Cluster-aware bootstrap or repeated temporal cohorts can be useful when their assumptions match the design.
-No formal guarantee of GNN superiority over tabular models follows from these identities.
+raw representation storage:
+  bytes = 6,100 nodes * 64 components * 4 bytes/component
+        = 6,100 * 256
+        = 1,561,600 bytes
+  MiB   = 1,561,600 / 1,048,576 = 1.4892578125 MiB  (~1.49 MiB)
 
-### Sources and evidence limitations
+parameter storage (one 64x64 matrix per layer):
+  bytes per matrix = 64 * 64 * 4 = 16,384 B = 16 KiB
+  two layers       = 32 KiB
+```
 
-The [source inventory](../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#graph-source) lists the graph-fraud topic as planned.
-The [source crosswalk](../../../00_SOURCE_TOPIC_CROSSWALK.json) maps the graph course and production case entries to their respective homes.
-The directory inventory lists the two source paths, but their contents were not available to inspect in this workspace.
-Accordingly, this lesson uses the filenames as topical provenance only, not as evidence of source-specific facts.
-The [course standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) define the numerical and editorial conventions used here.
-[GraphSAGE](https://arxiv.org/abs/1706.02216) describes learning functions that aggregate features from local neighborhoods for inductive representation learning.
-That paper does not establish the fraud-detection performance, sampling policy, or operating costs of this illustrative design.
-No empirical case result is claimed, and no source-specific benchmark has been reproduced.
-Any deployment should separately validate its own legal basis, data permissions, actual latency, and outcome quality.
+**Compute.** Per-node transform cost is `2 d² = 2 * 4,096 = 8,192` FLOPs; per-edge aggregation is `2 d = 128` FLOPs.
 
-The [fraud evaluation sheet](../../../11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md) develops review capacity, calibration and selective-label limits beyond this graph example.
-**Takeaway:** Identities support sanity checks, while production benefit requires a separately measured comparison.
+```text
+transform FLOPs  = 100 seeds * 8,192 * 2 layers        = 1,638,400
+aggregation FLOPs = 6,000 edge occurrences * 128       = 768,000
+total FLOPs       = 2,406,400  (~2.41 MFLOP per batch)
+per seed          = 2,406,400 / 100 = 24,064 FLOP
+```
 
-## Section 11 — Interview / Exam Questions
+At an illustrative sustained rate of 10 GFLOP/s on a shared CPU core, that batch is 0.24 ms of arithmetic. Any statement that graph ML is "expensive" at this scale is a statement about data movement, not multiplication. `OPEN`: no measurement of actual FLOP/s or latency was performed for this sheet.
 
-Score each answer from 0 (incorrect) to 3 (correct, assumption-aware, and defensible at its boundary); Section 3–10 examples are illustrative.
+**Latency.** Assume each seed requires one round trip that returns its first-hop rows and one that returns the union of second-hop rows, each with an assumed 4 ms server-side cost, at 8-way concurrency:
 
-These are constructed practice questions, not claims about a named employer's interview process.
-Each answer states its assumptions; a defensible alternative must preserve the same decision-time and evaluation constraints.
+```text
+serial round trips per seed   = 2
+serial time per seed          = 2 * 4 ms = 8 ms
+total serial, 100 seeds       = 800 ms
+with 8-way concurrency        = 800 / 8 = 100 ms  (idealised, no queueing)
+```
+
+The 4 ms assumption is ILLUSTRATIVE. The structural point survives any realistic value: end-to-end latency is dominated by round trips per seed times the number of seeds divided by concurrency, so the tuning levers are batching seeds per request and eliminating a round trip, not shrinking `d`.
+
+**Memory.** The 1.49 MiB figure is raw payload only. Add edge features, indices, allocator overhead, activation buffers, batch padding and concurrent requests; a 3–10× factor over payload is common in practice, and the correct response is to measure rather than assume. Training adds gradients and optimiser state, typically several times the forward activation footprint, and is a different budget entirely.
+
+**Review capacity.**
+
+```text
+available minutes per day      = 480 min
+minutes per case (illustrative) = 12 min  (includes evidence gathering and documentation)
+capacity k                      = 480 / 12 = 40 cases/day
+
+sensitivity: at 20 min/case -> 480 / 20 = 24 cases/day
+             at  8 min/case -> 480 /  8 = 60 cases/day
+```
+
+The quotient's unit is cases per day because minutes cancel. A high-complexity case can consume several slots, so a fixed `k` is an approximation whose error grows with case-complexity variance; a capacity model in case-minutes is more honest than a case count when variance is large.
+
+**Audit sizing.** To estimate the positive rate among unreviewed cases with margin `e` and confidence `1 - alpha_s`, the normal approximation gives `n = z² p(1-p) / e²`. With `z = 1.96`, `p = 0.20`, `e = 0.05`:
+
+```text
+n = 3.8416 * 0.20 * 0.80 / 0.0025
+  = 3.8416 * 0.16 / 0.0025
+  = 0.614656 / 0.0025
+  = 245.8624  ->  246 cases
+
+finite population correction with N = 5,000:
+n_adj = 246 / (1 + (246 - 1)/5,000) = 246 / 1.049 = 234.51  ->  235 cases
+```
+
+Two hundred and thirty-five audited cases at twelve minutes each is 2,820 investigator-minutes, or roughly six working days of the entire 480-minute daily budget. That is the real price of an identified recall estimate, and it explains why teams report precision and leave recall unidentified. The honest alternative is to say so.
+
+**Economics.** Cost per confirmed case includes review labour, graph storage, inference, data engineering and customer remediation. With the illustrative figures above, review labour alone is `12 min * (1/60) h = 0.2 h` per case, so at a hypothetical loaded rate the labour cost per reviewed case is `0.2 h * rate`. Monetary figures are omitted because no rate, currency or date basis has been established for this sheet — quoting one would be fabrication.
+
+**Takeaway:** Compute is free at fraud scale, data movement is cheap, and investigator minutes are the binding resource; size the system accordingly.
+
+## 10. Key Theorems / Results Reference
+
+| Result | Correct statement | Essential hypotheses | Practical implication | What it does not imply | Source |
+|---|---|---|---|---|---|
+| Handshake lemma | `sum_v d_v = 2 * \|E\|` for undirected graphs counting self-loops twice | undirected, same multiplicity convention in both counts | cheap consistency check on any snapshot | nothing about semantics of edges | DERIVED |
+| Mean within range | For non-negative weights with positive total, a weighted mean lies in `[min x, max x]` | finite values, weights ≥ 0, denominator > 0 | out-of-range aggregate is a defect signal | the mean preserves rare extremes | DERIVED |
+| Spectral smoothing | Applying `S = D^{-1/2} A D^{-1/2}` `L` times scales eigenvector `i` by `lambda_i^L` | symmetric `S`, eigenvalues in `[-1, 1]` | depth beyond the informative regime averages nodes together | that fewer layers always rank better | DERIVED (spectral decomposition) |
+| PPR convergence | `p = alpha (I - (1-alpha) W^T)^{-1} s` with Neumann expansion; truncation error bounded by `(1-alpha)^{J+1}` | `W` row-stochastic, `alpha` in `(0,1]` | a depth cap is principled, not arbitrary | that PPR ranks fraud better than a mean | DERIVED (Neumann series) |
+| Ranking optimality | Ordering by `P(Y=1 \| f)` descending maximises expected positives in the top-`k` for every `k` | the posterior is correctly specified and available | calibrate if you need an optimal queue; a monotone score suffices for ranking | that a well-ranked score is calibrated | DERIVED (exchange argument) |
+| Exchange argument detail | If two cases are misordered, swapping them cannot decrease the expected positive count in the prefix | identical action cost per case | explains why AUC-like monotonicity is enough for ranking | that action costs are equal in reality | DERIVED |
+| Precision at fixed `k` | `precision@k = \|P ∩ Top_k\| / k` | `k` completed distinct cases; `P` enumerated | quantifies yield per review slot | recall, or net value, without `\|P\|` | DEFINITION |
+| Selective-label non-identification | If observation of `Y` depends on the score, the population positive rate is not identified from observed labels alone | selection depends on a variable the model controls | recall requires an audit or an external outcome source | that a large labelled sample fixes it | DERIVED |
+| Modularity | `Q = sum_c [ L_c/m - (D_c/(2m))² ]` for `m` edges, internal edges `L_c`, degree sum `D_c` | undirected, single connected component decomposition | comparability of partitions on one snapshot | that a high `Q` partition is a fraud ring | DERIVED |
+| Motif z-score | `z = (N_obs - mu) / sigma` under a degree-preserving null | `mu`, `sigma` estimated from randomised graphs | separates structure from degree artefacts | that `z` large implies coordination | SOURCED (null-model practice) |
+| Fanout bound | With caps `f_l`, sampled edge occurrences are at most `B * f_1 * ... * f_L` before dedup | fixed caps, no dedup | rough compute budget | distinct-node count or wall time | DERIVED |
+
+The ranking-optimality result deserves the derivation because it resolves a common confusion. Let `p_i` be the true probability that case `i` is positive, and consider a prefix of size `k`. The expected number of positives in the prefix is `sum over i in prefix of p_i`. If two cases `i` and `j` are included and excluded respectively with `p_i < p_j`, swapping them adds `p_j - p_i > 0` to the expectation. Repeated swapping terminates at the descending-`p` order, which is therefore optimal for every `k` simultaneously. The hypothesis is that `p` is available and correct; the result says nothing when the score is only monotone, other than that the *expected* count is optimal for the true probabilities, not for the score.
+
+That distinction is the practical one. A monotone score gives the same ranking as its calibrated version and therefore the same selected set at any `k`; it differs only if you need to say "this case has an 80% chance" or choose per-case effort by expected value. Calibration is a separate, later problem, and it must be measured against outcomes on a representative mature sample.
+
+Modularity's derivation is short enough to include: the null model places an edge between `i` and `j` with probability `d_i d_j / (2m)`, so the expected internal edge count for community `c` is `D_c²/(4m)`, and the observed internal count is `L_c`. The difference, normalised by `m`, is the contribution `L_c/m - (D_c/(2m))²`. In the Section 5 fixture with `m = 6` and the partition `{A,B,C,D} / {E,F}`:
+
+```text
+community 1: L = 5, D = 10 -> 5/6 - (10/12)^2 = 0.833333 - 0.694444 = 0.138889
+community 2: L = 1, D =  2 -> 1/6 - ( 2/12)^2 = 0.166667 - 0.027778 = 0.138889
+Q = 0.138889 + 0.138889 = 0.277778
+```
+
+A `Q` of 0.28 on six nodes is a description of where edges cluster; it is not evidence of organisation. Modularity also has a known resolution limit, so it tends to merge small communities in large graphs — which is exactly the failure an analyst looking for small rings would most want to avoid.
+
+**Takeaway:** Identities and spectral facts justify sanity checks; none of them establishes that a graph model earns its keep.
+
+## 11. Interview / Exam Questions
+
+Score each answer 0 (wrong) to 3 (correct, assumption-aware, defensible at the boundary). All scenarios are constructed.
 
 ### Level 1 — Definition / Recall
 
-#### Q1 — Entity and edge semantics
+#### Q1. Shared device and common control
 
-**Prompt:** A device is shared by three accounts. Does that prove a fraud ring?
+**Prompt:** Three accounts use the same device identifier in one week. Does that establish a fraud ring?
 
-**Answer:** No. It proves only that the recorded relation links those accounts to a device under the specified identification and time rules. A household, public kiosk, or default identifier can create the same pattern.
+**Answer:** No. It establishes that three accounts were observed with one device under the declared relation and time rules. That pattern arises from households, employers, kiosks, resold handsets and sentinel tokens. Common control needs independent identity evidence; criminal association needs more still.
 
-**Assumption or alternative:** A bank transfer and a device-use observation should be different typed relations.
+**Alternative:** If the identifier is a strong, non-recycled, personally bound token and independent evidence links it to one person, the relation becomes strong evidence of shared access — still not of intent.
 
-**Follow-up:** What if the device identifier is a constant default?
+**Follow-up:** What if the token is a constant default written by a failing SDK?
 
-**Follow-up answer:** Its evidentiary value becomes weak; fix the instrumentation and avoid treating the hub as shared ownership.
+**Follow-up answer:** Its evidentiary value is nil and the hub it creates will distort every aggregate; fix instrumentation and treat the sentinel as absent.
 
-**Red flag:** Assuming a shared edge establishes intent or common control.
+**Red flag:** Reading connectivity as a finding. It is a description of the snapshot.
 
+#### Q2. Event time versus availability time
 
+**Prompt:** A payment occurred at 11:30, reached the serving path at 12:05, and a score was issued at 12:00. May the payment enter the score?
 
-#### Q2 — Event time versus availability
+**Answer:** No. Availability time governs. Event time tells you when the world changed; availability time tells you when the model could know. Only the second is a constraint on the model.
 
-**Prompt:** A payment occurred at 11:30, arrived at 12:05, and a score was issued at 12:00. Is it eligible?
+**Alternative:** If a different model received the same payment at 11:31 through an independent path, that model may use it — subject to its own cutoffs and policy.
 
-**Answer:** No. Although its event time precedes the decision, availability time does not. A replay including it uses information unavailable to the serving system.
+**Follow-up:** The warehouse shows the row landed at 11:32. Does that prove the online model saw it?
 
-**Assumption or alternative:** If the same payment was successfully available at 11:31, it can be eligible subject to all other feature rules.
+**Follow-up answer:** No. Warehouse landing, graph publication, cache visibility and model fetch are four distinct transitions; the earliest possible serving time is the latest of them.
 
-**Follow-up:** What if the serving cache missed an already committed edge?
+**Red flag:** Filtering on one timestamp because two are "basically the same".
 
-**Follow-up answer:** That is a serving-reliability problem, distinct from late source availability; compare source and cache traces.
+#### Q3. Unknown versus negative
 
-**Red flag:** Filtering only on the transaction event timestamp.
+**Prompt:** An account was never reviewed and shows no chargeback. Is it a negative?
 
+**Answer:** It is unknown. A negative requires a defined target, a matured horizon, and an ascertainment process that would have observed the outcome had it occurred. Absence of review and absence of chargeback are both consistent with fraud.
 
+**Alternative:** If a complete, mature, independent outcome source covers the target population, an observed non-event can be a negative under that source's coverage statement.
 
-#### Q3 — Unknown versus negative
+**Follow-up:** What if thirty per cent of the cohort is still within the dispute window?
 
-**Prompt:** An account was not reviewed and no chargeback is recorded yet. Is its label negative?
+**Follow-up answer:** Those cases are censored, not negative; either wait for maturity or model the unresolved state explicitly.
 
-**Answer:** Not necessarily. Its outcome may be unknown or immature, and the review policy may make labels selectively observed.
-
-**Assumption or alternative:** A matured negative requires a defined target, observation horizon, and reliable outcome ascertainment.
-
-**Follow-up:** What if all customers are observed through a complete, mature external outcome source?
-
-**Follow-up answer:** Then that source may justify a negative under its stated coverage and target definition.
-
-**Red flag:** Treating missing labels as confirmed legitimate outcomes.
-
-
+**Red flag:** Filling the label column with `0` because the join returned null.
 
 ### Level 2 — Derivation / Apply
 
-#### Q4 — Derive a mean
+#### Q4. Derive the degree-normalised aggregate
 
-**Prompt:** Eligible neighbors have scalar features 2 and 4. Derive the equal-weight aggregate.
+**Prompt:** Seed `B` has degree 3; its neighbours are `A` (`d=2`, `x=1`), `C` (`d=3`, `x=0`), `D` (`d=2`, `x=5`). Compute both the plain mean and the symmetric-normalised sum, and explain the difference.
 
-**Answer:** By definition the mean is the sum divided by count: (2+4)/2=3 feature units. The result lies between 2 and 4.
+**Answer:** Plain mean `= (1+0+5)/3 = 2.0`. Normalised: `1/sqrt(3*2) + 0 + 5/sqrt(3*2) = 6/sqrt(6) = 6/2.449489743 = 2.449489743`. The normalised version is larger because `D` has few alternatives: a low-degree neighbour is more specific about this seed, so its message is amplified.
 
-**Assumption or alternative:** This assumes two unique eligible neighbors and equal weight.
+**Alternative:** With `c_v,r = |N|` (R-GCN style) the result is the plain mean `2.0`; both normalisers are defensible and must be declared.
 
-**Follow-up:** What if there are no eligible neighbors?
+**Follow-up:** What happens if `D`'s degree rises to 1,000?
 
-**Follow-up answer:** The denominator is zero, so use an explicit missing representation rather than claiming the mean is zero.
+**Follow-up answer:** Its contribution shrinks toward `5/sqrt(3000) ≈ 0.0913`, and the aggregate approaches the contribution of the low-degree neighbours — which is the intended behaviour for a hub.
 
-**Red flag:** Dividing by zero or silently treating absence as a measured zero.
+**Red flag:** Reporting `2.449` as a probability because it lies near the `[0, 5]` range mid-point.
 
+#### Q5. Precision and recall with an incomplete denominator
 
+**Prompt:** A queue selects 40 cases; reviewers confirm 24 positives. What are precision and recall?
 
-#### Q5 — Weighted messages
+**Answer:** Precision is `24/40 = 0.60`. Recall is not determined: the denominator is all positives in the population, and the unreviewed remainder is unlabelled. Reporting `0.60` as recall would implicitly assume the population contains exactly 40 positives.
 
-**Prompt:** Messages are 2 and 4 with nonnegative weights 1 and 3. Calculate their weighted mean.
+**Alternative:** If an audit of 200 unreviewed cases with known inclusion probability finds 10 positives, an estimate of the unreviewed positive count can be formed — `(unreviewed / 200) * 10` is the crude version — and recall becomes `24 / (24 + estimate)` with an interval that propagates both terms.
 
-**Answer:** The weighted sum is 1×2+3×4=14; total weight is 4; 14/4=3.5 feature units. It lies in the input range.
+**Follow-up:** The audit found zero positives in 200 cases. Is recall 1.0?
 
-**Assumption or alternative:** Equal weights would give 3, not 3.5.
+**Follow-up answer:** The point estimate is near 1.0 but the interval is wide and asymmetric; zero in a sample bounds the rate, it does not establish zero.
 
-**Follow-up:** What if both weights are zero?
+**Red flag:** Using reviewed cases as the recall denominator.
 
-**Follow-up answer:** The weighted mean is undefined and a missingness policy is needed.
+#### Q6. Two-hop reach in a dense cluster
 
-**Red flag:** Treating arbitrary weighted features as a fraud probability.
+**Prompt:** Seed `C` has neighbours `{A, B, D}`; `A`'s neighbours are `{B, C}`, `B`'s are `{A, C, D}`, `D`'s are `{C, B}`. How many new accounts does a second hop add?
 
+**Answer:** The union of the neighbours' neighbourhoods is `{A, B, C, D}`; removing `C` leaves `{A, B, D}` — identical to the first hop. Zero new accounts.
 
+**Alternative:** In a chain or a hub-and-spoke graph the second hop adds many; the answer is topology-dependent, which is the point.
 
-#### Q6 — Point-in-time trace
+**Follow-up:** If depth 2 adds nothing, is depth 2 free?
 
-**Prompt:** Using Section 5, which edges are eligible at 12:00 and what is A’s mean?
+**Follow-up answer:** No. It costs a second round trip and the fanout multiplication, so it should be justified by measured feature change.
 
-**Answer:** A—B, A—C, and C—D are eligible; A—D arrives at 12:05 and B—C occurs later. A sees B=2 and C=4, so its mean is 3.
+**Red flag:** Assuming more hops always means more information.
 
-**Assumption or alternative:** The degree sum is six, consistent with three undirected edges.
+#### Q7. PPR truncation error
 
-**Follow-up:** What if A—D is included retrospectively?
+**Prompt:** With `alpha = 0.15`, how much restart mass remains beyond a 3-hop truncation?
 
-**Follow-up answer:** A’s mean becomes 2; that is a leaked historical reconstruction.
+**Answer:** The expansion weights hop `j` by `alpha * (1-alpha)^j`, so the total retained through `j = 0,1,2,3` is `0.15 * (1 + 0.85 + 0.7225 + 0.614125) = 0.15 * 3.186625 = 0.477994`. The residual is `1 - 0.477994 = 0.522006`, which equals `(1-alpha)^4 = 0.85^4 = 0.52200625`. Both routes agree, which is the check.
 
-**Red flag:** Using the complete end-of-day graph as the decision graph.
+**Alternative:** A different `alpha` changes the trade-off: `alpha = 0.3` leaves `0.7^4 = 0.2401` beyond hop 3.
 
+**Follow-up:** Is a 52% residual acceptable?
 
+**Follow-up answer:** It bounds the mass you ignored, not the ranking error; in practice you compare truncated against converged scores on a sample rather than reasoning from the bound alone.
 
-#### Q7 — Precision and recall at capacity
-
-**Prompt:** Four mature labels are A positive, B negative, C positive, D negative; the queue selects C and A. Calculate both metrics.
-
-**Answer:** Two of two reviewed are positive, so precision is 1.0. Both of the two positives in the defined population are selected, so recall is 1.0.
-
-**Assumption or alternative:** These are constructed labels, not a production performance estimate.
-
-**Follow-up:** What if labels for unreviewed cases are unavailable?
-
-**Follow-up answer:** Precision on reviewed cases may still be observable under reliable review, but population recall is not identified without additional data or assumptions.
-
-**Red flag:** Using only reviewed outcomes as the denominator for population recall.
-
-
+**Red flag:** Claiming a 3-hop cap "captures most of the influence" without computing the residual.
 
 ### Level 3 — Judgement / Design / Debug
 
-#### Q8 — Graph model selection
+#### Q8. Offline lift that vanishes online
 
-**Prompt:** A tabular model fits the deadline; a GNN exceeds it and has no measured lift. Which should serve?
+**Prompt:** A new neighbour-label feature doubles offline precision at `k`. Online, the selected set changes but confirmed yield does not improve. Give an ordered diagnosis.
 
-**Answer:** Choose the compliant baseline while investigating whether a graph variant adds value under the same candidate cohort and budget. The deadline is a hard constraint, not an accuracy feature.
+**Answer:** First check label availability per seed and seed self-exclusion — the classic explanation is that the offline feature saw labels unavailable at decision time. Second, check online graph freshness and fanout truncation against the offline snapshot. Third, check cohort and label maturity, since the online comparison may involve younger cases. Fourth, check whether the offline evaluation used the same capacity and deduplication.
 
-**Assumption or alternative:** A graph aggregate model may be an intermediate candidate if its graph fetch is reliable and time-safe.
+**Alternative:** If replay parity is exact and cohorts match, the remaining explanation is that the offline gain was a selection artefact from evaluating many variants; report the number of variants tried.
 
-**Follow-up:** What if the GNN later improves mature-case yield and meets the deadline?
+**Follow-up:** Replay reproduces online values exactly and the gain persists offline. Now what?
 
-**Follow-up answer:** Evaluate a controlled rollout with guardrails, cost, and outcome monitoring before replacing the baseline.
+**Follow-up answer:** The offline evaluation itself is biased — most likely a split that lets near-duplicate entities or components cross the boundary. Run an entity-disjoint and a component-disjoint stress test and compare.
 
-**Red flag:** Assuming the most complex method is necessarily best.
+**Red flag:** Concluding that the feature "doesn't work in production" without establishing which of the four mechanisms applies.
 
+#### Q9. A hub in the traversal path
 
+**Prompt:** A public terminal creates two-hop neighbourhoods of 200,000 accounts. How do you keep latency bounded without declaring all users fraudulent?
 
-#### Q9 — Suspicious offline lift
+**Answer:** Classify the device relation as weak evidence, cap per-relation fanout, cap total examined edges, return an incomplete flag, and retain account-level features for the fallback. Then measure what the cap costs in quality on a stratified audit set that includes confirmed rings on shared infrastructure.
 
-**Prompt:** A new graph label feature doubles offline precision but online yield falls. Diagnose.
+**Alternative:** Keep the hub but down-weight it by degree and reliability, which preserves hub signal at the cost of a more complex feature contract.
 
-**Answer:** Check label availability and self-label exclusion first, then compare online graph freshness, sampling, candidate cohorts, and label maturity. Rebuild the original snapshots and compare actual features.
+**Follow-up:** Confirmed rings do use the terminal. Does that justify removing the cap?
 
-**Assumption or alternative:** A leaked neighbor label should disappear when labels unavailable at each decision are removed.
+**Follow-up answer:** No — it justifies *stratifying* rather than removing: reserve budget for high-reliability relations and for small components, and evaluate recall specifically on the shared-infrastructure strata.
 
-**Follow-up:** What if replay parity is exact?
+**Red flag:** Either "exclude all hubs" or "treat all hub users as suspicious"; both are single-mechanism answers to a mixed-population problem.
 
-**Follow-up answer:** Investigate cohort change, review selection, confidence intervals, and stale labels; parity does not prove no other bias.
+#### Q10. Capacity arithmetic and its assumptions
 
-**Red flag:** Declaring the model successful from offline precision alone.
+**Prompt:** A team has 480 investigator-minutes per day and cases average 12 minutes. How many cases fit, and what breaks the answer?
 
+**Answer:** `480 / 12 = 40` cases per day, assuming deterministic effort, no interruptions, and no non-review work. Effort variance, case complexity and duplicate alerts all break it; measure the effort distribution and track distinct cases rather than alerts.
 
+**Alternative:** At 20 minutes per case the capacity is 24; the point is that the number is derived, not chosen.
 
-#### Q10 — High-degree hub
+**Follow-up:** The model produces 60 high-scoring accounts that map to 35 cases. Is there a capacity problem?
 
-**Prompt:** A popular public device creates huge two-hop neighborhoods. How do you protect latency without treating all users as a ring?
+**Follow-up answer:** At 35 distinct cases against 40 slots there is headroom, but only if the effort per case holds; if three of those cases are complex rings, the effective load may exceed the budget.
 
-**Answer:** Classify the device-use relation as weak evidence, limit work and relation fanout, retain incomplete-result indicators, and measure lost signal against a fuller audit set.
+**Red flag:** Equating account alerts with cases, or treating capacity as a property of the model.
 
-**Assumption or alternative:** Separate relationship types and keep account-level features for the fallback.
+#### Q11. Explaining a score to an investigator
 
-**Follow-up:** What if confirmed rings also use that device?
+**Prompt:** An investigator sees a high score and a highlighted device edge. What may they conclude, and what must the interface do?
 
-**Follow-up answer:** A hard exclusion may remove real signal; compare stratified sampling or relation-aware features and review the tradeoff.
+**Answer:** They may conclude the case is prioritised and that the edge is a lead worth checking. They may not conclude intent, identity or causation. The interface must show edge provenance, first-seen and last-seen times, the snapshot used, benign alternative explanations, uncertainty, and a route to challenge a wrong link.
 
-**Red flag:** Marking every connected user fraudulent or silently truncating all hubs.
+**Alternative:** A sensitivity display — score without the edge — is a legitimate additional aid, as long as it is labelled as model sensitivity and not as proof of that edge's importance.
 
+**Follow-up:** The explanation includes an edge recorded after the decision. What now?
 
+**Follow-up answer:** It is not an explanation of that decision. Regenerate from the recorded snapshot and log the defect.
 
-#### Q11 — Investigation capacity
+**Red flag:** Presenting attention weights as evidence, or an unlabelled post-hoc graph as the rationale.
 
-**Prompt:** A team has 480 minutes and each illustrative case takes 12 minutes. How many cases fit?
+#### Q12. Leakage through provenance rather than time
 
-**Answer:** 480 minutes divided by 12 minutes per case gives 40 cases, assuming deterministic handling time and no other work.
+**Prompt:** A feature "device flagged by previous investigation" has an availability timestamp before the decision. Is it safe?
 
-**Assumption or alternative:** At 20 minutes per case, capacity falls to 24 cases.
+**Answer:** Not necessarily. If the flag was set by an investigator who was looking at the outcome of the current case's adjudication, the timestamp is early but the content is downstream. Availability is necessary, not sufficient; provenance review is the second gate.
 
-**Follow-up:** What if case complexity varies widely?
+**Alternative:** If the flag came from an unrelated, earlier investigation with its own evidence and no dependence on the current label, it is legitimate prior information.
 
-**Follow-up answer:** Use observed handling-time distributions, prioritize cases at the correct grain, and track backlog and service constraints.
+**Follow-up:** How would you test that on data?
 
-**Red flag:** Equating 40 accounts with 40 independent investigations.
+**Follow-up answer:** Trace creator, creation time and the information on screen at creation; then compare offline features with and without investigation-authored edges and see whether the lift disappears.
 
+**Red flag:** Accepting any feature whose timestamp passes the cutoff.
 
+#### Q13. Choosing between an aggregate and a GNN
 
-#### Q12 — Evaluation under policy feedback
+**Prompt:** A one-hop mean and a two-layer GNN tie on offline precision at the real capacity. Which ships, and what would change your mind?
 
-**Prompt:** Only high-score accounts are reviewed, and reviewers provide most labels. Can you calculate unbiased population recall from reviewed labels alone?
+**Answer:** The aggregate ships. It has fewer moving parts, no sampling service, no fanout contract, an explanation an investigator can verify, and lower tail latency. A tie means the GNN's extra machinery bought nothing measurable.
 
-**Answer:** No. Unreviewed positive outcomes are unknown, and review selection depends on the model. Obtain mature independent outcomes or a designed audit sample with known inclusion probabilities.
+**Alternative:** If the GNN wins specifically on a stratum that matters — for example new accounts with sparse history — and the win survives a disjoint-entity test, the decision changes for that stratum, possibly as a routed sub-model.
 
-**Assumption or alternative:** Report the review policy and uncertainty, and keep unknown outcomes distinct from negatives.
+**Follow-up:** What if the GNN's advantage appears only at `k` far above capacity?
 
-**Follow-up:** What if some sampled low-score reviews reveal positives?
+**Follow-up answer:** Then it is irrelevant: the queue never reaches that region, and optimising there is an evaluation error.
 
-**Follow-up answer:** Use their known sampling probabilities in a justified estimator and report uncertainty and nonresponse limitations.
+**Red flag:** Choosing the more sophisticated model because it scores better on a metric the operation does not use.
 
-**Red flag:** Counting every unreviewed case as a negative.
+#### Q14. Recall with selective labels
 
+**Prompt:** Only high-score accounts are reviewed and reviewers supply the labels. Can unbiased population recall be computed from those labels?
 
+**Answer:** No. Observation of the label depends on the score, so the labelled subset is a biased sample of the population and the positives outside it are systematically missing. Options: an independent mature outcome source, or a designed audit with known inclusion probabilities, reported with non-response caveats.
 
-#### Q13 — Neighbor-label self leakage
+**Alternative:** Report precision at capacity with an explicit label policy and state that recall is unidentified. That is a legitimate, honest result.
 
-**Prompt:** Why can a self-loop corrupt a fraud-neighbor label feature, and how would you test it?
+**Follow-up:** An audit of 300 unreviewed cases finds 6 positives. What can you say?
 
-**Answer:** If the seed’s own target label returns through a self-loop or cycle, the feature directly reveals the answer. Use time-safe out-of-fold aggregates that exclude the seed target and trace dependencies through every hop.
+**Follow-up answer:** You can estimate the unreviewed positive rate as `6/300 = 0.02` with an interval, and combine it with the reviewed count, provided the audit sampled with known probabilities and non-response is addressed. The interval will be wide and that should be stated.
 
-**Assumption or alternative:** Build a tiny graph with uniquely identifiable labels and check that changing the held-out seed label cannot change its feature.
+**Red flag:** Treating the reviewed sample as representative, or dropping the interval entirely.
 
-**Follow-up:** What if another known label belongs to a genuinely distinct prior event?
+**Takeaway:** Strong answers separate what was knowable, what was observed, and what a capacity-limited human can act on.
 
-**Follow-up answer:** It can be eligible if its target grain and availability precede the decision and policy allows it.
-
-**Red flag:** Assuming that removing only explicit self-loops removes every cyclic leakage path.
-
-
-
-#### Q14 — Explanation and appeal
-
-**Prompt:** An investigator sees a high-risk score and an attention weight on a shared device. What can they conclude?
-
-**Answer:** The score is a prioritization signal and the device edge is a lead; neither establishes intent, identity, or causation. Show edge provenance, timestamps, uncertainty, and alternative benign explanations.
-
-**Assumption or alternative:** Use authorized evidence and a human review process with challenge or appeal.
-
-**Follow-up:** What if the explanation uses an edge recorded after the decision?
-
-**Follow-up answer:** It is not a faithful explanation of that decision; regenerate it from the scoring snapshot.
-
-**Red flag:** Treating an attention weight as proof of a causal or legal finding.
-
-
-
-#### Q15 — Fanout and reproducibility
-
-**Prompt:** For 100 seeds, fanouts of 10 then 5, what is the maximum number of sampled edge occurrences?
-
-**Answer:** The first layer has at most 100×10=1,000 occurrences and the second has at most 1,000×5=5,000, totaling 6,000 before deduplication.
-
-**Assumption or alternative:** Distinct nodes may be fewer; the count is not a latency measurement.
-
-**Follow-up:** What if the graph query scans many candidates to select each sample?
-
-**Follow-up answer:** Examined-edge work can exceed returned-edge counts and must be bounded or measured separately.
-
-**Red flag:** Equating a returned-edge cap with a complete resource bound.
-
-
-
-**Takeaway:** Strong answers distinguish what was knowable, what was observed, and what a constrained reviewer can actually act on.
-
-## Section 12 — Quick Reference Card
+## 12. Quick Reference Card
 
 | Item | Value |
 |---|---|
-| Topic | Time-safe graph-assisted fraud investigation ranking |
-| Core formula | For a nonempty eligible neighbor set, mean = sum of eligible features / number of eligible neighbors (G1) |
-| Key assumption | Each feature, relationship, and label was available by the seed decision time; absence of future edges alone does not rule out all leakage |
-| Complexity | Sampled aggregation is O(Sd) for S sampled edge occurrences and width d, excluding transformation and I/O costs |
-| Use when | Reliable typed relationships add measured value at the same investigation capacity and meet policy and latency constraints |
-| Avoid when | Snapshot availability, entity identity, permissions, or graph freshness cannot be defended |
-| Diagnostic | Replay graph and feature versions as of the original decision; inspect label availability and seed self-exclusion |
-| Review constraint | Rank deduplicated cases at the actual labor budget; unknown outcomes are not negatives |
-| Go deeper | [Graph ML topic plan](../INDEX.md); the source-specific production case remains a planned separate handoff |
+| Topic | Time-correct graph-assisted ranking of deduplicated fraud investigation cases under a fixed review budget |
+| Core formula | `m_v(t) = sum_{u in N_v(t)} x_u / \|N_v(t)\|` with `N_v(t)` restricted to records whose availability time is at or before `t` (G1b); normalised form `sum_u x_u / sqrt(d_v d_u)` (G2a) |
+| Key assumption | Every node, edge, attribute and label was readable at the seed's decision time, and no permitted record is itself derived from the outcome |
+| Complexity | `O(S d + \|N\| d²)` per layer for `S` sampled edge occurrences and width `d`; latency is dominated by round trips per seed, not by FLOPs |
+| Use when | A reproducible typed snapshot exists, one-hop aggregates beat the tabular baseline at equal capacity, and review capacity is expressed in case-minutes |
+| Avoid when | Snapshots cannot be reconstructed per request, relation provenance is untrustworthy, or connectivity would be presented as proof |
+| Diagnostic | Replay the snapshot and feature versions as of each decision; test a future-only edge, a future label change, and an availability boundary move |
+| Review constraint | Rank at the case grain, never substitute unknown for negative, and compute recall only with an observed or audited denominator |
+| Go deeper | [Collection index](../INDEX.md); the source-specific production case remains a planned separate handoff |

@@ -1,83 +1,47 @@
-# Dispatch, ETA and Delivery Operations - Case Study Collection
-
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+# Dispatch, ETA and Delivery Operations — Case Studies
 
 ## 1. Collection metadata
-
 | Field | Value |
 |---|---|
-| Collection owner | Curriculum maintainer |
-| Last reviewed | 2026-11-06 |
-| Review cadence | Quarterly and on material market/regulatory change |
-| Index version | 2.0-planned |
-| Canonical case-ID format | CASE-06-02-NNN |
-| Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
-| Source of truth | This directory |
+| Owner | Curriculum maintainer |
+| Index version | 3.0-planned |
+| Case ID format | CASE-06-02-NNN |
+| Evidence boundary | illustrative or not-measured unless primary evidence is cited |
+| Review trigger | routing/ETA contract, source access, or template changes |
 
 ## 2. Case catalog
-
-| Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-06-02-01 | ETA calibration | Dispatch, ETA and Delivery Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-02-02 | Rider supply forecast | Dispatch, ETA and Delivery Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-02-03 | Batching policy experiment | Dispatch, ETA and Delivery Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-02-04 | Dispatch outage incident | Dispatch, ETA and Delivery Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-06-02-05 | Late-order recovery | Dispatch, ETA and Delivery Operations | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| Case ID | Case title / link | Domain | Type | Decision | Primary pattern | Secondary | Evidence | Stage | Last reviewed | Result / limitation | Editorial status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| PLAN-06-02-01 | ETA calibration | delivery | predictive-ml | choose calibrated ETA policy | evaluation-mismatch | model-monitoring | not-measured | proposed | null | no result | planned |
+| PLAN-06-02-02 | Rider supply forecast | delivery | predictive-ml | plan supply | distribution-shift | label-delay | not-measured | proposed | null | no result | planned |
+| PLAN-06-02-03 | Batching policy experiment | delivery | analytical | select batching rule | causal-confounding | cost-latency-tradeoff | not-measured | proposed | null | no result | planned |
+| PLAN-06-02-04 | Dispatch outage incident | delivery | incident | contain dispatch failure | incident-postmortem | rollout-regression | not-measured | proposed | null | no incident evidence | planned |
+| PLAN-06-02-05 | Late-order recovery | delivery | analytical | select recovery action | human-in-the-loop | evaluation-mismatch | not-measured | proposed | null | no result | planned |
+| PLAN-2026-IR019 | Routing correctness and ETA quality | delivery | hybrid | publish legal route and separately score ETA | snapshot-consistency | correctness-contract | not-measured | proposed | null | planning brief only | planned |
+| PLAN-2026-IR023 | Closure-aware exact route fallback | delivery | analytical | fall back after closure | correctness-contract | snapshot-consistency | not-measured | proposed | null | source method, no benchmark | planned |
 
 ## 3. Canonical reusable patterns
-
-| Tag | Diagnostic signature | Use when | Boundary |
-|---|---|---|---|
-| data-leakage | Information unavailable at decision time inflates performance | Unexpectedly strong predictive result | Feature is truly available before the cutoff |
-| label-delay | Outcome truth arrives late or changes | Fraud, claims, retention, downstream operational labels | Immediate, stable labels |
-| distribution-shift | Operating population differs from training/evaluation | New market, season, channel, or rollout | Change is sampling noise only |
-| evaluation-mismatch | Offline metric does not represent the business decision | Ranking, forecast, LLM, agent, or multi-objective products | Metric captures decision and guardrails |
-| cost-latency-tradeoff | Quality, cost, and response time conflict | Online, real-time, or edge operation | Cost/latency are non-binding |
-| human-in-the-loop | Qualified review changes risk/quality trade-off | High-impact, uncertain, or regulated work | Review is infeasible or ineffective |
-| rollout-regression | Release degrades a live guardrail despite tests | Canary, A/B, feature-flag, or migration work | No rollout comparison exists |
-| model-monitoring | Production signals reveal drift or degradation | Deployed model/system with feedback | No meaningful feedback signal |
-| causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
-| incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
-
-## 4. Planned cross-case map
-
-| Pattern | Supporting planned cases | Theory/method links | Boundary to test |
-|---|---|---|---|
-| evaluation-mismatch | All planned cases | Relevant method and evaluation modules | Whether proxy metric changes decision quality |
-| distribution-shift | Market, season, policy, or user changes | Forecasting, MLOps, and domain indexes | Population and operational conditions |
-| human-in-the-loop | High-impact operational cases | Governance, UX, and domain workflows | Review capacity and override quality |
-
-## 5. Backlog and review
-
-Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
-
-## 6. Pre-publish checks
-
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
-- [ ] Decision, metric, action, and outcome refer to the same population.
-- [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
-|---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR019 | Keep routing correctness separate from ETA quality | Supporting curriculum; shared brief | hybrid | How should a navigation service publish legal optimal routes while separately evaluating predicted arrival time? | `snapshot-consistency` | `correctness-contract`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR023 | Reject stale shortcuts without losing a shortest-path guarantee | Supporting curriculum; shared brief | hybrid | When must a route query fall back to the live base graph after a closure? | `correctness-contract` | `snapshot-consistency` | not-measured | proposed | 2026-11-06 |  |
-
-### Reference and transfer notes
-
-| Planning ID | Example reference only | Scope boundary |
+| Pattern | Use when | Boundary |
 |---|---|---|
-| PLAN-2026-IR019 | [REF-IR019](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_02.md) | The OCR filename and ordinal ranges disagree; arbitrary traffic overlays do not preserve ordinary CH correctness |
-| PLAN-2026-IR023 | [REF-IR023](../../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Routing/closure_aware_shortest_paths.md) | Finding a legal route after filtering does not prove completeness or optimality; richer time/turn state needs a separate contract |
+| snapshot-consistency | closure feed and query must agree | a newer change applies to a later query unless a stronger contract exists |
+| correctness-contract | route must be legal and exact | negative weights/time-dependent turn state require another contract |
+| evaluation-mismatch | route quality and ETA quality differ | an accurate route does not establish ETA calibration |
+| incident-postmortem | diagnosing an outage | replay does not establish production incidence |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity / contrast map
+ETA, supply, and batching are decision-quality cases; outage and recovery are operational cases. IR019 distinguishes routing and ETA objectives. IR023 establishes that rejecting stale shortcuts is not an exact-search proof; base-graph Dijkstra is the safe exact fallback under the stated directed nonnegative contract.
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 5. Questions and future-case backlog
+Promotion requires a CASE ID/link, one owner/action/unit/time/baseline, Sections 1–15 with 5a–5e, successful and failed recovery paths, source ledger, checked calculation/sensitivity, and 12–18 fully answered interview prompts. Open evidence: no local source establishes a named delivery company's routing architecture or result.
+
+## 6. Review / retirement log
+| Date | Event | Decision |
+|---|---|---|
+| 2026-11-09 | Read closure-routing source and reconciled IR019/IR023 | retained planned; no source timings or company claims imported |
+
+## 7. Pre-publish checks
+- [ ] Every linked case has all 15 ordered sections and final card last.
+- [ ] Route oracle covers nested shortcuts, closures, directed edges, and unreachable destinations.
+- [ ] ETA score and route correctness use separate definitions and decision-time snapshots.
+- [ ] Evidence, implementation stage, editorial status, and source limitations are distinct.
+- [ ] Links and numerical/state-oracle checks are verified.

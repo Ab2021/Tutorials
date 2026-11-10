@@ -15,7 +15,7 @@ This collection teaches platform engineers to make API, orchestration, tenancy, 
 | Core | Multi-tenancy and platform product | isolate data, state, quota, and ownership | identity, authorization | planned |
 | Advanced | FinOps and cost allocation | reconcile successful-work cost and budget | units, accounting | planned |
 | Advanced | Global admission / token leases (PLAN-2026-IR022) | trace atomic debit, expiry, and recovery | concurrency | planned |
-| Final | Common Issues | diagnose 25+ distinct issues | all above | not written |
+| Final | [25 Common Issues](06_25_Common_Issues.md) | diagnose 25 distinct bounded platform failures | all above | draft; HYPOTHETICAL teaching traces, source review open |
 
 ## 3. Quick topic lookup
 
@@ -62,7 +62,7 @@ It does not certify a provider's current price/capability, replace organization-
 
 ## 9. Common Issues locator
 
-`06_25_Common_Issues.md` is required as the final artifact but **does not yet exist**. The collection claims zero completed issues; it must contain at least 25 distinct complete `VIOLATED_ASSUMPTION`, `NUMERICAL_EDGE`, `SCALE_FAILURE`, or `CONCEPT_CONFUSION` entries before the filename can claim 25.
+[`06_25_Common_Issues.md`](06_25_Common_Issues.md) is the final numbered artifact and contains 25 distinct complete HYPOTHETICAL teaching issues: `API-ID-01`–`OPS-SECRET-25`. Its checked illustrative global-admission trace demonstrates that three independent 40-credit replica buckets admit 120 credits against a 100-credit global budget. The artifact is authored as a draft; its issue count and structure do not establish source review or a production incident.
 
 ## 10. Sources, versions and collection maintenance
 

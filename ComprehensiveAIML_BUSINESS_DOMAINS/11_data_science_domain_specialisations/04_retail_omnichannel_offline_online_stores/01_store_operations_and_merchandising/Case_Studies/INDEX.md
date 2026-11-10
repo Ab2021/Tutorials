@@ -1,61 +1,45 @@
-# Store Operations and Merchandising - Case Study Collection
-
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+# Store Operations and Merchandising — Case Studies
 
 ## 1. Collection metadata
-
 | Field | Value |
 |---|---|
 | Collection owner | Curriculum maintainer |
-| Last reviewed | 2026-11-06 |
-| Review cadence | Quarterly and on material market/regulatory change |
-| Index version | 2.0-planned |
-| Canonical case-ID format | CASE-04-01-NNN |
-| Canonical tags | Use the controlled vocabulary below; add synonyms only after review |
-| Source of truth | This directory |
+| Canonical case-ID format | CASE-04-01-NN |
+| Evidence policy | Illustrative teaching inputs are not company results; sources unavailable in this subtree remain OPEN. |
+| Editorial state | Draft; independently reviewed status has not been claimed. |
+| Review trigger | A source body, decision policy, metric definition, or workload assumption changes. |
 
 ## 2. Case catalog
-
 | Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-04-01-01 | Shelf-availability prediction | Store Operations and Merchandising | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-04-01-02 | Labour scheduling | Store Operations and Merchandising | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-04-01-03 | Shrink detection | Store Operations and Merchandising | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-04-01-04 | Planogram compliance | Store Operations and Merchandising | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
-| PLAN-04-01-05 | Store experiment governance | Store Operations and Merchandising | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
+| CASE-04-01-01 | [Shelf Availability Prediction](./01_Shelf_Availability_Prediction.md) | Store Operations and Merchandising | predictive-ml | stockout-risk score per SKU-store-day; owner: store operations manager | evaluation-mismatch | human-in-the-loop; distribution-shift | illustrative | proposed | not reviewed | Not measured; illustrative decision design only. |
+| CASE-04-01-02 | [Labour Scheduling](./02_Labour_Scheduling.md) | Store Operations and Merchandising | analytical | shift allocation by role and 30-minute interval; owner: store operations manager | evaluation-mismatch | human-in-the-loop; distribution-shift | illustrative | proposed | not reviewed | Not measured; illustrative decision design only. |
+| CASE-04-01-03 | [Shrink Detection](./03_Shrink_Detection.md) | Store Operations and Merchandising | predictive-ml | review priority for transaction-event clusters; owner: loss-prevention lead | evaluation-mismatch | human-in-the-loop; distribution-shift | illustrative | proposed | not reviewed | Not measured; illustrative decision design only. |
+| CASE-04-01-04 | [Planogram Compliance](./04_Planogram_Compliance.md) | Store Operations and Merchandising | analytical | exception queue for aisle-SKU layouts; owner: merchandising lead | evaluation-mismatch | human-in-the-loop; distribution-shift | illustrative | proposed | not reviewed | Not measured; illustrative decision design only. |
+| CASE-04-01-05 | [Store Experiment Governance](./05_Store_Experiment_Governance.md) | Store Operations and Merchandising | analytical | holdout and rollout decision; owner: retail analytics lead | evaluation-mismatch | human-in-the-loop; distribution-shift | illustrative | proposed | not reviewed | Not measured; illustrative decision design only. |
 
 ## 3. Canonical reusable patterns
+| Pattern | Use | Boundary |
+|---|---|---|
+| evaluation-mismatch | A score must support a constrained action. | Proxy quality does not establish decision value. |
+| human-in-the-loop | Review capacity or override is material. | Review quality and capacity must be measured. |
+| distribution-shift | Seasons, channels, or policy versions change. | A shift alert does not prove harm. |
+| data-leakage | Outcome-adjacent state may arrive late. | Availability time, not event label, determines eligibility. |
 
-| Tag | Diagnostic signature | Use when | Boundary |
+## 4. Similarity / contrast map
+All cases share point-in-time decision logging and a baseline. Store cases emphasize physical execution; omnichannel cases emphasize identity, promise, and routing; pricing cases emphasize incrementality, margin, and customer trust. The policy-retrieval case uses abstention rather than an automatic commercial action.
+
+## 5. Questions / future-case backlog
+Open questions: obtain original source bodies; test denominator reconciliation; define operator override quality; validate causal designs before claiming uplift. No additional case is silently substituted for an existing indexed decision.
+
+## 6. Review / retirement log
+| Date | Artifact | Status | Evidence |
 |---|---|---|---|
-| data-leakage | Information unavailable at decision time inflates performance | Unexpectedly strong predictive result | Feature is truly available before the cutoff |
-| label-delay | Outcome truth arrives late or changes | Fraud, claims, retention, downstream operational labels | Immediate, stable labels |
-| distribution-shift | Operating population differs from training/evaluation | New market, season, channel, or rollout | Change is sampling noise only |
-| evaluation-mismatch | Offline metric does not represent the business decision | Ranking, forecast, LLM, agent, or multi-objective products | Metric captures decision and guardrails |
-| cost-latency-tradeoff | Quality, cost, and response time conflict | Online, real-time, or edge operation | Cost/latency are non-binding |
-| human-in-the-loop | Qualified review changes risk/quality trade-off | High-impact, uncertain, or regulated work | Review is infeasible or ineffective |
-| rollout-regression | Release degrades a live guardrail despite tests | Canary, A/B, feature-flag, or migration work | No rollout comparison exists |
-| model-monitoring | Production signals reveal drift or degradation | Deployed model/system with feedback | No meaningful feedback signal |
-| causal-confounding | Observational relationship is not intervention effect | Attribution, uplift, promotion, policy decisions | Valid randomization addresses concern |
-| incident-postmortem | Operational impact requires causal reconstruction | Actual incident or replay exercise | No failure event/replay exists |
+| 2026-11-09 | Collection reconciliation | Draft authored | Local navigation and illustrative arithmetic pending independent review. |
 
-## 4. Planned cross-case map
-
-| Pattern | Supporting planned cases | Theory/method links | Boundary to test |
-|---|---|---|---|
-| evaluation-mismatch | All planned cases | Relevant method and evaluation modules | Whether proxy metric changes decision quality |
-| distribution-shift | Market, season, policy, or user changes | Forecasting, MLOps, and domain indexes | Population and operational conditions |
-| human-in-the-loop | High-impact operational cases | Governance, UX, and domain workflows | Review capacity and override quality |
-
-## 5. Backlog and review
-
-Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
-
-## 6. Pre-publish checks
-
-- [ ] Case ID is unique and linked.
-- [ ] Evidence maturity is distinct from implementation stage.
-- [ ] Decision, metric, action, and outcome refer to the same population.
-- [ ] Assumptions, constraints, failure modes, and a quick-reference card are present.
-- [ ] Company-specific claims have primary/public evidence or are labelled illustrative.
-- [ ] Local links resolve and the review trigger is actionable.
+## 7. Pre-publish checks
+- [x] Every catalog row has a local case link and bounded decision.
+- [x] Evidence, implementation stage, and editorial status are separate.
+- [x] Cases retain 15 ordered sections and a final card.
+- [ ] Independent source/evidence review remains open; no company result is claimed.
+- [ ] Independent editorial review remains open.

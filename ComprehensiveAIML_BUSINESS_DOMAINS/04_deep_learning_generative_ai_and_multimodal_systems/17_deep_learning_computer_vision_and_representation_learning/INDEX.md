@@ -8,7 +8,7 @@
 
 | # | Topic | Current artifact / boundary |
 |---:|---|---|
-| 1 | CNNs and attention | [Draft sheet](Cheat_Sheets/02_CNNs_Attention_and_Transfer_Learning.md); full publication-depth expansion remains open. |
+| 1 | CNNs and attention | [Authored draft sheet](Cheat_Sheets/02_CNNs_Attention_and_Transfer_Learning.md): convolution geometry, attention/transfer selection, 34 diagnostic drills, and release evidence; independent technical review remains open. |
 | 2 | vision transformers | [Draft sheet](Cheat_Sheets/03_Vision_Transformers.md); full publication-depth expansion remains open. |
 | 3 | detection and segmentation | [Draft sheet](Cheat_Sheets/04_Detection_and_Segmentation.md); full publication-depth expansion remains open. |
 | 4 | self-supervision | [Draft sheet](Cheat_Sheets/05_Self_Supervision_and_Contrastive_Learning.md); full publication-depth expansion remains open. |

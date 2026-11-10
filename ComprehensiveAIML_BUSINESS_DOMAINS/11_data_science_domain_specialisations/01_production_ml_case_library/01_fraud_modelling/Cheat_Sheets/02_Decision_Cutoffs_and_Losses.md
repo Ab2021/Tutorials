@@ -317,6 +317,688 @@ This demonstrates that action availability is a hard feasibility constraint befo
 
 Takeaway: policy traces make capacity, maturity, feasibility, and action-specific loss auditable.
 
+## Appendix D — Diagnostic issue ledger
+Evidence: every entry is a HYPOTHETICAL teaching scenario, not an observed incident. Each is a bounded diagnostic contract for the policy described above.
+### I-01 — approval loss uses chargeback as if it were final net loss
+- **Category / provenance:** `VIOLATED_ASSUMPTION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** approval loss uses chargeback as if it were final net loss.
+- **Competing causes:** a recovery rate, fee, or liability party changed; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** reconcile amount, recovery, fees, and owner by decision cohort.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** replace the scalar loss with a versioned component schedule.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** replay the same cohort and reconcile each component to its ledger.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-02 — review benefit assumes every alert is completed
+- **Category / provenance:** `VIOLATED_ASSUMPTION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** review benefit assumes every alert is completed.
+- **Competing causes:** assignment is confused with completion or aging work is omitted; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** compare created, assigned, closed, reopened, and aged-out counts.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** allocate completed capacity by work type and deadline.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** daily capacity reconciliation matches case-management closure states.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-03 — a challenge is recommended for an unsupported channel
+- **Category / provenance:** `VIOLATED_ASSUMPTION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a challenge is recommended for an unsupported channel.
+- **Competing causes:** channel capability was not joined before policy evaluation; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** audit eligibility flags against channel contracts.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** make availability a feasibility gate before loss minimisation.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** property test rejects any unavailable action.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-04 — a decline policy is justified by a challenge experiment
+- **Category / provenance:** `VIOLATED_ASSUMPTION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a decline policy is justified by a challenge experiment.
+- **Competing causes:** action effects differ and the experiment has no decline arm; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** inspect action logs and treatment assignment by action.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** keep action-conditioned estimates separate; use ranges where unknown.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** report names the action and evidence basis for every estimate.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-05 — benefit is nearly zero but rounding routes the case
+- **Category / provenance:** `NUMERICAL_EDGE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** benefit is nearly zero but rounding routes the case.
+- **Competing causes:** currency rounding occurs before subtraction; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** retain unrounded components and inspect distance from zero.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** define a tie/abstain band in base currency.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** boundary cases consistently route to the documented fallback.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-06 — a probability outside [0,1] enters the loss table
+- **Category / provenance:** `NUMERICAL_EDGE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a probability outside [0,1] enters the loss table.
+- **Competing causes:** score transformation or serialization is faulty; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** validate raw and transformed score ranges by model version.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** quarantine invalid scores and invoke approved fallback.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** range check and fallback count are monitored.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-07 — two actions have equal expected loss
+- **Category / provenance:** `NUMERICAL_EDGE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** two actions have equal expected loss.
+- **Competing causes:** the loss schedule is intentionally indifferent or values were rounded; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** measure the unrounded difference and check tie policy.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** use a deterministic tie break that respects guardrails.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** replay produces the same result for permuted input order.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-08 — expected benefit overflows a fixed-point field
+- **Category / provenance:** `NUMERICAL_EDGE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** expected benefit overflows a fixed-point field.
+- **Competing causes:** amount scale or currency conversion exceeded declared bounds; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** test maximum amount, rate, and loss inputs before multiplication.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** use bounded decimal representation and reject unsafe conversion.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** extreme-value test records rejection rather than wrapped routing.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-09 — a negative recovery estimate increases fraud benefit
+- **Category / provenance:** `NUMERICAL_EDGE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a negative recovery estimate increases fraud benefit.
+- **Competing causes:** sign convention changed between recovery and cost sources; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** trace each component with signed units and source version.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** normalize signs at ingestion and add a component invariant.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** component sum equals independently computed total.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-10 — a zero-capacity queue still emits referrals
+- **Category / provenance:** `NUMERICAL_EDGE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a zero-capacity queue still emits referrals.
+- **Competing causes:** capacity defaulted to a stale positive value; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** compare policy timestamp with staffing/case queue telemetry.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** fail closed to the approved non-review route.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** zero-capacity simulation emits no review action.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-11 — top-K selection uses global capacity across regions
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** top-K selection uses global capacity across regions.
+- **Competing causes:** regional queues, deadlines, or owners are independent; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** slice selected and completed work by queue key.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** partition optimization by actual capacity owner.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** each queue respects its own limit after replay.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-12 — duplicate entity events consume multiple review slots
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** duplicate entity events consume multiple review slots.
+- **Competing causes:** deduplication key excludes event linkage or reopening state; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** measure unique case IDs per selected event.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** deduplicate before allocation while preserving audit links.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** selected unique cases equal allocated slots.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-13 — late score arrival misses a synchronous decision
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** late score arrival misses a synchronous decision.
+- **Competing causes:** feature or inference latency exceeded the decision deadline; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** join score timestamps to authorization deadline.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** set a deadline-aware fallback and monitor lateness.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** late-score rate and fallback route are reported.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-14 — queue ordering changes after pagination
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** queue ordering changes after pagination.
+- **Competing causes:** a partial sort or unstable cursor loses tie ordering; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** replay with shuffled pages and compare selected IDs.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** use a stable benefit-plus-ID ordering.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** page-size changes preserve selected set.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-15 — review capacity is consumed by reopens unexpectedly
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** review capacity is consumed by reopens unexpectedly.
+- **Competing causes:** reopen workload was absent from planning capacity; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** measure reopen rate and minutes by reason.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** reserve explicit reopen capacity or reprioritize by policy.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** forecast includes closed and reopened work.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-16 — policy replay cannot retrieve historic features
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** policy replay cannot retrieve historic features.
+- **Competing causes:** feature store retained latest state only; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** attempt point-in-time reconstruction by source version.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** retain decision-time snapshots or narrow evaluation claim.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** replay record contains feature timestamps and versions.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-17 — precision at K is reported as prevented loss
+- **Category / provenance:** `CONCEPT_CONFUSION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** precision at K is reported as prevented loss.
+- **Competing causes:** selected-label yield is substituted for counterfactual effect; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** compare definition, denominator, and action counterfactual.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** rename metric and add controlled/audited outcome design.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** report separates yield, action rate, and net-loss estimate.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-18 — calibration is claimed from unresolved cases
+- **Category / provenance:** `CONCEPT_CONFUSION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** calibration is claimed from unresolved cases.
+- **Competing causes:** censored outcomes were silently labeled negative; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** tabulate mature, censored, and revised labels by score bin.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** restrict reported calibration to mature cohort.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** calibration table carries maturity denominator.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-19 — amount is multiplied by score without action loss
+- **Category / provenance:** `CONCEPT_CONFUSION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** amount is multiplied by score without action loss.
+- **Competing causes:** exposure is mistaken for expected avoidable loss; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** inspect whether recovery, friction, and effectiveness exist in formula.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** use action-benefit components rather than score-times-amount.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** formula review names every omitted component.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-20 — fairness is declared from equal threshold alone
+- **Category / provenance:** `CONCEPT_CONFUSION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** fairness is declared from equal threshold alone.
+- **Competing causes:** base rates, action effects, and error consequences differ; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** slice action and mature outcome rates with uncertainty.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** set explicit fairness assessment and escalation criteria.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** review record includes affected population and limitation.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-21 — a score remains calibrated after a label-definition change
+- **Category / provenance:** `VIOLATED_ASSUMPTION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a score remains calibrated after a label-definition change.
+- **Competing causes:** target semantics changed while model version did not; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** diff label specification and onset date by cohort.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** version the target and suspend cross-version comparison.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** dashboard breaks series at definition change.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-22 — manual overrides are excluded from evaluation
+- **Category / provenance:** `VIOLATED_ASSUMPTION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** manual overrides are excluded from evaluation.
+- **Competing causes:** overrides correlate with unmodeled risk or policy exceptions; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** compare recommendation, execution, reason, and outcome.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** log override reason and evaluate policy plus human system.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** override rate and outcome slice are reviewed.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-23 — a retry storm creates repeated actions
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a retry storm creates repeated actions.
+- **Competing causes:** idempotency key is absent across policy and executor; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** count repeated action requests per decision ID.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** enforce idempotent action execution and replay-safe logs.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** fault injection yields one executed action per decision.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-24 — model-version and policy-version mismatch appears after rollout
+- **Category / provenance:** `SCALE_FAILURE` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** model-version and policy-version mismatch appears after rollout.
+- **Competing causes:** independent deployments were not compatibility checked; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** join emitted decisions to both version identifiers.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** pin compatible versions and use staged rollback.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** canary report contains both versions and fallback state.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+### I-25 — a high graph score is treated as proof of fraud
+- **Category / provenance:** `CONCEPT_CONFUSION` / HYPOTHETICAL.
+- **Trigger and environment:** investigate when this symptom appears in a versioned offline replay or controlled operational monitor.
+- **Observable symptom:** a high graph score is treated as proof of fraud.
+- **Competing causes:** relationship evidence is correlated but not dispositive; a source-data defect can produce the same surface signal.
+- **Discriminating diagnostic / expected signal:** compare graph-enriched and base score at fixed capacity.
+- **Root-cause evidence needed:** retain decision ID, timestamp, feature/model/policy versions, action availability, and queue state.
+- **Immediate mitigation:** stop the unsafe route or use the documented fallback; do not relabel outcomes to hide the discrepancy.
+- **Correction:** route graph signal to review unless a separate action basis exists.
+- **Mitigation risk:** a conservative fallback can shift customer friction or workload, so report that shift.
+- **Prevention:** make the stated invariant executable in replay and release review.
+- **Verification:** audit shows graph-only cases have documented human rationale.
+- **Related material:** CUT-01, CUT-02, Sections 5 and 8; ownership belongs to the policy owner with operations and model-risk review.
+
+## Appendix E — Sensitivity and state-oracle drills
+All numbers below are ILLUSTRATIVE and arithmetic-checked. They show policy sensitivity, not a recommended schedule or observed operational result.
+### D-01 — score calibration
+- **Constructed input:** `0.06; 500; 3; challenge; 33; If residual risk becomes 0.02, challenge loss is 13 CU and remains preferred.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `score calibration` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-02 — customer-friction cost
+- **Constructed input:** `0.04; 600; 2; challenge; 22; At friction 20 CU, challenge loss is 26 CU versus allow loss 24 CU, reversing choice.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `customer-friction cost` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-03 — review capacity
+- **Constructed input:** `[31,18,11,4]; CU benefits; 2; refer; 49; With K=3, add 11 CU; the fourth case remains unselected.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `review capacity` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-04 — action availability
+- **Constructed input:** `[allow=28,step-up=9,recovery=14]; CU losses; n/a; step-up; 9; When step-up is unavailable, recovery at 14 CU is the valid choice.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `action availability` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-05 — loss tie
+- **Constructed input:** `[allow=12.004,challenge=12.006]; CU losses; n/a; allow; 12.004; A 0.002-CU gap is inside a declared 0.01-CU abstain band, so use fallback instead.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `loss tie` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-06 — deduplication
+- **Constructed input:** `[20,19,8]; CU benefits; 2; refer unique cases; 28; If first two are the same case, select 20 and 8, not duplicate work.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `deduplication` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-07 — mature-label denominator
+- **Constructed input:** `8; selected cases; 5; report mature subset; 5; Three censored cases are neither positive nor negative in final calibration.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `mature-label denominator` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-08 — queue deadline
+- **Constructed input:** `90; seconds remaining; 120; fallback; n/a; An estimate arriving after deadline cannot justify a retroactive challenge.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `queue deadline` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-09 — recovery fraction
+- **Constructed input:** `0.10; fraud probability; 1000; allow; 100; At 50% expected recovery, net allow loss is 50 CU before other costs.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `recovery fraction` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-10 — capacity reserve
+- **Constructed input:** `100; case slots; 0.15; reserve fraction; 85; Only 85 new slots exist after reserving 15 for reopens.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `capacity reserve` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-11 — currency conversion
+- **Constructed input:** `100; EUR exposure; 1.10; USD/EUR; 110; The conversion date and source must be attached; it is not a model output.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `currency conversion` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-12 — policy version
+- **Constructed input:** `0.03; probability; 400; allow; 12; A loss-table update to 700 CU changes allow loss to 21 CU without model drift.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `policy version` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-13 — prevalence shift
+- **Constructed input:** `0.02; score estimate; 500; allow; 10; Do not replace calibration with base rate; investigate target and cohort shift.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `prevalence shift` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-14 — review minutes
+- **Constructed input:** `45; minutes/case; 6; reviewers; 48; Six reviewers at 6 productive hours/day complete 48 cases/day under this constructed assumption.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `review minutes` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-15 — appeal cost
+- **Constructed input:** `0.01; appeal probability; 80; decline; 0.8; Appeal cost is an expected component, not a reason to call all declines fraud.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `appeal cost` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-16 — challenge completion
+- **Constructed input:** `0.70; completion probability; 30; friction cost; 21; Expected friction is 21 CU only if 30 CU applies upon completion.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `challenge completion` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-17 — false-negative exposure
+- **Constructed input:** `0.05; risk; 300; allow; 15; This is expected exposure, not a prevalence estimate across all events.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `false-negative exposure` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-18 — fallback loss
+- **Constructed input:** `18; model loss estimate; 26; fallback loss; fallback; 26; An outage should compare known fallback loss and guardrails, not fabricate a score.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `fallback loss` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-19 — top-K stability
+- **Constructed input:** `[15,15,14]; CU benefits; 2; stable tie rule; 30; A deterministic ID tiebreak is auditable but does not claim equal customer impact.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `top-K stability` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-20 — component accounting
+- **Constructed input:** `500; gross loss; 0.30; recovery fraction; 350; Gross loss times one minus recovery is 350 CU before fees and friction.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `component accounting` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-21 — late-label reporting
+- **Constructed input:** `40; selected; 28; mature; mature subset; 28; Precision numerator and denominator must use the same mature subset.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `late-label reporting` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-22 — threshold equivalence
+- **Constructed input:** `0.08; risk; 100; homogeneous loss; threshold; 8; Only homogeneous loss and action conditions make risk order equal benefit order.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `threshold equivalence` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-23 — abstention cost
+- **Constructed input:** `9; abstain queue cost; 12; challenge loss; abstain; 9; Choose abstention only if its deadline and capacity are feasible.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `abstention cost` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+### D-24 — override audit
+- **Constructed input:** `60; recommendations; 9; overrides; audit; 9; Fifteen percent override rate requires reason and outcome slice, not automatic blame.`; units are those named in the values.
+- **Decision rule:** compare feasible action-conditioned expected losses or rank positive action benefits within the stated capacity.
+- **Worked output:** use the specified constructed operands and record the route, loss, or selected set before rounding.
+- **Arithmetic check:** recompute using the written operands before rounding; record units on every component.
+- **Interpretation:** the point is to expose how `override audit` can alter a policy without claiming an observed result.
+- **Changed constraint:** change only one assumption at a time; otherwise the source of a reversal is unidentified.
+- **Failure boundary:** this calculation fails if the input risk, effect, action availability, or loss definition belongs to a different population or time.
+- **Audit fields:** decision ID, source timestamps, risk/version, loss-table version, eligibility, capacity snapshot, recommendation, execution, and outcome maturity.
+- **Verification oracle:** a deterministic replay supplied these exact inputs must return the stated route or selected set.
+- **Owner / timing:** policy owner approves loss semantics; operations owner confirms capacity before the stated decision window.
+- **Evidence status:** DERIVED from constructed inputs; not a measurement of fraud, savings, customer harm, or staffing.
+
+## Appendix F — Release and audit contracts
+These contracts turn the preceding calculations into reviewable state transitions. They are DERIVED control patterns, not claims about a specific institution.
+### C-01 — loss-table publication
+- **Precondition:** a bounded owner, schema version, and retention location exist before this transition.
+- **Input contract:** policy owner supplies action, target, currency, component, effective date, and approver.
+- **State transition:** validate the input; either persist an auditable accepted state or emit a bounded fallback/rejection.
+- **Invariant:** every accepted record can be joined by decision ID to the policy, action, and later observation state.
+- **Why it matters:** an expected-loss calculation cannot be audited if its inputs or executed action are lost.
+- **Failure signal:** missing join keys, impossible version pairs, stale timestamps, or a count mismatch across states.
+- **Immediate mitigation:** stop relying on the affected metric or route until the missing state is reconstructed or labeled unknown.
+- **Correction:** reject any row missing an action or effective window.
+- **Verification:** a reviewer independently totals a sample decision from the published schedule.
+- **Risk of mitigation:** rejection or fallback can change workload and friction; quantify that change separately.
+- **Evidence:** ILLUSTRATIVE control contract; actual tooling and retention requirements remain OPEN.
+### C-02 — capacity snapshot
+- **Precondition:** a bounded owner, schema version, and retention location exist before this transition.
+- **Input contract:** operations supplies queue key, completed capacity, reserve, deadline, and snapshot time.
+- **State transition:** validate the input; either persist an auditable accepted state or emit a bounded fallback/rejection.
+- **Invariant:** every accepted record can be joined by decision ID to the policy, action, and later observation state.
+- **Why it matters:** an expected-loss calculation cannot be audited if its inputs or executed action are lost.
+- **Failure signal:** missing join keys, impossible version pairs, stale timestamps, or a count mismatch across states.
+- **Immediate mitigation:** stop relying on the affected metric or route until the missing state is reconstructed or labeled unknown.
+- **Correction:** treat missing or stale capacity as unavailable rather than silently reusing old capacity.
+- **Verification:** replay shows no selection above the timestamped feasible capacity.
+- **Risk of mitigation:** rejection or fallback can change workload and friction; quantify that change separately.
+- **Evidence:** ILLUSTRATIVE control contract; actual tooling and retention requirements remain OPEN.
+### C-03 — decision emission
+- **Precondition:** a bounded owner, schema version, and retention location exist before this transition.
+- **Input contract:** policy executor emits recommendation, feasibility result, model/policy/loss versions, and idempotency key.
+- **State transition:** validate the input; either persist an auditable accepted state or emit a bounded fallback/rejection.
+- **Invariant:** every accepted record can be joined by decision ID to the policy, action, and later observation state.
+- **Why it matters:** an expected-loss calculation cannot be audited if its inputs or executed action are lost.
+- **Failure signal:** missing join keys, impossible version pairs, stale timestamps, or a count mismatch across states.
+- **Immediate mitigation:** stop relying on the affected metric or route until the missing state is reconstructed or labeled unknown.
+- **Correction:** reject a request lacking decision ID or action availability evidence.
+- **Verification:** a retry produces the same recommendation and at most one external action.
+- **Risk of mitigation:** rejection or fallback can change workload and friction; quantify that change separately.
+- **Evidence:** ILLUSTRATIVE control contract; actual tooling and retention requirements remain OPEN.
+### C-04 — outcome maturation
+- **Precondition:** a bounded owner, schema version, and retention location exist before this transition.
+- **Input contract:** analytics records observed date, maturity rule, revision state, and selection path.
+- **State transition:** validate the input; either persist an auditable accepted state or emit a bounded fallback/rejection.
+- **Invariant:** every accepted record can be joined by decision ID to the policy, action, and later observation state.
+- **Why it matters:** an expected-loss calculation cannot be audited if its inputs or executed action are lost.
+- **Failure signal:** missing join keys, impossible version pairs, stale timestamps, or a count mismatch across states.
+- **Immediate mitigation:** stop relying on the affected metric or route until the missing state is reconstructed or labeled unknown.
+- **Correction:** prohibit unresolved or unobserved outcomes from final calibration denominator.
+- **Verification:** metric query returns selected, mature, censored, and revised counts separately.
+- **Risk of mitigation:** rejection or fallback can change workload and friction; quantify that change separately.
+- **Evidence:** ILLUSTRATIVE control contract; actual tooling and retention requirements remain OPEN.
+### C-05 — override review
+- **Precondition:** a bounded owner, schema version, and retention location exist before this transition.
+- **Input contract:** case operator records executed action, override reason, authority, and time.
+- **State transition:** validate the input; either persist an auditable accepted state or emit a bounded fallback/rejection.
+- **Invariant:** every accepted record can be joined by decision ID to the policy, action, and later observation state.
+- **Why it matters:** an expected-loss calculation cannot be audited if its inputs or executed action are lost.
+- **Failure signal:** missing join keys, impossible version pairs, stale timestamps, or a count mismatch across states.
+- **Immediate mitigation:** stop relying on the affected metric or route until the missing state is reconstructed or labeled unknown.
+- **Correction:** do not equate recommendation with execution in evaluation.
+- **Verification:** weekly sample connects override reasons to policy gaps or operational exceptions.
+- **Risk of mitigation:** rejection or fallback can change workload and friction; quantify that change separately.
+- **Evidence:** ILLUSTRATIVE control contract; actual tooling and retention requirements remain OPEN.
+
 ## 12. Quick Reference Card
 
 | Field | Rule |

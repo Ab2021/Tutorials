@@ -8,12 +8,14 @@ This collection supports actuarial analysts and reviewers making exposure-normal
 
 | Level | Topic | Outcome and prerequisite | Status |
 |---|---|---|---|
+| Foundation | Probability and insurance distributions | Derive moments and select a distribution under stated support and exposure assumptions. | Planned; source topic `01_Probability_Insurance_Distributions`. |
+| Foundation | Life contingencies and survival models | Compute a bounded survival/life-contingency value with censoring and timing explicit. | Planned; source topic `02_Life_Contingencies_Survival_Models`. |
 | Core | [03 Non-Life Pricing: Pure Premium, Frequency–Severity and Exposure](03_NonLife_Pricing_Ratemaking.md) | Reconcile earned exposure and claim counts; calculate and diagnose expected loss cost. Requires basic ratios, expected values and coverage terminology. | Draft; not reviewed |
+| Core | GLM theory for insurance | Derive a count mean with a valid exposure offset and diagnose link/offset misuse. | Requires probability and exposure definitions; planned; source topic `04_GLM_Theory_Insurance`. |
 | Core | [05 Claims Reserving Methods](05_Claims_Reserving_Methods.md) | Develop a paid triangle, reconcile paid outstanding, distinguish incurred-based IBNR and investigate temporal, validation and uncertainty risks; requires ratios and claims terminology. | Draft; not independently reviewed |
-| Advanced | Actuarial model review | Assess assumptions, inputs and validation. | Planned |
-| Advanced | Rating-factor governance | Review factor decisions, permissible use and monitoring. | Planned |
-| Advanced | Reserving validation | Compare claim development assumptions and validation. | Planned |
-| Final | Common Issues | Consolidated issue locator and complete troubleshooting artifact. | Planned; no issue file exists |
+| Advanced | Reinsurance, capital and risk measures | Calculate a layer payout and state attachment, limit, gross/net, and aggregation boundary. | Planned; source topic `06_Reinsurance_Capital_Risk_Measures`. |
+| Advanced | Extreme-value theory and catastrophe | Select a tail model only after threshold, dependence, and exposure boundaries are stated. | Planned; source topic `09_Extreme_Value_Theory_Catastrophe`. |
+| Advanced | Bayesian credibility and hierarchical models | Combine experience and prior information without treating weight as proof of homogeneity. | Planned; source topic `10_Bayesian_Credibility_Hierarchical`. |
 
 ## 3. Quick topic lookup
 

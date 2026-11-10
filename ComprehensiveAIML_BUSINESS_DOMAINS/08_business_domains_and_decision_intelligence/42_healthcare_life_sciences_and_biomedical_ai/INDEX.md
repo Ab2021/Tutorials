@@ -9,7 +9,7 @@
 | # | Topic | Status |
 |---:|---|---|
 | 1 | [clinical workflow design](Cheat_Sheets/01_Clinical_Decision_Support_Evidence_and_Handoff.md) | draft; 12-section manuscript exceeds the 1,000-line course threshold; source-body and local-policy evidence remain OPEN |
-| 2 | [biomedical signals](Cheat_Sheets/02_Biomedical_Signal_Pipeline_and_Validation.md) | draft; expanded acquisition/validation sheet remains below the 1,000-line course threshold; technical ECG/HRV/filter commitments remain in Module 37 |
+| 2 | [biomedical signals](Cheat_Sheets/02_Biomedical_Signal_Pipeline_and_Validation.md) | draft; 1,017-line 12-section manuscript with exactly 15 answered questions; 13 arithmetic checks and routing/split paper oracles passed; technical ECG/HRV/filter commitments remain in Module 37 and primary/local evidence remains OPEN |
 | 3 | imaging and triage | planned |
 | 4 | drug discovery | planned |
 | 5 | validation and regulation | planned |

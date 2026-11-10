@@ -14,6 +14,10 @@
 
 This family has its own cross-domain Case_Studies and Cheat_Sheets folders. Use these for comparisons that span its child domains; use each child collection for domain-specific material.
 
+
+## Authorship evidence
+
+Use the [local coverage ledger](./COVERAGE_LEDGER.md) for the reconciled original-topic and reference-informed commitments, readable-source boundary, collection gates, and honest artifact states. A catalog row is not authored coverage.
 ## Local coverage ledger
 
 Established 2026-11-08 before individual authoring. The 35 original topic commitments and three reference-informed additions are distinct syllabus obligations; neither an index row nor a source filename establishes completion.

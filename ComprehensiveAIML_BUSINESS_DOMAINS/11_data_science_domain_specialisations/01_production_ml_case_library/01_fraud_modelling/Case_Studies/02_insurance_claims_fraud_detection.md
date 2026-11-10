@@ -557,6 +557,407 @@ No gate may be marked passed without its referenced artifact.
 **Scoring:** 0 accusation; 1 correlation caveat; 2 competing causes; 3 validation plan.
 **Support:** Sections 5a, 5d, and F-04.
 
+## Appendix A — Evidence-gated evaluation protocol
+This appendix is an executable reading of the proposed validation plan. It documents what evidence must exist before a future claim; it does not assert that the evidence exists.
+### E-01 — cohort freezing
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `claim-key and intake-version snapshot`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** the eligible list cannot change after policy assignment.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** a late correction becomes a separately linked superseding decision.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-02 — cutoff timing
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `availability timestamp for every field`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** each retained feature precedes the queue timestamp.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** unavailable fields are absent rather than imputed from the future.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-03 — identity linkage
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `claim-to-policy cardinality`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** one-to-many links retain both keys and effective dates.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** a current policy dimension cannot rewrite historic ownership.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-04 — missingness semantics
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `source absent versus feed failure`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** missingness reason is a separate categorical state.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** an upstream outage triggers fallback rather than learned imputation.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-05 — outcome taxonomy
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `disposition, recovery, reversal, and unresolved state`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** no disposition is silently mapped to a final negative.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** revised outcomes retain previous values and revision time.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-06 — capacity measurement
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `assigned, started, closed, reopened and aged files`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** K uses usable starts for the decision window.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** headcount is never substituted for queue capacity.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-07 — baseline replay
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `rules version and adjuster route`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** candidate and baseline see identical eligibility and capacity.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** baseline exceptions remain visible in comparison.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-08 — feature transformation
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `fit scope and transform timestamp`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** learned transform is fit only on training fold.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** forward data is never used to fill a training statistic.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-09 — calibration
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `score bins, maturity, and selection route`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** reported bins use named cohort and final outcomes.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** selected-only curve is labeled observation-conditioned.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-10 — reason codes
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `policy reason and operational reason`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** every referral and nonreferral has a reproducible reason.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** human prose does not replace structured audit fields.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-11 — assignment
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `policy arm and assignment timestamp`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** all eligible assigned cases remain in intent-to-treat analysis.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** fallback traffic is not removed after randomization.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-12 — service guardrail
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `intake-to-action and claimant-contact timing`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** time window matches policy cohort.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** median alone cannot hide tail delay.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-13 — slice review
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `approved slicing definition and count`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** sufficient-count uncertainty is shown.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** small cells are not overinterpreted or exposed.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-14 — override analysis
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `recommendation, execution, authority and reason`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** execution is distinguishable from recommendation.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** override is neither assumed error nor discarded.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-15 — retry safety
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `decision key and snapshot hash`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** same key/hash yields one active queue item.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** changed snapshot creates supersession rather than duplication.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-16 — queue reconciliation
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `decision, enqueue, start, closure, and cancellation events`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** every accepted referral has one terminal or active state.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** unacknowledged handoff is an incident, not a nonreferral.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-17 — value attribution
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `gross amount, recovery, cost, and counterfactual definition`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** currency components share cohort and window.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** score rank is not treated as recovered value.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-18 — maturity curve
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `cohort age and final-label rate`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** unresolved count is retained in every report.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** recent cohort is not compared as fully mature.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-19 — release compatibility
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `model, feature, policy, and fallback versions`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** all version pairs are declared compatible.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** rollback preserves the original decision evidence.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-20 — fallback test
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `dependency loss and routing outcome`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** loss of scoring does not silently drop eligible claims.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** fallback volume and reason reconcile to outage window.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-21 — retention boundary
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `fields, owners, permissions and deletion rule`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** replay access follows approved retention basis.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** a useful feature is excluded if its use is not approved.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-22 — appeal and correction
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `appeal event and revised decision`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** appeal does not overwrite original recommendation.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** analysis distinguishes initial and final states.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-23 — prospective stop rule
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `predeclared harm and operational threshold`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** owner can pause affected route promptly.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** post-hoc threshold changes are versioned separately.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+### E-24 — decision record
+- **Owner:** claims operations owns workflow state; analytics owns measurement; model-risk/privacy owners approve their respective gates.
+- **Required input:** `claim ID, time, versions, action, and evidence state`.
+- **Method:** materialize the input as a versioned artifact before the relevant replay, policy run, or analysis.
+- **Invariant:** a reviewer can reconstruct why an action occurred.
+- **Failure interpretation:** a failed check can mean a data defect, process change, policy bug, or genuinely changed population; do not default to model drift.
+- **Immediate response:** mark the affected metric or recommendation unavailable, use the preserved baseline route where authorized, and retain the failed artifact.
+- **Competing-cause check:** compare source timestamps, join keys, policy version, and queue state before retraining or changing K.
+- **Correction boundary:** repair the identified contract; do not retroactively overwrite decision-time values to improve the replay.
+- **Verification oracle:** missing record narrows the conclusion to unknown.
+- **Evidence boundary:** passing this control validates a data/process property, not model quality, causal benefit, fairness, or regulatory compliance.
+- **Review record:** store checker version, evaluated cohort, failure count, exception rationale, owner decision, and recheck trigger.
+- **Risk of mitigation:** fallback or pause can reduce queue yield, delay investigation, or alter claimant experience; measure it separately.
+- **Status:** proposed; not executed in this illustrative case.
+## Appendix B — Sensitivity interpretation traces
+The calculations reuse the explicitly illustrative arithmetic in Section 6. They are not insurer outcomes or a substitute for a controlled evaluation.
+### S-01 — maturity
+- **Base condition:** 60 positives out of 200 referrals.
+- **Changed condition:** 45 positives after strict maturity exclusion.
+- **What remains fixed:** eligibility definition, target semantics, and decision-time data must be frozen before this comparison.
+- **Interpretation:** do not call the difference model degradation until cohort age and revisions are reconciled.
+- **Wrong inference to reject:** a changed reported metric proves that the ranker became better or worse without examining observation, policy, and workflow changes.
+- **Required report fields:** assigned count, referred count, started count, mature count, unresolved count, cost components, and service guardrails.
+- **Decision consequence:** if a material conclusion reverses under a plausible condition, retain uncertainty and defer expansion.
+- **Audit trail:** preserve both configurations, versions, computation inputs, and the owner who selected the scenario.
+- **Evidence:** DERIVED/ILLUSTRATIVE only.
+### S-02 — capacity
+- **Base condition:** K=200 and 60 constructed positives.
+- **Changed condition:** K=120 with top 36 constructed positives.
+- **What remains fixed:** eligibility definition, target semantics, and decision-time data must be frozen before this comparison.
+- **Interpretation:** value, recall, and service workload must be recomputed together.
+- **Wrong inference to reject:** a changed reported metric proves that the ranker became better or worse without examining observation, policy, and workflow changes.
+- **Required report fields:** assigned count, referred count, started count, mature count, unresolved count, cost components, and service guardrails.
+- **Decision consequence:** if a material conclusion reverses under a plausible condition, retain uncertainty and defer expansion.
+- **Audit trail:** preserve both configurations, versions, computation inputs, and the owner who selected the scenario.
+- **Evidence:** DERIVED/ILLUSTRATIVE only.
+### S-03 — service cost
+- **Base condition:** 200 referrals at $25 constructed cost.
+- **Changed condition:** 200 referrals at $100 constructed cost.
+- **What remains fixed:** eligibility definition, target semantics, and decision-time data must be frozen before this comparison.
+- **Interpretation:** net-value scenario falls by $15,000; no observed result follows.
+- **Wrong inference to reject:** a changed reported metric proves that the ranker became better or worse without examining observation, policy, and workflow changes.
+- **Required report fields:** assigned count, referred count, started count, mature count, unresolved count, cost components, and service guardrails.
+- **Decision consequence:** if a material conclusion reverses under a plausible condition, retain uncertainty and defer expansion.
+- **Audit trail:** preserve both configurations, versions, computation inputs, and the owner who selected the scenario.
+- **Evidence:** DERIVED/ILLUSTRATIVE only.
+### S-04 — recoverable value
+- **Base condition:** 60 referrals at $2,000 constructed value.
+- **Changed condition:** 60 referrals at $1,000 constructed value.
+- **What remains fixed:** eligibility definition, target semantics, and decision-time data must be frozen before this comparison.
+- **Interpretation:** the scenario falls from $65,000 to $5,000 using the written formula.
+- **Wrong inference to reject:** a changed reported metric proves that the ranker became better or worse without examining observation, policy, and workflow changes.
+- **Required report fields:** assigned count, referred count, started count, mature count, unresolved count, cost components, and service guardrails.
+- **Decision consequence:** if a material conclusion reverses under a plausible condition, retain uncertainty and defer expansion.
+- **Audit trail:** preserve both configurations, versions, computation inputs, and the owner who selected the scenario.
+- **Evidence:** DERIVED/ILLUSTRATIVE only.
+### S-05 — feature delay
+- **Base condition:** all fields available by cutoff.
+- **Changed condition:** one high-impact field arrives after cutoff.
+- **What remains fixed:** eligibility definition, target semantics, and decision-time data must be frozen before this comparison.
+- **Interpretation:** remove it from replay rather than backdating availability.
+- **Wrong inference to reject:** a changed reported metric proves that the ranker became better or worse without examining observation, policy, and workflow changes.
+- **Required report fields:** assigned count, referred count, started count, mature count, unresolved count, cost components, and service guardrails.
+- **Decision consequence:** if a material conclusion reverses under a plausible condition, retain uncertainty and defer expansion.
+- **Audit trail:** preserve both configurations, versions, computation inputs, and the owner who selected the scenario.
+- **Evidence:** DERIVED/ILLUSTRATIVE only.
+### S-06 — policy override
+- **Base condition:** all routed recommendations executed.
+- **Changed condition:** 15% documented overrides.
+- **What remains fixed:** eligibility definition, target semantics, and decision-time data must be frozen before this comparison.
+- **Interpretation:** evaluate assignment, recommendation, execution, and outcome separately.
+- **Wrong inference to reject:** a changed reported metric proves that the ranker became better or worse without examining observation, policy, and workflow changes.
+- **Required report fields:** assigned count, referred count, started count, mature count, unresolved count, cost components, and service guardrails.
+- **Decision consequence:** if a material conclusion reverses under a plausible condition, retain uncertainty and defer expansion.
+- **Audit trail:** preserve both configurations, versions, computation inputs, and the owner who selected the scenario.
+- **Evidence:** DERIVED/ILLUSTRATIVE only.
+
 ## 15. Quick Reference Card
 | Field | Value |
 |---|---|

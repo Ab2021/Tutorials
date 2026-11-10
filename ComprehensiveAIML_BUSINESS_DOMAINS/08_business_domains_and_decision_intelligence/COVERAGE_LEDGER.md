@@ -6,7 +6,7 @@
 
 | Module | Indexed topics | Existing substantive artifact | Completed | Remaining indexed topics |
 |---|---:|---|---:|---|
-| 42 Healthcare, Life Sciences and Biomedical AI | 5 | clinical handoff exceeds 1,000 lines; biomedical signal sheet is a 753-line expanded draft with 13 arithmetic checks and routing/split oracles; human-factors expansion is in progress | 0 | clinical workflow design; biomedical signals; imaging and triage; drug discovery; validation and regulation |
+| 42 Healthcare, Life Sciences and Biomedical AI | 5 | clinical handoff exceeds 1,000 lines; biomedical signal pipeline is a 1,017-line expanded draft with exactly 15 answered questions, 13 arithmetic checks, and routing/split oracles; human-factors expansion is in progress | 0 | clinical workflow design; biomedical signals require independent review and primary/local evidence; imaging and triage; drug discovery; validation and regulation |
 | 43 Financial Services, Fraud, Risk and Fintech | 5 | `Cheat_Sheets/01_Fraud_Triage_and_Review_Controls.md` is a 65-line short draft, below the 12-section/1,000-line requirement | 0 | fraud graphs and streaming; credit and underwriting; AML and compliance; model risk; financial evaluation |
 | 44 Retail, E-Commerce, Media and Personalisation | 5 | none | 0 | customer journey; catalogue and content; personalisation; pricing and promotions; retail measurement |
 | 45 Manufacturing, Industrial IoT and Quality AI | 5 | none | 0 | OT/IT data; predictive maintenance; visual inspection; process optimisation; factory agent workflows |

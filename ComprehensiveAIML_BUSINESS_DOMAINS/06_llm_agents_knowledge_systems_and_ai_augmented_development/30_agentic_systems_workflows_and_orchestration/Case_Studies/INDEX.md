@@ -10,7 +10,7 @@ Owner: enterprise agent security curriculum maintainers. Last reviewed: not revi
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | CASE-2026-030 | [Approval gate for an enterprise agent](01_enterprise_agent_approval_gate.md) | Enterprise agent security | llm-agentic | How should an assistant gate ticket actions despite untrusted documents? | `exact-action-approval` | `least-privilege-execution`, `idempotent-side-effects` | not-measured | proposed | not reviewed | No deployment or outcome measured; illustrative calculations only. | draft |
 
-Planned, not case records: claims operations agent; research workflow with approval gates. Reference-informed briefs [PLAN-2026-IR005 and PLAN-2026-IR006](../../../00_REFERENCE_INFORMED_CASE_PLAN.md) remain plans; the latter shares recovery concepts but is not a published comparison.
+Planned, not case records: the original **claims-operations agent** case (PLAN-2026-IR005) and **research workflow with approval gates** case (PLAN-2026-IR006) remain explicitly pending in [00_REFERENCE_INFORMED_CASE_PLAN.md](../../../00_REFERENCE_INFORMED_CASE_PLAN.md). `CASE-2026-030` is a supporting internal-ticket approval-gate design only; it does not complete, replace, or supply outcome evidence for either planned case. The research-workflow brief shares recovery concepts but is not a published comparison.
 
 ## 3. Canonical reusable pattern vocabulary
 

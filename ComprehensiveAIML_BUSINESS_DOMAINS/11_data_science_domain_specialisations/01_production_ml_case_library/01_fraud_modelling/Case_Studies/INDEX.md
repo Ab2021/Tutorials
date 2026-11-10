@@ -18,7 +18,7 @@
 
 | Case ID | Case title / relative link | Domain | Case type | Decision / business question | Primary pattern | Secondary pattern(s) | Evidence | Stage | Last reviewed | Key result or limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-01-001 | [Real-time payment-card fraud detection](01_real_time_payment_card_fraud_detection.md) (draft; crosswalk PLAN-01-01-01) | Fraud Modelling | predictive-ml | Select approve, challenge or decline under friction and latency constraints | evaluation-mismatch | label-delay, cost-latency-tradeoff | illustrative; not-measured | proposed | not reviewed | Numerical example only; production impact unknown |
+| CASE-01-01-001 | [Real-time payment-card fraud detection](01_real_time_payment_card_fraud_detection.md) (draft; crosswalk PLAN-01-01-01) | Fraud Modelling | predictive-ml | Select approve, challenge or decline under friction and latency constraints | evaluation-mismatch | label-delay, cost-latency-tradeoff | illustrative; not-measured | proposed | not reviewed | Constructed action-cost, friction, and fallback arithmetic only; action effectiveness and production impact unknown |
 | CASE-01-01-002 | [Insurance claims investigation triage](02_insurance_claims_fraud_detection.md) (draft; crosswalk PLAN-01-01-02) | Fraud Modelling | predictive-ml | Rank eligible intake claims for SIU referral under capacity and claimant-service constraints | evaluation-mismatch | label-delay, human-in-the-loop | illustrative; not-measured | proposed | not reviewed | Illustrative capacity and value arithmetic only; no insurer, model, or outcome measured |
 | CASE-01-01-003 | [Account takeover challenge policy](03_account_takeover_application_fraud.md) (draft; crosswalk PLAN-01-01-03) | Fraud Modelling | predictive-ml | Choose allow, challenge, or recovery route under identity-signal and support constraints | evaluation-mismatch | label-delay, cost-latency-tradeoff | illustrative; not-measured | proposed | not reviewed | Illustrative queue and support-load arithmetic only; no account system or outcome measured |
 | PLAN-01-01-04 | AML transaction monitoring | Fraud Modelling | hybrid | Decision to be framed before writing | evaluation-mismatch | model-monitoring | not-measured | proposed | 2026-11-06 | |
@@ -75,7 +75,7 @@
 
 <!-- BEGIN INTERVIEW REFERENCE PLAN -->
 
-## Reference-informed additions to develop
+### Reference-informed additions to develop
 
 These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
 
@@ -83,7 +83,7 @@ These are proposed writing briefs informed by interview examples. The examples a
 |---|---|---|---|---|---|---|---|---|---|---|
 | PLAN-2026-IR036 | Evaluate incremental investigator value from graph fraud signals | Supporting curriculum; shared brief | predictive-ml | Which graph-enriched alerts add confirmed value at a fixed investigation capacity beyond claim-level scoring? | `delayed-selective-labels` | `human-in-the-loop`, `data-leakage` | not-measured | proposed | 2026-11-06 |  |
 
-### Reference and transfer notes
+#### Reference and transfer notes
 
 | Planning ID | Example reference only | Scope boundary |
 |---|---|---|

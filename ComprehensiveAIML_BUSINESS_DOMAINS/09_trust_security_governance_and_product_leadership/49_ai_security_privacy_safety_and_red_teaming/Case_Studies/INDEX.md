@@ -4,13 +4,13 @@
 
 ## 1. Collection metadata
 
-**Domain:** AI security, privacy, safety, and red teaming. **Purpose:** bounded decisions about tool-enabled AI risk. **Case types:** `llm-agentic`, `incident`, and `analytical` as appropriate. **Evidence policy:** new examples are illustrative or not-measured unless a primary source is cited at claim level. **Source scope:** [directory inventory, lines 86–94](../../../../Templates/directory.txt), [trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), and [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety); source bodies are unavailable.
+**Domain:** AI security, privacy, safety, and red teaming. **Purpose:** bounded decisions about tool-enabled AI risk. **Case types:** `llm-agentic`, `incident`, and `analytical` as appropriate. **Evidence policy:** new examples are illustrative or not-measured unless a primary source is cited at claim level. **Source scope:** [directory inventory, lines 86–94](../../../../Templates/directory.txt), [trust brief](../../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), and [safety brief](../../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety); source bodies are **OPEN / unavailable for review**, so no catalog row claims source-derived implementation evidence.
 
 ## 2. Case catalog
 
 | Case ID | Linked title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result/limitation | Editorial status |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| CASE-49-001 | [Approval-bound export](01_Agent_Data_Exfiltration_Simulation.md) | data export | llm-agentic | permit bounded export or retain manual baseline | authorization-scope | approval-payload-binding; evaluation-mismatch | illustrative | proposed | null | no execution/outcome measured | draft |
+| CASE-49-001 | [Approval-bound export for a retrieval assistant](01_Agent_Data_Exfiltration_Simulation.md) | data export | llm-agentic | permit bounded export or retain manual baseline | authorization-scope | approval-payload-binding; evaluation-mismatch | illustrative | proposed | null | canonical draft; synthetic local simulator only; no execution/outcome measured | draft |
 | CASE-49-002 | Secure RAG design review | retrieval | llm-agentic | select retrieval/authorization boundary | authorization-scope | data-leakage | not-measured | proposed | null | planned | planned |
 | CASE-49-003 | Tenant adapter isolation | model customization | llm-agentic | train/select/rollback tenant adapter | authorization-scope | atomic-release-bundle; rollout-regression | not-measured | proposed | null | PLAN-2026-IR004 reference only | planned |
 | CASE-49-004 | Release evaluation gate | safety evaluation | llm-agentic | promote candidate after required suites | evaluation-mismatch | data-leakage; rollout-regression | not-measured | proposed | null | PLAN-2026-IR008 reference only | planned |

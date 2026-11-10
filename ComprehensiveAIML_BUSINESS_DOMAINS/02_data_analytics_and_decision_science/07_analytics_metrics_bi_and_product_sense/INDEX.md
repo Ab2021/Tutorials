@@ -4,15 +4,16 @@
 > **Prerequisites:** 02,05  
 > **Purpose:** Turn business questions into trustworthy measures, dashboards, cohorts, and decision narratives.
 
-## Topics to develop
+## Indexed teaching topics
 
-| # | Topic | Status |
-|---:|---|---|
-| 1 | metric trees and north stars | planned |
-| 2 | funnel cohort and retention analysis | planned |
-| 3 | dashboard design | planned |
-| 4 | segmentation | planned |
-| 5 | stakeholder narratives | planned |
+| # | Topic | Teaching artifact | Status / evidence boundary |
+|---:|---|---|---|
+| 1 | metric trees and north stars | [01 Metric Trees and North-Stars](Cheat_Sheets/01_Metric_Trees_and_North_Stars.md) | Draft; illustrative/derived examples, independent review open |
+| 2 | funnel, cohort and retention analysis | [02 Funnel, Cohort, and Retention](Cheat_Sheets/02_Funnel_Cohort_and_Retention_Analysis.md) | Draft; illustrative/derived examples, independent review open |
+| 3 | dashboard design | [03 Dashboard Design and Operational Alerts](Cheat_Sheets/03_Dashboard_Design_and_Operational_Alerts.md) | Draft; illustrative/derived examples, independent review open |
+| 4 | segmentation | [04 Segmentation for Decisions](Cheat_Sheets/04_Segmentation_and_Decision_Use.md) | Draft; illustrative/derived examples, independent review open |
+| 5 | stakeholder narratives | [05 Stakeholder Narratives and Decision Memos](Cheat_Sheets/05_Stakeholder_Narratives_and_Decision_Memos.md) | Draft; illustrative/derived examples, independent review open |
+| final diagnostics | cross-topic metric failures | [06 25 Common Issues](Cheat_Sheets/06_25_Common_Issues.md) | Draft; 25 hypothetical complete diagnostics; independent review open |
 
 ## What competence looks like
 

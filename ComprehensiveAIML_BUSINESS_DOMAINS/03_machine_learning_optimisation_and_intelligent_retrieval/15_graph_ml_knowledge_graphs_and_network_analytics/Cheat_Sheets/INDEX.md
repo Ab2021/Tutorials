@@ -21,8 +21,8 @@ For analysts and engineers considering graph features for fraud and financial-cr
 | Question | Reference | Condition and warning |
 |---|---|---|
 | Can graph signals predict fraud? | [Graph fraud sheet](01_graph_fraud_detection.md) | Compare against point-in-time baselines; shared links do not prove fraud. |
-| Where can leakage enter? | [Failure modes](01_graph_fraud_detection.md#section-8--failure-modes--edge-cases) | Restrict nodes, edges, features and labels to information available at the decision cutoff. |
-| What should investigators prioritize? | [Worked example](01_graph_fraud_detection.md#section-5--worked-numerical-example) | Capacity, selected labels and delayed outcomes change what reported precision means. |
+| Where can leakage enter? | [Failure modes](01_graph_fraud_detection.md#8-failure-modes--edge-cases) | Restrict nodes, edges, features and labels to information available at the decision cutoff. |
+| What should investigators prioritize? | [Worked example](01_graph_fraud_detection.md#5-worked-numerical-example) | Capacity, selected labels and delayed outcomes change what reported precision means. |
 
 ## 4. Reading paths
 
@@ -42,20 +42,20 @@ The current draft is not evidence of an actual fraud ring or deployment, a compl
 
 | Symbol or term | Meaning | Scope / warning | Reference |
 |---|---|---|---|
-| Node | Typed entity in a graph | Entity-resolution errors can merge distinct entities | [Definitions](01_graph_fraud_detection.md#section-3--foundational-definitions) |
-| Edge | Typed relationship, with provenance and time when applicable | A shared relationship alone does not prove fraud | [Definitions](01_graph_fraud_detection.md#section-3--foundational-definitions) |
+| Node | Typed entity in a graph | Entity-resolution errors can merge distinct entities | [Definitions](01_graph_fraud_detection.md#3-foundational-definitions) |
+| Edge | Typed relationship, with provenance and time when applicable | A shared relationship alone does not prove fraud | [Definitions](01_graph_fraud_detection.md#3-foundational-definitions) |
 | Decision cutoff | Time by which an input must have been available | Later events or labels can leak into historical features | [Graph fraud sheet](01_graph_fraud_detection.md) |
-| Precision at capacity | Proportion of verified positives among selected cases at a stated review limit | Selected or immature labels limit inference | [Worked example](01_graph_fraud_detection.md#section-5--worked-numerical-example) |
+| Precision at capacity | Proportion of verified positives among selected cases at a stated review limit | Selected or immature labels limit inference | [Worked example](01_graph_fraud_detection.md#5-worked-numerical-example) |
 
 ## 8. Quick Reference Card directory
 
 | Card | Core rule | Use and critical condition |
 |---|---|---|
-| [Graph fraud](01_graph_fraud_detection.md#section-12--quick-reference-card) | Restrict graph inputs to the information available at decision time. | Compare against appropriate baselines, and do not equate graph connectivity with guilt. |
+| [Graph fraud](01_graph_fraud_detection.md#12-quick-reference-card) | Restrict graph inputs to the information available at decision time. | Compare against appropriate baselines, and do not equate graph connectivity with guilt. |
 
 ## 9. Common Issues locator
 
-A standalone Common Issues artifact is **planned, not written**; no collection-wide issue count is claimed. Consult the draft's [failure modes](01_graph_fraud_detection.md#section-8--failure-modes--edge-cases) for leakage, identity and evaluation diagnostics.
+A standalone Common Issues artifact is **planned, not written**; no collection-wide issue count is claimed. Consult the draft's [failure modes](01_graph_fraud_detection.md#8-failure-modes--edge-cases) for leakage, identity and evaluation diagnostics.
 
 ## 10. Sources, versions and maintenance
 

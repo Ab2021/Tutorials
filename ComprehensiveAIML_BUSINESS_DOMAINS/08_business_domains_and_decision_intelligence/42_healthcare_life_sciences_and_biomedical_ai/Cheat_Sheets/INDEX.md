@@ -9,7 +9,7 @@ This collection teaches bounded, evidence-aware healthcare AI decisions: clinica
 | Level | File | Outcome | Prerequisites | Status |
 |---|---|---|---|---|
 | 1 | [01 Clinical Decision Support: Evidence and Handoff](01_Clinical_Decision_Support_Evidence_and_Handoff.md) | define time-safe, non-binding decision support; calculate sensitivity; trace abstention/recovery oracles | confusion-matrix arithmetic | draft; 12-section manuscript exceeds the course 1,000-line threshold; source-body and local-policy evidence remain OPEN |
-| 1 | [02 Biomedical Signal Pipeline and Validation](02_Biomedical_Signal_Pipeline_and_Validation.md) | specify acquisition, preprocessing, segmentation and validity | 01 and sampling basics | draft; 753-line 12-section expansion; 13 arithmetic checks and routing/split paper oracles passed; below 1,000-line course threshold; acquisition/clinical evidence and independent review OPEN |
+| 1 | [02 Biomedical Signal Pipeline and Validation](02_Biomedical_Signal_Pipeline_and_Validation.md) | specify acquisition, preprocessing, segmentation, decision-time availability, and validity boundaries | 01 and sampling basics | draft; 1,017-line 12-section manuscript; 13 arithmetic checks and routing/split paper oracles passed; exactly 15 answered questions; acquisition/clinical evidence and independent review OPEN |
 | 2 | [03 Human Factors: Alert Design and Recovery](03_Human_Factors_Alert_Design_and_Recovery.md) | select review, alert and recovery controls | 01 workflow contract | draft; below course 1,000-line publication requirement |
 | 2 | imaging and triage | define a triage evaluation and handoff | diagnostic-study design | planned |
 | 3 | drug discovery and validation | separate scientific prediction from experimental validation | statistics and domain review | planned |
@@ -25,6 +25,8 @@ This collection teaches bounded, evidence-aware healthcare AI decisions: clinica
 | What should abstention do? | 01 §2, §7–8 | missing/stale/out-of-scope input | silent negative output |
 | How do I size review work? | 01 §4.2, §9 | explicit alert capacity | omit false-positive workload |
 
+| How do I reject a late or wrongly mapped segment? | [02 §11.8–11.9](02_Biomedical_Signal_Pipeline_and_Validation.md#118-decision-time-audit-traces) | audit or failure triage | a clean array is not a time-safe input |
+| How do I size an illustrative signal batch or review queue? | [02 §11.10](02_Biomedical_Signal_Pipeline_and_Validation.md#1110-resource-and-review-capacity-worksheet) | stated packed-input and sequential-review assumptions | payload arithmetic is not a device or staffing claim |
 ## 4. Reading paths — three options
 
 - **Beginner:** 01, then planned biomedical signal pipeline and human-factors checklist; objective: define a bounded assistive workflow.
@@ -50,11 +52,16 @@ It does not supply diagnosis or treatment advice, claim device clearance, establ
 | `t_a` | feature availability time | timestamp | stated zone | 01 §3 |
 | `N`, `A` | eligible units, abstentions | count | `0<=A<=N` | 01 §4.3 |
 
+| `f_s` | nominal sample rate | samples/s | positive; fixed-rate relation only | [02 §4](02_Biomedical_Signal_Pipeline_and_Validation.md#4-core-formulas-with-full-derivation) |
+| `T` | declared segment duration | seconds | positive, half-open interval | 02 §4 |
+| `C` | named channel count | count | non-negative integer with map | 02 §3 |
+| `t_available` | time an authorized feature artifact is available | timestamp | comparable clock/zone | [02 §11.8](02_Biomedical_Signal_Pipeline_and_Validation.md#118-decision-time-audit-traces) |
 ## 8. Quick Reference Card directory
 
 | File | Card | Core rule | Critical assumption | Avoid when |
 |---|---|---|---|---|
 | [01](01_Clinical_Decision_Support_Evidence_and_Handoff.md#12-quick-reference-card) | clinical support | `t_a <= t_d`; clinician owns action | authorized data and handoff exist | outcome/provenance unavailable |
+| [02](02_Biomedical_Signal_Pipeline_and_Validation.md#12-quick-reference-card) | signal validation | preserve acquisition, identity, units, timing, and split lineage | metadata is complete and route is declared | quality pass is treated as diagnosis |
 
 ## 9. Common Issues locator
 

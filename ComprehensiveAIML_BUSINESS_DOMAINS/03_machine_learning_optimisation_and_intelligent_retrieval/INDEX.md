@@ -23,6 +23,8 @@ Parts 01-02; modules build from descriptive to predictive and prescriptive metho
 - [Case studies](./Case_Studies/INDEX.md) connect multiple modules into cross-cutting system and business narratives.
 - [Cheat sheets](./Cheat_Sheets/INDEX.md) consolidate the part's reusable patterns, decision frameworks, and review checklists.
 
+The [local coverage ledger](COVERAGE_LEDGER.md) records every original row and directly assigned source commitment with its artifact state, evidence boundary, and remaining acceptance gate. It does not convert registered paths into completed teaching content.
+
 ## Coverage ledger and counting contract
 
 **Ledger established:** 2026-11-08, before this authoring pass. **Editorial state:** authoring in progress; no independent review or production execution is asserted. The [course standards](../00_AUTHORING_AND_NUMERICAL_STANDARDS.md), [visible inventory](../../Templates/directory.txt), [exact source crosswalk](../00_SOURCE_TOPIC_CROSSWALK.md), and [reference-informed plan](../00_REFERENCE_INFORMED_CASE_PLAN.md) jointly define scope. Original source bodies are not established as accessible merely because their filenames appear in the inventory.

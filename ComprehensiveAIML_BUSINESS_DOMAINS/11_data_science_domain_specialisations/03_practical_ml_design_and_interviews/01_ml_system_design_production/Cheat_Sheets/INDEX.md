@@ -1,71 +1,62 @@
 # ML System Design Production — Cheat Sheets
 
-**Status:** The feature-store sheet is an unreviewed draft; other references remain planned. Follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and linked cheat-sheet master. A reference card does not replace evidence or evaluation in a full case.
-
 ## 1. Overview
-
-For engineers designing operational ML systems, this collection links decision-time correctness, system boundaries and production tradeoffs. The current draft covers feature-store inputs, availability, retrieval and monitoring. Readiness means reproducing a point-in-time join and identifying when online and offline feature values are not comparable.
+This collection teaches decision-time-correct production ML design. The authored feature-store sheet covers temporal feature eligibility, revision ordering, parity, and recovery. Remaining source-plan and original-map commitments are retained as unauthored commitments rather than represented as completed material. Readiness is the ability to specify an input/output contract, choose the smallest viable architecture, calculate a bounded capacity estimate, and diagnose a violated invariant.
 
 ## 2. Topic ladder
-
-| Level | Reference | Outcome and prerequisite | Status |
-|---|---|---|---|
-| Practitioner | [Feature store design](03_Feature_Store_Design.md) | Trace event-time and availability-time joins and diagnose training-serving skew; requires ML data and serving fundamentals | Draft; unreviewed |
-| Planned | ML system-design framework | Define decisions, inputs, metrics and failure signals | Not written |
-| Planned | Capacity estimation | Estimate throughput, state and bottlenecks under stated workload | Not written |
-| Planned | Model launch gate | Specify evaluation, rollout and rollback criteria | Not written |
-| Planned | Common Issues | Collection-wide distinct diagnostic reference | Not written |
+| Level | File / commitment | Testable outcome | Prerequisites | Status |
+|---|---|---|---|---|
+| 1 | System framing, data contracts, feature platform | State prediction-time inputs, outputs, ownership, and invalid states | SQL joins; supervised-learning leakage | Planned |
+| 2 | [03 Feature Store Design](03_Feature_Store_Design.md) | Reconstruct a point-in-time feature value and detect parity failure | timestamps; keyed data; leakage | Draft, unreviewed |
+| 2 | Training, serving, experiments, evaluation | Compare candidate model paths with a frozen cohort and metric contract | framing; data contract | Planned |
+| 3 | Monitoring, security, rollout, cost, incidents | Select gates, recovery, and bounded resource policy | prior rows | Planned |
+| Final | Common Issues | Diagnose cross-cutting production failures | all rows | Not authored |
 
 ## 3. Quick topic lookup
-
-| Question | Reference | Condition and warning |
-|---|---|---|
-| Which historical feature value could a model have used? | [Worked example](03_Feature_Store_Design.md#5-worked-numerical-example) | Availability time and event time are distinct; a later correction must not leak backward. |
-| Why do offline and online values differ? | [Failure modes](03_Feature_Store_Design.md#8-failure-modes--edge-cases) | Compare the same entity, cutoff, source version and transformation before attributing cause. |
-| How is a feature selected? | [Core formulas and mechanisms](03_Feature_Store_Design.md#4-core-formulas-with-full-derivation) | A historical query depends on a defined availability and revision contract. |
+| Question | File / section | Use condition | Failure warning |
+|---|---|---|---|
+| What could the model know at cutoff? | [Feature Store §4](03_Feature_Store_Design.md#4-core-formulas-with-full-derivation) | event and availability times are recorded | latest warehouse snapshot leaks corrections |
+| Why do offline and online vectors differ? | [Feature Store §8](03_Feature_Store_Design.md#8-failure-modes--edge-cases) | matched request context exists | aggregate similarity is not parity |
+| How should a shifted model be contained? | [Drift case](../Case_Studies/01_model_monitoring_drift_incident.md) | labels are delayed; contract may fail | drift alone is not outcome harm |
+| How do cache, range-query, sketch, prefix, nearest-neighbor, graph, scheduling and online-window choices differ? | Source commitment `PLAN-2026-IR026` | operation mix and correctness contract are explicit | no authored local sheet yet |
 
 ## 4. Reading paths
-
-- **Beginner:** Review supervised learning, database joins, timestamps and service requests; read the sheet's definitions. The broader system-design framework remains planned.
-- **Practitioner:** Read the complete feature-store sheet; reproduce its illustrative point-in-time example and document online/offline parity and freshness for a real feature.
-- **Advanced:** Analyze delayed arrivals, corrections, backfills, deletion and access control; design replay, monitoring and rollback drills. Capacity and launch-gate references remain planned.
+- **Beginner:** data-contract commitment → Feature Store §§1–5 → Feature Store §12. Assumes basic joins and UTC timestamps.
+- **Practitioner:** Feature Store → drift case → planned evaluation/monitoring commitments. Objective: separate rapid contract containment from mature-outcome evaluation.
+- **Advanced:** all authored files, then planned serving, rollout, cost, incident and IR026 commitments. Optional extension: adversarial small-data operation traces.
 
 ## 5. Prerequisite skills
+Typed entity keys; relational joins; UTC/event/availability times; train/validation/test isolation; deterministic transformations; basic queue and storage arithmetic; least-privilege access. The linked feature-store sheet defines the collection’s temporal notation.
 
-Understand entity keys, event versus ingestion and availability timestamps, training/validation leakage, deterministic transformations, keyed serving, freshness budgets and basic throughput/storage arithmetic.
-
-## 6. What this collection does not cover
-
-The current draft is not a product-specific deployment guide, measured benchmark, complete governance policy or universal feature-store requirement. System-design framework, capacity worksheet, launch gate and standalone Common Issues material remain planned.
+## 6. What this collection does NOT cover
+It does not certify a vendor feature store, a company architecture, model quality, regulatory compliance, or a universal launch threshold. Model-family selection and domain-specific business decisions are handed to their respective collections. Source bodies behind inventory names were not accessible and remain uncertain.
 
 ## 7. Master symbol glossary
-
-| Term | Meaning | Scope / warning | Reference |
-|---|---|---|---|
-| Entity key | Identifier used to join a feature to an example or request | Identity and consent scope must be stable and authorized | [Definitions](03_Feature_Store_Design.md#3-foundational-definitions) |
-| Event time | Time a source event occurred | May precede the time the feature became queryable | [Definitions](03_Feature_Store_Design.md#3-foundational-definitions) |
-| Availability time | Time a particular version could be used | A later correction cannot be treated as historically available | [Worked example](03_Feature_Store_Design.md#5-worked-numerical-example) |
-| Freshness | Age of a defined value relative to a defined decision time | A recent timestamp does not by itself establish correctness | [Feature store sheet](03_Feature_Store_Design.md) |
+| Symbol / term | Meaning | Units / type | Valid range | First appearance |
+|---|---|---|---|---|
+| `e` | typed entity key | identifier | authorized entity namespace | [Feature Store §3](03_Feature_Store_Design.md#3-foundational-definitions) |
+| `v_r` | feature logical/event time | UTC instant | no later than cutoff for eligibility | [Feature Store §4](03_Feature_Store_Design.md#4-core-formulas-with-full-derivation) |
+| `a_r` | availability time | UTC instant | no later than cutoff for eligibility | [Feature Store §4](03_Feature_Store_Design.md#4-core-formulas-with-full-derivation) |
+| `H` | maximum feature age | seconds | nonnegative policy bound | [Feature Store §4](03_Feature_Store_Design.md#4-core-formulas-with-full-derivation) |
+| PSI | binned population-shift statistic | dimensionless | descriptive only | [Drift case §6](../Case_Studies/01_model_monitoring_drift_incident.md#6-analysis-walkthrough) |
 
 ## 8. Quick Reference Card directory
-
-| Card | Core rule | Use and critical condition |
-|---|---|---|
-| [Feature store](03_Feature_Store_Design.md#12-quick-reference-card) | Historical feature values must be available by the prediction cutoff. | Define event time, availability, revision order and feature identity consistently. |
+| File/card | Core rule | Use condition | Avoid condition |
+|---|---|---|---|
+| [Feature Store card](03_Feature_Store_Design.md#12-quick-reference-card) | rank only values available by cutoff | publication history and definition version exist | exact replay is claimed from corrected snapshots only |
+| [Drift case card](../Case_Studies/01_model_monitoring_drift_incident.md#15-quick-reference-card) | contain a broken contract before attributing outcome harm | compatible fallback is verified | fallback shares the fault |
 
 ## 9. Common Issues locator
+No collection-wide Common Issues artifact exists. The feature-store sheet includes local hypothetical diagnostic entries; they are not a completed 25-issue collection artifact. Required issue count: 25 distinct complete entries before this locator can claim completion.
 
-The standalone Common Issues artifact is **planned, not written**; no collection-wide issue count is claimed. The draft's [failure modes](03_Feature_Store_Design.md#8-failure-modes--edge-cases) contain hypothetical diagnostics, not observed production incidents.
-
-## 10. Sources, versions and maintenance
-
-The draft uses illustrative traces and sizing, not measured outcomes. Review when event or availability semantics, transformations, versions, access controls, model contracts or data retention change. The [source coverage brief](../../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-ml-design) is a topic plan, not evidence that the unavailable original files were inspected.
-
-**Planned reference-informed brief:** [PLAN-2026-IR026](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md) covers cache policies, range queries, sketches, search, graphs, scheduling and online windows. Check operation traces against exact small-data oracles and distinguish approximation from distributed-service guarantees. The [interview example](../../../../../INTERVIEW_CASES/DSA/index_basics/INTERVIEW_CASE_STUDIES.md) is reference material only, not a finished sheet or measured system.
+## 10. Empirical sources, versions and maintenance
+`SRC-MLD-01`: source-plan brief [ds-ml-design](../../../../00_SOURCE_COVERAGE_DATA_SCIENCE.md#ds-ml-design), reviewed for planning on 2026-11-06; supports topic scope, not source-body claims. `SRC-IR026`: [reference-informed plan](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md), supports a proposed operation-mix brief only. Illustrative arithmetic in authored files is internally checked there; no production benchmark is claimed. Revisit when input timing, transformation versions, access policy, fallback dependencies, or source access changes.
 
 ## 11. Collection acceptance checklist
-
-- [ ] Planned references and a distinct Common Issues artifact are authored and reviewed.
-- [ ] Each sheet has all 12 sections, checked calculations or traces, failure diagnostics, answered interview questions and a final card.
-- [ ] Decision-time, authorization, evidence and source limitations are explicit.
-- [ ] Links, glossary, paths, issue locations and editorial statuses match actual files.
+- [x] Canonical index has 11 sections and links only authored artifacts.
+- [x] Authored feature-store sheet has 12 sections and final card.
+- [x] Authored drift case is explicitly illustrative and unreviewed.
+- [ ] Original topic-map commitments have individual authored sheets.
+- [ ] Source-plan commitments, including IR026, have focused authored coverage.
+- [ ] Final 25-issue Common Issues artifact exists.
+- [ ] Independent technical and source review is complete.

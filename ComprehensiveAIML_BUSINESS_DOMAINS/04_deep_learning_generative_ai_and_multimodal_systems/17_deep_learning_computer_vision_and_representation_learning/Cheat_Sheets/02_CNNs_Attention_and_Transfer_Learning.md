@@ -521,283 +521,174 @@ Each drill is a constructed scenario. The stated check is an oracle input for re
 - **Mitigation risk:** using full-frame serving changes object scale and may increase memory; validate both semantic coverage and geometry.
 
 #### Drill 18 — JPEG quality shift
-- **Observed symptom (illustrative):** Compressed uploads introduce block artifacts absent from training.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Stratify errors by codec and quality estimate.
-- **Bounded correction:** Collect or simulate justified compression range.
-- **Verification:** Test on an independently held codec slice.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-18` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Recall falls only on low-quality uploads; the same scene succeeds in the archival image.
+- **Competing causes:** DCT blocking may erase small edges; a mobile-app resize may be changing geometry; or low-quality uploads may come from a different site with a different class mix.
+- **Discriminating diagnostic:** Re-encode a fixed, labeled fixture set at quality 95, 75, and 40 while holding pixels’ dimensions and site constant; separately replay the app resize. A monotone quality-only loss implicates compression rather than sampling.
+- **Correction and risk:** Train with the measured codec/quality range or reject unsupported quality. Synthetic JPEG augmentation can teach artifacts not used in production and harm pristine images.
+- **Verification:** Keep an independently captured low-quality slice; require its recall and false-positive rate to meet the declared action gate.
 
 #### Drill 19 — Camera firmware shift
-- **Observed symptom (illustrative):** Auto-exposure behavior changes after an update.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Compare intensity histograms and metadata before/after update.
-- **Bounded correction:** Freeze firmware in pilot or collect labeled post-change samples.
-- **Verification:** Make firmware version a monitored slice.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-19` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Scores change after a firmware update although the product and model digest are unchanged.
+- **Competing causes:** Exposure/white-balance behavior changed; lens focus changed; or timestamp/device metadata were joined to the wrong image cohort.
+- **Discriminating diagnostic:** Photograph a stable color/geometry target before and after update, compare raw histogram, saturation fraction, sharpness, and EXIF firmware fields, then score paired frames.
+- **Correction and risk:** Pin approved firmware or collect labeled post-update data and qualify it as a new input regime. Pinning may defer a security or device-maintenance update; escalation belongs to device operations.
+- **Verification:** Make firmware version a mandatory monitored slice and replay the target on each approved version.
 
 #### Drill 20 — Small-object metric masking
-- **Observed symptom (illustrative):** Large objects dominate an aggregate overlap score.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Report AP or recall by size band and support.
-- **Bounded correction:** Raise resolution or use multiscale design if the action needs small objects.
-- **Verification:** Block release on the smallest action-critical band.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-20` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Mean overlap looks acceptable while action-critical small defects are missed.
+- **Competing causes:** Resolution/stride is insufficient; annotations omit tiny objects; or the matching IoU threshold is inappropriate for annotation uncertainty.
+- **Discriminating diagnostic:** Report object recall and AP by area band with counts; inspect false negatives against image resolution and have a second annotator review a sample.
+- **Correction and risk:** Increase input resolution, use an appropriate feature pyramid, or route the band to review. Higher resolution raises latency and may reduce batch capacity.
+- **Verification:** Release only if the smallest action-critical band, not the aggregate, meets its predeclared gate.
 
 #### Drill 21 — Background confounding
-- **Observed symptom (illustrative):** A class correlates with a workbench or hospital marker.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Swap or mask backgrounds in a controlled review set.
-- **Bounded correction:** Diversify context and remove noncausal overlays where possible.
-- **Verification:** Re-evaluate under background counterfactuals.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-21` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** A class score follows a workbench, tray, or hospital marker more than the object.
+- **Competing causes:** A real contextual cue may be valid; a visible overlay may leak the label; or object crop quality may differ by site.
+- **Discriminating diagnostic:** Score controlled object-preserving background swaps, overlay masks, and tight crops. A score change after background replacement with the object fixed is shortcut evidence, not proof that all context is invalid.
+- **Correction and risk:** Collect counterfactual contexts, remove label-bearing overlays, or constrain the crop. Aggressive masking can remove clinically or operationally relevant context.
+- **Verification:** Evaluate paired counterfactuals and a held-out site; retain per-site error tables.
 
 #### Drill 22 — Channel-count adapter
-- **Observed symptom (illustrative):** A grayscale sensor is replicated to three channels without validation.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Compare first-layer activation scale to expected RGB fixture range.
-- **Bounded correction:** Train or validate a declared input adapter.
-- **Verification:** Test across illumination and sensor cohorts.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-22` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** A single-channel sensor is copied three times into an RGB-pretrained model without an input contract.
+- **Competing causes:** Channel semantics differ; intensity scaling differs; or the adapter order/transposition is wrong.
+- **Discriminating diagnostic:** Run fixed black, mid-gray, and white fixtures through the serving transform and compare tensor shape, per-channel mean/std, and first-layer activations to the declared adapter calculation.
+- **Correction and risk:** Train a one-channel stem or explicitly initialize a three-channel adapter and validate it. Reusing RGB normalization after replication can create an artificial color prior.
+- **Verification:** Test illumination and sensor cohorts with the exact exported preprocessing digest.
 
 #### Drill 23 — Multi-label collapse
-- **Observed symptom (illustrative):** Independent labels are forced into a softmax.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Inspect label co-occurrence and target encoding.
-- **Bounded correction:** Use sigmoid outputs with label-specific thresholds when semantics permit.
-- **Verification:** Report per-label calibration and support.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-23` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Co-occurring findings disappear because targets are encoded as one softmax class.
+- **Competing causes:** Labels may be mutually exclusive by definition; annotation policy may suppress secondary findings; or the evaluation decoder may be wrong.
+- **Discriminating diagnostic:** Inspect the label schema and co-occurrence matrix, then hand-check examples with two findings. Softmax mass summing to one is incompatible with independent positives.
+- **Correction and risk:** Use independent sigmoid heads and per-label thresholds where labels are nonexclusive. Independent thresholds can create impossible combinations, requiring a downstream consistency rule.
+- **Verification:** Report per-label precision/recall, calibration, and observed invalid-combination rate.
 
 #### Drill 24 — Abstention blind spot
-- **Observed symptom (illustrative):** Low-confidence cases are rejected without a human queue.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Calculate abstention count, queue capacity, and unresolved harm.
-- **Bounded correction:** Specify owner, SLA, and safe fallback for abstentions.
-- **Verification:** Exercise an overload scenario.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-24` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** A confidence threshold suppresses predictions but no owner receives the suppressed work.
+- **Competing causes:** Low confidence may indicate ambiguity, distribution shift, calibration error, or merely a conservative score scale.
+- **Discriminating diagnostic:** For each threshold compute coverage, error among accepted cases, abstentions per hour, reviewer capacity, and age of the oldest unresolved item.
+- **Correction and risk:** Define queue owner, SLA, safe fallback, and overflow rule before enabling abstention. Raising the threshold can improve accepted accuracy while creating an unsafe backlog.
+- **Verification:** Simulate a peak-rate interval and demonstrate bounded queue age or deliberate service degradation.
 
 #### Drill 25 — Edge-device quantization
-- **Observed symptom (illustrative):** INT8 changes scores near the action boundary.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Compare full-precision and quantized score deltas around threshold.
-- **Bounded correction:** Calibrate on representative inputs or retain higher precision.
-- **Verification:** Requalify threshold and slice metrics on device.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-25` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** INT8 changes decisions near the action threshold.
+- **Competing causes:** Calibration set range is unrepresentative; operator implementation differs; or threshold was copied from float evaluation.
+- **Discriminating diagnostic:** On paired device outputs calculate `delta = score_int8 - score_fp`, plot it by score and input slice, and count threshold crossings.
+- **Correction and risk:** Recalibrate with representative inputs, use quantization-aware training, retain selected higher-precision operations, and reselect threshold. Higher precision can violate memory or latency limits.
+- **Verification:** Requalify action metrics and threshold crossings on the target runtime, not an emulator alone.
 
 #### Drill 26 — Asynchronous preprocessing
-- **Observed symptom (illustrative):** Serving uses a newer normalization manifest than training.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Resolve manifest digest in every request trace.
-- **Bounded correction:** Bind preprocessing and weights into one release artifact.
-- **Verification:** Reject incompatible digest pairs.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-26` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Serving uses a newer resize/normalization manifest than the weights were evaluated with.
+- **Competing causes:** The model may have regressed; a cache may hold old transforms; or the request trace may misreport the active manifest.
+- **Discriminating diagnostic:** Resolve model, transform, and label-map digests from the same request; replay a golden fixture through both artifact tuples.
+- **Correction and risk:** Package compatible transforms and weights atomically and reject incompatible tuples. Atomic release may slow independent preprocessing fixes, so use an explicit compatibility migration.
+- **Verification:** A deployment test must reject a deliberately mismatched digest pair and preserve the last compatible release.
 
 #### Drill 27 — Human-review feedback loop
-- **Observed symptom (illustrative):** Reviewer decisions become labels without adjudication.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Measure reviewer consistency and outcome delay.
-- **Bounded correction:** Separate operational disposition from ground truth.
-- **Verification:** Audit future training labels against adjudicated outcomes.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-27` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Operational reviewer dispositions become training truth without adjudication.
+- **Competing causes:** Disagreement can be reviewer variation, ambiguous policy, delayed outcome information, or model-influenced anchoring.
+- **Discriminating diagnostic:** Blindly double-label a stratified sample, compare reviewers to later adjudicated outcomes where available, and separate model score from reviewer view.
+- **Correction and risk:** Store disposition, rationale, and adjudicated label as distinct fields; sample difficult cases for adjudication. More adjudication increases latency and may reduce the volume of fresh labels.
+- **Verification:** Audit a future training batch for field provenance, reviewer agreement, and outcome maturity.
 
 #### Drill 28 — Temporal drift hidden by random split
-- **Observed symptom (illustrative):** Future images appear in training.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Plot group timestamps per partition.
-- **Bounded correction:** Use forward-chaining or deployment-time holdout.
-- **Verification:** Evaluate a post-cutoff test interval.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-28` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Random splitting gives high validation scores although deployment occurs after a process or camera change.
+- **Competing causes:** Legitimate repeat captures, entity leakage, and a real temporal shift can all produce correlated partitions.
+- **Discriminating diagnostic:** Plot capture time and entity/site overlap by split; compare random-split performance with a forward holdout after the release cutoff.
+- **Correction and risk:** Use group-aware temporal splits and retain a post-cutoff gate. A strict split can reduce training data and increase uncertainty; it is not evidence of poorer deployment performance by itself.
+- **Verification:** Evaluate the untouched post-cutoff interval and disclose support and regime differences.
 
 #### Drill 29 — Source license mismatch
-- **Observed symptom (illustrative):** A checkpoint license conflicts with proposed use.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Review exact checkpoint card and legal approval record.
-- **Bounded correction:** Replace or obtain approval before any deployment claim.
-- **Verification:** Store approval scope with artifact digest.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-29` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Proposed deployment rights are not established by the checkpoint’s public availability.
+- **Competing causes:** The base model, training data, adapter, and serving dependency can have different terms; an internal approval may be expired or narrower than the use.
+- **Discriminating diagnostic:** Bind exact artifact digests to their license texts, intended use, distribution path, and approval record; ask the authorized legal owner to resolve ambiguity.
+- **Correction and risk:** Replace the artifact or obtain scoped approval before release. Substituting a model changes quality, safety, and evaluation evidence and requires requalification.
+- **Verification:** Store the approval scope with the release manifest; do not treat this teaching check as legal advice.
 
 #### Drill 30 — Out-of-distribution false certainty
-- **Observed symptom (illustrative):** Novel materials receive confident class scores.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Use a labeled novelty set and inspect score distribution.
-- **Bounded correction:** Add abstention or collect coverage; do not promise detection from confidence alone.
-- **Verification:** Measure novelty handling at the decision boundary.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-30` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Unseen materials or layouts receive high class probabilities.
+- **Competing causes:** The novelty set may be mislabeled, threshold calibration may be stale, or confidence may simply be non-diagnostic for this shift.
+- **Discriminating diagnostic:** Use a labeled, semantically distinct novelty set; compare accepted error, score distribution, and abstention behavior to in-domain data.
+- **Correction and risk:** Collect coverage, add a bounded abstention/review route, or narrow the supported input contract. Confidence-only novelty filters can reject valid rare inputs while accepting harmful unknowns.
+- **Verification:** Measure novelty handling at the actual action boundary with a declared false-abstention cost.
 
 #### Drill 31 — Resolution-dependent calibration
-- **Observed symptom (illustrative):** Scores shift when camera resolution changes.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Plot reliability by native resolution before resize.
-- **Bounded correction:** Calibrate or qualify each resolution regime.
-- **Verification:** Hold out a resolution slice for verification.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-31` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** Identical object categories receive different confidence after a camera resolution change.
+- **Competing causes:** Native detail changed, resize interpolation changed, or resolution is proxying for site/illumination.
+- **Discriminating diagnostic:** Hold object identity and scene as constant as possible across native resolutions; plot reliability and error by native resolution before resize and by post-resize object pixels.
+- **Correction and risk:** Qualify resolution regimes, alter capture requirements, or calibrate only when the calibration set covers each regime. Separate calibrators can overfit sparse slices.
+- **Verification:** Preserve a resolution-stratified holdout and check both calibration and action error.
 
 #### Drill 32 — Metric denominator omission
-- **Observed symptom (illustrative):** A report states recall without defining ignored images.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Reconstruct TP, FN, exclusions, and eligible population.
-- **Bounded correction:** Freeze the eligibility rule before comparison.
-- **Verification:** Publish numerator and denominator in the report.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-32` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** A recall number cannot be reproduced because ignored frames and eligibility are undefined.
+- **Competing causes:** Exclusions may be legitimate quality rules, accidental filtering, or a change in the unit from object to image.
+- **Discriminating diagnostic:** Reconstruct the cohort table: eligible count, exclusions by reason, TP, FN, and whether each image can contain multiple targets.
+- **Correction and risk:** Freeze the eligibility rule before comparison and publish numerator, denominator, and exclusion reasons. Broadening eligibility may lower a metric but improve decision relevance.
+- **Verification:** Independently recompute the metric from the frozen cohort manifest.
 
 #### Drill 33 — Capacity claims from FLOPs
-- **Observed symptom (illustrative):** A team infers throughput from MAC count.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Measure end-to-end request traces on target hardware.
-- **Bounded correction:** Use FLOPs only for relative design budgeting.
-- **Verification:** Record p50/p95 and queue behavior before capacity approval.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-33` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** A design is admitted from MAC counts despite unknown decode, preprocessing, transfer, and queue costs.
+- **Competing causes:** Compute may dominate, memory bandwidth may dominate, or upstream image decode may be the bottleneck.
+- **Discriminating diagnostic:** Trace end-to-end request phases on target hardware: decode, transform, host/device transfer, inference, postprocess, and queue wait; report p50/p95 by offered load.
+- **Correction and risk:** Use FLOPs for relative model budgeting and size service capacity from measured traces. Optimizing one phase can shift contention to another.
+- **Verification:** Run a declared load sweep to saturation with bounded queue policy; label results as environment-specific.
 
 #### Drill 34 — Retraining on predictions
-- **Observed symptom (illustrative):** Pseudo-labels amplify a site-specific shortcut.
-- **Competing explanation:** Do not assign the cause until the named check distinguishes it from label noise, sampling change, or a pipeline mismatch.
-- **Diagnostic:** Sample pseudo-label errors by site and confidence.
-- **Bounded correction:** Require reviewed labels or isolate the experiment.
-- **Verification:** Compare against a human-adjudicated holdout.
-- **Escalation:** Preserve the failing artifact and send `CNN-DRILL-34` to the model owner when the check cannot be reproduced.
-- **Mitigation risk:** A local correction can improve one slice while degrading another; retain the grouped holdout and affected slice gate.
+- **Observed symptom (illustrative):** High-confidence pseudo-labels amplify a site-specific shortcut in the next model.
+- **Competing causes:** The model may be wrong, the site distribution may legitimately differ, or the pseudo-label selection rule may exclude hard but important examples.
+- **Discriminating diagnostic:** Stratify sampled pseudo-labels by site, class, confidence, and predicted outcome; compare to blind human adjudication and inspect confidence-error curves.
+- **Correction and risk:** Require adjudicated anchors, cap pseudo-label influence, isolate the experiment, and retain a fixed human-labeled holdout. Filtering to high confidence can entrench majority classes.
+- **Verification:** Compare the new model with the frozen baseline on human-adjudicated site slices before promotion.
 
 **Takeaway:** The useful unit of troubleshooting is symptom plus a discriminating observation, not a generic “retrain” response.
 
 ### 11.1 Answered interview questions
 
-1. **Why can two 3x3 layers be preferred to one 5x5 layer?**
-   - **Checked answer:** Two stride-one 3x3 layers have an effective 5x5 receptive field but introduce an intervening nonlinearity. A dense 5x5 C-to-C layer has 25C² weights versus 18C² across two 3x3 layers, ignoring biases. This is a design comparison, not a universal speed result.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** If the device kernel makes two launches expensive, profile the actual graph; fewer weights do not settle latency.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+1. **Why can two 3x3 layers be preferred to one 5x5 layer?**  
+   **Answer:** Two stride-one 3x3 layers have a 5x5 effective receptive field and an intervening nonlinearity; for equal channel width, they have `18C²` rather than `25C²` weights (biases omitted). That is neither a latency claim nor a guarantee of better accuracy. **Follow-up:** profile the target graph when launches or memory traffic dominate. **Red flag:** claiming parameter count proves device throughput. **Score 3:** derives the comparison, names the hardware boundary, and proposes a trace.
 
-2. **Derive output width when dilation is d.**
-   - **Checked answer:** The effective kernel width is K_eff=d(K-1)+1 because d spaces adjacent taps by d pixels. Substitute K_eff for K in CNN-01: floor((W+2P-K_eff)/S)+1. This requires symmetric padding and integer framework conventions.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** For W=32,K=3,d=2,P=2,S=1, K_eff=5 and W_out=32.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+2. **Derive output width with dilation.**  
+   **Answer:** Dilation gives `K_eff=d(K-1)+1`, so `W_out=floor((W+2P-K_eff)/S)+1` under symmetric padding and the declared framework rounding. For `W=32,K=3,d=2,P=2,S=1`, `K_eff=5` and `W_out=32`. **Follow-up:** test an even-sized input and border fixture. **Red flag:** using `K` instead of `K_eff`. **Score 3:** states convention and checks shape.
 
-3. **What evidence would justify partial fine-tuning?**
-   - **Checked answer:** A frozen probe must fail a predeclared target-slice gate while a controlled partial-unfreeze candidate improves that gate without violating retained-domain or calibration gates. The split and threshold must remain fixed for comparison.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** A higher random-image score alone is not that evidence.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+3. **What evidence justifies partial fine-tuning?**  
+   **Answer:** A frozen probe fails a locked target-slice gate; a partial-unfreeze candidate improves that gate without breaking retained-domain and calibration gates on the same split. **Follow-up:** if random-image score rises alone, reject the conclusion. **Red flag:** changing split, augmentation, and unfreezing together. **Score 3:** requires a controlled comparison and rollback criterion.
 
-4. **When is an attention block a poor first remedy?**
-   - **Checked answer:** When the error is input incompatibility, insufficient spatial resolution, label ambiguity, leakage, or a wrong output contract. Attention changes representation interactions; it cannot repair an undefined decision target.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** First inspect a fixture trace, label policy, grouped split, and error slices.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+4. **When is attention a poor first remedy?**  
+   **Answer:** When the failure is an input-contract mismatch, insufficient object pixels, label ambiguity, leakage, or an invalid decision target. Attention changes feature interaction, not the truth of the labels. **Follow-up:** inspect fixture tensors, annotation policy, grouped split, and error slices first. **Red flag:** adding attention to “explain” a wrong crop. **Score 3:** names a falsifiable upstream check.
 
-5. **How would you choose an augmentation?**
-   - **Checked answer:** Write the deployment nuisance, label invariance argument, parameter range, and failure slice. Review transformed examples with a qualified label owner, then compare against a no-transform baseline under the same split.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** If rotation changes the class meaning, rotation is disqualified regardless of visual realism.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+5. **How do you choose augmentation?**  
+   **Answer:** Specify the real deployment nuisance, label-invariance argument, bounded parameter range, and harmed slice; inspect transformations with a qualified label owner and compare to a no-transform baseline on the identical split. **Follow-up:** rotation is disqualified if orientation changes class meaning. **Red flag:** applying visually plausible transforms without semantic review. **Score 3:** includes a disqualifier and evaluation protocol.
 
-6. **Why report support beside slice recall?**
-   - **Checked answer:** Recall 9/10 and 900/1000 have very different uncertainty even though both are 0.9. The numerator is true positives and denominator is eligible actual positives under the frozen policy.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** Use an interval method appropriate to the protocol and avoid ranking tiny slices as stable.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+6. **Why show support with slice recall?**  
+   **Answer:** `9/10` and `900/1000` are both 0.9 but support radically different confidence in the estimate. State eligible positives, TP, exclusions, and an interval suited to the protocol. **Follow-up:** do not rank tiny slices as stable. **Red flag:** reporting a percentage without denominator. **Score 3:** distinguishes uncertainty from performance.
 
-7. **What is catastrophic forgetting in this setting?**
-   - **Checked answer:** Adaptation lowers loss on target data while degrading a retained task or acquisition regime that remains required. It is detected by a frozen, comparable evaluation suite rather than by parameter distance alone.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** If the old task is no longer required, record that scope change rather than calling regression irrelevant.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+7. **What is catastrophic forgetting here?**  
+   **Answer:** Adaptation improves target loss while degrading a still-required acquisition regime or task on a frozen comparable suite. Parameter distance does not measure it. **Follow-up:** if the old task is retired, document the scope change rather than hiding regression. **Red flag:** declaring success from target loss alone. **Score 3:** names retained gates and decision scope.
 
-8. **Why is a model card insufficient by itself?**
-   - **Checked answer:** It describes an artifact but does not establish local input compatibility, split integrity, decision threshold, review capacity, rollback, or target performance. It is a necessary provenance input, not a completed validation.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** Bind it to local release records and evidence gaps.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+8. **Why is a model card insufficient?**  
+   **Answer:** It supplies artifact provenance but does not validate local sensor compatibility, split integrity, threshold, review capacity, rollback, or target performance. **Follow-up:** bind the card to immutable release and evaluation records. **Red flag:** treating public documentation as a local safety result. **Score 3:** separates source evidence from local validation.
 
-9. **How would you investigate a sudden confidence increase?**
-   - **Checked answer:** Compare preprocessing digests, score distributions, class prevalence, calibration slices, and input statistics before treating the change as a quality improvement. A score shift can be calibration, pipeline, or population change.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** If labels are delayed, use shadow review rather than asserting accuracy.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+9. **How do you investigate a sudden confidence increase?**  
+   **Answer:** Compare preprocessing/model digests, input statistics, prevalence, and calibration slices before calling it quality. With delayed labels, use shadow review. **Follow-up:** compare paired fixtures first to isolate a pipeline change. **Red flag:** equating higher softmax scores with accuracy. **Score 3:** proposes both interface and outcome checks.
 
-10. **What changes for a multi-site rollout?**
-   - **Checked answer:** The unit of evaluation becomes the site-aware decision; split by site where feasible, pre-register site slices, estimate review load per site, and define whether thresholds or calibration may differ.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** Do not pool away a critical site failure into a global average.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+10. **What changes for a multi-site rollout?**  
+    **Answer:** Evaluate the site-aware decision: group/split by site where possible, preregister blocking slices, estimate per-site review load, and state whether thresholds may vary. **Follow-up:** a global mean cannot waive a site failure. **Red flag:** pooling sites before checking capture and label policy differences. **Score 3:** names a site-level promotion gate.
 
-11. **How does depthwise separable convolution change the design?**
-   - **Checked answer:** Depthwise filtering has roughly K²C_in weights, then pointwise mixing has C_in C_out weights, versus K² C_in C_out for dense convolution. It reduces arithmetic under stated shapes but may alter accuracy and kernel efficiency.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** Profile target kernels and retain the required channel-mixing behavior.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+11. **How does depthwise separable convolution change design?**  
+    **Answer:** Depthwise spatial filtering has approximately `K²C_in` weights and its pointwise mixer `C_inC_out`, versus `K²C_inC_out` dense weights. It changes connectivity and kernel behavior, not just arithmetic. **Follow-up:** profile the actual target kernel. **Red flag:** omitting the pointwise stage from comparison. **Score 3:** gives both formula and deployment caveat.
 
-12. **What is the first oracle for a serving mismatch?**
-   - **Checked answer:** A versioned immutable fixture with declared input bytes and intermediate tensor shapes/ranges. It isolates interface divergence before statistical evaluation.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** A matching top-1 label is too weak because hidden tensor drift can remain.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+12. **What is the first oracle for serving mismatch?**  
+    **Answer:** A versioned immutable fixture with input bytes, orientation, transformed tensor shape/range, and expected output. It isolates contract divergence before statistical evaluation. **Follow-up:** matching top-1 labels is too weak; inspect intermediate invariants. **Red flag:** debugging only with live traffic. **Score 3:** specifies immutable artifact identities.
 
-13. **Why is held-out calibration data necessary?**
-   - **Checked answer:** Selecting a calibration mapping on the same data used to judge it biases apparent reliability. A separate partition keeps mapping selection distinct from final assessment.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** If data are scarce, disclose the limitation and choose a resampling protocol before inspection.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+13. **Why hold out calibration data?**  
+    **Answer:** Choosing a calibration map on the same examples used to judge it biases apparent reliability. Keep calibration selection separate from final assessment; if data are scarce, select a resampling protocol before inspection. **Follow-up:** calibrate by qualified regime only with adequate support. **Red flag:** using accuracy as calibration evidence. **Score 3:** identifies partition purpose and limitation.
 
-14. **When should a team abstain rather than classify?**
-   - **Checked answer:** When score, input validity, novelty, or policy evidence is outside the qualified region and a human or safe fallback can handle the case. Abstention needs an owner, queue limit, and harm analysis.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** Rejecting cases without a route merely hides errors.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+14. **When should the system abstain?**  
+    **Answer:** When score, input validity, novelty, or policy evidence falls outside the qualified region and a human or safe fallback can own the case. A queue needs an owner, SLA, capacity, and overflow behavior. **Follow-up:** calculate coverage and queue age at peak rate. **Red flag:** dropping cases without a route. **Score 3:** joins uncertainty to operating capacity.
 
-15. **How would a changed latency constraint alter selection?**
-   - **Checked answer:** Recompute end-to-end budget across decode, transforms, transfer, inference, postprocess, and queueing. Then consider resolution, batch, architecture, precision, or a workflow fallback while holding quality gates fixed.
-   - **Reasoning:** The answer distinguishes a representation mechanism from the evaluation or operational evidence needed to use it.
-   - **Follow-up:** Never infer p95 latency by scaling parameter count.
-   - **Acceptable alternative:** A different architecture or protocol is acceptable if it preserves the declared input, split, metric, and decision constraints.
-   - **Red flag:** Treating an illustrative arithmetic result or a generic benchmark as target-system evidence.
-   - **Scoring:** 0 unsupported; 1 names a term; 2 gives mechanism and check; 3 also gives boundary and action.
+15. **How does a tighter latency limit alter selection?**  
+    **Answer:** Rebudget decode, transform, transfer, inference, postprocess, and queueing; then compare resolution, precision, architecture, batching, and workflow fallback while keeping quality gates fixed. **Follow-up:** measure p95 under offered load. **Red flag:** scaling latency from parameter count. **Score 3:** states end-to-end measurement and non-negotiable quality boundary.
 
-**Takeaway:** Defensible interview answers tie formulas and architectural choices to a frozen protocol and a reversible operational decision.
+**Takeaway:** Defensible interview answers connect a mechanism to a locked protocol, a discriminating check, and a reversible operational decision.
 
 
 ### 11.9 Formula and mechanism inspection cards
@@ -992,6 +883,111 @@ Use these compact cards to audit whether an implementation has supplied the vari
 - **Review conclusion:** State the bounded decision, uncertainty, and recheck trigger.
 
 **Takeaway:** A review record is actionable when another reader can identify the exact artifact, population, policy, and unresolved boundary.
+
+### 11.11 Worked review packets
+
+#### Packet A — Geometry release check
+- **Decision:** Can a 32-pixel-wide fixture traverse a dilated convolution without unexpected shrinkage?
+- **Inputs:** `W=32`, `K=3`, `d=2`, `P=2`, `S=1`; units are pixels.
+- **Calculation:** `K_eff=2(3-1)+1=5`; `W_out=floor((32+4-5)/1)+1=32`.
+- **Expected invariant:** Output width equals input width because padding supplies the two missing pixels at each side under this convention.
+- **Failure signal:** Width 30 indicates the serving transform omitted padding or uses an incompatible layer definition.
+- **Competing cause:** A correct convolution can still receive a 30-pixel crop; inspect input tensor shape before blaming the kernel.
+- **Owner/action:** ML engineer records layer config; serving owner replays the immutable fixture.
+- **Evidence:** DERIVED and VERIFIED arithmetic; not a measured latency claim.
+- **Boundary:** Asymmetric padding or framework-specific rounding changes the calculation.
+- **Promotion rule:** Reject artifact pairing if shape differs from the declared fixture trace.
+
+#### Packet B — Depthwise parameter check
+- **Decision:** Does a mobile candidate reduce dense spatial parameters as claimed?
+- **Inputs:** `K=3`, `C_in=32`, `C_out=64`, one bias per output channel.
+- **Calculation:** Dense weights `=3*3*32*64=18,432`; depthwise-plus-pointwise weights `=3*3*32+32*64=2,336`.
+- **Interpretation:** The separable pair uses 16,096 fewer weights before biases but has two operations and different channel mixing.
+- **Expected invariant:** Depthwise group count equals `C_in`; pointwise input channels equal depthwise output channels.
+- **Failure signal:** A layer configured with groups 1 is not depthwise and invalidates this count.
+- **Competing cause:** Export tooling may fuse operations without altering mathematical connectivity.
+- **Owner/action:** Architecture reviewer checks graph shape and group field, not an architecture name.
+- **Evidence:** DERIVED arithmetic; target runtime remains NOT MEASURED.
+- **Boundary:** A depth multiplier or bias changes the count.
+- **Promotion rule:** Capacity planning must use target-device traces, not this count alone.
+
+#### Packet C — Threshold queue check
+- **Decision:** Is a proposed abstention threshold operationally safe?
+- **Inputs:** Illustrative arrival rate 40 cases/hour, abstention rate 0.15, reviewer capacity 4 cases/hour.
+- **Calculation:** Expected abstentions/hour `=40*0.15=6`; net backlog growth `=6-4=2` cases/hour.
+- **Interpretation:** Even with better accepted-case accuracy, backlog grows 16 cases over an eight-hour shift.
+- **Expected invariant:** Queue simulation uses the same population and threshold as the score evaluation.
+- **Failure signal:** A report gives coverage but omits arrival and review capacity.
+- **Competing cause:** Burstiness can create an SLA breach despite average capacity balance.
+- **Owner/action:** Operations owner chooses capacity, threshold, or safe fallback before release.
+- **Evidence:** ILLUSTRATIVE, arithmetic VERIFIED; no workload measurement is claimed.
+- **Boundary:** Real service times and priority rules must replace the constant-rate assumption.
+- **Promotion rule:** Demonstrate bounded queue age at peak offered load.
+
+#### Packet D — Slice-recall denominator check
+- **Decision:** Does a 90% recall statement support a site release?
+- **Inputs:** Site A has `TP=9,FN=1`; Site B has `TP=900,FN=100`; eligible positives only.
+- **Calculation:** Each recall is `TP/(TP+FN)=0.90`, but supports are 10 and 1,000.
+- **Interpretation:** Equal point estimates do not imply equal evidential stability or equal missed-case counts.
+- **Expected invariant:** Exclusions are recorded before numerator/denominator construction.
+- **Failure signal:** A dashboard aggregates images when the action contract is per object.
+- **Competing cause:** Low support may reflect rare incidence, not necessarily poor capture.
+- **Owner/action:** Evaluation owner publishes support and uncertainty protocol beside each slice.
+- **Evidence:** ILLUSTRATIVE and VERIFIED arithmetic.
+- **Boundary:** Confidence interval choice depends on sampling/dependence; do not infer it from this example.
+- **Promotion rule:** Site-specific minimum support and error gates are declared before inspection.
+
+#### Packet E — Quantized threshold-crossing check
+- **Decision:** Can an INT8 export retain a float threshold of 0.70?
+- **Inputs:** Illustrative paired scores: float `[0.68,0.71,0.74]`, INT8 `[0.66,0.69,0.75]`.
+- **Trace:** At threshold 0.70, the second item changes from accept to abstain; one of three action decisions differs.
+- **Interpretation:** Mean score delta is inadequate because policy changes occur near the threshold.
+- **Expected invariant:** Pair by identical input bytes and matching postprocessing version.
+- **Failure signal:** Comparing separately shuffled float and device outputs.
+- **Competing cause:** A threshold crossing may come from output dequantization or changed image preprocessing.
+- **Owner/action:** Runtime owner logs paired digests; model owner reselects threshold only after device evaluation.
+- **Evidence:** ILLUSTRATIVE and VERIFIED trace; hardware performance is NOT MEASURED.
+- **Boundary:** Three examples do not estimate real crossing frequency.
+- **Promotion rule:** Set a maximum crossing/error rate on a representative qualified holdout.
+
+#### Packet F — Background shortcut check
+- **Decision:** Is a high score driven by object evidence or a label-bearing background?
+- **Inputs:** One object crop, its original background, one neutral replacement, and one masked-overlay version.
+- **Trace:** Hold object pixels and preprocessing fixed; score all three variants with the same artifact digest.
+- **Interpretation:** A large score movement after a background swap is evidence to investigate shortcut reliance, not proof of causal explanation.
+- **Expected invariant:** Geometry, scale, and compression must stay constant across the variants.
+- **Failure signal:** A replacement changes object boundary or introduces an unnatural edge, confounding the result.
+- **Competing cause:** Context may contain legitimate information required by the declared task.
+- **Owner/action:** Data owner checks collection policy; model owner evaluates counterfactual and held-out-site slices.
+- **Evidence:** Method is DERIVED; outcome is OPEN until run on a documented review set.
+- **Boundary:** Synthetic counterfactuals may be out of distribution.
+- **Promotion rule:** Do not remove context without showing that the intervention preserves task semantics.
+
+#### Packet G — Temporal split check
+- **Decision:** Is a random image split leaking future process conditions?
+- **Inputs:** Capture timestamps, entity/site IDs, training cutoff, and proposed deployment date.
+- **Trace:** Build a table of min/max time by partition and count entities that appear on both sides.
+- **Interpretation:** Future captures in training invalidate a deployment-time claim even if labels are correct.
+- **Expected invariant:** The cutoff uses availability time, not a later label-adjudication timestamp.
+- **Failure signal:** A high random-split result collapses on a post-cutoff holdout.
+- **Competing cause:** Repeated captures can be legitimate only if the decision will see that same entity history.
+- **Owner/action:** Evaluation owner freezes the group/time rule; data owner documents late labels.
+- **Evidence:** Diagnostic method DERIVED; local impact remains OPEN until evaluated.
+- **Boundary:** Temporal order does not itself prove drift.
+- **Promotion rule:** Use the untouched post-cutoff interval for final reported evidence.
+
+#### Packet H — Artifact-pair compatibility check
+- **Decision:** Are weights and preprocessing safe to release together?
+- **Inputs:** Weight digest, transform digest, label-map digest, immutable fixture bytes, expected tensor ranges.
+- **Trace:** Resolve all three digests from a single release manifest, replay fixture, then compare shape, dtype, range, and output schema.
+- **Interpretation:** This check detects interface drift before aggregate quality metrics hide it.
+- **Expected invariant:** A manifest is immutable and names exactly one compatible tuple.
+- **Failure signal:** A mutable “latest” transform resolves differently during replay.
+- **Competing cause:** A numerical tolerance issue can be hardware-dependent rather than a semantic transform mismatch.
+- **Owner/action:** Release owner blocks incompatible tuple; platform owner preserves prior manifest for rollback.
+- **Evidence:** Mechanism DERIVED; observed compatibility requires a recorded replay.
+- **Boundary:** Passing fixtures cannot prove broad statistical correctness.
+- **Promotion rule:** Require both fixture compatibility and locked evaluation gates.
 ## 12. Quick Reference Card
 
 | Item | Rule |

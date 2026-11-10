@@ -8,7 +8,7 @@ This collection teaches visual representation selection, ViT token budgeting, de
 
 | Level | File | Outcome | Prerequisites | Key skill | Status |
 |---|---|---|---|---|---|
-| Foundation | [02 CNNs, attention and transfer](02_CNNs_Attention_and_Transfer_Learning.md) | compute geometry/weights and choose adaptation baseline | convolution, grouped splits | CNN-01–03 | incomplete: repeated generic drill/interview/inspection prose requires replacement |
+| Foundation | [02 CNNs, attention and transfer](02_CNNs_Attention_and_Transfer_Learning.md) | compute geometry/weights, select adaptation baseline, and investigate production visual failures | convolution, grouped splits | CNN-01–03 and fixture/release evidence | authored draft; arithmetic and local navigation smoke-checked 2026-11-09; independent technical review remains open |
 | Foundation | [01 Vision evaluation](01_Vision_Evaluation_and_Error_Taxonomy.md) | specify task, split, slices and error taxonomy before model comparison | 02; task contract | metric contract | incomplete draft |
 | Core | Augmentation library — original planned scope | select transforms whose label, geometry and deployment invariances remain valid | 02; coordinate and label conventions | augmentation contracts, interpolation and slice checks | planned; self-supervised pair contracts do not replace supervised augmentation coverage |
 | Core | [03 Vision transformers](03_Vision_Transformers.md) | budget patch tokens and select attention structure | 02; frozen evaluation protocol | VIT-01–02 | draft |
@@ -82,10 +82,9 @@ Recheck inputs, label policy, device, target population and any model implementa
 ## 11. Acceptance checklist
 
 - [x] Four focused sheets have real paths and 12 ordered headings.
-- [x] `02_CNNs_Attention_and_Transfer_Learning.md` meets the 1,000-line manuscript gate.
- 
+- [x] `02_CNNs_Attention_and_Transfer_Learning.md` meets the 1,000-line manuscript gate and its drills 18–34, interview answers, and worked review packets are distinct technical content.
 - [ ] Sheets 01 and 03–05 remain below that gate and are not thereby complete.
 - [ ] The existing evaluation draft requires expansion to all 12 headings and answered interview pack.
 - [ ] Augmentation, source-specific biosignal variants, 25-issue artifact, two bounded cases and full case catalog remain unauthored.
-- [x] Formula examples are explicitly illustrative and hand-checked, not executed benchmarks.
-- [x] Source-body uncertainty is visible.
+- [x] CNN geometry, depthwise counts, threshold queue, and quantized crossing illustrations have stated inputs and checked arithmetic; they are not executed benchmarks.
+- [x] Source-body uncertainty is visible; independent technical review and source evidence remain open.

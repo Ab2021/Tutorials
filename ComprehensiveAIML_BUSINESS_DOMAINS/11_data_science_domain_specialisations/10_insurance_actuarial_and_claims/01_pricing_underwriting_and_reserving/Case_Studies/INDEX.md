@@ -51,7 +51,13 @@
 
 Before drafting any listed case, replace the PLAN ID with a CASE ID, add a relative file link, choose one primary pattern and no more than two secondary patterns, state evidence/stage independently, and set a concrete review trigger. The full 15-section integrated case-study outline is mandatory for each drafted case.
 
-## 6. Pre-publish checks
+## 6. Review and retirement log
+
+| Date | Scope | State | Next trigger |
+|---|---|---|---|
+| 2026-11-09 | Reconciled the original five planned case rows with the collection template. | Planned; no local case file authored. | A bounded case receives a stable CASE ID and a complete evidence declaration. |
+
+## 7. Pre-publish checks
 
 - [ ] Case ID is unique and linked.
 - [ ] Evidence maturity is distinct from implementation stage.

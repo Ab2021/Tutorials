@@ -85,3 +85,9 @@ These are proposed writing briefs informed by interview examples. The examples a
 Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
 
 <!-- END INTERVIEW REFERENCE PLAN -->
+
+## 7. Review and retirement log
+
+| Date | Scope | Evidence observed | Editorial decision | Trigger for recheck |
+|---|---|---|---|---|
+| 2026-11-09 | Existing catalog and reference-plan rows | Rows are planning briefs; source examples do not establish local deployments, measurements, or authored cases. | Retain all rows as `PLAN`; do not assign `CASE` IDs or claim results. | A template-complete local case, primary evidence, or a changed source-reference boundary. |

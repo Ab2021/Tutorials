@@ -1,39 +1,63 @@
-# Claims, Fraud, Customer and Operations - Cheat Sheets
+# Claims, Fraud, Customer and Operations — Cheat Sheets
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
+This collection will teach reusable, auditable methods for claims intake, extraction, triage, fraud investigation, customer contact, capacity, monitoring, and human review. It assumes insurance decision vocabulary and never treats a score, extraction, or graph connection as authority to deny a claim. No listed topic is authored in this collection; linked case material is separate evidence, not a substitute for a 12-section sheet.
 
-## Purpose
-
-These planned reference cards support repeatable decisions in Claims, Fraud, Customer and Operations. They complement case studies; they do not replace the assumptions, evidence, and evaluation required in a full case.
-
-## Planned references
-
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | Claims automation controls | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 2 | Fraud investigation guide | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-| 3 | Customer fairness checklist | Decision rules, inputs, metrics, trade-offs, and failure signals. | planned |
-
-## Required card fields
-
-Every card must state: intended decision and reader; preconditions and inputs; default recommendation; metrics/formulas or architecture pattern; trade-offs; failure signals; security/privacy/governance constraints; and links to deeper material. Review tool-, market-, and regulation-sensitive cards quarterly.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 2. Topic ladder
+| Level | File / planned topic | Testable outcome | Prerequisites | Status |
 |---|---|---|---|---|
-| PLAN-2026-IR005 | Immutable release manifests; compatibility gates; side-effect-free shadowing; staged canaries; incident containment | Bundle-compatibility tests, rollback drills, guardrail breaches and unresolved side effects after recovery. Boundary: A prompt-only rollback cannot restore all dependencies; example dwell times and canary percentages are not defaults. | [REF-IR005](../../../../../INTERVIEW_CASES/Agentic_AI_System/INDEX/Agent_Release_And_Incident_Operations.md) | planned; not written |
-| PLAN-2026-IR011 | Page and region provenance; thumbnail/tiling tradeoffs; schema validation; claim-level temporal splits | Field accuracy and calibration by template, handwriting and scan quality; reviewer workload, evidence coverage and latency. Boundary: Neither a similarity match nor a VLM fraud suspicion justifies denial; source scale and patch arithmetic need fresh sizing. | [REF-IR011](../../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Insurance_Document_VLM.md) | planned; not written |
-| PLAN-2026-IR014 | Schema versioning; semantic checks; dead-letter replay; idempotency; quality-constrained tiered RAG routing | Gold field accuracy and reconciliation for extraction; full-path cost and grounded quality by tier for routing. Boundary: Contains two reference problems: author separate narratives; valid JSON and cheap token prices do not establish successful outcomes. | [REF-IR014](../../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Structured_Extraction_And_Cost_Routing.md) | planned; not written |
-| PLAN-2026-IR015 | Product/date eligibility; grounded generation; native-language review; source dependencies; supersession triggers | Unsupported product claims, expired evidence, read-aloud time, reviewer agreement and agent usability. Boundary: Human approval and source maintenance remain necessary; the example word target is not a compliance standard. | [REF-IR015](../../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Approved_Objection_Response_Scripts.md) | planned; not written |
-| PLAN-2026-IR016 | Channel-aware ASR; VAD; code-switching; speaker roles; redaction; evidence spans; cohort aggregation | Human-gold WER, domain-term WER, role error, objection precision/recall and end-to-end report coverage. Boundary: Transcript matching does not prove audio fidelity; aggregate coaching themes must not become unvalidated individual scores. | [REF-IR016](../../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Multilingual_Call_Objections.md) | planned; not written |
-| PLAN-2026-IR031 | N+1 detection; adjacency-list indexing; per-step authorization; cycle checks; stable assembly; snapshot reads | Reference traversal comparisons, round trips, rows scanned, unauthorized descendants, deep/wide trees and truncation behavior. Boundary: One SQL statement can still do excessive work; an outer LIMIT is not a universal recursion work bound. | [REF-IR031](../../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Tree_Queries/policy_hierarchy_n_plus_one.md) | planned; not written |
-| PLAN-2026-IR036 | Conservative entity resolution; typed claim-actor graphs; motifs and supernodes; point-in-time features; reversible merges | Temporal baseline comparison, precision at capacity, mature outcomes, sampled low-risk audits and appeal/false-positive slices. Boundary: Connectivity and shared providers are not proof of fraud; source reference notes are unavailable and labels are delayed/selected. | [REF-IR036](../../../../../INTERVIEW_CASES/Graph_Rings/Fraud_Ring_Detection/Claims_Fraud_Ring_Case.md) | planned; not written |
+| Foundation | Claims journey and automation controls | Map decision-time evidence, action, owner, queue, and recovery state. | Claim lifecycle basics. | Planned. |
+| Core | Document extraction and evidence validation | Compute field and claim completeness; route unsupported fields. | Claims journey; schema concepts. | Planned; covers PLAN-2026-IR011/014. |
+| Core | Triage, severity, and human review | Select a threshold subject to review capacity and error cost. | Conditional probability and queue basics. | Planned. |
+| Core | Fraud investigation and graph enrichment | Evaluate incremental value at fixed investigator capacity. | Temporal splits and delayed labels. | Planned; covers PLAN-2026-IR036. |
+| Core | Customer communication and call analytics | Preserve evidence spans and distinguish ASR, role, and extraction error. | Consent/authorization boundary; evaluation basics. | Planned; covers PLAN-2026-IR015/016. |
+| Advanced | Operational capacity, monitoring, and release recovery | Trace idempotent processing, dead-letter replay, and compatible release recovery. | Above controls; state/version concepts. | Planned; covers PLAN-2026-IR005/031. |
+| Final | Common Issues | Diagnose at least 25 complete distinct failures. | All completed sheets. | Planned. |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
+## 3. Quick topic lookup
+| Question | Planned teaching home | Use condition | Failure warning |
+|---|---|---|---|
+| Can this field bypass review? | Document extraction and evidence validation §7–8 | Schema and source evidence are available. | Valid syntax is not business correctness. |
+| Does graph enrichment help investigators? | Fraud investigation §5, §9 | Investigation capacity is fixed and labels are mature enough. | Connectivity is not proof of fraud. |
+| Is a retry safe? | Operational capacity §4, §8 | Side effects have idempotency keys and durable state. | Replaying an unkeyed action can duplicate it. |
+| Are coaching themes trustworthy? | Customer communication §9 | Speaker/evidence quality is measured. | Transcript match does not prove audio or role fidelity. |
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 4. Reading paths
+- **Beginner:** Claims journey → document extraction → triage/human review.
+- **Practitioner:** Beginner path → fraud investigation → capacity/monitoring → customer communication.
+- **Advanced:** Practitioner path → compatible release/recovery, authorization-aware hierarchy retrieval, and final Common Issues.
+
+## 5. Prerequisite skills
+Define a claim and field unit, preserve event versus processing time, calculate precision/recall and rates, interpret queues, and distinguish a source document from a derived extraction. The existing [document extraction case](../Case_Studies/Medical_Claims_Document_Extraction_MediConCen.md) is a published-source critique and illustrative design exercise; it supplies no general benchmark.
+
+## 6. Exclusions and handoffs
+This collection does not make coverage, medical, legal, fraud, or employment determinations. Subrogation and recovery policy require relevant owners. Pricing and reserves hand off to `../../01_pricing_underwriting_and_reserving/`; model governance and climate hand off to `../../03_insurance_mlops_model_risk_and_climate/`.
+
+## 7. Master symbol glossary
+| Symbol / term | Meaning | Units/type | Domain / warning | Planned first use |
+|---|---|---|---|---|
+| Claim completeness | Required fields correct for one claim | proportion | Requires an explicit eligible field set | Document extraction |
+| Review capacity | Cases an authorized team can complete per time window | claims/time | Not model throughput | Triage |
+| Mature label | Outcome fixed enough for stated metric | status/event | Selective investigation labels are biased | Fraud investigation |
+| Idempotency key | Stable identity for one intended side effect | key | Must survive retry and replay | Operational capacity |
+| Evidence span | Source page/region supporting a claim | structured reference | Similar text alone is not evidence | Customer communication |
+
+## 8. Quick Reference Card directory
+No completed cards exist. Planned cards will cover extraction acceptance, capacity-constrained triage, graph-alert evaluation, evidence-grounded communication, and idempotent recovery. Cards become links only after their authored sheets exist.
+
+## 9. Common Issues locator
+No Common Issues file exists. The final artifact must retain 12 headings and contain at least 25 distinct, complete issues with category, provenance, competing causes, diagnostic signal, mitigation risk, correction, prevention, and verification.
+
+## 10. Sources, versions and maintenance
+| Commitment | Basis and limitation | Status | Recheck trigger |
+|---|---|---|---|
+| Original 12-topic module map | Local INDEX; original topic names only. | Planned. | Collection scope changes. |
+| PLAN-2026-IR005/011/014/015/016/031/036 | Reference-informed planning briefs; referenced bodies are examples only. | Planned; no source-body reconstruction. | Reference correction or authored teaching scope. |
+| MediConCen case | Public customer-story analysis with explicit evidence gaps. | Draft case; not a completed sheet. | Primary evaluation or source correction. |
+
+## 11. Collection acceptance checklist
+- [x] Original and reference-informed commitments are visible in the topic ladder.
+- [x] Prerequisite order, handoffs, source limits, and planned issue target are stated.
+- [ ] Every topic has an actual 12-section, 1,000-line sheet.
+- [ ] Final Common Issues artifact contains at least 25 complete issues.
+- [ ] Navigation, numerical examples, sources, and editorial status receive independent review.
