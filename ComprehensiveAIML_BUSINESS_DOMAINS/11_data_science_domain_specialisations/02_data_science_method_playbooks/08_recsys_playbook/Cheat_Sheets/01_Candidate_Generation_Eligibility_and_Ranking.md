@@ -134,6 +134,38 @@ Definitions here are written as operational tests: each row states how you would
 
 **Why exposure is a definition, not a log detail.** If exposure logging drops impressions for one surface, then R for that surface is computed over a subset of what users actually saw. The resulting recall estimate is biased in a direction that depends on which items were dropped. An exposure audit — counting logged exposures against server-side render decisions — is therefore a prerequisite for trusting any retrieval metric, not an optional data-quality chore.
 
+### 3.1 Constructing the eligible set from a policy log
+
+The definition only becomes an instrument when you can write the query that produces E. The construction below is the one that survives audit, because every predicate carries its own effective time and its own failure mode.
+
+```text
+FORMULA:   E(q,t) = { i in I(t) : R(i, terr(q), t) AND S(i, tier(q), t)
+                                AND A(i, surf(q), t) AND F(i, loc(q), t)
+                                AND Y(i, t) }
+WHERE:     R = rights predicate, S = entitlement, A = asset availability,
+           F = fulfilment or licensing region, Y = safety policy
+           each predicate evaluated at t, not at ingest, and not at label time
+CONSTRAINT: every predicate is a lookup into a versioned store keyed by
+            (subject, attribute, valid_from, valid_to) with no NULL as allow
+NUMERICAL EXAMPLE: for one request the five predicates reject 12%, 18%, 5%,
+            7% and 0% of the catalog respectively; sequential application
+            leaves 637.5 of every 1,000 candidates (Section 4.2).
+INTERPRETATION: the eligible set is a join, and the join is only as correct as
+            the temporal validity of each side.
+```
+
+**Three query-level defects that produce a wrong E.**
+
+*Open-interval predicates.* A rights row stored as `valid_to = NULL` meaning "current" silently becomes "valid forever" once a revocation is written as a new row that some consumer does not read. The fix is to materialise explicit intervals and to reject any predicate that cannot resolve a `valid_to`; a NULL must never default to allow.
+
+*Attribute timing.* The viewer's territory must come from the same snapshot as the policy evaluation. If territory is read from a profile updated at session start and policy is read at request time, a viewer who crosses a border mid-session is evaluated against a mismatched pair, and the resulting E is neither the old one nor the new one. This is not hypothetical for travel and VPN traffic; it is the standard cause of "the app shows content I cannot play".
+
+*Predicate order in the presence of cost.* Rights lookups are usually more expensive than device-capability checks, so a query optimiser reorders them. Reordering changes the *rejection attribution* recorded in logs even when it does not change E. Any metric built on rejection reason codes must therefore be computed from a labelled evaluation of every predicate against a sample, not from the first-failing-predicate log, which is order-dependent.
+
+**What "no NULL as allow" costs.** Failing closed converts a policy outage into an empty slate, which is a visible product event. That is the correct trade, but it must be instrumented: the authorization-error metric in Section 8.2 exists precisely to distinguish "nothing eligible" from "the policy service is down". Without it, an outage appears as a catalog scarcity problem and responders investigate the wrong subsystem.
+
+**A cheap audit that finds most errors.** Take 200 requests, sample 5 candidate items each, and for every item record the decision of each predicate from both the request path and an independent offline re-evaluation. The disagreement rate per predicate is the correction you need to apply to the funnel numbers. In practice the rights predicate dominates; if you can only audit one, audit that one.
+
 **Why "candidate" must exclude the post-ranker set.** Some teams call the top 100 after ranking "candidates". That usage destroys the diagnostic value of the term, because the post-ranker set is already a function of the score you are trying to evaluate. In this card, candidate always means pre-ranker, and the term for the later set is the slate.
 
 **Takeaway.** Before computing any percentage, fix four things on paper: the universe (E), the labelled subset (R with its horizon), the candidate budget (k), and the timestamp of the snapshot. A metric without those four is not comparable to anything.
@@ -647,6 +679,44 @@ marginal:   --    +0.188 +0.141 +0.105 +0.079
 
 Caption: each added source contributes less than the previous one under independence, and much less in practice because popularity and co-visit sources overlap heavily on head items. The series is the geometric decay of (1 − p)^s, not a tuning artefact.
 
+### 6.1 Reading the funnel as a table of losses
+
+The geometric pictures above compress into a single loss accounting that survives a review meeting, because each row is attributable to one owner and one change.
+
+| Stage | Entering | Leaving | Loss | Loss attributable to | Recoverable by |
+|---|---:|---:|---:|---|---|
+| Catalog at ingest | 12,000,000 | 12,000,000 | 0 | — | — |
+| Passes rights | 12,000,000 | 10,560,000 | 12.0% | deal book and territory map | territory partitioning |
+| Passes entitlement | 10,560,000 | 8,659,200 | 18.0% of remainder | subscription tier mix | tier-partitioned indexes |
+| Passes availability | 8,659,200 | 8,226,240 | 5.0% of remainder | asset pipeline lag | earlier asset readiness |
+| Passes device and safety | 8,226,240 | 8,226,240 | 0% in this cohort | device mix | nothing needed |
+| **Eligible set** | 12,000,000 | **240,000** | **98.0%** | the five predicates | not recoverable, by design |
+| Entered candidate set | 240,000 | 1,390 looked at | — | depth provisioning | more depth, more latency |
+| Kept after cap | 1,390 | 20 | 98.6% of looked-at | the budget k | larger k, more ranker cost |
+| Relevant in candidates | 7 labelled | 4 | 3 lost | retrieval quality | better retrieval |
+| Reach slate | 4 | 4 | 0 | ranker retention near 1.0 | nothing needed |
+
+The table makes an argument that prose obscures: from 12 million items to 20 candidates, the largest single reduction is eligibility, and it is *correct*. The reduction that is a defect is the third-from-bottom row, where three of seven relevant items never entered the candidate set. Reviewers who treat the 98% eligibility loss as the problem and the 3-of-7 retrieval loss as normal have the priorities exactly inverted.
+
+**The arithmetic of that inversion, stated once.** Improving retrieval from 4 of 7 to 6 of 7 raises candidate recall from 0.5714 to 0.8571, a gain of 28.6 percentage points, at a cost of depth and latency. Relaxing an eligibility predicate to admit 1% more of the catalog would raise the eligible pool by 2,400 items and might raise recall by less than one item, while creating a compliance exposure. Ratio of value to risk is not close.
+
+### 6.2 The same funnel for a marketplace, where availability dominates
+
+The video case above is rights-dominated. A marketplace candidate pipeline inverts two rows, and the inversion changes which infrastructure investment pays.
+
+| Stage | Video surface | Marketplace surface | Why the difference matters |
+|---|---|---|---|
+| Dominant rejection | rights (territory, window) | availability (stock, zone) | rights change slowly; stock changes by the second |
+| Refresh cadence that suffices | hourly policy sync plus request-time check | near-real-time stock feed plus request-time check | a stale stock view sells what cannot ship |
+| Partitionable dimension | territory | fulfilment zone | zones are numerous, so partitioning multiplies storage more |
+| Typical eligible density | 2% of a 12M catalog | 8% of a 2M catalog in-zone | higher density means shallower depth is sufficient |
+| Depth implied at k=20, alpha=0.05 | 1390 | 344 at p=0.08 | 4.0x cheaper traversal |
+| Failure that reaches the user | unplayable title | order cancelled after payment | the marketplace failure is more expensive per event |
+
+The depth figure for the marketplace case follows from the same formula, not from a different one: at p = 0.08, k = 20, the required depth is between the p = 0.05 value of 554 and the p = 0.10 value of 275; direct evaluation gives 344 for a 95% fill probability, and 1390/344 = 4.04. The lesson is not the number but the method: density is measured per surface, then substituted.
+
+**Where the marketplace case breaks the model.** Stock is not independent of score. A model trained on purchase history ranks popular items highly, and popular items are precisely the ones that sell out, so their eligibility is negatively correlated with their rank. The binomial depth model assumes independence and therefore under-predicts underfill exactly when it matters most. The correction is empirical: measure the realised kept-count distribution at the chosen depth and compare it with the binomial prediction. If the realised fifth percentile is materially below k while the model says 95%, correlation is present and depth must be raised until the measured tail, not the modelled tail, satisfies the tolerance.
+
 **Takeaway.** The pictures encode three facts worth memorising: metrics must divide by the middle ring, depth requirements grow like k/p, and every added stage both costs latency and attenuates the fraction of relevant items that survives to display.
 
 ## 7. Comparison / Selection Table
@@ -1151,15 +1221,13 @@ Fifteen questions with independent answers. Questions 4, 5, 6, 8, 9, 10, 12, and
 
 | Item | Value and condition |
 |---|---|
-| Core decision | Trust a candidate pipeline to feed a ranker only when eligibility is checked at decision time, candidate recall is measured on a matched cohort, and underfill plus latency are reported alongside it |
-| Candidate recall | `|C_k ∩ R| / |R ∩ E|`, defined only when the eligible labelled count is positive; denominators must use the eligible universe, never the whole catalog |
-| Aggregates | macro weights requests equally; pooled (identical to relevant-count weighting) weights requests by their relevant-item count; the choice is a product decision and must be declared before results are seen |
-| Depth requirement | smallest m with `P(Binomial(m, p) ≥ k) ≥ 1 − α`; at p = 0.02, k = 20, α = 0.05 the answer is m = 1390, a ratio of 69.5 |
-| Eligibility attrition | `1 − r1 − r2 + (r1·r2 + ω)`; excess co-rejection ω raises joint survival, so independence under-estimates the surviving set |
-| Approval gate | fail closed on authorization; push eligibility into retrieval traversal or partition the index; keep the index free of eligibility decisions so staleness affects quality only |
-| Complexity | exact scan is bandwidth-bound at d·4 bytes per item (6.144 GB for 12M × 128 float32); ANN touches about m + log·M nodes, roughly 742 KiB at m = 1390 |
-| Cost anchors | float32 vectors 6.144 GB per 12M-item replica; graph at M = 64 adds 3.072 GB; ranker cost dominates candidate count growth at roughly 2.6 ms per candidate |
-| Use when | a ranker or slate budget constrains how many items can be scored, and eligibility is a nontrivial fraction of the catalog |
+| Core decision | Trust a candidate pipeline only when eligibility is checked at decision time, candidate recall is measured on a matched cohort, and underfill plus latency are reported alongside it |
+| Candidate recall | `|C_k ∩ R| / |R ∩ E|`, defined only when the eligible labelled count is positive; the denominator uses the eligible universe, never the whole catalog |
+| Aggregates | macro weights requests equally; pooled (identical to relevant-count weighting) weights by relevant-item count; declare the choice before seeing results |
+| Depth requirement | smallest m with `P(Binomial(m, p) ≥ k) ≥ 1 − α`; p = 0.02, k = 20, α = 0.05 gives m = 1390 (ratio 69.5); p = 0.08 gives m = 344 (ratio 17.2) |
+| Eligibility attrition | `1 − r1 − r2 + (r1·r2 + ω)`; positive co-rejection ω raises joint survival, so independence under-estimates the surviving set |
+| Approval gate | fail closed on authorization, push eligibility into traversal or partition the index, and keep eligibility decisions out of the index so staleness affects quality only |
+| Cost anchors | exact scan is bandwidth-bound (6.144 GB per request at 12M × 128 float32); ANN at depth 1390 touches ~742 KiB; ranker cost scales with candidate count at roughly 2.6 ms per candidate |
+| Use when | a ranker or slate budget limits how many items can be scored and eligibility is a nontrivial share of the catalog |
 | Avoid when | the eligible labelled population cannot be assembled point-in-time, the label horizon is immature, or the comparison differs in k, H, or eligibility vintage |
-| Signature failure | a full slate with weak personalisation: the fallback is filling slots because the primary path under-delivers, and slate fill hides it |
-| Go deeper | [Collection index](INDEX.md) for sibling cards and the planned ranking-metric, exploration, and common-issues artefacts |
+| Signature failure | a full slate with weak personalisation: fallback rows fill the slots because the primary path under-delivers, and slate fill hides it |

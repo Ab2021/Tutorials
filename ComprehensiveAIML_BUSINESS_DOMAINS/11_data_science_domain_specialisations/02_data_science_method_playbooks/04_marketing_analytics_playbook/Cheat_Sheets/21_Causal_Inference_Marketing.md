@@ -1,1250 +1,1129 @@
+---
+title: "Causal Inference and A/B Experimentation for Marketing"
+topic: "Estimating incremental marketing effects from randomized and observational designs"
+collection: "Marketing Analytics Playbook — Cheat Sheets"
+level: "core"
+evidence: "DERIVED"
+created: "2026-11-10"
+last_reviewed: null
+content_status: "draft"
+---
+
 # Causal Inference and A/B Experimentation for Marketing
 
-## Section 1 — File Header
+## 1. File Header
 
-> **Purpose:** Estimate and interpret incremental marketing effects without confusing attribution, prediction, or selection with causation.
-> **Audience:** Marketing analysts, experiment owners, data scientists, and decision makers.
-> **Prerequisites:** Basic probability, confidence intervals, SQL joins, and familiarity with campaign delivery and conversion events.
-> **Key outcome:** Given an experiment specification and arm-level outcomes, estimate the intention-to-treat effect, quantify uncertainty, and make a bounded decision.
-> **Exclusions:** Full marketing-mix model estimation, auction mechanics, and legal advice; consult the local playbook for adjacent planned topics.
-> **Level:** 2–3, core methods through production.
-> **Version / reviewed:** Draft 0.1; not independently reviewed.
-> **Evidence:** Published method references are linked in Section 10; all data, monetary values, and operations scenarios are illustrative, not observed deployments.
-> **Source mapping:** directory entry `DS_Domain/Marketing_Analytics_Cheat_Sheets/21_Causal_Inference_Marketing.md`; the original file content was not available in this workspace.
-> **Retrieval cue:** If reported exposed users convert better than unexposed users, start with Sections 3 and 8.
+> **Purpose:** Estimate an incremental marketing effect that survives a stated counterfactual, and convert that estimate plus its uncertainty into a bounded decision.
+> **Audience:** Marketing analysts who own experiment readouts, data scientists who build the assignment and measurement pipelines, and decision makers who must act on a lift estimate.
+> **Prerequisites:** Sampling distributions and confidence intervals; two-proportion hypothesis tests; SQL joins on keys with defined grain; familiarity with campaign delivery, click, and purchase event streams.
+> **Key outcome:** Given an experiment or quasi-experiment specification and arm-level outcome counts, compute the intention-to-treat effect, its uncertainty under the assignment design, the economic break-even effect, and an explicit decision with a named risk.
+> **Exclusions:** Auction mechanics and bid shading; media-mix regression coefficients; multi-touch attribution credit allocation; legal or privacy determinations. Those are separate decisions and separate files.
+> **Level:** Core. Sections 1–7 are usable by an analyst in week one; Sections 8–10 require ownership of the measurement pipeline.
+> **Version:** Draft 0.3. Not independently reviewed. All figures marked ILLUSTRATIVE are constructed for teaching and were recomputed arithmetically; no company result is claimed anywhere in this file.
+> **Evidence basis:** The results in Sections 4 and 10 are derived from the stated assumptions (potential outcomes, randomization, consistency) or are closed-form standard errors. Nothing here reports an observed campaign lift.
+> **Retrieval cue:** If exposed users look better than unexposed users, read Section 3 (estimand), then Section 8 F-04 (post-treatment conditioning) before you compute a single rate.
 
-The decision is whether changing marketing assignment improves outcomes relative to a specific alternative for a specified population and period.
-A conversion credited to an ad is not automatically an incremental conversion.
-An effect can be real but unprofitable, heterogeneous, or too uncertain to support expansion.
-The goal is a decision-ready estimate with a clear counterfactual and visible assumptions.
+Three statements get confused constantly in marketing readouts, and they answer different questions:
 
-**Takeaway:** Specify whose outcome changes under which intervention before computing lift.
+1. "People who saw the ad bought more" is a description of a joint distribution. It is true, it is nearly always true, and it is not evidence of causation.
+2. "Assigning people to the ad raised purchases by 2.0 percentage points" is a causal claim about a policy, with a population denominator and a comparator.
+3. "The ad caused 82.5 incremental purchases across 12,000 customers" is that causal claim multiplied by a size, and it inherits every assumption of statement 2 plus a transport assumption.
 
-## Section 2 — Concept Map / Mental Model
+This sheet is about statement 2 and the arithmetic that connects it to statement 3. The unit of analysis is always the randomized or assignable unit — customer, household, store, or geography — never the impression, never the click, never the order.
 
-```text
-Business decision -> eligible population -> assignment policy and comparator
-                                            |
-                   pre-assignment snapshot  v
-                      -> randomized or defensible observational design
-                                            |
-                 assignment -> delivery -> outcome window -> mature ledger
-                      |             |                |
-                      |             |                +-> measurement checks
-                      |             +-> compliance and interference checks
-                      +-> denominator, assignment ratio, and balance checks
-                                            |
-                               estimand-aligned estimate and uncertainty
-                                            |
-                        benefit, cost, harm guardrails, decision, monitoring
-```
-Arrows in this diagram show workflow, not causal identification by themselves.
-Assignment is the randomized intervention; delivery and clicks are downstream events.
-Randomization balances potential outcomes in expectation, not every finite sample.
-The central invariant is that every randomized eligible unit remains in its originally assigned arm for the primary analysis.
-A post-assignment filter can break that invariant and destroy the original comparison.
-For observational data, measured baseline covariates alone cannot establish the absence of unmeasured confounding.
-For shared budgets or social networks, one unit's assignment may affect another unit's outcome.
+**Takeaway:** Name the intervention, the population, the outcome window, and the comparator before touching the data; a rate without those four is not an estimate.
 
-**Takeaway:** Preserve assignment and the target population through outcome collection and analysis.
+## 2. Concept Map / Mental Model
 
-## Section 3 — Foundational Definitions
-
-### Unit, time, intervention, comparator
-The unit is the entity assigned, such as a customer, household, account, store, or geographic market.
-A customer-level outcome must be linked back to the assignment unit without duplicating that unit.
-The target population is the set of eligible units to which the decision applies.
-Eligibility must be determined using data available before assignment.
-The intervention is a sufficiently specified policy, not merely an observed impression.
-A policy specifies creative, bid or channel, eligibility, timing, and frequency where these determine the intervention.
-The comparator may be no message, business-as-usual marketing, or a specific alternative campaign.
-A holdout is only meaningful when its allowed marketing is stated.
-The outcome must define numerator, denominator, measurement horizon, currency, returns, and late-data policy.
-Randomization time is time zero for treatment assignment and for the outcome horizon.
-
-### Potential outcomes and causal estimands
-For unit i, Y_i(1) is the outcome under policy 1 and Y_i(0) under policy 0 over the specified horizon.
-For a given unit only one of these is normally observed, creating the fundamental missing-counterfactual problem.
-The average treatment effect (ATE) averages Y_i(1) minus Y_i(0) over the defined target population.
-The average treatment effect on the treated (ATT) averages that contrast among units that actually receive treatment.
-The intention-to-treat (ITT) effect compares outcomes under assignment to policies, regardless of delivery or engagement.
-An ITT is an effect of assignment, not the effect of seeing an ad.
-A conditional average treatment effect (CATE) averages the potential-outcome contrast within a defined baseline-covariate subgroup.
-A population risk difference is measured in probability points; conversion probability is dimensionless.
-A revenue effect per assigned unit has currency per assigned unit as its unit.
-An estimand additionally fixes handling of intercurrent events such as opt-out, incomplete delivery, cancellation, and missing outcomes.
-
-### Bias and identification
-A confounder is a pre-treatment common cause of both treatment and outcome, or a member of a sufficient adjustment set that blocks a backdoor path.
-For example, prior purchase intent can influence both retargeting exposure and purchase.
-A mediator lies on the causal pathway, such as a click caused by an ad that precedes purchase.
-Adjusting for a mediator generally changes the total effect being estimated.
-A collider is caused by two variables; conditioning on it can induce an association between its causes.
-Selection bias occurs when inclusion or outcome observability depends on treatment and outcome-related factors in a way that distorts the target comparison.
-Exchangeability means potential outcomes are independent of treatment, unconditionally in a randomized trial or conditionally on appropriate baseline covariates in an observational design.
-Positivity means each treatment relevant to the target estimand has positive probability in every baseline stratum being targeted.
-Consistency means the observed outcome equals the potential outcome under the treatment actually received, with intervention versions sufficiently specified.
-No interference means a unit's potential outcome does not change with others' assignments; it is often questionable for auctions and households.
-Identification maps a causal estimand to a function of observed data under explicit assumptions.
-Estimation approximates that identified function with finite data; a precise estimator does not repair false identification assumptions.
-
-### Lift, exposure, and uncertainty
-Absolute lift is the difference in treatment and control conversion probabilities, in percentage points when multiplied by 100.
-Relative lift divides that difference by control conversion probability; it is undefined when the control probability is zero.
-Incremental outcomes equal the absolute effect per unit times the relevant eligible population under transport and stability assumptions.
-Incremental return compares incremental contribution with incremental marketing cost, not attributed revenue with total ad spend.
-Sample ratio mismatch (SRM) is an unexpected allocation-count discrepancy against the configured randomization scheme.
-A confidence interval reports a procedure's long-run coverage under its assumptions; it is not a probability that a fixed effect lies in the realized interval.
-Statistical significance does not prove practical profitability, external validity, or absence of measurement error.
-A negative control is an outcome or exposure selected because a specified causal relationship should be absent under the design assumptions.
-A placebo failure can reveal a problem, but a passing placebo does not prove no unmeasured confounding.
-
-**Takeaway:** Estimands, assignment, receipt, and outcome observability are distinct objects.
-
-## Section 4 — Core Formulas with Full Derivation
-
-### 4.1 Simplest / Base Case
-
-**Validity before use:** Individually randomized eligible units, a common mature outcome horizon, no material interference, correctly recorded assignment, and no differential missing outcomes.
-For a finite experiment, the arm mean is the sum of each observed outcome divided by the number assigned to that arm.
-Random assignment gives each arm comparable potential-outcome distributions in expectation.
-Subtracting observed arm means thus estimates the corresponding average assignment effect in the randomized population.
-```text
-FORMULA [E1]: ITT_hat = mean(Y | Z=1) - mean(Y | Z=0)
-WHERE: Z is randomized assignment; Y is an outcome per assigned unit.
-CONSTRAINT: analyze every eligible randomized unit in the original arm; handle missing outcomes explicitly.
-NUMERICAL EXAMPLE: 120/1,000 - 100/1,000 = 0.020 conversions per assigned unit.
-INTERPRETATION: assignment raises conversion by an estimated 2 percentage points, not 2 percent relative.
-```
-This identity estimates the assignment policy contrast; it is not the effect among those who clicked.
-Finite-sample uncertainty and the practical outcome definition still matter.
-
-**Validity before use:** A nonzero control conversion probability and comparable outcome definitions across arms.
-Relative lift standardizes E1 by the baseline rate; algebra gives the following ratio.
-```text
-FORMULA [E2]: relative_lift = (p1_hat - p0_hat) / p0_hat
-WHERE: p1_hat and p0_hat are conversion proportions for assigned arms.
-CONSTRAINT: p0_hat > 0; report an interval appropriate for a ratio when inference is required.
-NUMERICAL EXAMPLE: (0.12 - 0.10) / 0.10 = 0.20 = 20%.
-INTERPRETATION: treatment conversion is 20% higher relative to control; the absolute change is 2 points.
-```
-The ratio is unstable near a zero baseline and does not substitute for the absolute effect.
-
-### 4.2 General Case
-
-**Validity before use:** Both arm sample sizes are large enough for a normal approximation, units are independent within and across arms, and the assignment design is compatible with this variance approximation.
-For independent binomial proportions, the variance of each sample proportion is approximately p(1-p)/n.
-The variance of their difference is the sum of the two arm variances because the samples are independent.
-Plug in the observed arm rates to obtain an estimated standard error and use the normal critical value for a two-sided approximate 95% interval.
-```text
-FORMULA [E3]: SE = sqrt(p1_hat*(1-p1_hat)/n1 + p0_hat*(1-p0_hat)/n0)
-FORMULA [E4]: approximate 95% CI = ITT_hat +/- 1.96*SE
-WHERE: n1,n0 are assigned unit counts; p1_hat,p0_hat are arm conversion proportions.
-CONSTRAINT: use cluster-aware or design-based inference for cluster or restricted assignment; rare events need suitable alternatives.
-NUMERICAL EXAMPLE: n1=n0=1,000; p1_hat=0.12; p0_hat=0.10; SE=sqrt(0.0001956)=0.01399.
-INTERPRETATION: the 0.02 effect has approximate interval [-0.0074, 0.0474], which includes both a small loss and a gain.
-```
-A fixed-horizon interval is not generally valid after uncontrolled repeated significance checks and optional stopping.
-For small populations under complete randomization, finite-population considerations can change variance interpretation; document the assignment design.
-
-**Validity before use:** Observational treatment is well defined; the baseline covariate set X suffices for conditional exchangeability; positivity and consistency hold; outcome measurement is valid.
-The law of total expectation averages conditional treatment contrasts over the target distribution of X.
-Under conditional exchangeability and consistency, the observed conditional mean in each arm identifies its potential-outcome mean within X.
-```text
-FORMULA [E5]: ATE = sum_x P_target(X=x) * [E(Y|A=1,X=x) - E(Y|A=0,X=x)]
-WHERE: A is observed treatment, X is a discrete pre-treatment adjustment set, and Y is the mature outcome.
-CONSTRAINT: all target strata must have both treatment possibilities and no unmeasured confounding; continuous X uses integration.
-NUMERICAL EXAMPLE: target weights 0.5,0.5 and within-stratum differences 0.04,0.02 give ATE=0.03.
-INTERPRETATION: the adjusted effect is 3 percentage points under the identification assumptions, not automatically a proven effect.
-```
-Choosing the covariates requires causal reasoning; including all available variables can introduce post-treatment or collider bias.
-
-**Validity before use:** The estimated offer costs and outcome values apply to the same assigned population and horizon; no uncounted harm or capacity constraint invalidates the rule.
-The incremental net value equals additional contribution from incremental outcomes less incremental policy cost.
-```text
-FORMULA [E6]: incremental_net = N * ITT_hat * margin_per_conversion - incremental_cost
-WHERE: N is the number of eligible assigned units; margin is currency per incremental conversion; cost is currency.
-CONSTRAINT: use contribution margin rather than revenue and include incremental delivery, incentives, returns, and relevant downstream costs.
-NUMERICAL EXAMPLE: 10,000 units * 0.02 * $20 - $2,000 = $2,000.
-INTERPRETATION: the point estimate suggests $2,000 incremental contribution after incremental campaign cost, before omitted costs.
-```
-The point estimate alone is not a guarantee; propagate effect uncertainty and margin/cost uncertainty separately.
-If the outcome already measures net revenue or contribution, do not multiply by margin again.
-
-### 4.3 Key Special Cases / Variants
-
-| Variant | What changes | Assumptions | Use when | Avoid when | Link |
-|---|---|---|---|---|---|
-| ITT | Contrast randomized assignment | Valid assignment and measurement | Decision is whether to offer policy | Assignment not recorded | E1 |
-| ATT | Target is treated units | Comparable untreated counterfactual for treated | Existing recipients are the target | No overlap for treated | E5 adaptation |
-| Cluster trial | Randomize groups | Enough independent clusters; spillovers managed | Household or geo interference | Few noncomparable clusters without suitable inference | Section 7 |
-| Stratified trial | Assign within baseline strata | Correct stratum-specific weights | Strong prognostic baseline differences | Strata are post-treatment | Section 7 |
-| Instrumental variable | Assignment induces receipt | Relevance, exclusion, independence, monotonicity for usual complier interpretation | Noncompliance with defensible instrument | Assignment has direct effects or changes other channels | Section 10 |
-| Observational standardization | Average conditional contrasts | Exchangeability, positivity, consistency | Randomization impossible and confounding measurable | Important unmeasured confounding | E5 |
-
-A per-protocol comparison conditions on adherence and can be confounded even inside an originally randomized study.
-An instrumental-variable estimate is not automatically the population ATE; its usual interpretation concerns compliers under additional assumptions.
-
-### 4.4 Asymptotic / Limiting Behaviour and Counterexample
-
-With infinite randomized sample size and stable measurement, sampling uncertainty can shrink; systematic measurement bias does not necessarily shrink.
-With zero control conversions, relative lift is undefined even when the absolute difference is well defined.
-With no overlap, weighting cannot recreate information about an unobserved treatment within an unsupported stratum.
-If a campaign suppresses a competing ad, the effect includes that policy interaction and is not a pure creative effect.
-If the treated arm sends offers only to buyers predicted likely to purchase, exposed-versus-unexposed comparisons overstate or understate incrementality depending on selection.
-If treatment changes whether an outcome is recorded, dropping unobserved units changes the comparison and can bias even an experiment.
-A p-value or narrow interval cannot establish that any of these assumptions holds.
-
-**Takeaway:** Every formula is conditional on its population, intervention, denominator, and identification assumptions.
-
-## Section 5 — Worked Numerical Example
-
-### Illustrative campaign holdout
-
-A retailer considers replacing its standard email policy with a personalized offer for eligible customers.
-The primary question is 14-day purchase conversion under assignment to the offer versus assignment to standard email.
-The analysis unit is an eligible customer assigned once before either email is sent.
-Assume exactly 1,000 customers are randomly assigned to each arm and every 14-day outcome is observed.
-Assume no material cross-customer interference and the specified policy remains stable for the relevant rollout.
-The data below are invented for teaching; they are not an observed marketing result.
-
-| Arm | Assigned customers | Purchasers | Non-purchasers | Conversion |
-|---|---:|---:|---:|---:|
-| Offer | 1,000 | 120 | 880 | 12% |
-| Standard | 1,000 | 100 | 900 | 10% |
-| Total | 2,000 | 220 | 1,780 | 11% |
-
-Apply E1: 120/1,000 minus 100/1,000 equals 0.02 conversions per assigned customer.
-Multiply by 100 to express the result as 2 percentage points.
-Apply E2: 0.02 divided by 0.10 equals 0.20, or 20% relative lift.
-Apply E3: 0.12 times 0.88 divided by 1,000 equals 0.0001056.
-The control variance term is 0.10 times 0.90 divided by 1,000, or 0.0000900.
-Their sum is 0.0001956 and its square root is approximately 0.01399.
-Apply E4: 1.96 times 0.01399 is approximately 0.02741.
-The approximate 95% confidence interval is therefore -0.00741 to 0.04741.
-In percentage points this is approximately -0.74 to +4.74 points.
-This interval includes zero and values on both sides of a business break-even threshold.
-
-Suppose a future rollout covers 10,000 comparable eligible customers.
-Suppose contribution per incremental purchase is $20 and the incremental offer policy costs $2,000 in total.
-Assume cost and margin are fixed for illustration, and that the estimated per-customer effect transports to the future rollout.
-E6 gives 10,000 times 0.02 times $20 minus $2,000, or $2,000 incremental net contribution.
-The incremental policy cost per eligible customer is $2,000/10,000 = $0.20.
-Break-even lift is $0.20/$20 = 0.01 conversions per eligible customer, or 1 percentage point.
-Using the confidence interval endpoints with these fixed costs and margins yields approximately -$3,482 to +$7,482.
-The linear transform preserves the approximate interval coverage only under the stated fixed-cost and fixed-margin assumptions.
-The numerical interval is wide enough to include economically meaningful losses and gains.
-A defensible decision is to gather more information or run a bounded pilot rather than assert profitable rollout from the point estimate alone.
-
-Independent arithmetic check: the treatment arm has 20 more purchasers than the control arm for equal assignment counts.
-Twenty divided by 1,000 is 0.02, agreeing with the arm-rate subtraction.
-At 10,000 eligible customers, 0.02 times 10,000 yields 200 incremental purchases, not 2,000.
-Two hundred purchases at $20 give $4,000 additional contribution before the $2,000 incremental cost.
-A wrong path divides the 20-purchase difference by all 2,000 participants and reports 1 percentage point; this uses the wrong denominator.
-Another wrong path multiplies all 1,200 projected treated purchases by $20, incorrectly crediting purchases that would have occurred under the comparator.
-Revenue and margin are not interchangeable; returns and offer redemption may change the margin.
-If offers are delivered to fewer than all assigned customers, ITT still uses all 1,000 assigned to each arm.
-A higher delivery-adjusted estimate requires an explicit alternative estimand and additional assumptions.
-
-**Takeaway:** Report both absolute uncertainty and economic break-even, not only a positive point estimate.
-
-## Section 6 — Visual / Geometric Intuition
+The mental model is a funnel with three distinct stages, and errors concentrate where stages are silently merged. Assignment creates the comparison. Delivery determines what fraction of the assigned policy was actually received. Outcome measurement determines what fraction of the intended behaviour was observed. Only the first stage is under the analyst's design control; the other two are measurement and compliance problems that must be quantified, not assumed away.
 
 ```text
-Baseline causal graph, arrows denote hypothesized causal effects:
-
-      prior intent X -----> ad exposure A -----> purchase Y
-           |                                      ^
-           +--------------------------------------+
-
-Post-treatment selection graph, arrows denote hypothesized effects:
-
-       assignment Z -----> click S <----- latent intent U -----> purchase Y
+stage 1  ASSIGNMENT          Z in {0,1} drawn by a stated rule
+         |                   invariant: Z is recorded for every eligible unit
+         v
+stage 2  DELIVERY            D in {0,1}; D can be zero even when Z=1
+         |                   diagnostic: delivery rate by arm, by day, by channel
+         v
+stage 3  OUTCOME             Y measured over a declared window [0, W]
+         |                   diagnostic: capture rate by arm, event-time vs ingest-time
+         v
+         ESTIMAND            E[Y | do(Z=1)] - E[Y | do(Z=0)] over the eligible population
 ```
-The first diagram shows a backdoor path from exposure to purchase through prior intent.
-A valid pre-treatment adjustment set blocks the relevant backdoor paths if all other identifying assumptions hold.
-The second shows click as a collider of assignment and latent intent under the depicted assumptions.
-Restricting to clickers can induce an association between assignment and latent intent even if assignment was randomized.
-The diagrams are schematic, not empirical claims about a particular campaign.
-They omit other paths; a real causal graph must capture the decision context and measurement process.
+
+Read the diagram as a set of constraints, not a flow of data. The invariant at stage 1 is that the assignment ledger is written before any outcome exists and is never rewritten. If the ledger is rewritten after outcomes are visible, no downstream arithmetic recovers a valid comparison — the design is gone and the file has to be re-run.
+
+A second, orthogonal map separates the estimand from the estimator. The estimand is a property of the world; the estimator is arithmetic on a sample. Most "the test showed no effect" disputes are actually estimand disputes: the experiment identified the effect of assignment, while the stakeholder wanted the effect of exposure, and the difference between those two is the compliance rate.
 
 ```text
-Time axis, left to right; outcome window begins at assignment:
-pre-period snapshot | eligibility | randomize | offer/delivery | 14-day outcome | maturity
+estimand ladder (choose one, in writing, before launch)
+
+  ITT   effect of being assigned              always identified by randomization
+  CACE  effect on units who comply            identified with an extra monotonicity assumption
+  ATT   effect on the units actually treated  needs a treated-population weighting
+  CATE  effect conditional on covariates      needs power in each subgroup
+  ATE   population-average effect             needs the target population to be the enrolled one
 ```
-Only variables captured before assignment are automatically eligible for baseline adjustment.
-A later event may be useful to diagnose delivery but should not become a primary-analysis inclusion requirement.
-
-**Takeaway:** The direction of selection and timing of variables determine whether adjustment helps or harms.
-
-## Section 7 — Comparison / Selection Table
-
-| Method | Preconditions | Quality / guarantee | Cost | Best for | Avoid when | Evidence |
-|---|---|---|---|---|---|---|
-| Raw exposed versus unexposed | Comparable groups only if justified | Descriptive association | Low data cost | Funnel reporting without causal claim | Exposure depends on intent | Derived warning |
-| Individual randomized holdout | Stable unit, feasible withholding | Assignment effect identified in expectation | Opportunity cost and engineering | Customer-level email offer | Strong spillovers or shared-budget effects | Section 10 |
-| Cluster randomized holdout | Cluster assignment and sufficient clusters | Cluster-policy effect with design-aware inference | Larger variance and operational coordination | Household or geo spillovers | Too few independent clusters | Section 10 |
-| Standardization / weighting | Conditional exchangeability and overlap | Identifies target effect only under assumptions | Covariate and model work | Strong baseline confounders measured | No overlap or unmeasured intent | E5 |
-| Difference-in-differences | Defensible untreated parallel trends and timing | Policy contrast under design assumptions | Panel construction and diagnostics | Staggered or regional change | Concurrent differential shocks | Section 10 |
-| Instrumental variables | Relevance, independence, exclusion, monotonicity for LATE | Complier effect under stated assumptions | Instrument validation | Noncompliance and credible assignment instrument | Direct assignment effects | Section 10 |
-
-First disqualify designs that cannot define an ethical, legally permissible, stable intervention.
-If individual holdout and no material interference are feasible, prefer the simplest valid randomized comparison.
-If shared exposure is material, evaluate a cluster or geographic assignment and make the cluster the inference unit.
-If withholding is infeasible, investigate a natural experiment or a transparent observational design with explicit assumptions.
-When support or confounding is unacceptable, collect new evidence rather than treating a sophisticated model as a substitute.
-When precision and validity conflict, preserve validity and communicate the resulting wider uncertainty.
-No numerical method-performance benchmark is claimed here; comparisons depend on population and implementation.
-
-**Takeaway:** Reject invalid identification before optimizing precision or computational convenience.
-
-## Section 8 — Failure Modes & Edge Cases
-
-All following failure cases are HYPOTHETICAL teaching scenarios, not incident reports.
-Each diagnostic is evidence for or against a mechanism, not a universal proof.
-Common Issues entries are planned and not linked as if authored.
-
-### F-01 — Allocation mismatch
-Symptom: Unequal arm counts.
-Competing mechanisms: A broken hash, duplicate assignment, or an incorrect configured ratio.
-Discriminating check: Compare immutable assignment counts with the prespecified allocation by randomization stratum.
-Expected signal: Mismatch in the raw assignment ledger supports an allocation or logging defect.
-Negative-test limit: A clean ledger but mismatched analysis table implicates downstream joins or filters.
-Corrective action: Pause interpretation and reconcile counts before repair.
-Prevention and verification: Reprocess from the immutable assignment ledger and retain all original units.
-Interpretation boundary: Recheck the configured randomization probabilities and late-arriving assignments.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-02 — Duplicate assignment
-Symptom: A customer appears in both arms.
-Competing mechanisms: Identity merges, changing hash salts, or repeated eligibility evaluation.
-Discriminating check: Trace both records to the first eligible assignment and identity version.
-Expected signal: Different salts or assignment timestamps indicate unstable assignment.
-Negative-test limit: Multiple source rows with one assignment ID indicate a join fanout instead.
-Corrective action: Quarantine conflicting identities and quantify affected assignment units.
-Prevention and verification: Restore the prespecified sticky-assignment policy for future traffic.
-Interpretation boundary: Do not silently choose the arm associated with the observed conversion.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-03 — Missing conversions
-Symptom: Conversion ingestion falls after rollout.
-Competing mechanisms: Pipeline outage, schema drift, or a true behavioral change.
-Discriminating check: Compare source transaction counts with ingested counts by arm and event date.
-Expected signal: An arm-specific source-to-warehouse gap indicates measurement bias.
-Negative-test limit: A source-level decline in both channels supports a real demand or coverage change.
-Corrective action: Restore ingestion and recompute mature outcomes from source records.
-Prevention and verification: Monitor source-to-ledger completeness by assignment arm.
-Interpretation boundary: A balanced aggregate gap can still hide subgroup-specific bias.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-04 — Delayed outcomes
-Symptom: Recent cohorts show weak conversion.
-Competing mechanisms: Unequal attribution delay or immature outcome windows.
-Discriminating check: Plot purchase-date and ingestion-date delay distributions by arm.
-Expected signal: A large backlog only in recent cohorts supports outcome immaturity.
-Negative-test limit: Equal mature-cohort outcomes with a recent difference suggests timing rather than lift.
-Corrective action: Freeze mature cohorts and rerun after the declared lateness allowance.
-Prevention and verification: Keep event time and ingestion time separately.
-Interpretation boundary: Do not extend one arm’s observation window to compensate.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-05 — Post-click filtering
-Symptom: The clicker analysis shows huge lift.
-Competing mechanisms: Clicks are affected by assignment and latent intent.
-Discriminating check: Compare all assigned units with the selected clicker subset.
-Expected signal: A large arm difference in click inclusion reveals post-treatment selection.
-Negative-test limit: Similar click rates do not rule out collider bias.
-Corrective action: Use the all-assigned ITT as the primary analysis.
-Prevention and verification: Treat click-conditioned results as descriptive unless a specific causal design identifies them.
-Interpretation boundary: Record the denominator and time of each inclusion rule.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-06 — Exposure-only denominator
-Symptom: Exposed users outperform unexposed users.
-Competing mechanisms: The ad platform chooses high-intent users or delivery fails selectively.
-Discriminating check: Compare baseline intent and allocation status before exposure.
-Expected signal: Large baseline imbalances support selective delivery.
-Negative-test limit: Balanced measured intent cannot rule out unmeasured intent.
-Corrective action: Estimate the assigned-policy ITT from all eligible randomized units.
-Prevention and verification: Separate assignment, eligible delivery, rendered impression, and click events.
-Interpretation boundary: Use receipt effects only with explicit identification assumptions.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-07 — Shared budget
-Symptom: Control conversions move when treatment spend changes.
-Competing mechanisms: Auction competition or budget reallocation causes interference.
-Discriminating check: Compare auction prices, budget pacing, and cross-arm delivery.
-Expected signal: A treatment-induced change in control delivery supports policy interference.
-Negative-test limit: Stable logged delivery does not exclude unobserved auction effects.
-Corrective action: Interpret ITT as the effect of the whole allocation policy.
-Prevention and verification: Consider switchback or cluster designs with stable budget rules.
-Interpretation boundary: Prespecify what marketing the control arm is allowed to receive.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-08 — Household spillover
-Symptom: Control users see treatment advertising through family devices.
-Competing mechanisms: Cross-device identity gaps or shared physical environment.
-Discriminating check: Measure treatment saturation within linked households.
-Expected signal: Higher control exposure in treated households suggests spillover.
-Negative-test limit: Unlinked households prevent ruling out leakage.
-Corrective action: Randomize at household level where practical.
-Prevention and verification: Use cluster-aware analysis with enough independent households.
-Interpretation boundary: The household-policy estimand differs from a pure individual effect.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-09 — Treatment leakage
-Symptom: Control users receive the offer.
-Competing mechanisms: Suppression failure, cache lag, or stale identity mapping.
-Discriminating check: Join delivery logs to immutable assignment and suppressions.
-Expected signal: Control-side offer delivery above the agreed tolerance indicates contamination.
-Negative-test limit: No logged delivery does not exclude off-platform exposure.
-Corrective action: Fix suppression and retain intention-to-treat membership.
-Prevention and verification: Assess policy contamination and whether restart is needed.
-Interpretation boundary: Do not delete contaminated controls from the primary analysis.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-10 — Unequal observation
-Symptom: One arm has fewer measurable outcomes.
-Competing mechanisms: Privacy choices, app versions, or instrumentation changed by treatment.
-Discriminating check: Measure outcome capture and consent status by original assignment.
-Expected signal: An arm-specific drop in source capture supports differential missingness.
-Negative-test limit: Equal overall capture cannot rule out missing-not-at-random outcomes.
-Corrective action: Use source reconciliation and prespecified missing-data sensitivity bounds.
-Prevention and verification: Escalate if the direction of bias could change the decision.
-Interpretation boundary: A complete-case comparison alone is not a repair.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-11 — Seasonality
-Symptom: Treatment and control campaigns ran in different weeks.
-Competing mechanisms: Calendar effects or promotions coincide with the intervention.
-Discriminating check: Align concurrent randomized cohorts or compare pre-specified calendar controls.
-Expected signal: A shift matching a holiday or promotion supports temporal confounding.
-Negative-test limit: Matching weekly aggregates does not establish equal demand.
-Corrective action: Prefer concurrent randomized assignment where possible.
-Prevention and verification: Document timing and concurrent market changes.
-Interpretation boundary: Do not interpret a before-after difference as incrementality without a design.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-12 — Concurrent promotion
-Symptom: An offer test overlaps a price reduction.
-Competing mechanisms: The price intervention may interact with assignment or demand.
-Discriminating check: Inspect promotion logs and randomized arm exposure by calendar time.
-Expected signal: An arm-specific promotion exposure indicates a changed treatment bundle.
-Negative-test limit: Equal exposure still leaves possible treatment-by-promotion interaction.
-Corrective action: Estimate the combined policy effect for the observed environment.
-Prevention and verification: Report the promotion and evaluate interaction only with adequate design and power.
-Interpretation boundary: Do not transport the estimated effect to full-price periods without evidence.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-13 — Novelty
-Symptom: Initial lift fades over time.
-Competing mechanisms: A novelty response, fatigue, or changing audience mix.
-Discriminating check: Plot prespecified cohort-specific effects and delivery frequencies.
-Expected signal: A consistent decline across comparable mature cohorts supports decay.
-Negative-test limit: Changing cohort mix can produce the same pattern.
-Corrective action: Run a longer holdout and inspect incremental value by exposure history.
-Prevention and verification: Avoid post-hoc selection of the most favorable week.
-Interpretation boundary: Prespecify when the final estimate will be read.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-14 — Repeated peeking
-Symptom: An early interval excluded zero and a later interval did not.
-Competing mechanisms: Optional stopping or ordinary sampling variation.
-Discriminating check: Inspect the analysis schedule and decision timestamps.
-Expected signal: A stop triggered by unscheduled repeated significance checks invalidates a nominal fixed-horizon claim.
-Negative-test limit: A single planned interim with a valid spending plan is a different design.
-Corrective action: Apply the prespecified sequential procedure or treat the result as exploratory.
-Prevention and verification: Define monitoring rules before data access.
-Interpretation boundary: Operational safety monitoring is separate from efficacy stopping.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-15 — Multiple subgroups
-Symptom: One segment has a very large apparent effect.
-Competing mechanisms: Multiple comparisons, small denominators, or genuine heterogeneity.
-Discriminating check: Count all segments searched and inspect segment sample sizes.
-Expected signal: An isolated extreme effect among many small subgroups supports selection noise.
-Negative-test limit: A replicated prespecified effect is stronger but still uncertain.
-Corrective action: Use multiplicity control or independent confirmation appropriate to the decision.
-Prevention and verification: Report the full set of tested segments and uncertainty.
-Interpretation boundary: Do not target based only on a post-hoc winning segment.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-16 — Changing eligibility
-Symptom: The enrolled population drifts during the trial.
-Competing mechanisms: Eligibility logic changed or the arriving audience changed.
-Discriminating check: Version eligibility rules and compare baseline distributions by assignment date.
-Expected signal: A code deployment aligned with an abrupt eligibility change supports rule drift.
-Negative-test limit: Gradual drift can reflect demand or seasonality.
-Corrective action: Freeze eligibility or segment the analysis by a prespecified policy period.
-Prevention and verification: Retain the original inclusion record for every assigned unit.
-Interpretation boundary: Do not silently drop earlier enrolled units.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-17 — Unequal assignment probabilities
-Symptom: A naive arm average disagrees with a stratified analysis.
-Competing mechanisms: Treatment allocation fractions vary across baseline strata.
-Discriminating check: Inspect configured and realized probabilities by stratum.
-Expected signal: Different fractions with different baseline outcomes can change the naive contrast.
-Negative-test limit: Equal allocation fractions remove that particular weighting problem.
-Corrective action: Use design-consistent stratum weights for the target population.
-Prevention and verification: Archive allocation probabilities and stratum definitions.
-Interpretation boundary: Do not use post-treatment variables to construct strata.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-18 — Low overlap
-Symptom: An observational estimate depends on a few extreme weights.
-Competing mechanisms: Treatment propensity is near zero or one in important strata.
-Discriminating check: Inspect propensity distributions, weights, effective sample size, and covariate balance.
-Expected signal: Concentrated weights and missing opposite-arm support indicate instability.
-Negative-test limit: Good estimated overlap does not prove absence of hidden confounding.
-Corrective action: Restrict the target population only with an explicit estimand change or collect randomized evidence.
-Prevention and verification: Report excluded units and the resulting target population.
-Interpretation boundary: Clipping weights trades variance for bias and does not restore absent support.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-19 — Unmeasured intent
-Symptom: Retargeted users convert substantially more.
-Competing mechanisms: Browsing intent affects both exposure and future purchase.
-Discriminating check: Compare pre-treatment behavior and test plausible negative controls.
-Expected signal: Large pre-treatment differences support confounding.
-Negative-test limit: Balanced recorded history cannot establish exchangeability.
-Corrective action: Use randomized suppression or a transparent sensitivity analysis.
-Prevention and verification: State the plausible direction and magnitude needed to change the decision.
-Interpretation boundary: Predictive accuracy of a propensity model does not validate causality.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-20 — Mediator adjustment
-Symptom: The effect shrinks after controlling for clicks.
-Competing mechanisms: The model blocks part of the pathway or induces selection.
-Discriminating check: Compare the target estimand and timing of every covariate.
-Expected signal: Clicks after assignment are downstream of treatment.
-Negative-test limit: A smaller coefficient is not proof that the remaining effect is unbiased.
-Corrective action: Remove post-treatment variables from total-effect adjustment.
-Prevention and verification: If mediation is required specify a separate estimand and stronger assumptions.
-Interpretation boundary: Do not relabel the resulting coefficient as the total ITT.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-21 — Identity merge
-Symptom: A user’s conversions attach to multiple assignments.
-Competing mechanisms: Cross-device merges, delayed identity resolution, or many-to-many joins.
-Discriminating check: Inspect assignment-to-outcome join multiplicity and identity version.
-Expected signal: More than one outcome row per transaction identifier supports duplication.
-Negative-test limit: Unique transaction IDs do not rule out wrong-user linkage.
-Corrective action: Aggregate outcomes once per assignment unit under a frozen identity policy.
-Prevention and verification: Track unmatched and multiply matched outcomes by arm.
-Interpretation boundary: Treat identity updates consistently across both arms.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-22 — Refund timing
-Symptom: Revenue lift disappears after returns mature.
-Competing mechanisms: Return lag or differences in order cancellation.
-Discriminating check: Compare gross and net contribution using a common return-maturity window.
-Expected signal: A higher treated return rate can reverse gross revenue lift.
-Negative-test limit: An immature return ledger cannot establish durable net contribution.
-Corrective action: Wait for maturity or use a prespecified censoring adjustment.
-Prevention and verification: Include shipping, discounts, and refunds in the contribution definition.
-Interpretation boundary: Do not count gross order value as incremental profit.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-23 — Geo imbalance
-Symptom: One treatment region dominates the result.
-Competing mechanisms: A large cluster, unmatched market conditions, or heterogeneous effects.
-Discriminating check: Plot cluster-level baseline and outcome contributions.
-Expected signal: A single cluster driving the result indicates sensitivity to cluster composition.
-Negative-test limit: A balanced mean does not establish parallel trends or exchangeability.
-Corrective action: Use the prespecified cluster estimand and design-aware uncertainty.
-Prevention and verification: Report cluster count and leave-one-cluster sensitivity descriptively.
-Interpretation boundary: Avoid treating individual purchases as independent geo assignments.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-24 — Interference through inventory
-Symptom: Treatment sells out inventory used by controls.
-Competing mechanisms: Scarce shared stock couples customer outcomes.
-Discriminating check: Inspect inventory by time and assignment-group demand.
-Expected signal: Stockouts after treatment launch support inventory-mediated spillover.
-Negative-test limit: Absence of recorded stockouts does not rule out substitution.
-Corrective action: Include inventory constraints in the policy decision and consider cluster randomization.
-Prevention and verification: Monitor lost sales and substitution products.
-Interpretation boundary: Do not claim a scale-invariant unit-level effect.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-25 — Wrong target population
-Symptom: A successful test fails after full rollout.
-Competing mechanisms: Experimental eligibility differs from rollout or campaign saturation changes.
-Discriminating check: Compare baseline feature distributions and delivery policies across populations.
-Expected signal: Unsupported rollout strata make direct transport unjustified.
-Negative-test limit: Similar measured features do not guarantee transportability.
-Corrective action: Bound the decision to supported groups or run a representative follow-up.
-Prevention and verification: Document policy, season, channels, and consent differences.
-Interpretation boundary: Reweighting requires both support and credible conditional transport assumptions.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-26 — Effect sign reversal
-Symptom: Aggregate lift disagrees with subgroup lifts.
-Competing mechanisms: Changing subgroup proportions or a calculation error.
-Discriminating check: Recompute subgroup rates and use common population weights.
-Expected signal: Different arm compositions can explain an aggregate reversal.
-Negative-test limit: A reversal can also be real effect heterogeneity.
-Corrective action: Use assignment-design weighting and investigate the causal structure.
-Prevention and verification: Report weighted and subgroup estimates with uncertainty.
-Interpretation boundary: Do not assume every sign reversal proves confounding.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-27 — Extreme revenue
-Symptom: A few large orders dominate the mean.
-Competing mechanisms: Heavy-tailed spend, duplicate orders, or a real high-value customer.
-Discriminating check: Inspect transaction provenance and influence by assignment unit.
-Expected signal: Duplicated transaction IDs indicate data error; valid large purchases are not automatically errors.
-Negative-test limit: Removing valid extremes changes the target estimand.
-Corrective action: Correct verified data errors and use prespecified robust or alternative summaries.
-Prevention and verification: Report uncertainty and sensitivity to heavy-tail assumptions.
-Interpretation boundary: Do not winsorize only after seeing the result without disclosure.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-28 — Cluster pseudoreplication
-Symptom: Customer-level interval is implausibly narrow.
-Competing mechanisms: Many customers share the same assigned market or household.
-Discriminating check: Count independent assignment clusters and inspect within-cluster correlation.
-Expected signal: Few clusters with correlated outcomes make individual-level independence implausible.
-Negative-test limit: Many customers per cluster do not create many independent assignments.
-Corrective action: Use randomization-based or cluster-aware inference appropriate to the design.
-Prevention and verification: Plan power around the number and variability of clusters.
-Interpretation boundary: A conventional cluster-robust approximation can itself be unreliable with very few clusters.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-29 — Sequential delivery
-Symptom: Assignment is valid but delivery fails in one cohort.
-Competing mechanisms: Provider outage, throttling, or incompatible address formats.
-Discriminating check: Compare delivery attempt and failure codes by original arm and cohort.
-Expected signal: A treatment-specific delivery failure explains weak policy implementation.
-Negative-test limit: Comparable measured delivery does not prove comparable user exposure.
-Corrective action: Retain ITT and describe actual policy adherence.
-Prevention and verification: Correct delivery for future cohorts under a versioned change.
-Interpretation boundary: Avoid replacing ITT with a naive delivered-only contrast.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-30 — Regression adjustment
-Symptom: Adjusted effect is unexpectedly large.
-Competing mechanisms: Post-treatment covariates, model extrapolation, or coding error.
-Discriminating check: Inspect covariate timestamps, interactions, and prediction support.
-Expected signal: Post-assignment variables in the adjustment set reveal leakage.
-Negative-test limit: Agreement with the unadjusted estimate does not prove correct specification.
-Corrective action: Return to design-based analysis and prespecified baseline covariates.
-Prevention and verification: Validate transformations on a frozen analysis specification.
-Interpretation boundary: Do not adjust away the policy pathway to improve significance.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-31 — Counterfactual drift
-Symptom: Control arm changes its normal marketing during the test.
-Competing mechanisms: A separate optimization system changes spend or targeting.
-Discriminating check: Compare control delivery, creative, frequency, and spend against the protocol.
-Expected signal: An unplanned control policy change changes the comparator.
-Negative-test limit: Stable spend does not guarantee stable delivery composition.
-Corrective action: Document the actual policy contrast and pause if the question is no longer relevant.
-Prevention and verification: Coordinate change freezes and experiment ownership.
-Interpretation boundary: The treatment effect is always relative to the actual comparator.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-32 — Misread confidence interval
-Symptom: A non-significant result is called proof of no effect.
-Competing mechanisms: Low power or interval values compatible with material effects.
-Discriminating check: Compare both interval endpoints with the smallest economically relevant effect.
-Expected signal: An interval spanning both meaningful harm and gain is inconclusive.
-Negative-test limit: A narrow interval within a prespecified equivalence region can support equivalence under an appropriate test.
-Corrective action: Communicate decision uncertainty and design a follow-up if valuable.
-Prevention and verification: Prespecify equivalence margins for a no-material-effect claim.
-Interpretation boundary: Failure to reject zero is not evidence of equivalence.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-33 — Optimizer feedback
-Symptom: An ad platform reallocates delivery during the experiment.
-Competing mechanisms: The learning system uses post-assignment outcomes to change bids.
-Discriminating check: Inspect platform pacing, audience overlap, and policy version history.
-Expected signal: Arm-dependent reallocation supports an adaptive treatment policy.
-Negative-test limit: Fixed creative does not imply fixed delivery.
-Corrective action: Estimate the deployed policy effect and document adaptation.
-Prevention and verification: Use isolated budgets or a design that explicitly includes learning dynamics.
-Interpretation boundary: Do not call the estimate a fixed-impression creative effect.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-34 — Treatment version
-Symptom: Different customers receive materially different offers.
-Competing mechanisms: Feature-flag drift, device constraints, or creative rotation.
-Discriminating check: Audit assigned version and delivery version across time and cohorts.
-Expected signal: Multiple unrecorded versions make the intervention ambiguous.
-Negative-test limit: A single version ID can still mask different delivery frequencies.
-Corrective action: Version the policy and interpret the estimate as its realized mixture.
-Prevention and verification: Prespecify whether creative rotation is part of the intervention.
-Interpretation boundary: Do not combine incompatible versions under an unlabeled treatment.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-35 — Silent opt-out
-Symptom: Treatment changes unsubscribe or tracking opt-out.
-Competing mechanisms: The intervention changes outcome observability and harms retention.
-Discriminating check: Compare unsubscribe and measurement consent rates by randomized assignment.
-Expected signal: A treatment-driven increase in opt-out is both a guardrail and a missingness concern.
-Negative-test limit: No observed difference is not proof that missingness is ignorable.
-Corrective action: Use independent first-party outcomes where lawful and quantify missing-data sensitivity.
-Prevention and verification: Enforce consent and holdout rules without re-identification.
-Interpretation boundary: Do not infer zero purchases for unobserved customers without justification.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-36 — Wrong geographic boundary
-Symptom: Traveling customers cross test-region borders.
-Competing mechanisms: Assignment geography and outcome geography use different definitions.
-Discriminating check: Compare residence, exposure, and purchase location with timestamped boundary rules.
-Expected signal: High cross-border movement challenges geographic isolation.
-Negative-test limit: Low recorded movement may miss unlinked devices.
-Corrective action: Define a stable cluster assignment and assess contamination sensitivity.
-Prevention and verification: Keep geography definitions and version histories in the protocol.
-Interpretation boundary: Do not reassign customers based on where they purchased.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-37 — Invalid instrumental variable
-Symptom: Random offer assignment changes both receipt and other marketing.
-Competing mechanisms: Exclusion restriction or monotonicity may be violated.
-Discriminating check: Audit all channels and pathways changed by assignment.
-Expected signal: A direct assignment-to-outcome pathway violates the usual exclusion restriction.
-Negative-test limit: A large assignment-to-receipt effect proves relevance only.
-Corrective action: Report ITT and avoid an unsupported complier effect.
-Prevention and verification: Design an instrument that changes receipt without other pathways when feasible.
-Interpretation boundary: Statistical tests cannot fully validate exclusion.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-38 — Lagged baseline
-Symptom: A baseline covariate is recorded after assignment.
-Competing mechanisms: Backfilled timestamps or processing-time confusion hide leakage.
-Discriminating check: Compare event occurrence time, ingestion time, and feature snapshot time.
-Expected signal: Post-assignment occurrence means the feature is not pre-treatment.
-Negative-test limit: Late ingestion alone is acceptable only when the underlying event truly predates assignment.
-Corrective action: Rebuild snapshots using as-of event time and known availability rules.
-Prevention and verification: Log both event and processing time.
-Interpretation boundary: Never use a later outcome to retrospectively define eligibility.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-39 — Underpowered subgroup
-Symptom: A regional estimate has a wide interval.
-Competing mechanisms: Small assigned count, low baseline conversion, or cluster correlation.
-Discriminating check: Report assigned units, events, clusters, and confidence intervals.
-Expected signal: Low event counts or few independent clusters explain weak precision.
-Negative-test limit: A wide interval does not imply that the true effect is zero.
-Corrective action: Pool only under an explicitly justified model or design a larger test.
-Prevention and verification: Avoid treating unplanned segment point estimates as reliable ranking.
-Interpretation boundary: Preserve subgroup privacy and minimum disclosure thresholds.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-### F-40 — Cost undercount
-Symptom: Conversion lift is positive but the campaign loses money.
-Competing mechanisms: Discount subsidy to always-buyers or channel displacement.
-Discriminating check: Reconcile all incremental spend and margin components by assignment.
-Expected signal: Higher total discounts or displaced full-price orders reduce net value.
-Negative-test limit: A positive conversion ITT does not measure subsidy cost.
-Corrective action: Use per-assigned-unit net contribution as a coprimary or decision metric.
-Prevention and verification: Prespecify cost allocation, return windows, and currency.
-Interpretation boundary: Do not multiply uplift by gross revenue and call the result profit.
-Category: HYPOTHETICAL; evaluate against the actual protocol and evidence.
-
-**Takeaway:** Diagnose the data-generating mechanism before changing the estimator or interpreting an apparent lift.
-
-## Section 9 — Complexity & Cost Analysis
-
-### 9a. Algorithmic complexity and data contracts
-
-Let N denote assigned units, E denote outcome events, K denote baseline strata, and P denote model features.
-A single streaming pass can count assigned units and aggregate already keyed outcomes in O(N+E) time.
-The working memory depends on aggregation strategy; an in-memory per-unit hash aggregation can use O(N) state.
-A distributed join incurs network shuffle and storage costs that depend on partitioning and key skew.
-Sorting or a poorly clustered scan can dominate a simple statistical calculation.
-Model fitting costs depend on algorithm, feature sparsity, iteration count, convergence criteria, and implementation.
-There is no universal runtime for propensity models, random forests, or distributed causal estimators.
-Confidence interval calculations are cheap relative to identity linkage, validation, and outcome maturity.
-
-### 9b. Back-of-envelope sizing and economics
-
-**Evidence:** ILLUSTRATIVE sizing, not a benchmark or measured environment.
-Suppose 1,000,000 assigned customers generate 4,000,000 outcome-event records in the 14-day window.
-Suppose the assigned-unit ledger uses 64 logical bytes per customer and the projected event rows use 80 logical bytes each.
-Assignment payload is 1,000,000 times 64 bytes, or 64,000,000 bytes.
-Event payload is 4,000,000 times 80 bytes, or 320,000,000 bytes.
-Combined logical payload is 384,000,000 bytes, or approximately 366.21 MiB using 1 MiB = 1,048,576 bytes.
-This excludes indexes, string storage, replication, intermediate joins, compression, and execution-engine overhead.
-At twice the events per customer the event payload doubles, while the fixed assignment payload remains unchanged.
-A hot customer or identity key may produce partition skew even when total bytes are modest.
-The relevant production measurements are scan bytes, shuffle bytes, peak memory, spill, join multiplicity, runtime, and source completeness.
-The environment, actual storage engine, hardware, and cost are NOT MEASURED; no wall-clock or cloud-price claim follows.
-
-Opportunity cost also matters: withholding an effective campaign can forgo contribution during the experiment.
-Conversely, deploying a harmful intervention without a credible test can impose loss at full population scale.
-Allocate sample size using baseline rate, minimum economically relevant effect, allocation ratio, error rates, clustering, and realistic attrition assumptions.
-The sample size is a planning estimate, not a guarantee of significance or valid identification.
-Budget separately for engineering, analysis, experiment duration, incentives, compute, and privacy controls.
-For rare outcomes, a longer observation period may be necessary, but it can increase exposure to market drift.
-Predefine a stopping policy and minimum useful maturity rather than stopping when a dashboard looks favorable.
-
-### 9c. Experiment operations and analysis checks
-
-**O-01: Define decision.**
-- Name the rollout owner and the actual decision deadline.
-- Specify whether the choice is launch, stop, revise, or measure further.
-- Record the cost of each wrong decision.
-- State whether the target is incremental purchase or incremental contribution.
-- Agree who can approve a change to the protocol.
-- Keep the original decision record after results arrive.
-
-**O-02: Define eligibility.**
-- Use an immutable pre-assignment eligibility snapshot.
-- State geographic, consent, account, and frequency-cap criteria.
-- Measure how many potential units fail each eligibility criterion.
-- Apply the same eligibility rules before both arms.
-- Preserve eligible nonassigned units for coverage accounting where permitted.
-- A post-assignment purchase cannot define eligibility.
-
-**O-03: Define assignment.**
-- Choose customer, household, store, or geographic assignment unit.
-- Use a stable random seed or deterministic keyed allocation with documented version.
-- Record randomization time and assignment probability.
-- Make assignments sticky across sessions and devices when identity permits.
-- Document strata and expected allocation within each stratum.
-- Do not rerandomize a returning user because a browser cookie changed.
-
-**O-04: Define comparator.**
-- Record what messages and spend are allowed for controls.
-- Separate no contact from business-as-usual marketing.
-- Document whether control can receive other channels or organic communications.
-- Freeze or version comparator changes during the observation period.
-- Explain the actual policy contrast in the final result.
-- A holdout is not necessarily an absence of all marketing.
-
-**O-05: Define treatment.**
-- Version creative, discount, audience, bids, frequency, and timing.
-- State whether delivery is guaranteed or follows an auction.
-- Record which adaptive rules can change delivery.
-- Specify treatment and control suppression mechanics.
-- Keep assignment distinct from a delivered impression.
-- An effect of policy assignment is not necessarily an effect of a single exposure.
-
-**O-06: Define outcomes.**
-- Choose a primary outcome per assigned unit.
-- Specify purchase event, returns, deduplication key, and observation window.
-- Specify the treatment of cancellations and missing observations.
-- Use the same event logic and time zone for both arms.
-- Record an immutable metric definition before analysis.
-- A conversion recorded after the maturity cutoff needs an explicit lateness policy.
-
-**O-07: Define guardrails.**
-- Set customer harm and economic guardrails before launch.
-- Include unsubscribe, complaint, refund, contact frequency, and consent as relevant.
-- Assign an owner and a stop or escalation action to each guardrail.
-- Specify whether monitoring is operational or part of formal efficacy inference.
-- Account for multiple guardrail looks when making statistical claims.
-- A positive primary metric does not excuse a failed safety constraint.
-
-**O-08: Define power.**
-- Translate the minimum worthwhile economic effect into outcome units.
-- Specify the baseline rate and plausible variance from a relevant prior period.
-- Choose allocation, power, false-positive rate, and analysis horizon.
-- Adjust planning for clustering, incomplete capture, and anticipated policy adherence.
-- Record assumptions and perform sensitivity calculations.
-- Power cannot compensate for selection bias or a broken assignment system.
-
-**O-09: Verify randomization.**
-- Check counts at the earliest immutable assignment ledger.
-- Use expected allocation probabilities for the actual strata or blocks.
-- Investigate a mismatch before interpreting conversion differences.
-- Check duplicate IDs, assignment churn, and missing strata.
-- Compare baseline covariates as diagnostics, not proof of validity.
-- Do not repeatedly test dozens of covariates and treat every small p-value as failure.
-
-**O-10: Verify delivery.**
-- Count attempted, accepted, rendered, and suppressed messages separately.
-- Reconcile provider logs against assignment and consent.
-- Quantify control contamination and treatment non-delivery.
-- Investigate differential provider errors and missing identifiers.
-- Keep non-delivered units in the primary assignment analysis.
-- The delivery funnel explains implementation but does not identify receipt effects by itself.
-
-**O-11: Verify outcomes.**
-- Reconcile warehouse outcomes to authoritative transaction sources.
-- Deduplicate on a stable transaction key before joining assignments.
-- Check capture lag, currency, returns, and time-zone boundaries.
-- Measure missingness and late arrival separately by assignment arm.
-- Lock a mature data snapshot and document its timestamp.
-- Never infer a missing transaction source is a confirmed nonpurchase without support.
-
-**O-12: Run analysis.**
-- Use the prespecified estimator and target-population weights.
-- Compute absolute effect and uncertainty using the assignment unit.
-- Report relative lift only when the baseline denominator permits it.
-- Use cluster-aware inference when units are assigned in clusters.
-- Keep every eligible assigned unit in its original group.
-- Explain any deviations from the protocol and their effect on interpretation.
-
-**O-13: Assess uncertainty.**
-- Distinguish uncertainty in conversion effects from uncertainty in costs.
-- Check whether the interval crosses both zero and economic break-even.
-- Use suitable methods for rare events, skewed revenue, or few clusters.
-- Account for prespecified sequential monitoring and multiplicity.
-- Avoid post-hoc precision claims after selecting the best subgroup.
-- A narrow interval still depends on valid measurement and identification.
-
-**O-14: Calculate economics.**
-- Use incremental contribution rather than attributed gross revenue.
-- Include offer subsidy, message cost, displaced revenue, and returns.
-- Use the same population and horizon for benefit and cost.
-- Calculate break-even lift using the actual incremental per-unit cost.
-- Show uncertainty and sensitivity to margin and rollout transport.
-- Do not charge fixed costs twice or omit costs imposed on control customers.
-
-**O-15: Review heterogeneity.**
-- Select segments using baseline attributes only.
-- Prespecify subgroup hypotheses and minimum sample sizes.
-- Report all evaluated subgroups and their uncertainty.
-- Separate subgroup effect estimation from individual uplift prediction.
-- Use independent confirmation before high-stakes targeted deployment.
-- A significant effect in one group and a nonsignificant effect in another does not establish a difference.
-
-**O-16: Deploy safely.**
-- Use the decision threshold and guardrails agreed before the experiment.
-- Roll out incrementally if feedback loops or capacity constraints may change the effect.
-- Monitor the actual assignment, delivery, conversion, and contribution policies.
-- Maintain a kill switch and accountable owner.
-- Log policy versions so later observations can be interpreted.
-- A pilot effect need not transport to a saturated rollout.
-
-**O-17: Maintain holdout.**
-- Retain a randomized long-term control if it is feasible and justified.
-- Check that control policy and treatment policy remain stable or versioned.
-- Monitor cumulative contact fatigue, market shifts, and changing prices.
-- Refresh eligibility without changing original assignment for enrolled units.
-- Account for long-term opportunity cost and privacy retention.
-- Repeated evaluation requires a prespecified monitoring approach.
-
-**O-18: Handle privacy.**
-- Use the minimum necessary identifiers and restricted access.
-- Respect consent, retention, deletion, and channel-specific suppression obligations.
-- Aggregate or threshold sensitive subgroup reporting where appropriate.
-- Record identity linkage rules and audit access.
-- Consult applicable policy and legal owners rather than assuming a universal rule.
-- Protect a randomization ledger as sensitive operational data.
-
-**O-19: Plan recovery.**
-- Retain immutable assignments and metric-definition versions.
-- Backfill delayed events from authoritative sources without changing group labels.
-- Recompute affected windows and annotate superseded reports.
-- Quantify whether the outage differs by arm and outcome risk.
-- Escalate if valid reconstruction is impossible.
-- A corrected pipeline does not automatically repair already missing events.
-
-**O-20: Communicate decision.**
-- Lead with the population, intervention, comparator, and horizon.
-- Report absolute lift, uncertainty, sample counts, and economic threshold.
-- Explain delivery compliance and any missingness or contamination.
-- Distinguish an inconclusive result from evidence of no effect.
-- List the largest threats to internal and external validity.
-- State the decision and its owner without overselling the evidence.
-
-### 9d. Uplift modeling: design and evaluation
-
-The target quantity is a conditional average treatment effect for a defined population and intervention.
-The conditional effect compares expected outcomes under treatment and control at the same baseline features.
-No individual's two potential outcomes are simultaneously observed.
-Consequently, a label that marks an individual as personally persuaded is generally unavailable.
-Training must exploit assignment variation rather than inventing that missing individual label.
-A purchase propensity model estimates purchase likelihood under its training conditions.
-It does not by itself estimate the effect of changing the marketing policy.
-High-propensity customers may purchase even if the offer is withheld.
-Low-propensity customers may also be unlikely to respond to any offer.
-The economically relevant candidates have sufficient incremental outcome value relative to incremental treatment cost.
-Incremental response is not necessarily the same as incremental profit.
-A discount can cause a purchase while also reducing margin on purchases that would have occurred anyway.
-Evaluate treatment and control differences in net contribution when reliable accounting is available.
-Use only features known before assignment for training and policy eligibility.
-Preserve the experiment assignment probabilities and outcome maturity rules in the modeling dataset.
-Split training and evaluation by the independent assignment unit.
-For household randomization, keep linked household members in the same split.
-For geographic assignment, a customer-level random split leaks cluster context across splits.
-An independent randomized evaluation set can estimate the effect of a fixed learned policy.
-The evaluation policy must be chosen without using outcomes from that evaluation set.
-For a selected segment, compare randomized treatment and control outcomes within that baseline-defined segment.
-If assignment probabilities differ, use the appropriate known probabilities or design-consistent weighting.
-Quantify uncertainty at the original randomization unit.
-Report how many customers the proposed policy treats and the expected incremental policy cost.
-Compare with the business-as-usual policy, not only with an unrealistic no-marketing counterfactual.
-Also compare with a simple rule based on a prespecified baseline feature.
-A complex model is not justified solely because its offline score is higher.
-Inspect whether the ranking remains useful across time, channels, and policy versions.
-Calibrate claimed subgroup effects on independent data rather than only inspecting rank.
-When sample sizes are small, the estimated top-ranked segment may be selected mainly because of noise.
-A chosen cutoff trades reach, cost, incremental benefit, and uncertainty.
-Select that cutoff on training or validation data and evaluate it on separate data.
-Do not tune the cutoff on the final holdout and then call that estimate unbiased.
-If there is no overlap for a proposed segment, its counterfactual cannot be learned nonparametrically from that comparison.
-If treatment assignment depends on observed features, recorded assignment probabilities matter for evaluation.
-If actual assignment depends on hidden intent, recorded observational propensity scores do not remove all confounding.
-If delivery is adaptive, define whether the model targets assignment, receipt, or a whole delivery policy.
-For targeting decisions, a controlled policy experiment provides stronger evidence than a retrospective ranking alone.
-Monitor policy drift and retain a randomized comparison where feasible.
-Review impacts on protected or vulnerable groups under applicable organizational and legal rules.
-Do not infer an individual's actual counterfactual outcome from a subgroup effect.
-Do not claim that an uplift score is a probability without showing its calibration and scale.
-
-### 9e. Observational designs: choosing and challenging assumptions
-
-Begin by specifying a hypothetical trial with eligibility, assignment strategies, time zero, outcome, and follow-up.
-The hypothetical trial clarifies which observed-data approximation is being attempted.
-Align treatment assignment and start of outcome follow-up to avoid immortal-time bias.
-Immortal time occurs when treatment classification uses future information that requires surviving or remaining observable.
-For example, defining treatment as receiving an ad at any time during the next month excludes early events from the treated group.
-A time-varying treatment design may be required when exposure changes throughout follow-up.
-Time-varying confounders affected by earlier treatment require methods beyond naive baseline adjustment.
-Baseline matching can improve observed covariate comparability but cannot balance unmeasured intent by construction.
-Propensity scores summarize modeled treatment probability conditional on observed baseline features.
-An accurate treatment classifier can reveal weak overlap rather than validating a causal estimate.
-After matching or weighting, inspect each important baseline covariate and the resulting target population.
-Record the number and characteristics of units removed by matching or overlap restrictions.
-A restricted-support estimate should not be presented as the effect in the original full population.
-Extreme inverse-probability weights make the estimate sensitive to a small number of units.
-Weight truncation can reduce variance but can introduce bias and alter the effective target.
-Report the chosen truncation rule and show a sensitivity analysis.
-Outcome regression extrapolates when observed comparison units are unlike the target units.
-Flexible machine learning reduces some functional-form restrictions but does not remove hidden confounding.
-Double-robust methods rely on their own assumptions and implementation details.
-They are not robust to an unmeasured confounder merely because two nuisance models were fitted.
-Use sample splitting or cross-fitting where needed to control overfitting in suitable estimators.
-Check whether the observation period includes a concurrent price change or product launch.
-For difference-in-differences, identify why untreated trends would have remained comparable.
-Plot pre-period trends and report the observation window used.
-Similar pre-trends are useful diagnostics but cannot prove the counterfactual post-period trend.
-A treatment announcement may change behavior before the nominal implementation date.
-Staggered treatment timing can invalidate naive two-way fixed-effects interpretations under heterogeneous effects.
-Choose a timing-aware estimator whose target and comparison groups are explicit.
-For regression discontinuity, assess whether assignment changes sharply at a specified threshold.
-Investigate sorting or manipulation around that threshold.
-The resulting local effect is not automatically the effect far from the threshold.
-For instrumental variables, explain why the instrument affects treatment receipt.
-Also defend why the instrument cannot affect the outcome through other paths.
-An instrument can be statistically strong and still violate the exclusion restriction.
-For synthetic control, document the donor pool and the pre-intervention fit.
-A close pre-intervention fit alone does not establish a valid post-intervention counterfactual.
-Investigate concurrent events affecting the treated region but not its donors.
-For every observational result, report which assumptions are testable and which remain untestable.
-Use plausible sensitivity scenarios to show how strong hidden bias would need to be to alter a decision.
-Sensitivity results depend on their chosen bias model and are not proof that the bias is absent.
-Triangulate independent designs when they rely on meaningfully different assumptions.
-Agreement between two methods using the same biased data is weaker than independent evidence.
-If assumptions are implausible, state that the causal effect remains unidentified.
-An inconclusive result is preferable to a precise but unsupported causal claim.
-
-**Takeaway:** Experiment cost is dominated by trustworthy data, operational constraints, and decision risk, not the arithmetic alone.
-
-## Section 10 — Key Theorems / Results Reference
-
-| Result | Statement | Essential hypotheses | Practical implication | Does not imply | Source |
-|---|---|---|---|---|---|
-| Randomization identification | Assignment makes arm means unbiased for corresponding assignment potential-outcome means under the randomization design | Correct implementation and consistent outcome measurement; interference must be addressed in the estimand | Compare all assigned units | Every finite sample is perfectly balanced | [Hernán and Robins, *Causal Inference: What If*, chapters 1–3](https://www.hsph.harvard.edu/miguel-hernan/causal-inference-book/) |
-| Standardization | A target average potential outcome is a covariate-weighted average of observed conditional means | Consistency, conditional exchangeability, positivity, correct target distribution | Adjust only for a defensible baseline set | Measured covariates eliminate all bias | [Hernán and Robins, chapters 12–13](https://www.hsph.harvard.edu/miguel-hernan/causal-inference-book/) |
-| Potential-outcome framework | An individual treatment effect compares potential outcomes under alternative interventions | Interventions and units well defined | The missing counterfactual motivates study design | Individual effects are directly observed | [Hernán and Robins, chapters 1–2](https://www.hsph.harvard.edu/miguel-hernan/causal-inference-book/) |
-| Local average treatment effect | An instrumental-variable contrast identifies an average effect among compliers under standard assumptions | Randomized or as-if-random instrument, relevance, exclusion, monotonicity, consistency | Can address noncompliance in a suitable design | The complier effect equals the overall ATE | [Angrist, Imbens and Rubin, 1996](https://doi.org/10.1080/01621459.1996.10476902) |
-| Difference-in-differences | A treatment-versus-control change contrast identifies a causal effect under the appropriate untreated parallel-trends condition and design-specific assumptions | Comparable untreated changes, no relevant anticipation or concurrent differential shocks, appropriate treatment timing | Use transparent policy-change comparisons | Similar pretrends prove future parallel trends | [Roth et al., 2023](https://doi.org/10.1016/j.jeconom.2023.03.008) |
-| Cluster randomization | Assignment at group level requires uncertainty reflecting that design and within-cluster dependence | Valid randomization, relevant cluster-level estimand, appropriate small-sample method | Count independent clusters, not merely customers | A large number of observations means many independent randomizations | [Eldridge et al., CONSORT extension](https://doi.org/10.1136/bmj.i5661) |
-
-Reference links identify published methodological evidence; their presence does not mean this draft was independently reviewed.
-The specific example values and all operational scenarios in this sheet are constructed rather than extracted from the sources.
-
-**Takeaway:** A named method provides a conclusion only when its assumptions match the policy and data.
-
-## Section 11 — Interview / Exam Questions
-
-These are invented practice questions, not attributed to any employer.
-Score each answer 0 for incorrect, 1 for partial, 2 for a correct answer with assumptions, and 3 for a defended tradeoff and appropriate limitation.
-
-### Level 1 — Definition / Recall
-
-**Q01 — ITT versus receipt.**
-Prompt: What does an intention-to-treat estimate mean when 30% of assigned users never see the offer?
-Given and assumptions: All eligible randomized users and a mature outcome window are given.
-Answer: Compare average outcomes by original assignment, including those not reached.
-Reasoning: This is the effect of the assignment policy, including its imperfect delivery.
-Result or boundary: An effect of actual exposure requires additional identification assumptions.
-Alternative: An instrumental-variable complier effect may be defensible when its assumptions hold.
-Follow-up: If delivery improves at rollout, the old assignment effect need not transport unchanged.
-Trap: Deleting undelivered users is a post-assignment selection error.
-Answer support: Section 3 and E1.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q02 — Confounding versus prediction.**
-Prompt: Why can a predictive model of who will purchase fail to identify ad incrementality?
-Given and assumptions: The platform targets users with high latent intent.
-Answer: Intent affects both exposure and purchase, creating a backdoor path.
-Reasoning: Predictive accuracy does not reveal what the exposed users would have done without the ad.
-Result or boundary: A randomized holdout compares assignment policies without relying on measured intent alone.
-Alternative: Observed-data adjustment is defensible only with a sufficient baseline set and overlap.
-Follow-up: If intent is unmeasured, sensitivity analysis or new randomized evidence is needed.
-Trap: Calling every high-conversion exposed user incremental is the red flag.
-Answer support: Sections 3 and 6.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q03 — Absolute versus relative lift.**
-Prompt: A control converts at 10% and treatment at 12%; distinguish the two lifts.
-Given and assumptions: The outcomes are measured on the same eligible population and horizon.
-Answer: The absolute difference is 12% minus 10%, or 2 percentage points.
-Reasoning: The relative difference is 2 divided by 10, or 20%.
-Result or boundary: The first is a probability difference; the second is a ratio.
-Alternative: Either can be useful, but the absolute lift supports incremental volume calculations.
-Follow-up: If control conversion is zero, the relative ratio is undefined.
-Trap: Calling the absolute difference 20 percentage points is wrong.
-Answer support: E1 and E2.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-### Level 2 — Derivation / Apply
-
-**Q04 — Derive standardization.**
-Prompt: Under what assumptions does adjustment identify an observational ATE?
-Given and assumptions: Let X be a sufficient baseline covariate set with target stratum weights.
-Answer: Average each treatment-specific conditional outcome mean across the target distribution of X.
-Reasoning: Subtract the standardized means to obtain the weighted conditional differences in E5.
-Result or boundary: Conditional exchangeability, positivity, consistency, and valid measurement are required.
-Alternative: A suitable weighting estimator can target the same estimand under its own conditions.
-Follow-up: If a target stratum has no untreated units, its counterfactual mean is unsupported.
-Trap: Adjusting for every available post-treatment field can create bias.
-Answer support: E5 and Section 10.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q05 — Compute an interval.**
-Prompt: With 120 of 1,000 treated and 100 of 1,000 controls converting, estimate the effect and interval.
-Given and assumptions: Assume independent units and a fixed horizon with a normal approximation.
-Answer: The conversion difference is 0.12 minus 0.10, or 0.02.
-Reasoning: The standard error is the square root of 0.0001956, approximately 0.01399.
-Result or boundary: The approximate 95% interval is 0.02 plus or minus 0.02741, or -0.74 to +4.74 points.
-Alternative: An appropriate exact or score-based approach can be considered for sparse outcomes.
-Follow-up: If assignment is by market, customer-level independent standard errors are inappropriate.
-Trap: Reporting only 20% relative lift omits uncertainty.
-Answer support: E1–E4 and Section 5.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q06 — Break-even analysis.**
-Prompt: How much absolute lift is required if policy cost is $0.20 per user and contribution is $20 per incremental purchase?
-Given and assumptions: Assume fixed contribution per purchase and no other incremental costs.
-Answer: Divide $0.20 per user by $20 per purchase.
-Reasoning: Break-even is 0.01 incremental purchases per user, or 1 percentage point.
-Result or boundary: The units cancel correctly and the estimate must exceed the threshold to have positive point-estimated net value.
-Alternative: A direct net-contribution-per-user outcome avoids a constant-margin assumption.
-Follow-up: If discount subsidies also apply to always-buyers, include that cost before deciding.
-Trap: Using gross revenue instead of contribution overstates value.
-Answer support: E6 and Section 5.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q07 — Weight a stratified result.**
-Prompt: Two equally sized target strata have effects of 4 and 2 percentage points; what is the target effect?
-Given and assumptions: Assume both strata are supported and their estimates identify the desired contrasts.
-Answer: Multiply each effect by its target weight of 0.5.
-Reasoning: The result is 0.5 times 0.04 plus 0.5 times 0.02, or 0.03.
-Result or boundary: The overall target effect is 3 percentage points.
-Alternative: Unequal target sizes require unequal weights, not a simple average.
-Follow-up: If a stratum lacks controls, the stratum contrast is not identified from that comparison.
-Trap: Weighting by post-treatment segment membership can change or bias the estimand.
-Answer support: E5.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-### Level 3 — Judgement / Design / Debug
-
-**Q08 — Diagnose allocation mismatch.**
-Prompt: The dashboard reports a 55/45 split for an intended 50/50 test; what do you do?
-Given and assumptions: No prior assumption about whether the fault is assignment or analytics is given.
-Answer: Check the immutable assignment ledger and expected split within randomization strata.
-Reasoning: If the raw ledger is balanced but the dashboard is not, inspect joins, filters, and late data.
-Result or boundary: If the raw ledger is imbalanced, inspect allocation configuration, hashing, and assignment logs.
-Alternative: A valid unequal planned allocation is not a mismatch against its correct expected probabilities.
-Follow-up: Pause causal interpretation until the source and consequences are understood.
-Trap: Dropping units until the ratio is 50/50 corrupts the experiment.
-Answer support: F-01 and O-09.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q09 — Design for interference.**
-Prompt: One customer’s ads compete for the same inventory and shared campaign budget; what design changes?
-Given and assumptions: The marketer can randomize either individuals or geographic clusters.
-Answer: First determine which spillovers matter and whether cluster assignment can contain them.
-Reasoning: A geo or household cluster trial estimates a cluster-level policy effect rather than a pure isolated user effect.
-Result or boundary: Plan around the number of independent clusters and use design-appropriate inference.
-Alternative: A switchback may be defensible if carryover and temporal shocks are managed.
-Follow-up: If only a few geos are available, uncertainty may remain too large for a confident decision.
-Trap: Treating every purchase as an independent randomized market is pseudoreplication.
-Answer support: F-07, F-28 and Section 7.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q10 — Explain non-significance.**
-Prompt: An interval includes zero; can you conclude the campaign has no effect?
-Given and assumptions: The primary fixed-horizon estimate and an economic threshold are available.
-Answer: No: the interval may contain both meaningful harm and meaningful benefit.
-Reasoning: Compare the full interval with the prespecified decision threshold and relevant harms.
-Result or boundary: If it is wide, call the result inconclusive and evaluate the value of more data.
-Alternative: A properly designed equivalence analysis may support no material effect within predefined margins.
-Follow-up: If the interval is entirely below break-even, a business no-go can be justified despite possible positive lift.
-Trap: A p-value above 0.05 does not prove that the true effect is zero.
-Answer support: F-32 and Section 5.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q11 — Evaluate uplift targeting.**
-Prompt: How would you validate a model that ranks customers by expected incremental response?
-Given and assumptions: Use baseline features and randomized treatment assignment for training and evaluation.
-Answer: Define uplift as the difference between conditional potential-outcome means, not purchase propensity.
-Reasoning: Evaluate the target policy on an independent randomized holdout with appropriate assignment probabilities.
-Result or boundary: Compare outcome and cost for policy-selected treatment against a specified comparator policy.
-Alternative: A simple randomized policy or fixed-rule targeting is a useful baseline.
-Follow-up: If treatment rates vary by subgroup, use valid design weights and report support.
-Trap: Predicting buyers and sending offers to all high-propensity buyers may subsidize always-buyers.
-Answer support: Sections 3, 7 and 9.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q12 — Assess observational claims.**
-Prompt: A platform reports that ad-exposed customers spend twice as much; would you scale?
-Given and assumptions: No randomized assignment or confounder-quality evidence is supplied.
-Answer: Treat the ratio as an association, not an incremental causal effect.
-Reasoning: Investigate selection into exposure, pre-treatment intent, outcome windows, and missingness.
-Result or boundary: Propose a randomized holdout if feasible; otherwise state adjustment and sensitivity assumptions.
-Alternative: A defensible natural experiment can be useful when its identification conditions are credible.
-Follow-up: If withholding is impossible and key intent is unmeasured, report the unresolved causal limitation.
-Trap: A complex model or large sample cannot eliminate unmeasured confounding.
-Answer support: F-06, F-19 and Section 7.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q13 — Handle peeking.**
-Prompt: A manager wants to stop as soon as the ordinary fixed-horizon p-value drops below 0.05; what changes?
-Given and assumptions: Assume no sequential monitoring plan was established before looking.
-Answer: Repeated unadjusted testing can inflate the chance of a false positive.
-Reasoning: Do not present the selected ordinary p-value as if there had been only one planned look.
-Result or boundary: Use a prespecified sequential design for future monitoring or label the current result exploratory.
-Alternative: A planned alpha-spending or always-valid approach may be appropriate when correctly implemented.
-Follow-up: Urgent safety signals can trigger operational intervention without claiming efficacy significance.
-Trap: Changing the final sample size after seeing favorable data is not a neutral design choice.
-Answer support: F-14 and O-07.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Q14 — Verify a rollout.**
-Prompt: A small test shows positive point-estimated net value; what evidence is needed before full deployment?
-Given and assumptions: The interval crosses both loss and gain and treatment shares a budget with other campaigns.
-Answer: Report the uncertain net range and assess whether the experiment represented rollout saturation.
-Reasoning: Check guardrails, delivery fidelity, interference, population overlap, and cost accounting.
-Result or boundary: Use a bounded expansion or a new design if the value of information justifies it.
-Alternative: A launch can be reasonable under a documented risk tolerance and reversible downside.
-Follow-up: If inventory or budget limits bind at scale, the old per-user effect may not transport.
-Trap: Calling the point estimate guaranteed profit ignores uncertainty and feedback.
-Answer support: Sections 5, 8 and 9.
-Scoring: use the 0–3 rubric above, including assumptions and tradeoffs.
-
-**Takeaway:** Defend the estimand, assumptions, numerical result, and decision rather than reciting a test name.
-
-## Section 12 — Quick Reference Card
-
-| Item | Value |
+
+The ladder is ordered by assumption cost, not by usefulness. ITT is cheapest because randomization is sufficient; CACE adds an exclusion restriction and monotonicity; ATT requires that the treated group's counterfactual be reconstructed; CATE requires either prespecified subgroups with adequate power or a model that is honest about its variance; ATE requires that enrolment be representative of the deployment population. The most common executive question — "how much lift would we get if we rolled this out?" — is an ATE or ATT question wearing ITT clothes, and the transport step must be labelled.
+
+A third map is temporal, because causal claims fail on timing more often than on algebra.
+
+```text
+pre-period            assignment        exposure           outcome window        maturity
+  |                      |                 |                    |                   |
+covariates only    Z frozen here     D observed here     Y accumulates       Y complete
+  |                      |                 |                    |                   |
+eligible for        never adjust      mediator, not        truncation bias     freeze cohort,
+baseline adjust     for anything      a covariate          if read early       then analyse
+```
+
+The vertical line at assignment is a wall. Anything left of it may be a covariate; anything right of it is a consequence of the intervention and adjusting for it changes the estimand at best and induces bias at worst. Section 8 F-04 works a numeric case where conditioning on a right-of-the-wall variable reverses the sign of the measured effect while the true effect is exactly zero.
+
+**Takeaway:** Draw assignment, delivery, outcome, and the assignment wall on one page for every test; disagreements about results are usually disagreements about which stage moved.
+
+## 3. Foundational Definitions
+
+### 3.1 Unit, population, and eligibility
+
+The **unit** is the entity that is assigned, and it is the entity over which the analysis must sum. If the assignment service randomizes customer IDs but the outcome pipeline returns one row per order, the analyst must aggregate orders to customers before comparing arms, or the arms are weighted by purchase frequency and the comparison silently becomes a per-order comparison.
+
+The **target population** is the set of units to which the eventual decision applies. It is defined by eligibility rules evaluated strictly before assignment: tenure, region, prior purchase history as of `T0`, consent state, and inventory availability. Eligibility computed with data that arrives after assignment contaminates the population definition, because the treatment itself can move those fields.
+
+The **assignment unit** and the **inference unit** need not be identical, but the mismatch must be chosen, not accidental. Assigning at household level and inferring at customer level understates variance; assigning at customer level and inferring at household level is simply wrong. Section 4.3 gives the design-effect arithmetic for the cluster case.
+
+### 3.2 Potential outcomes and the fundamental problem
+
+Each unit `i` has two potential outcomes: `Y_i(1)` under assignment to treatment and `Y_i(0)` under assignment to control. The individual effect `Y_i(1) - Y_i(0)` is never observed, because only one assignment happens. Everything estimable is an average over units, and every average requires an assumption that makes the assigned groups comparable.
+
+Three assumptions carry the whole structure, and each has an operational test:
+
+- **Consistency.** The observed outcome equals the potential outcome for the assignment actually received, `Y_i = Z_i Y_i(1) + (1 - Z_i) Y_i(0)`. It fails when "the treatment" is not one thing — for example when the offer creative, landing page, and discount change mid-flight, so assignment to `Z=1` no longer maps to a single intervention.
+- **Exchangeability (ignorability).** `(Y_i(1), Y_i(0))` is independent of `Z_i`. Randomization delivers this in expectation. In observational data it is an assumption, not a finding, and it is only ever *conditionally* plausible given measured covariates.
+- **Positivity (overlap).** `0 < P(Z_i = 1 | X_i) < 1` for every covariate stratum that matters. It fails when a segment is deterministically targeted, so no comparable control exists; no weighting scheme creates units that were never allowed into the other arm.
+
+A fourth assumption, **SUTVA** (no interference and no hidden versions of treatment), is the one marketing breaks most often. Shared budgets, auction competition, and household device sharing all mean one unit's assignment changes another unit's outcome.
+
+### 3.3 Assignment, delivery, exposure, outcome
+
+These four are different random variables and conflating them is the single largest source of inflated lift numbers.
+
+| Term | Symbol | Definition | Typical source | Failure if confused |
+|---|---|---|---|---|
+| Assignment | `Z` | Arm chosen by the randomization rule | Assignment ledger | Nothing downstream is comparable |
+| Delivery | `D` | The message was actually sent or served | Send log, ad server | Undercounts ITT, hides suppression bugs |
+| Exposure | `E` | The message was plausibly seen | Viewability, session join | Selection on attention |
+| Outcome | `Y` | Behaviour in the declared window | Orders, CRM, store feed | Denominator drift |
+
+Assignment is the only one that randomization makes independent of potential outcomes. Exposure is a post-treatment variable: it depends on `Z` and on latent intent, so conditioning on it selects a different population in each arm. Section 8 F-04 quantifies that selection with numbers where the true effect is zero.
+
+### 3.4 Estimands in operational language
+
+**ITT (intention-to-treat)** is the mean difference in outcomes between all units assigned to treatment and all units assigned to control, regardless of whether they received anything. It answers: what happens to the business if we adopt this assignment policy? It is the default because it is the only estimand that randomization identifies without extra assumptions.
+
+**CACE (complier average causal effect)** rescales ITT by the compliance difference. If 85% of the treated arm receives the offer and 0% of controls do, `CACE = ITT / 0.85`. It answers: what would the offer do to a unit that actually takes it up? It requires monotonicity (no unit is discouraged by assignment) and an exclusion restriction (assignment affects outcomes only through receipt).
+
+**ATT (average effect on the treated)** weights stratum effects by the treated distribution. It differs from ATE whenever treatment propensity correlates with baseline outcome level, which is normal in targeting.
+
+**CATE (conditional average treatment effect)** is a function of covariates. It is only as good as its power in the regions where it is reported; a subgroup with 300 units and a 1.0-point effect has a standard error near 2.6 points, so the "winning segment" is usually noise.
+
+### 3.5 Design vocabulary
+
+**MDE (minimum detectable effect)** is the true effect size at which the test has the stated power, conventionally 80%, at the stated alpha. It is a property of sample size, baseline rate, and design — not of the observed result.
+
+**Power** is the probability of rejecting the null when the MDE-sized effect is true. It says nothing after the fact about whether a non-significant result proves absence of effect.
+
+**SRM (sample ratio mismatch)** is a statistical test of realized allocation against the design allocation, computed *within* randomization stratum. A globally significant SRM test on a design with deliberately unequal stratum probabilities is a false alarm; Section 5 shows exactly that case with a chi-square of 10.8.
+
+**Sequential monitoring** is any rule that lets the analyst look at accumulating data and stop. Unadjusted repeated looks inflate the type-I error; Section 9 gives the arithmetic and the alpha-spending correction.
+
+**Sensitivity analysis** quantifies how strong an unmeasured confounder would have to be to overturn the conclusion. The E-value in Section 4.3 is the compact version for ratio-scale outcomes.
+
+**Takeaway:** Every one of these terms names a decision (which denominator, which assumption, which population); the definitions matter because they change the number, not because they are terminology.
+## 4. Core Formulas with Full Derivation
+
+All derivations below use the same five-part anatomy: **FORMULA** (the equation and its symbol definitions), **WHERE** (the data that must exist for it to be computable), **CONSTRAINT** (the assumption that makes it valid), **NUMERICAL EXAMPLE** (arithmetic shown at each step), **INTERPRETATION** (what a practitioner may and may not say). Each subsection closes with an explicit validity condition. Numbers marked ILLUSTRATIVE are constructed.
+
+### 4.1 Base case — the two-arm ITT difference and its standard error
+
+**FORMULA**
+
+```text
+Let  n1, n0     = assigned units in treatment and control arms   [count, 1..N]
+     y1, y0     = units with the outcome in each arm             [count, 0..n]
+     p1 = y1/n1, p0 = y0/n0                                      [proportion, 0..1]
+
+ITT   = p1 - p0                                                 [proportion-difference]
+Var   = p1(1-p1)/n1 + p0(1-p0)/n0                               [variance of difference]
+SE    = sqrt(Var)
+CI95  = ITT +/- 1.959964 * SE                                   [Wald interval]
+```
+
+`p1` and `p0` are arm-specific outcome rates over *assigned* units. The variance expression uses the normal approximation to the binomial separately inside each arm and adds them because the arms are independent samples. The coefficient 1.959964 is the two-sided 95% normal quantile.
+
+**WHERE** The assignment ledger with one row per unit and columns `unit_id`, `stratum`, `arm`, `assigned_at`; the outcome table with one row per unit and `outcome_flag`, `event_at`. The join is a left join from the ledger so that zeros are counted, not dropped. Both counts must come from the same maturity cut-off timestamp.
+
+**CONSTRAINT** Independence between arms (no shared budget, no household spillover), independent outcomes within arm (no clustering), and a fixed analysis horizon declared before data access. If outcomes are clustered, the variance formula understates `SE` by `sqrt(DEFF)` with `DEFF = 1 + (m-1)rho` — Section 4.3.
+
+**NUMERICAL EXAMPLE** ILLUSTRATIVE. 12,000 eligible customers, 6,180 assigned to the personalized offer and 5,820 to standard email; 329 and 250 purchasers respectively within 14 days.
+
+```text
+p1 = 329 / 6180 = 0.0532362
+p0 = 250 / 5820 = 0.0429553
+ITT = 0.0532362 - 0.0429553 = 0.0102809   -> 1.028 percentage points
+
+Var = 0.0532362*0.9467638/6180 + 0.0429553*0.9570447/5820
+    = 0.0504021/6180 + 0.0411102/5820
+    = 0.0000081557 + 0.0000070636
+    = 0.0000152193
+SE  = sqrt(0.0000152193) = 0.0039012   -> 0.3901 pp
+
+CI95 = 0.0102809 +/- 1.959964*0.0039012
+     = 0.0102809 +/- 0.0076462
+     = [0.0026347, 0.0179271]   -> [0.26 pp, 1.79 pp]
+
+z    = 0.0102809 / 0.0039012 = 2.6353  (two-sided p = 0.0084)
+```
+
+Every intermediate is shown because rounding at the wrong step changes the third digit: `0.3901` rounded to `0.39` gives a CI upper bound of `1.793` instead of `1.793`, but rounding `SE` to `0.4` gives `1.81`, a visible difference at the two-decimal reporting precision that executives read.
+
+**INTERPRETATION** The assignment policy raised the 14-day purchase rate by 1.03 points, with a 95% interval excluding zero. That sentence is licensed *only* on assigned units. It is not licensed to say the offer "works for people who see it", and it is not licensed to say "2.4% lift" without stating that the relative figure uses `p0` as the denominator: `0.0102809/0.0429553 = 23.9%` relative, which sounds far larger than 1.03 points and is the same estimate.
+
+**Validity condition:** valid iff each arm's outcomes are independent Bernoulli draws with no cross-arm interference, the two counts cover the same window, and the analyst declared this contrast and this horizon before seeing outcomes. Any deviation requires a different variance estimator, not a caveat added after the fact.
+
+### 4.2 General case — stratified assignment with unequal probabilities
+
+Marketing randomization is rarely simple. Targeting sends high-value segments to treatment with probability 0.6, mid-value with 0.5, and low-value with 0.4. In that design the unweighted difference is biased for the population effect because the arm composition differs by stratum.
+
+**FORMULA**
+
+```text
+Let  s = 1..S            strata defined on pre-assignment covariates
+     N_s                 eligible units in stratum s        [count]
+     N = sum_s N_s       total eligible                       [count]
+     w_s = N_s / N       population weight                    [-]
+     p1_s, p0_s          arm rates within stratum s
+     n1_s, n0_s          arm counts within stratum s
+
+ITT_strat = sum_s w_s (p1_s - p0_s)                          [weighted average]
+Var_strat = sum_s w_s^2 [ p1_s(1-p1_s)/n1_s + p0_s(1-p0_s)/n0_s ]
+```
+
+The estimand being computed is the **ATE over the eligible population**, so the weights are population shares, not arm shares. Using treated-arm shares computes an **ATT** instead; using control shares computes yet another quantity. All three are legitimate and all three give different numbers — see the numeric example.
+
+**WHERE** The ledger needs a `stratum` column assigned before randomization, plus the prespecified stratum probabilities `pi_s`. The outcome join is identical to the base case. Strata must be defined on fields that exist at `T0`; a stratum built from the customer's outcome-adjacent behaviour is a post-treatment variable.
+
+**CONSTRAINT** Within-stratum randomization with known `pi_s`, and enough units per stratum that the normal approximation holds (rule of thumb: at least 5 expected outcomes and 5 expected non-outcomes per arm per stratum). Strata with sparse outcomes must be collapsed before the weights are applied, or the variance explodes.
+
+**NUMERICAL EXAMPLE** ILLUSTRATIVE. Three strata, `N = 4800 + 4200 + 3000 = 12000`.
+
+| Stratum `s` | `N_s` | `pi_s` | `n1_s` | `y1_s` | `p1_s` | `n0_s` | `y0_s` | `p0_s` |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| High value | 4800 | 0.60 | 2880 | 187 | 0.0649306 | 1920 | 108 | 0.0562500 |
+| Mid value | 4200 | 0.50 | 2100 | 99 | 0.0471429 | 2100 | 84 | 0.0400000 |
+| Low value | 3000 | 0.40 | 1200 | 43 | 0.0358333 | 1800 | 58 | 0.0322222 |
+
+```text
+naive pooled:  n1 = 6180, y1 = 329 -> p1 = 0.0532362
+               n0 = 5820, y0 = 250 -> p0 = 0.0429553
+               naive ITT = 0.0102809  (1.0281 pp)
+               naive Var = 0.0000152193, SE = 0.0039012
+
+weights: w = (0.40, 0.35, 0.25)                         [4800/12000 etc.]
+stratum effects: d_s = (0.0086806, 0.0071429, 0.0036111)
+weighted ITT = 0.40*0.0086806 + 0.35*0.0071429 + 0.25*0.0036111
+             = 0.0034722 + 0.0025000 + 0.0009028
+             = 0.0068750                          -> 0.6875 pp
+
+stratum variances: v_s = p1(1-p1)/n1 + p0(1-p0)/n0
+   s=1: 0.0649306*0.9350694/2880 + 0.05625*0.94375/1920
+      = 0.00002108145 + 0.00002764893 = 0.00004873038
+   s=2: 0.0471429*0.9528571/2100 + 0.0400000*0.9600000/2100
+      = 0.00002139067 + 0.00001828571 = 0.00003967638
+   s=3: 0.0358333*0.9641667/1200 + 0.0322222*0.9677778/1800
+      = 0.00002879109 + 0.00001732442 = 0.00004611551
+Var_strat = 0.16*0.00004873038 + 0.1225*0.00003967638 + 0.0625*0.00004611551
+          = 0.00000779686 + 0.00000486036 + 0.00000288222
+          = 0.00001553944
+SE_strat  = 0.00394201     -> 0.3942 pp
+CI95      = 0.0068750 +/- 1.959964*0.00394201 = [-0.000851, 0.014601]
+```
+
+The naive estimate is 1.028 points and significant (`z = 2.635`); the correctly weighted estimate is 0.688 points and not significant at 95% (`z = 1.744`, two-sided `p = 0.081`). The gap is not noise — it is Simpson-type composition: the high-value stratum received treatment more often *and* has the highest baseline rate, so the pooled comparison credits part of the segment mix to the offer. Recovering the treated-arm weighting instead gives `0.006558` (0.66 pp), and reweighting control to treated shares gives `0.007174` (0.72 pp); three defensible estimands, three different decisions under a 0.7-point break-even threshold.
+
+**INTERPRETATION** The number an executive hears must be paired with its weighting. "Lift of 0.69 points for the eligible population" and "lift of 1.03 points among the assigned mix" are both true statements about the same data and support different rollout decisions. The reporting template must print the weights.
+
+**Validity condition:** valid iff strata are pre-assignment, probabilities are known rather than estimated from realized counts, and no stratum is so sparse that its arm rate is 0 or 1. If a stratum is degenerate, collapse it and renormalize, documenting the merge.
+
+### 4.3 Variants — four corrections that change the decision
+
+#### 4.3a Clustered assignment (design effect)
+
+When assignment happens at store, household, or geography level, the effective sample size is not the unit count.
+
+```text
+FORMULA      DEFF = 1 + (m - 1) * rho
+             SE_cluster = SE_iid * sqrt(DEFF)
+             n_eff = n_total / DEFF
+WHERE        m   = units per cluster [count]
+             rho = intra-cluster correlation of the outcome [-]
+CONSTRAINT   equal cluster sizes; unequal sizes require the
+             more general 1 + (CV_m^2 + 1)*m_bar*rho - 1 form
+```
+
+ILLUSTRATIVE with `m = 50` households per block and `rho = 0.02`: `DEFF = 1 + 49*0.02 = 1.98`. Using the 12,000 units from Section 4.1, `n_eff = 12000/1.98 = 6061` and `SE` becomes `0.0039422*sqrt(1.98) = 0.005547` (0.55 pp). The 95% interval on a 0.69-point effect then runs from `-0.40` to `+1.78` points. Raising `rho` to `0.05` with the same block size gives `DEFF = 3.45` and `SE = 0.007322` (0.73 pp), at which point a 0.69-point effect is indistinguishable from zero regardless of how many customers are enrolled. The lever is block size, not budget: halving `m` to 25 at `rho = 0.05` gives `DEFF = 2.20`.
+
+#### 4.3b Pre-period covariate adjustment (CUPED)
+
+Subtracting a pre-period proxy scaled by its regression coefficient removes variance without touching the estimand, provided the proxy is measured before assignment.
+
+```text
+FORMULA      Y* = Y - theta * (X - E[X]),   theta = Cov(Y,X)/Var(X)
+             Var(Y*) = Var(Y) * (1 - rho^2)
+             rho = Corr(Y, X)
+CONSTRAINT   X must be pre-assignment and unaffected by Z; theta estimated
+             out-of-sample or with the appropriate degrees-of-freedom correction
+```
+
+ILLUSTRATIVE: a 90-day pre-period purchase count correlates at `rho = 0.5` with the 14-day outcome. `Var` falls by factor `1 - 0.25 = 0.75`, so `SE` falls by `sqrt(0.75) = 0.8660`. Applied to the clustered `SE` of 0.005547, the combined `SE` is `0.005547*0.8660 = 0.004804` (0.48 pp). At `rho = 0.7` the factor is `0.7141` and the combined `SE` is 0.003961. The trap: if `X` is measured after assignment — "pre-period" defined as the 90 days before the *outcome* rather than before *assignment* — CUPED absorbs part of the treatment effect and biases the estimate toward zero.
+
+#### 4.3c Difference-in-differences for non-randomized rollouts
+
+When a region gets the campaign and a comparable region does not, the estimator uses two differences so that a common time shock cancels.
+
+```text
+FORMULA      DiD = (p_T,post - p_T,pre) - (p_C,post - p_C,pre)
+             Var = sum over the four cells of p(1-p)/n
+CONSTRAINT   parallel trends: absent treatment, the treated region's change
+             would have equalled the control region's change
+```
+
+ILLUSTRATIVE with 1,000 units per cell: treated `10.0% -> 13.0%`, control `10.0% -> 11.0%`.
+
+```text
+DiD = (0.13 - 0.10) - (0.11 - 0.10) = 0.03 - 0.01 = 0.02  (2.00 pp)
+Var = 0.13*0.87/1000 + 0.10*0.90/1000 + 0.11*0.89/1000 + 0.10*0.90/1000
+    = 0.00011310 + 0.00009000 + 0.00009790 + 0.00009000
+    = 0.00039100
+SE  = 0.019774   -> 1.977 pp
+CI95 = 0.020 +/- 1.959964*0.019774 = [-0.01876, +0.05876]
+```
+
+The point estimate of 2.00 points looks identical to a randomized 2-point effect but its interval is five times wider at the same cell size, because DiD variance comes from four noisy cells rather than two. More importantly: if the treated region was already trending at `+0.5` pp per period for reasons unrelated to the campaign, the true campaign effect is `2.0 - 0.5 = 1.5` pp and the estimator is biased by the entire trend violation. Parallel trends is not testable with two periods; it is only falsifiable with pre-period data showing the trends tracked before treatment.
+
+#### 4.3d Compliance rescaling (CACE) and the dilution from leakage
+
+```text
+FORMULA      CACE = ITT / (P(D=1|Z=1) - P(D=1|Z=0))
+CONSTRAINT   monotonicity (no defiers) and exclusion (Z affects Y only via D)
+```
+
+ILLUSTRATIVE: ITT of 2.0 points, delivery 85% in treatment and 0% in control, gives `CACE = 0.020/0.85 = 0.02353` (2.35 pp). If 5% of controls also receive the offer through a suppression failure, the denominator becomes `0.85 - 0.05 = 0.80` and `CACE = 0.0250` (2.50 pp). With 40% delivery the rescaling yields 5.00 points — but at that point the exclusion restriction deserves scrutiny, because assignment to a mostly-undelivered campaign may itself change behaviour (inventory holds, pricing changes) through channels other than delivery.
+
+**Validity condition for all of 4.3:** each correction changes the variance, the estimand, or both. State which. A design effect changes variance only; CUPED changes variance only if `X` is pre-assignment; DiD changes the identifying assumption; CACE changes the estimand from assignment effect to complier effect. Never present a corrected number without naming which of these happened.
+## 5. Worked Numerical Example
+
+### 5.1 The decision and the specification
+
+A subscription retailer runs a **14-day personalized-offer test** against its standard email policy. ILLUSTRATIVE throughout: the customer counts, purchase counts, cost per contact, and contribution margin are constructed for teaching and were recomputed by hand below. No company result is represented.
+
+| Specification item | Value in this example |
 |---|---|
-| Topic | Incremental effect of a specified marketing assignment policy versus a defined comparator |
-| Core formula | E1: assigned-treatment mean minus assigned-control mean; retain all eligible assigned units |
-| Key assumption | Valid assignment and outcome capture; identify interference and preserve the original analysis population |
-| Complexity | A keyed pass over N assigned units and E events is O(N+E); joins and shuffle can dominate |
-| Use when | Choosing or evaluating a marketing policy when an incremental counterfactual matters |
-| Avoid when | An exposure-only or observational comparison lacks a defensible causal identification strategy |
-| Failure signal | Assignment mismatch, post-treatment filtering, missing outcomes, spillovers, or unsupported overlap |
-| Go deeper | [Local collection index](INDEX.md); adjacent marketing-mix and experimentation sheets remain planned |
-| Economics | Compare incremental contribution with incremental costs and prespecified harm guardrails |
-| Evidence and review | Illustrative examples; published methods cited in Section 10; draft, not independently reviewed |
+| Decision | Adopt the personalized-offer policy for the next quarter, or keep standard email |
+| Eligible population | Active subscribers, tenure ≥ 30 days, purchasable in the US, consent on file |
+| Unit | Customer (household IDs collapsed first, so one row per household) |
+| Assignment | Hash of `household_id` salted with `test_id`, 50/50 within three value strata |
+| Comparator | Standard email policy, same send day, same suppression list |
+| Outcome | Any purchase with `event_at` in `[assigned_at, assigned_at + 14 days)` |
+| Maturity cut-off | `assigned_at + 21 days`, allowing seven days of ingest lag |
+| Primary estimand | ATE over eligible population, stratified weights |
+| Secondary estimand | CACE at observed delivery (85% treatment, 0% control) |
+| Economic inputs | Contact cost \\$0.25 per assigned customer; contribution margin \\$18 per purchase |
+
+The specification is written before the data is touched because three of its rows are the ones analysts silently change when the result disappoints: the comparator (swapping to "no email at all" inflates the effect), the maturity cut-off (extending the window for the treated arm only), and the estimand (switching to CACE when ITT is null).
+
+### 5.2 The counts
+
+Assignment ran over 12,000 households. Realized allocation was 6,180 treatment and 5,820 control, which is a 51.5/48.5 split rather than the designed 50/50.
+
+```text
+FORMULA      chi2_SRM = sum_arm (observed - expected)^2 / expected,  df = 1
+WHERE        expected = 6,000 per arm under a 50/50 design
+NUMERICAL    (6180-6000)^2/6000 + (5820-6000)^2/6000
+             = 32400/6000 + 32400/6000
+             = 5.40 + 5.40 = 10.80
+             p = P(chi2_1 > 10.80) = 2*(1 - Phi(sqrt(10.80)))
+               = 2*(1 - Phi(3.2863)) = 0.00102
+INTERPRETATION  A global SRM test rejects at 0.1%, but this design is NOT 50/50
+             globally: stratum probabilities are 0.60 / 0.50 / 0.40.
+```
+
+The global test is the wrong test, and this is the most common SRM false alarm in marketing. Expected counts must be computed within stratum:
+
+```text
+stratum       N_s    pi_s   E[n1] = N_s*pi_s   observed n1   chi2 contribution
+High value    4800   0.60   2880               2880          (0)^2/2880  = 0
+Mid value     4200   0.50   2100               2100          (0)^2/2100  = 0
+Low value     3000   0.40   1200               1200          (0)^2/1200  = 0
+
+total chi2 = 0.000, df = 3, p = 1.000
+```
+
+The assignment service is behaving exactly as designed. The 180-unit global imbalance is the *expected consequence* of unequal stratum probabilities combined with real stratum sizes — a mathematical artifact, not a defect. Had the analyst stopped at the global test, the correct test would have been abandoned or, worse, the data re-randomized.
+
+### 5.3 The unadjusted estimate
+
+```text
+n1 = 2880 + 2100 + 1200 = 6180      y1 = 187 + 99 + 43 = 329
+n0 = 1920 + 2100 + 1800 = 5820      y0 = 108 + 84 + 58 = 250
+
+p1 = 329/6180 = 0.0532362
+p0 = 250/5820 = 0.0429553
+ITT_naive = 0.0102809                       -> 1.0281 pp
+
+Var = 0.0532362*0.9467638/6180 + 0.0429553*0.9570447/5820
+    = 0.0000081557 + 0.0000070636 = 0.0000152193
+SE  = 0.0039012                             -> 0.3901 pp
+CI  = [0.0026347, 0.0179271]                -> [0.26 pp, 1.79 pp]
+z   = 2.6353        two-sided p = 0.0084
+```
+
+An unstratified readout therefore reports a statistically significant 1.03-point lift and the team starts drafting the rollout memo. Section 5.4 is why that memo would have been wrong.
+
+### 5.4 The stratified estimate
+
+```text
+w_s      = (0.40, 0.35, 0.25)
+d_s      = (0.0086806, 0.0071429, 0.0036111)          [p1_s - p0_s]
+ITT_strat= 0.40*0.0086806 + 0.35*0.0071429 + 0.25*0.0036111
+         = 0.00347222 + 0.00250000 + 0.00090278
+         = 0.00687500                                  -> 0.6875 pp
+
+v_s (stratum variance of the difference):
+  s=1: 0.00004873038
+  s=2: 0.00003967638
+  s=3: 0.00004611551
+Var  = 0.16*0.00004873038 + 0.1225*0.00003967638 + 0.0625*0.00004611551
+     = 0.00001553944
+SE   = 0.00394201                                      -> 0.3942 pp
+CI   = [-0.000851, 0.014601]                           -> [-0.09 pp, 1.46 pp]
+z    = 1.7438        two-sided p = 0.0812
+```
+
+Two properties deserve attention. First, the standard error barely changed (0.3942 versus 0.3901) while the point estimate fell by a third — the correction is about bias, not precision. Second, the sign of the decision flipped: the interval now includes zero and the lower bound is slightly negative.
+
+The three estimands that a real analysis must choose between, computed from the same table:
+
+```text
+ATE  (population weights)      = 0.0068750   (0.69 pp)
+ATT  (treated-arm weights)     = 0.0065579   (0.66 pp)
+  recompute: p1_std = sum_s (n0_s/n0)*p1_s
+           = 0.329897*p1_1 + 0.360825*p1_2 + 0.309278*p1_3
+           = 0.0214204 + 0.0170103 + 0.0110825 = 0.0495132  [4.95132%]
+           ATT = 0.0495132 - 0.0429553 = 0.0065579
+ATE via IPW (check)           = 0.0068750
+  per stratum: w_s*(p1_s - p0_s) with weights on arm-specific means
+  equals the weighted sum above because stratum probabilities are common
+  within stratum across arms; it differs from ATT because the weights differ
+```
+
+The ATE-versus-ATT distinction is not academic here. The rollout decision applies to the eligible population (ATE), but a retention team that only ever touches high-value customers would be making an ATT decision and should use the 0.66-point figure. Section 8 F-11 catalogues the case where an analyst computes ATE weights but describes the result as if it applied to the treated, which overstates the benefit to the customers most likely to be targeted.
+
+### 5.5 Design-quality corrections and what they do to power
+
+The interval above assumes independent Bernoulli outcomes. Two realistic violations apply: household-level correlation among cohabiting customers, and the availability of a pre-period purchase count.
+
+```text
+cluster effect:  m = 50 cohabiting households per block, rho = 0.02
+  DEFF  = 1 + 49*0.02 = 1.98
+  SE_c  = 0.00394201 * sqrt(1.98) = 0.0055469        -> 0.55 pp
+  CI_c  = [0.0068750 - 1.959964*0.0055469, ... ]
+        = [-0.003997, 0.017747]                     -> [-0.40 pp, 1.77 pp]
+  n_eff = 12000/1.98 = 6060.6   (half the enrolments do the work of 6,061)
+
+CUPED with pre-period purchase count, rho_YX = 0.5
+  Var factor = 1 - 0.25 = 0.75,  SE factor = 0.86603
+  SE_cc = 0.0055469 * 0.86603 = 0.0048038           -> 0.48 pp
+  CI_cc = [-0.002539, 0.016290]                     -> [-0.25 pp, 1.63 pp]
+```
+
+CUPED recovers roughly three quarters of the variance that clustering cost, and the combined interval is still wider than the naive one. This is the normal outcome: a properly designed and analysed test usually has a *wider* interval than the naive readout, because the naive readout omitted real sources of variance.
+
+### 5.6 Economic break-even and the decision
+
+```text
+cost per assigned customer      c = $0.25
+contribution per purchase       v = $18.00
+break-even ITT                  t* = c/v = 0.25/18 = 0.0138889   -> 1.389 pp
+
+projected incremental purchases at N = 12,000 (holds population fixed):
+  point: N*0.0068750 = 82.5 purchases
+         revenue 82.5*18 = $1,485 ; spend 12,000*0.25 = $3,000 ; net = -$1,515
+  lower: N*(-0.000851) = -10.2 purchases
+         revenue -$183.86 ; spend $3,000 ; net = -$3,183.86
+  upper: N*(0.014601) = 175.2 purchases
+         revenue $3,153.86 ; spend $3,000 ; net = +$153.86
+```
+
+The point estimate is unprofitable: the campaign would spend \$3,000 to earn \$1,485 in contribution, a loss of \$1,515. The 95% interval spans a \$3,337 range of outcomes and its upper end clears break-even by only \$154. A probability statement makes the decision sharper than a significance test:
+
+```text
+P(true effect > 0)        = 1 - Phi((0 - 0.006875)/0.00394201)
+                          = 1 - Phi(-1.7440) = 0.9594
+P(true effect > 1.389 pp) = 1 - Phi((0.0138889 - 0.006875)/0.00394201)
+                          = 1 - Phi(1.7790) = 0.0376
+```
+
+The campaign is probably positive and almost certainly not profitable at these unit economics. Under the cluster-plus-CUPED standard error the second probability moves to `1 - Phi(1.4601) = 0.0721`, and the interval's upper bound no longer clears break-even. Any decision rule that ignores the design effect reports more confidence in profitability than the design supports.
+
+### 5.7 Sensitivity to the economic inputs
+
+Because the decision is a comparison of an estimate to a threshold, the threshold deserves as much scrutiny as the estimate. Recomputing net contribution at the point estimate and at the interval endpoints across five input pairs:
+
+| `c` (\\$/contact) | `v` (\\$/purchase) | break-even (pp) | net at point | net at lower | net at upper | power at break-even (iid) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0.10 | 18 | 0.556 | +\\$285 | -\\$1,384 | +\\$1,954 | 0.291 |
+| 0.25 | 18 | 1.389 | -\\$1,515 | -\\$3,184 | +\\$154 | 0.941 |
+| 0.40 | 18 | 2.222 | -\\$3,315 | -\\$4,984 | -\\$1,646 | 1.000 |
+| 0.25 | 9 | 2.778 | -\\$2,258 | -\\$3,092 | -\\$1,423 | 1.000 |
+| 0.25 | 36 | 0.694 | -\\$30 | -\\$3,368 | +\\$3,308 | 0.421 |
+
+Two rows are decisive. At `c = \\$0.10` the campaign is profitable at the point estimate and break-even sits *below* the estimate; the same data supports adoption. At `v = \\$9` — a margin half the base case, plausible for a discounted first order — no point in the interval is profitable and the answer is a clean no. The estimate did not change; the economics did, and the economics carry more decision weight than the p-value.
+
+The "power at break-even" column is a diagnostic for test design, not for this result: it shows the probability that a future test of the same size would correctly reject a null of no effect if the true effect were exactly break-even. Below about 0.8, a null result cannot distinguish "no effect" from "break-even effect", which is the worst outcome a decision maker can be handed.
+
+### 5.8 Independent arithmetic re-check
+
+A second path that avoids the rate subtraction entirely:
+
+```text
+purchases: treatment 329, control 250, total assigned 12,000
+count difference = 329 - 250 = 79
+79 / 12,000 = 0.0065833                       -> 0.658 pp
+
+This differs from the stratified 0.6875 pp by 0.029 pp, because the
+pooled denominator weights the arms by their realized sizes rather than
+by stratum population shares. It is the right cross-check that the
+stratified figure was NOT produced by dividing counts by a single
+denominator: if an analyst's stratified result equals 0.6583 pp exactly,
+they recomputed the naive number and mislabelled it.
+```
+
+Three additional re-checks, each targeting a specific arithmetic slip:
+
+```text
+1. Stratum counts must sum to arm counts:
+   2880+2100+1200 = 6180 = n1   and   1920+2100+1800 = 5820 = n0   OK
+   187+99+43 = 329 = y1   and   108+84+58 = 250 = y0                OK
+
+2. Weights must sum to one: 0.40+0.35+0.25 = 1.00                   OK
+
+3. Variance must be positive and SE must be smaller than the largest
+   plausible binomial SE at these counts:
+   worst-case binomial SE at p=0.5, n=6180: sqrt(0.25/6180) = 0.00636
+   both SEs (0.00390, 0.00394) are below it                        OK
+```
+
+A fourth check that catches unit errors: the effect in percentage points must equal the effect in proportion multiplied by 100, and the *counts* of incremental purchases must equal the effect times the eligible population under the population estimand. `0.0068750 * 12000 = 82.5`, consistent with the table in 5.6. If a deck reports "82 incremental purchases" against a 1.03-point effect, `0.0102809*12000 = 123.4`, not 82.5 — the mismatch means the deck mixed the naive point estimate with the stratified projection, which is the most common internal inconsistency in experiment write-ups.
+
+### 5.9 What the estimate does not license
+
+- It does not license "the offer lifts conversion 24%" without the denominator: `0.0102809/0.0429553 = 23.93%` relative, which is the same data as 1.03 points and sounds three times larger.
+- It does not license an exposure effect. Delivery was 85%, so `CACE = 0.020/0.85 = 2.35 pp` under monotonicity — but that number requires an exclusion restriction nobody verified.
+- It does not license a rollout to the full 120,000-household list at the same margin. The enrolled population was filtered on tenure ≥30 days and prior purchasability; the marginal household beyond the filter has a lower baseline rate, and the same absolute effect would produce fewer incremental purchases.
+- It does not license a repeated quarterly read as if each quarter were independent. The same customers appear in successive experiments; assignment histories correlate with outcome histories, so the third quarter's test is not a clean replication.
+
+**Takeaway:** Compute the population-weighted estimate, the design-corrected standard error, and the break-even threshold; the decision is where those three meet, and all three can be computed before the test launches.
+
+## 6. Visual / Geometric Intuition
+
+### 6.1 The assignment wall
+
+```text
+   PRE-ASSIGNMENT (covariates)   |   POST-ASSIGNMENT (consequences)
+   ----------------------------- | ------------------------------------
+   tenure, prior spend, region   |   delivery, open, click, session
+   consent state, list source    |   cart, purchase, return, churn
+   eligibility flags as of T0    |   support ticket, unsubscribe
+                                 |
+   may be adjusted for           |   never a covariate in the primary model
+   may define strata             |   may define a secondary, assumption-heavy estimand
+```
+
+Draw this wall once per experiment. Any variable to the right of it that appears in a model is a decision, not a default, and the decision must be written in the analysis plan with the estimand it produces. The wall is also the reason "control for engagement" fails: engagement is the first thing assignment changes.
+
+### 6.2 The collider, drawn and quantified
+
+```text
+                    latent intent U
+                    /            \
+             (a)   /              \  (b)
+                  v                v
+   assignment Z --------> click S <-------- nothing else
+                  \                /
+             (c)   \              /
+                    v            v
+                     purchase Y
+```
+
+Paths: `Z -> S` is the treatment effect on clicking; `U -> S` and `U -> Y` are latent intent acting on both. Conditioning on `S` (restricting to clickers) opens the path `Z -> S <- U -> Y`, a collider path. The result is a comparison between treated clickers and control clickers who are not comparable on `U`.
+
+A numeric demonstration where the **true ITT is exactly zero**:
+
+```text
+ILLUSTRATIVE model
+  P(U=1) = 0.5, independent of Z                      (randomization holds)
+  P(S=1 | Z=1, U=1) = 0.80    P(S=1 | Z=1, U=0) = 0.40
+  P(S=1 | Z=0, U=1) = 0.30    P(S=1 | Z=0, U=0) = 0.10
+  P(Y=1 | U=1) = 0.20         P(Y=1 | U=0) = 0.02     (no Z term: effect = 0)
+
+all-assigned means:
+  E[Y|Z=1] = 0.5*0.20 + 0.5*0.02 = 0.110
+  E[Y|Z=0] = 0.5*0.20 + 0.5*0.02 = 0.110
+  ITT = 0.000                                        <- truth
+
+click-through rates:
+  E[S|Z=1] = 0.5*0.80 + 0.5*0.40 = 0.600
+  E[S|Z=0] = 0.5*0.30 + 0.5*0.10 = 0.200
+
+composition of clickers:
+  treated:   P(U=1|S=1,Z=1) = (0.5*0.80)/0.600 = 0.6667
+  control:   P(U=1|S=1,Z=0) = (0.5*0.30)/0.200 = 0.7500
+
+conversion among clickers:
+  E[Y|S=1,Z=1] = 0.6667*0.20 + 0.3333*0.02 = 0.14000
+  E[Y|S=1,Z=0] = 0.7500*0.20 + 0.2500*0.02 = 0.15500
+  "clicker lift" = 0.14000 - 0.15500 = -0.01500     -> -1.50 pp
+```
+
+The true effect is zero, the treated arm clicks three times as often, and the clicker-restricted readout reports a *negative* 1.5-point effect. The sign reversed because treatment pulled in lower-intent clickers (0.40 click rate among low-intent treated versus 0.30 among low-intent control), diluting the clicker pool. An analyst who reasoned "treated clickers are worse, so the campaign is bad" would have concluded the opposite of the truth, and an analyst in a different parameterization would have concluded the opposite error — the point is that the direction of collider bias is not signable in advance.
+
+The same geometry explains why "viewability-weighted lift" is untrustworthy: viewability is a post-assignment selection variable, and the treated/control compositions of viewable impressions differ for exactly the reason above.
+
+### 6.3 Intervals as ranges of decisions, not error bars
+
+```text
+net contribution at N = 12,000, c = $0.25, v = $18
+
+ -$3,184        -$1,515          $0          +$154
+    |--------------|--------------|--------------|
+    lower         point        break-even      upper
+    bound        (0.69 pp)     (1.39 pp)     bound
+    |<----------- loss ----------->|<-- tiny gain -->|
+```
+
+The picture makes the decision readable without any statistics vocabulary: most of the interval is loss, the profitable region is a thin sliver at the top, and the point estimate sits on the loss side. A bar chart of arm conversion rates cannot show this, because it omits the threshold. Any readout that shows two bars and no threshold is asking the audience to supply their own economics, which they will do differently from one another.
+
+### 6.4 Sequential looks and the invisible multiplicity
+
+```text
+nominal 95% bands as a function of analysis time, unadjusted:
+
+z
+4 |                                    ....
+3 |                          ....
+2 |--+--+--+--+--+--+--+--+--          <- fixed 1.96 boundary
+1 |     *     *
+0 |  *
+  +----------------------------------> fraction of planned sample
+    .25   .50   .75   1.00
+
+under H0 with 4 equally spaced unadjusted looks, the probability that
+at least one look crosses the boundary is 0.127, not 0.05
+```
+
+The boundary line is what a fixed-horizon test implies; the wandering path is what the data does. Stopping when the path first crosses is what inflates the error rate — Section 9.4 gives the alpha-spending boundaries that repair it, with the actual cumulative alpha values.
+
+**Takeaway:** Three pictures carry the whole method — the assignment wall, the collider graph, and the interval against a break-even threshold; each prevents a specific class of wrong conclusion.
+## 7. Comparison / Selection Table
+
+### 7.1 Design selection
+
+Choose the design before choosing the estimator. The table is ordered so that earlier rows have fewer untestable assumptions; if a later row is the only feasible option, the assumption column becomes the headline of the readout rather than a footnote.
+
+| Design | Identifying assumption | Point estimator | Variance consequence | Feasible when | Fails when |
+|---|---|---|---|---|---|
+| Individual randomized holdout | Randomization; no interference | `p1 - p0` | Base case | One unit's treatment does not move another's outcome | Shared budget, household sharing, social contagion |
+| Randomized with unequal `pi_s` | Randomization within stratum | `sum w_s d_s` | Slightly larger, weights add variance | Targeting tiers with different treatment fractions | Strata built on post-assignment fields |
+| Cluster randomized | Randomization of clusters | Difference of cluster means, or weighted unit means | Inflated by `1+(m-1)rho`; needs cluster-robust SE | Interference confined within cluster | Few clusters (`<40`) — normal approximation degrades, use `t` with `G-2` df |
+| Switchback (time-sliced) | Stationarity within period; washout removes carryover | Paired difference across periods | Dominated by week-to-week variance, not unit count | One shared marketplace, no geo split | Strong seasonality or supply shocks inside the window |
+| Difference-in-differences | Parallel trends absent treatment | Two differences of four cells | Four noisy cells; 5x wider than RCT at equal n per cell | Untreated comparison region exists | Differential shocks; staggered adoption with heterogeneous effects |
+| Synthetic control | Donor pool spans the treated unit's factor loadings | Weighted donor counterfactual | Inference by placebo distribution, not formula | One treated geography, many donors, long pre-period | Donor pool contaminated by the treatment (spillover) |
+| Propensity weighting / matching | Conditional exchangeability given `X`; overlap | IPW or matched difference | Sensitive to extreme weights; effective n collapses | Rich pre-treatment covariates, no randomization possible | Hidden targeting on unmeasured intent; poor overlap |
+| Instrumental variables | Relevance, exclusion, independence, monotonicity | Wald ratio `ITT/(first stage)` | Very wide; weak instrument inflates by `1/F` | A credible nudge exists that changes exposure only | Instrument correlates with demand (e.g. price as instrument) |
+| Pre/post with no comparison | Nothing; it is a description | Difference of two rates | Not a causal interval | Only for generating a hypothesis | Anything involving seasonality, trend, or concurrent promotion |
+
+Three selection rules that resolve most real choices:
+
+1. **If you can randomize, randomize, and then fix the analysis rather than the design.** The temptation to run a quasi-experiment because it needs no engineering is expensive: DiD at 1,000 units per cell produced a 95% interval of `[-1.88, +5.88]` points for a 2.00-point estimate in Section 4.3c, versus `[+0.26, +1.79]` for the randomized test in Section 5.3.
+2. **If interference is the reason randomization looks impossible, change the randomization unit, not the method.** Section 9.2 works the switchback numbers: with `rho = 0.02` and 20,000 weekly units, a 12-week switchback yields an effective sample of about 599 units and a standard error near 1.73 points. That is worse than a clean individual test but far better than a pre/post comparison, which has no valid interval at all.
+3. **If you must use observational data, spend the budget on covariates and on a negative control, not on a fancier estimator.** A propensity model with a strong negative-control outcome gives a testable prediction; a doubly-robust estimator without one gives a confident number with no falsification.
+
+### 7.2 Estimator selection within a randomized design
+
+| Situation | Estimator | Why not the simple difference | Numeric consequence (from this file) |
+|---|---|---|---|
+| Equal `pi_s`, balanced realized allocation | Unadjusted difference | Nothing to correct | 1.028 pp, SE 0.390 pp |
+| Unequal `pi_s` by value tier | Stratified weighted difference | Pooled contrast confounds effect with mix | 0.688 pp, SE 0.394 pp |
+| Unequal `pi_s`, small strata | Weighted difference with collapsed strata | Sparse strata produce `0/0` rates | Merge until ≥5 expected outcomes per arm |
+| Pre-period outcome available | CUPED-adjusted difference | Leaves variance on the table | SE × 0.866 at `rho = 0.5` |
+| Cluster assignment | Cluster-robust or aggregated analysis | `SE` understated by `sqrt(DEFF)` | SE 0.390 → 0.547 pp at `DEFF = 1.98` |
+| Non-compliance and interest in receipt | IV / CACE rescaling | ITT understates effect on compliers | 2.00 → 2.35 pp at 85% delivery |
+| Multiple planned looks | Group-sequential boundary | Fixed-horizon `z` inflates type I | 0.127 realised type I with 4 unadjusted looks |
+| Many subgroups, exploratory | Shrinkage or prespecified hierarchy | Best-of-k reporting | A 300-unit subgroup has SE near 2.6 pp |
+
+### 7.3 What to report, by audience
+
+| Audience | Must see | Must not be shown without a caveat |
+|---|---|---|
+| Analyst peer | Estimand, weights, SE estimator, SRM test, maturity rule | Any number without its denominator |
+| Marketing owner | Effect in points, interval, break-even threshold, delivery rate | Relative lift alone |
+| Finance | Incremental units × margin, spend, net, interval on net | Point-estimate net as if certain |
+| Exec sponsor | Decision, the risk being accepted, the monitoring trigger | Subgroup best-of-k as a targeting plan |
+| Legal/privacy | Assignment mechanism, suppression list, consent basis | Any claim about individual-level causation |
+
+**Takeaway:** The design choice is a validity decision, the estimator choice is a variance decision, and both must be written down before the numbers arrive — otherwise the estimator is chosen by which one looks better.
+
+## 8. Failure Modes & Edge Cases
+
+Each entry below states the mechanism, the observable symptom, at least two competing causes with a check that separates them, the numeric signal that discriminates, the correction, and the prevention. All scenarios are ILLUSTRATIVE constructions for teaching; none is an incident report.
+
+### F-01 Post-treatment conditioning inflates or reverses the effect
+
+**Mechanism.** The analyst restricts to units that were exposed, clicked, or opened, then compares conversion. The restriction is on a variable downstream of assignment, so the two arms' restricted populations differ in latent intent (Section 6.2).
+
+**Symptom.** The restricted readout shows an implausibly large lift — often 3–8x the all-assigned figure — and the restricted denominator is much smaller than the assigned count.
+
+**Competing causes.** (a) Genuine effect concentration: the campaign really does work only on engaged users. (b) Collider selection: the restriction created the association.
+
+**Discriminating check.** Compare the arm-wise inclusion rate into the restricted set. In the Section 6.2 construction the click rates were 0.600 treated versus 0.200 control, a 40-point differential on an outcome the treatment itself moves; that asymmetry is the fingerprint of selection. A genuine effect-concentration story still requires the all-assigned ITT to be non-zero.
+
+**Numeric signal.** True ITT 0.000, restricted readout `-0.0150` (negative 1.5 points). Any restricted estimate whose sign disagrees with a precisely estimated all-assigned ITT is presumed to be selection until proven otherwise.
+
+**Correction.** Report ITT as primary. If a receipt effect is genuinely required, specify it as CACE with the monotonicity and exclusion assumptions named, and show the compliance rates used.
+
+**Prevention.** The analysis plan lists every filter as either `pre-assignment` (allowed) or `post-assignment` (secondary only).
+
+### F-02 Sample ratio mismatch from the wrong expected counts
+
+**Mechanism.** Realized allocation deviates from the design because of a hashing bug, a logging defect, or simply because the design was stratified and the test was run pooled.
+
+**Symptom.** Global observed counts differ from the nominal 50/50 by a visible margin, and the SRM test rejects.
+
+**Competing causes.** (a) A genuine assignment or logging defect. (b) An expected-count calculation that ignores stratum probabilities.
+
+**Discriminating check.** Recompute expected counts as `N_s * pi_s` within stratum. In Section 5.2 the global chi-square was 10.80 (`p = 0.001`) while the stratified chi-square was 0.000 (`p = 1.000`) — identical data, opposite conclusion, and only the stratified test is valid for a stratified design.
+
+**Numeric signal.** If stratified chi-square is under about 3.84 for one stratum (the 5% critical value at df=1) and the pooled statistic is large, the imbalance is composition, not failure.
+
+**Correction.** Never delete or reweight units to force the realized ratio back. Report the realized ratio in the readout and use design-consistent weights.
+
+**Prevention.** Write the expected counts into the analysis plan as a formula, not a number.
+
+### F-03 Delivery failures masquerading as null results
+
+**Mechanism.** The assignment is correct but the send, the ad call, or the suppression step fails for a subset of the treated arm. The ITT dilutes toward zero in proportion to the delivery shortfall.
+
+**Symptom.** ITT is small and non-significant, and the treatment arm's event counts show a suspiciously flat pattern in the days after a release.
+
+**Competing causes.** (a) The campaign genuinely does not work. (b) Delivery was partial, so the ITT measures a mostly-untreated arm.
+
+**Discriminating check.** Compute delivery rate by arm, day, and channel from the send log, joined to the immutable assignment ledger. A delivery rate of 0.85 with a null ITT is a different finding from a delivery rate of 0.30 with a null ITT: the first bounds the effect on delivered units to roughly `ITT/0.85`, the second leaves almost everything unidentified.
+
+**Numeric signal.** With observed `ITT = 0.020` and delivery 0.85, `CACE = 0.0235`; recomputed at delivery 0.40, `CACE = 0.050`. The same null ITT implies a very different per-delivered effect depending on the delivery rate.
+
+**Correction.** Report the delivery rate alongside the ITT and state the dilution bound. Do not re-run the analysis on delivered units only.
+
+**Prevention.** Delivery rate is a monitored metric during the test, with an alert threshold agreed before launch.
+
+### F-04 Maturity and truncation bias
+
+**Mechanism.** Outcomes arrive with lag. Reading the test at a fixed calendar date gives recently assigned cohorts a shorter effective observation window than early cohorts. If the arm mix varies over time — and it does, because allocation is sequential — the truncation is arm-correlated.
+
+**Symptom.** The effect estimate drifts day to day in the same direction, and the recent cohorts look uniformly worse in both arms.
+
+**Competing causes.** (a) Truncation. (b) A genuine decay of effect over the test period (novelty).
+
+**Discriminating check.** Plot the effect by assignment cohort, restricted to cohorts old enough to be fully mature. If mature cohorts show a stable effect and the pooled estimate is dragged by immature cohorts, truncation is the driver. If mature cohorts themselves decline monotonically, decay is the driver.
+
+**Numeric signal.** A cohort that is 50% mature contributes roughly half its eventual outcomes; pooling it with mature cohorts shrinks the estimate by approximately the immaturity share times that cohort's weight.
+
+**Correction.** Freeze the cohort set to `assigned_at <= cutoff - maturity_lag`, and report the chosen cutoff.
+
+**Prevention.** Store event time and ingest time separately, and define maturity as a property of the cohort, not of the query date.
+
+### F-05 Sequential peeking without correction
+
+**Mechanism.** The team checks the dashboard daily and stops when the effect crosses significance. Each look is a test; the maximum of `k` correlated test statistics exceeds the fixed threshold far more often than alpha.
+
+**Symptom.** The stopping date coincides suspiciously with the first crossing, and the effect at stop is larger than the effect two weeks later.
+
+**Competing causes.** (a) Optional stopping. (b) A genuine early-peaking effect that decays.
+
+**Discriminating check.** Inspect the analysis log: how many looks were recorded, at what sample fractions, and whether the launch plan declared a fixed horizon. A test with one planned interim at 50% under a spending function is a legitimate design; a test with fourteen unplanned looks is not.
+
+**Numeric signal.** With four equally spaced unadjusted looks the family-wise error rate is approximately 0.127 instead of 0.05 — a 2.5x inflation. The observed effect at the stopping look is also biased upward by selection on the test statistic.
+
+**Correction.** Apply a group-sequential boundary (Section 9.4) and re-read the data at the corrected threshold, or label the result exploratory.
+
+**Prevention.** The stopping rule is written into the launch document, and dashboards show the corrected boundary rather than 1.96.
+
+### F-06 Interference through a shared budget or auction
+
+**Mechanism.** Treatment spend changes the competitive environment. The control arm's outcomes therefore depend on the treatment arm's assignment, violating SUTVA.
+
+**Symptom.** Control-arm metrics move during the test in a way that cannot be explained by seasonality — typically control CPA rising as treatment spend rises.
+
+**Competing causes.** (a) Interference. (b) A concurrent market change.
+
+**Discriminating check.** Regress control-arm daily delivery and cost metrics on treatment-arm daily spend. A positive relationship between treatment spend and control CPA is direct evidence the arms are not isolated. Also check whether the platform reallocates budget across arms automatically.
+
+**Numeric signal.** If the control conversion rate is depressed by 0.20 points by interference while the true ITT is 2.00 points, the measured contrast is 2.20 points — a 10% overstatement that no amount of extra sample size corrects.
+
+**Correction.** Reinterpret the estimate as the effect of the whole allocation policy; run a switchback or a geo holdout with isolated budgets if the pure campaign effect is required.
+
+**Prevention.** Prespecify whether the control arm is allowed to receive competing marketing, and log platform-level budget pacing during the test.
+
+### F-07 Non-compliance handled by dropping units
+
+**Mechanism.** Units in the treated arm that were not delivered are deleted from the analysis, and units in the control arm that were accidentally exposed are deleted too. Deletion is on a post-assignment variable in both arms.
+
+**Symptom.** The analysed sample is smaller than the assigned sample, and the analysed arms have different covariate distributions from the assigned arms.
+
+**Competing causes.** (a) Legitimate pre-specified exclusion of ineligible units discovered by a documented pre-assignment rule. (b) Post-treatment deletion.
+
+**Discriminating check.** Compare the covariate means in the assigned sample and the analysed sample, arm by arm. A shift in a pre-assignment covariate that moves differently by arm indicates treatment-dependent selection.
+
+**Numeric signal.** With 85% delivery, dropping undelivered treated units removes 15% of the arm — and 15% is exactly the non-complier share that CACE is designed to handle. If the analysed effect differs materially from `ITT/0.85`, the deletion did more than rescale.
+
+**Correction.** Keep every assigned unit in the primary analysis. Use IV/CACE for the receipt estimand.
+
+**Prevention.** The pipeline's default is left-join from the assignment ledger, so zeros cannot be dropped by accident.
+
+### F-08 Multiplicity across segments
+
+**Mechanism.** Fifteen segments are examined, one shows a 4-point effect at `p = 0.03`, and it becomes the targeting strategy.
+
+**Symptom.** The "winning segment" is small, the effect is far from the pooled estimate, and it does not replicate.
+
+**Competing causes.** (a) Real heterogeneity. (b) Selection from many comparisons.
+
+**Discriminating check.** Count every segment examined, including the ones not shown in the deck. Compute what the expected maximum `z` would be under a null with 15 independent tests: about 2.5, which corresponds to `p = 0.012`. A single `p = 0.03` among 15 tests is below that expectation.
+
+**Numeric signal.** A 300-unit subgroup at a 5% baseline has a standard error of about `sqrt(2*0.05*0.95/300) = 0.0178`, i.e. 1.78 points. A reported 4-point effect in that subgroup is roughly 2.2 standard errors — unremarkable given 15 tries.
+
+**Correction.** Report all examined segments with intervals, apply a multiplicity adjustment or a hierarchical/shrinkage model, and require independent replication before targeting.
+
+**Prevention.** Pre-register a small number of segments with power calculations, and treat everything else as exploratory.
+
+### F-09 Outcome capture differing by arm
+
+**Mechanism.** Outcome measurement depends on the treatment. A new creative drives app installs, and the app reports purchases differently from the web; or the offer triggers a consent flow that suppresses tracking.
+
+**Symptom.** The treated arm has fewer observed outcomes per assigned unit while order volume from the source system is unchanged.
+
+**Competing causes.** (a) Differential capture. (b) A genuine behavioural shift that moves purchases off the measured surface.
+
+**Discriminating check.** Reconcile source-system counts to warehouse counts, by arm and event date. A source-to-warehouse gap that is larger in one arm is differential capture; an equal gap with differing event counts is behaviour.
+
+**Numeric signal.** If capture is 0.95 in control and 0.88 in treatment, the observed difference is biased downward by roughly `0.07 * p0` in absolute terms — at `p0 = 0.043` that is 0.30 points of pure measurement artifact, comparable to a third of the true effect.
+
+**Correction.** Use source-system reconciliation for the primary outcome where possible, and report the capture rates.
+
+**Prevention.** Instrument both surfaces before launch and alert on arm-divergent capture.
+
+### F-10 Assignment drift and population change
+
+**Mechanism.** Eligibility logic is deployed, altered, or hot-fixed during the test, so the enrolled population changes over time and the design probabilities no longer apply uniformly.
+
+**Symptom.** Baseline covariates shift by assignment week, and the realized allocation ratio shifts at the same moment.
+
+**Competing causes.** (a) A code deployment changing eligibility. (b) Organic change in who is arriving.
+
+**Discriminating check.** Version the eligibility rule and log its version on every assignment record. A step change in covariate means aligned to a deployment timestamp points to rule drift; a gradual drift points to audience change.
+
+**Numeric signal.** A 5-point shift in the share of a high-baseline segment between the first and second half of the test moves the pooled rate by roughly `0.05 * (p_high - p_low)`, which at a 3-point gap is 0.15 points — enough to flip a marginal readout.
+
+**Correction.** Freeze eligibility during the test, or analyse by prespecified policy period with the strata redefined.
+
+**Prevention.** Assignment records carry the rule version; deployments during a test require an explicit sign-off.
+
+### F-11 Estimand mismatch between the calculation and the sentence
+
+**Mechanism.** The analyst computes ATE-weighted numbers and describes them as applying to treated customers, or the reverse. The arithmetic is right and the claim is wrong.
+
+**Symptom.** The deck says "targeted customers gained 0.69 points" while the weighted calculation used population shares in which the targeted segment is only 40% of the base.
+
+**Competing causes.** (a) An estimand labelling error. (b) A genuine disagreement about the decision population.
+
+**Discriminating check.** Recompute under both weightings. In Section 5.4 the same table gives 0.6875 pp (population weights), 0.6558 pp (treated weights), and 0.7174 pp (control reweighted to treated). If the reported number matches one of these three, the label must match it exactly.
+
+**Numeric signal.** The three estimates differ by up to 0.06 pp here; in designs with stronger propensity-outcome correlation the spread is larger than the standard error, which means the choice can change significance.
+
+**Correction.** Print the weighting next to every number, and name the population in the sentence.
+
+**Prevention.** The reporting template has a mandatory `estimand:` field that cannot be left empty.
+
+**Takeaway:** Every failure above leaves a signature in a secondary table — delivery by arm, inclusion rates, covariate means by week, capture rates — so build those tables before the readout, not after a challenge.
+## 9. Complexity & Cost Analysis
+
+### 9.1 What "cost" means here
+
+Four costs matter and they are not interchangeable: statistical cost (sample size and time needed to reach a decision), engineering cost (assignment service, logging, measurement joins), opportunity cost (revenue withheld from control), and decision cost (the expected loss from acting on an estimate that is wrong in either direction). Analysts habitually optimize the first and ignore the fourth, which is the one the business feels.
+
+### 9.2 Cost of precision
+
+The sample size required for a two-arm test at power `1 - beta` and two-sided alpha:
+
+```text
+FORMULA      n_per_arm = (z_{1-alpha/2} + z_{1-beta})^2 * (p1(1-p1) + p0(1-p0)) / (p1-p0)^2
+             with alpha = 0.05, power = 0.80: (1.959964 + 0.841621)^2 = 7.84888
+
+WHERE        p0 = baseline rate, p1 = p0 + delta, delta = MDE
+CONSTRAINT   normal approximation; each arm needs >= 5 expected events
+```
+
+ILLUSTRATIVE evaluations at `p0 = 0.05` (a realistic purchase rate for a broad campaign):
+
+| MDE (pp) | `p1` | numerator term `p1(1-p1)+p0(1-p0)` | `n` per arm | total assigned | weeks at 6,000/week |
+|---:|---:|---:|---:|---:|---:|
+| 0.50 | 0.0550 | 0.099475 | 31,231 | 62,461 | 10.4 |
+| 1.00 | 0.0600 | 0.103900 | 8,155 | 16,310 | 2.7 |
+| 1.39 (break-even in §5.6) | 0.0639 | 0.107307 | 4,366 | 8,732 | 1.5 |
+| 2.00 | 0.0700 | 0.112600 | 2,209 | 4,419 | 0.7 |
+| 5.00 | 0.1000 | 0.137500 | 432 | 863 | 0.1 |
+
+Two things are visible. First, sample size scales as `1/delta^2`: halving the target effect multiplies the enrolment by roughly 3.7-4, so detecting 1 point instead of 2 costs 8,155 versus 2,209 per arm. Second, the baseline rate enters only through `p(1-p)`, so the same absolute MDE is *harder* to detect at a 50% baseline than at 5%: at `p0 = 0.50` a 2-point effect needs `7.84888*(0.52*0.48 + 0.50*0.50)/0.0004 = 9,803` per arm, more than four times the 2,209 at `p0 = 0.05`. Teams that port a sample-size calculator from a click-through test to a purchase test routinely under-enrol by an order of magnitude because they carried the baseline forward without recomputing.
+
+The cluster correction multiplies the requirement by `DEFF` and CUPED divides it by `(1 - rho^2)`:
+
+```text
+DEFF = 1.98, CUPED factor 0.75:
+  total required = 8,732 * 1.98 * 0.75 = 12,967 assigned units at the
+  break-even MDE, versus 8,732 for the iid design.
+```
+
+So a design that is "adequately powered" on paper becomes underpowered once the real correlation structure is acknowledged — and this is the single most common reason a well-run test returns an interval that cannot support a decision.
+
+### 9.3 Cost of the four design families
+
+ILLUSTRATIVE cost model: assignment and logging engineering measured in engineer-weeks, opportunity cost measured in withheld contribution, and calendar time measured at 6,000 eligible units per week.
+
+| Design | Engineering | Opportunity cost | Calendar time | Effective n | Realistic use |
+|---|---|---|---|---|---|
+| Individual holdout, 50/50 | 2–4 eng-weeks (ledger, sticky assignment, join) | 50% of campaign contribution withheld | 1.5 weeks at break-even MDE | 8,732 | Default |
+| Individual holdout, 90/10 | 2–4 eng-weeks | 10% withheld | 4x longer for same precision | ~same total needed | When withholding is expensive |
+| Cluster (geo) | 4–8 eng-weeks (geo matching, cluster-robust analysis) | 50% of clusters withheld; larger blast radius | Similar | 8,732 × 1.98 | Spillover or platform-level changes |
+| Switchback | 6–10 eng-weeks (scheduling, washout enforcement) | None withheld, but every period is degraded vs the better policy | 12+ weeks of calendar | ~600 (see below) | One shared auction with no geo split |
+| DiD / synthetic control | 3–6 eng-weeks | None | Needs long pre-period (8–12 weeks) | 4× cells for same SE | Retrospective, or rollout already decided |
+| Propensity / IV | 3–6 eng-weeks | None | Retrospective | Collapses with poor overlap | When randomization is impossible |
+
+The switchback effective sample is the number that surprises people:
+
+```text
+12 weekly periods, 20,000 units per period, rho = 0.02
+  DEFF  = 1 + (20000-1)*0.02 = 401.0
+  n_eff = 12*20000/401.0 = 598.5
+  SE    = sqrt(2*0.10*0.90/598.5) = 0.01734        -> 1.73 pp
+```
+
+A switchback over a quarter with 240,000 unit-periods delivers the precision of a 599-unit individual test. Increasing periods helps linearly but slowly: at 6 periods per arm the SE is 2.45 pp, at 8 it is 2.12 pp, at 4 it is 3.00 pp. The lever that matters is the within-period correlation `rho` — reducing it from 0.02 to 0.005 would cut `DEFF` roughly fourfold, which is a measurement design question (shorter periods, cleaner washout), not a budget question.
+
+### 9.4 Cost of sequential monitoring
+
+Fixed-horizon tests cost one number: the planned sample. Sequential designs cost a boundary and buy the right to stop early. The trade is real and quantifiable.
+
+```text
+O'Brien-Fleming spending, alpha = 0.05 two-sided, equally spaced looks:
+  t = 0.25  cumulative alpha = 0.000089   -> |z| > 3.9198
+  t = 0.50  cumulative alpha = 0.005575   -> |z| > 2.7718
+  t = 0.75  cumulative alpha = 0.023625   -> |z| > 2.2632
+  t = 1.00  cumulative alpha = 0.050000   -> |z| > 1.9600
+
+Pocock-style constant boundary, 4 looks (simulated, 200,000 paths):
+  |z| > 2.361 at every look gives one-sided+two-sided FWER 0.0500
+  |z| > 2.500 gives 0.0350
+  unadjusted |z| > 1.960 at every look gives 0.1269
+```
+
+The last line is the price of ignoring the problem: 2.5x the nominal error rate. The OBF boundary is nearly impossible to cross early (3.92 standard errors at the first look), which is appropriate when early evidence should be treated with suspicion; the Pocock boundary is roughly flat and easier to cross early, at the cost of a higher final threshold (2.36 versus 1.96). The choice is a policy decision about how much the organization trusts early signals.
+
+Time cost, expressed in required effect size: an OBF design that requires `|z| > 2.7718` at the halfway point needs an effect about 41% larger to stop early than the fixed-horizon test would need at the same sample size, which is why early stopping mostly happens for unexpectedly large effects and those estimates are then biased upward.
+
+### 9.5 Decision cost and the value of a better estimate
+
+The decision-theoretic frame: if you roll out when the true effect is below break-even you lose `N*(c - v*effect)`; if you withhold when it is above break-even you lose `N*(v*effect - c)`. Using the Section 5 numbers with `N = 120,000` (the quarterly eligible base, ten times the test):
+
+```text
+roll out at true effect = 0 (the pessimistic case):
+  loss = 120,000 * ($0.25 - $18*0) = $30,000
+withhold at true effect = 0.0139 (exactly break-even): loss = $0
+withhold at true effect = 0.0200: loss = 120,000*($18*0.020 - $0.25) = $13,200
+roll out at true effect = 0.0069 (the point estimate):
+  loss = 120,000*($0.25 - $18*0.0069) = $15,096
+```
+
+The test itself costs `12,000 * $0.25 = $3,000` in contact cost plus engineering. So a test that reduces the probability of a \$30,000 misallocation by a meaningful margin pays for itself several times over — and the relevant question is not "was the test significant" but "how much did it change the probability of the wrong action". A test with an interval that spans break-even has not resolved the decision even though it produced a number.
+
+The counter-case matters too: at `c = $0.10` and `v = $18` the break-even is 0.56 pp, and the point estimate of 0.69 pp is above it, so the decision is "roll out" and further testing has low value. Recognizing when a test is decision-complete prevents the pathological pattern of re-running the same underpowered test every quarter.
+
+### 9.6 Cost of the analysis pipeline itself
+
+The arithmetic is cheap; the joins are not. A production-grade causal pipeline needs, at minimum: an immutable assignment ledger with sticky assignment and rule versioning; an outcome extract keyed to the assignment grain with event-time and ingest-time; a delivery/exposure log; a covariate snapshot at `T0`; and a readout service that recomputes SRM, balance, and maturity checks on every refresh. The recurring engineering cost is in keeping those five consistent under schema change, which is where most experiment infrastructure decay originates.
+
+A useful sizing heuristic: the analysis code is a few hundred lines and the pipeline is a few thousand. Teams that spend the effort on the estimator and none on the ledger end up with a statistically sophisticated readout over a denominator nobody can defend.
+
+**Takeaway:** Buy precision with sample size, buy validity with design, and buy decision quality with the break-even threshold; only the last one changes what you should do.
+
+## 10. Key Theorems / Results Reference
+
+### 10.1 Identification results
+
+**Randomization identifies the ATE.** If `Z` is independent of `(Y(1), Y(0))`, then `E[Y|Z=1] - E[Y|Z=0] = E[Y(1) - Y(0)]`. Proof: by independence, `E[Y|Z=1] = E[Y(1)|Z=1] = E[Y(1)]` and similarly for control; subtract. No modelling assumption is involved, which is why randomization survives criticism that regressions do not.
+
+**Conditional randomization identifies the stratum ATE.** If `Z` is independent of potential outcomes within stratum `s`, the within-stratum difference identifies `E[Y(1)-Y(0)|s]`, and averaging with population weights `w_s` identifies the population ATE. This is the result behind Section 4.2, and it is why stratification is a design fix rather than an analysis trick.
+
+**Instrumental variables identify the LATE, not the ATE.** With relevance (`E[D|Z=1] > E[D|Z=0]`), independence, exclusion, and monotonicity, the Wald ratio `(E[Y|Z=1]-E[Y|Z=0])/(E[D|Z=1]-E[D|Z=0])` identifies the average effect among compliers. It says nothing about always-takers or never-takers. In marketing, compliers are exactly the units whose exposure responds to the nudge, and they are usually not representative of the population.
+
+**Conditional exchangeability identifies the ATE under overlap.** If `(Y(1),Y(0))` is independent of `Z` given `X` and `0 < e(X) < 1`, then `E[ZY/e(X) - (1-Z)Y/(1-e(X))] = E[Y(1)-Y(0)]`. The overlap condition is not decorative: without it the ratio is undefined for some units and the estimator's variance is infinite.
+
+**DiD identifies the ATT under parallel trends.** `E[Y(1)-Y(0)|treated] = (E[Y|treated,post]-E[Y|treated,pre]) - (E[Y|control,post]-E[Y|control,pre])` provided the untreated change in the treated group equals the observed change in controls. The assumption is about a counterfactual trend, so it can be supported but never proven by pre-period data.
+
+### 10.2 Variance results
+
+**Two-sample variance.** `Var(p1-p0) = p1(1-p1)/n1 + p0(1-p0)/n0` under independent Bernoulli sampling. Two refinements are worth knowing:
+
+```text
+pooled (used for testing H0: p1 = p0)
+  Var_pool = p_bar(1-p_bar)(1/n1 + 1/n0),  p_bar = (y1+y0)/(n1+n0)
+unpooled (used for the interval)
+  Var_unpooled = p1(1-p1)/n1 + p0(1-p0)/n0
+
+Neyman's third term, which the unpooled form omits:
+  Var = S1^2/n1 + S0^2/n0 - S_tau^2/N
+  with S_tau^2 the variance of the individual effect
+  at n1=n0=6000 and tau = 0.01028 (effects in {0,1}):
+    S_tau^2 = 0.01028*0.98972 = 0.010175
+    term   = 0.010175/12000 = 8.479e-7
+    Var_unpooled = 1.52193e-5   Var_Neyman = 1.43714e-5
+    ratio 0.9443  ->  SE ratio 0.9717
+```
+
+The third term makes the conservative unpooled interval about 3% wider than necessary. It is almost never applied in marketing practice, and mentioning it is the difference between knowing the formula and knowing its conservatism.
+
+**Cluster design effect.** `Var(cluster mean) = Var(unit mean) * (1 + (m-1)rho)` for equal cluster sizes `m`. For unequal sizes, replace `m` with `m_bar * (1 + CV_m^2)` where `CV_m` is the coefficient of variation of cluster size; a design with highly variable geo sizes is much less efficient than its average size suggests.
+
+**CUPED variance.** `Var(Y - theta(X - E[X])) = Var(Y)(1 - rho^2)` at the optimal `theta`. The result is exact for the linear adjustment and asymptotically valid when `theta` is estimated; with small samples the degrees-of-freedom correction matters.
+
+**Delta-method for ratios.** Rescaling ITT to CACE divides two random quantities. The variance is approximately `Var(ITT)/C^2` where `C` is the compliance difference, so a small compliance difference inflates variance quadratically: at `C = 0.85` the variance multiplier is 1.38; at `C = 0.40` it is 6.25.
+
+### 10.3 Sequential and multiplicity results
+
+**Repeated unadjusted testing inflates type I.** For `k` independent looks at the same nominal level, the family-wise error rate approaches `1 - (1-alpha)^k`; for `k = 4` and `alpha = 0.05` that is 0.185 under independence, and 0.127 with the positive correlation induced by overlapping data (simulated above). The correlation reduces but does not eliminate the inflation.
+
+**O'Brien-Fleming spending.** Cumulative alpha at information fraction `t` is `2 - 2*Phi(z_{1-alpha/2}/sqrt(t))`, giving the boundaries tabulated in Section 9.4. The boundary is conservative early by construction and approaches the fixed-horizon critical value at `t = 1`.
+
+**Bonferroni is conservative under positive dependence.** For `m` tests at level `alpha/m` the family-wise error is at most `alpha`; when tests are positively correlated the actual rate is well below `alpha`, so Bonferroni costs power. Holm's step-down procedure dominates it without extra assumptions.
+
+**Selection on the maximum.** With `m` independent standard normal statistics, `E[max z] ≈ sqrt(2 ln m)`: 15 segments give about 2.33, and 100 give about 3.03. This is the number to quote against any "best segment" claim, because it is the effect size that pure noise produces.
+
+### 10.4 Sensitivity results
+
+**E-value for a risk ratio.** The minimum strength of association, on the risk-ratio scale, that an unmeasured confounder would need with both treatment and outcome to explain away the observed association is `RR + sqrt(RR*(RR-1))`. ILLUSTRATIVE at the Section 5 observed rates:
+
+```text
+RR = p1/p0 = 0.0532362/0.0429553 = 1.2393
+E  = 1.2393 + sqrt(1.2393*0.2393) = 1.2393 + 0.5445 = 1.7838
+```
+
+An unmeasured confounder associated with both assignment and purchase by a risk ratio of 1.78 each would suffice to move the estimate to the null. In a randomized test that is a strange hypothesis (randomization should make such an association impossible); in an observational comparison it is entirely plausible, which is exactly what the E-value is for. Its role here is as a calibration of what "this observational result is fragile" means numerically.
+
+**Bias factor for a binary confounder.** For a confounder with prevalence difference `gamma` between arms and effect `delta` on the outcome, the bias in the risk difference is approximately `gamma * delta`. ILLUSTRATIVE: if 30% more of the treated arm are high-intent (`gamma = 0.30`) and high intent raises purchase probability by 3 points (`delta = 0.03`), the bias is `0.30*0.03 = 0.9` points — larger than the entire stratified estimate of 0.69 points. This arithmetic is the fastest way to kill a retargeting "lift" claim.
+
+**Takeaway:** Five results carry the practice — randomization identifies the ATE, stratification identifies strata, IV identifies compliers only, clustering inflates variance by `DEFF`, and repeated looks inflate error by roughly the square root of the number of looks.
+## 11. Interview / Exam Questions
+
+Fourteen questions, ordered roughly by seniority. Each answer states the number where a number is required; questions marked **[C]** require computation, **[D]** require diagnosis of a described situation, and **[J]** require a judgement call with a stated rationale.
+
+### Q1 [C] A test has 6,180 treated with 329 purchases and 5,820 control with 250 purchases. Give the ITT in percentage points, the standard error, and the 95% interval.
+
+`p1 = 329/6180 = 0.0532362` and `p0 = 250/5820 = 0.0429553`, so `ITT = 0.0102809`, i.e. 1.028 pp. The variance is `0.0532362*0.9467638/6180 + 0.0429553*0.9570447/5820 = 0.0000081557 + 0.0000070636 = 0.0000152193`, giving `SE = 0.0039012` (0.390 pp). The interval is `0.0102809 ± 1.959964*0.0039012 = [0.0026347, 0.0179271]`, or `[0.26 pp, 1.79 pp]`, and `z = 2.635` (two-sided `p = 0.0084`). If the candidate reports 1.03 pp with a standard error computed from the pooled rate `(329+250)/12000 = 0.04825`, they have used the testing variance rather than the interval variance; `sqrt(0.04825*0.95175*(1/6180+1/5820)) = 0.003899`, which is numerically almost identical here but is the wrong object — it is valid only under the null.
+
+### Q2 [C] The same test was run with treatment probabilities 0.60, 0.50, and 0.40 across three strata of sizes 4,800, 4,200, and 3,000. Why does the pooled difference overstate the effect, and what is the corrected number?
+
+The pooled difference is 1.028 pp; the population-weighted stratified difference is 0.6875 pp. The high-value stratum has both the highest baseline rate (5.63% control) and the highest treatment probability (0.60), so the treated arm is compositionally richer in high-value customers than the control arm. The pooled contrast therefore contains a mix effect of about 0.34 pp on top of the causal effect. Corrected: `0.40*0.0086806 + 0.35*0.0071429 + 0.25*0.0036111 = 0.006875`, a 33% reduction, and the `z` statistic falls from 2.635 to 1.744 so the result is no longer significant at 95%.
+
+### Q3 [C] With the stratified estimate, what is the probability that the true effect exceeds a break-even threshold of 1.389 pp?
+
+Using `0.006875` and `SE = 0.00394201`: `z = (0.0138889 - 0.006875)/0.00394201 = 1.7790`, so `P = 1 - Phi(1.7790) = 0.0376`. If the design is clustered with `DEFF = 1.98` and CUPED at `rho = 0.5`, `SE = 0.0048038`, `z = 1.4601`, and `P = 0.0721`. The probability roughly doubles under the correct variance, which is the practical argument for computing it on the design-corrected standard error. A candidate who reports 0.0376 while claiming the interval assumed independence has given the right arithmetic for the wrong model.
+
+### Q4 [D] A dashboard shows treated clickers converting at 14.0% and control clickers at 15.5%, while all-assigned conversion is 11.0% in both arms. What is happening?
+
+The restricted comparison is conditioned on a post-assignment variable, so the arms' clicker populations differ in latent intent. In the constructed example, treatment raises the click rate from 0.200 to 0.600 and the treated clicker pool is 66.7% high-intent versus 75.0% among control clickers; with purchase rates of 20% (high intent) and 2% (low intent) the restricted means are 0.140 and 0.155. The true ITT is zero. The -1.5 pp "effect" is pure collider selection, and its direction is not signable in advance. The correct action is to report the all-assigned ITT and treat the clicker table as descriptive.
+
+### Q5 [C] Compute the MDE for a two-arm test with 6,000 per arm at a 5% baseline and `alpha = 0.05`, 80% power.
+
+`MDE = (1.959964 + 0.841621)*sqrt(2*0.05*0.95/6000) = 2.801585*0.0039811 = 0.011154`, i.e. 1.115 pp. Repeating at other baselines with the same 6,000 per arm: a 10% baseline gives `2.801585*sqrt(2*0.10*0.90/6000) = 2.801585*0.0054772 = 0.015345` (1.535 pp), and a 20% baseline gives `2.801585*0.0073029 = 0.020460` (2.046 pp), so the absolute MDE grows by a factor of 1.83 across that range. The relative MDE moves the other way: 1.115/5 = 22.3% at the 5% baseline versus 2.046/20 = 10.2% at the 20% baseline, and at a 0.4% click baseline the same budget yields `2.801585*0.0011523 = 0.003228`, i.e. 0.323 pp = 80.7% relative. That asymmetry is the practical trap: the low-baseline click metric looks more sensitive in relative terms precisely because it cannot resolve a small number of points, and a team reporting only relative lift will believe the blunt instrument is the sharp one. Always quote the absolute MDE in points next to its baseline.
+
+### Q6 [D] The global SRM test returns `chi2 = 10.80` on a design with 50/50 nominal allocation but 60/50/40 stratum probabilities. Diagnose.
+
+The global test compares realized counts to 6,000 per arm, but the design implies expected counts of `4800*0.60 + 4200*0.50 + 3000*0.40 = 2,880 + 2,100 + 1,200 = 6,180` and `5,820`. Against those expectations the chi-square is exactly zero in each stratum. The global statistic of 10.80 (`p = 0.001`) is measuring the design, not a defect. The rule: expected counts are always `N_s * pi_s` within stratum, and a pooled SRM test is valid only when `pi_s` is constant across strata. Acting on the false alarm by re-randomizing or dropping units would introduce the bias the test was meant to prevent.
+
+### Q7 [C] A geo test assigns 40 clusters. What is the correct reference distribution, and how much does it cost versus 40 independent units?
+
+With 40 clusters the difference-in-cluster-means is approximately `t`-distributed with `G - 2 = 38` degrees of freedom, whose 97.5th percentile is 2.024 rather than 1.960 — a 3.3% wider interval before any design effect. The real cost is the design effect: at `m = 50` units per cluster and `rho = 0.02`, `DEFF = 1.98`, so `n_eff = 2000/1.98 = 1010` and the standard error is `sqrt(1.98) = 1.407` times the naive value. So 2,000 clustered units carry the information of about 1,010 independent ones, and the interval is 41% wider. With 40 clusters the `t` correction and the design effect compound, which is why cluster count — not cluster size — is the binding constraint.
+
+### Q8 [D] Treatment spend rises 8% during the test and control CPA rises at the same time. What are the two candidate explanations and how do you separate them?
+
+Either the arms interfere through a shared auction or budget pool, or an external market change lifted costs for everyone. Separate them by (a) regressing control-arm daily CPA on treatment-arm daily spend within the test window — a positive within-test relationship with no plausible external driver supports interference; (b) checking whether the same CPA movement appears in markets outside the test; (c) inspecting platform pacing logs for automatic cross-arm budget reallocation. If interference is real, the estimate is the effect of the whole allocation policy, not the campaign. A 0.20 pp depression in control conversion on a 2.00 pp true effect yields a measured 2.20 pp contrast, a 10% overstatement unaffected by sample size.
+
+### Q9 [C] With 85% delivery in treatment and 5% leakage into control, convert an ITT of 2.0 pp into a CACE, and state what the number assumes.
+
+`CACE = 0.020/(0.85 - 0.05) = 0.020/0.80 = 0.0250`, i.e. 2.50 pp. Without leakage the denominator would be 0.85 and the answer 2.35 pp, so contamination of 5% moves the receipt effect by 0.15 pp — the leakage matters more than intuition suggests because it enters the denominator directly. The number assumes monotonicity (no unit's exposure is reduced by assignment) and exclusion (assignment affects the outcome only through delivery). Exclusion is the fragile one: if assignment also triggers inventory holds or price changes, the rescaled number attributes those effects to delivery.
+
+### Q10 [C] Four equally spaced looks, unadjusted testing, nominal 5%. What is the actual error rate, and what boundary restores 5%?
+
+Simulating four correlated looks on a Brownian path gives a family-wise error rate of 0.127 — 2.5x nominal. A constant Pocock-style boundary at `|z| > 2.361` restores 0.0500; an O'Brien-Fleming boundary is `3.9198` at `t = 0.25`, `2.7718` at `t = 0.50`, `2.2632` at `t = 0.75`, and `1.9600` at `t = 1.00`, with cumulative alpha of 0.000089, 0.005575, 0.023625, and 0.050000. The OBF choice is right when early evidence should be discounted; the flat choice is right when the organization needs the option to stop early for operational reasons.
+
+### Q11 [J] Your test returns an interval of `[-0.09 pp, +1.46 pp]` against a break-even of 1.39 pp. The marketing owner wants to launch. What do you say?
+
+The correct response separates the statistical statement from the decision: the data are consistent with a small loss and with a modest gain, and the probability that the effect clears break-even is 0.038 on the iid standard error and 0.072 once clustering is acknowledged. The expected net contribution at the point estimate is negative (`12,000*(0.006875*18 - 0.25) = -\$1,515`), and only the top of the interval is profitable, by about \$154. The defensible options are: (a) do not launch at these unit economics; (b) reduce `c` or raise `v` so break-even falls below the point estimate — at `c = \$0.10` the same estimate clears break-even and the decision reverses; (c) run a larger test sized to the break-even effect, which needs about 4,366 per arm rather than the 6,000 used, so the current test was in fact sized adequately and the honest answer is that the campaign is not profitable enough. Naming the option set, rather than refusing to decide, is what distinguishes a senior answer.
+
+### Q12 [D] A readout shows a 4-point lift in a 300-unit segment at `p = 0.03`, out of 15 segments examined. Assess.
+
+At a 5% baseline the standard error in a 300-unit segment is about `sqrt(2*0.05*0.95/300) = 0.0178`, i.e. 1.78 pp, so a 4-point effect is about 2.2 standard errors. With 15 independent tests the expected maximum `z` under the null is `sqrt(2 ln 15) = 2.33`, so a maximum of 2.2 is *below* what pure noise produces. The segment result is unremarkable. Correct handling: report all 15 segments with intervals, apply Holm or a shrinkage model, and require independent replication before targeting. The most damaging version of this error is not the wrong number but the wrong follow-up — a targeting plan built on a segment that was selected for its noise.
+
+### Q13 [C] An observational comparison gives a risk ratio of 1.24. Compute the E-value and interpret it in a randomized versus an observational setting.
+
+`E = 1.2393 + sqrt(1.2393*0.2393) = 1.2393 + 0.5445 = 1.7838`. Interpretation: a confounder associated with both treatment and outcome by a risk ratio of 1.78 each could explain the association away. In a randomized test that hypothesis is implausible because randomization severs the confounder-treatment link; in a retargeting comparison where 30% more of the treated arm are high-intent and high intent adds 3 pp to purchase probability, the bias is `0.30*0.03 = 0.9 pp`, which exceeds the entire 0.69 pp estimate. The E-value is therefore a screening tool: large E-values need strong confounders to overturn, small ones need only the confounders that marketing data is full of.
+
+### Q14 [J] When is a DiD estimate preferable to running a randomized holdout, given that DiD has four noisy cells and an untestable parallel-trends assumption?
+
+When withholding is infeasible or when the rollout has already happened. Three concrete situations: (a) a regulatory or contractual constraint forbids denying service to a subset (some financial and healthcare communications); (b) the treatment is a market-level change — a pricing structure, a retail media placement — that cannot be applied to part of a market; (c) the decision is retrospective and the only available evidence is a natural experiment. In those cases the honest comparison is not "DiD versus RCT" but "DiD with a stated trend assumption versus no estimate at all", and the deliverable must carry the assumption in the headline. The numeric penalty is real: at 1,000 per cell, DiD gave 2.00 pp with `SE = 1.98 pp` and an interval of `[-1.88, +5.88]`, against `SE = 0.39 pp` for the randomized equivalent. A practitioner choosing DiD should also budget for 8–12 weeks of pre-period to make parallel trends at least partly falsifiable.
+
+### Q15 [D] A readout reports a 24% relative lift. The underlying numbers are 5.3236% versus 4.2955%. What is the absolute effect, and what is the danger in the framing?
+
+`0.0532362 - 0.0429553 = 0.0102809`, i.e. 1.03 pp, and `0.0102809/0.0429553 = 23.93%`, which is where the 24% comes from. The framing danger is that relative lift is scale-free and therefore travels badly: the same 24% relative lift on a 0.4% baseline is 0.10 pp, which may be far below break-even, while on a 40% baseline it is 9.6 pp, which may be transformational. Break-even in this file was 1.389 pp, so the 1.03 pp absolute effect fails the economic test even though the 24% headline reads like a success. Report absolute effect, baseline, and break-even together; the relative figure is a derived convenience, never the decision input.
+
+**Takeaway:** The questions that separate candidates are not the formula recitations but the two-step ones — compute the number, then say what it does and does not license.
+## 12. Quick Reference Card
+
+| # | Item | What to do | Number / rule from this file |
+|---:|---|---|---|
+| 1 | Estimand | Write `ITT`, `CACE`, `ATT`, or `ATE` on the readout before computing anything | Weighting changes the answer: 0.688 / 0.656 / 0.717 pp from one table |
+| 2 | ITT and interval | `p1 - p0` with `SE = sqrt(p1(1-p1)/n1 + p0(1-p0)/n0)` | 1.028 pp, SE 0.390 pp, CI [0.26, 1.79] pp |
+| 3 | Stratification | Expected counts and weights use `N_s * pi_s` and `N_s/N`, never realized arm shares | Naive 1.028 pp vs stratified 0.688 pp (33% bias) |
+| 4 | Design effect | Multiply SE by `sqrt(1 + (m-1)rho)` for clustered assignment | `m=50, rho=0.02` → DEFF 1.98, SE 0.390 → 0.547 pp |
+| 5 | CUPED | Pre-assignment covariate at correlation `rho` cuts SE by `sqrt(1-rho^2)` | `rho = 0.5` → factor 0.866; `rho = 0.7` → 0.714 |
+| 6 | Compliance | `CACE = ITT / (delivery_treated - delivery_control)`; never delete undelivered units | 2.00 pp / (0.85 - 0.05) = 2.50 pp |
+| 7 | MDE | `(1.959964 + 0.841621)*sqrt((p1(1-p1)+p0(1-p0))/n)` per arm | 1.115 pp at 5% baseline and 6,000/arm; 2.046 pp at 20% |
+| 8 | Break-even | `effect* = cost_per_contact / contribution_per_purchase` | \$0.25/\$18 = 1.389 pp; compare to the interval, not the point |
+| 9 | Sequential looks | Use OBF boundaries `2 - 2*Phi(1.959964/sqrt(t))`; unadjusted peeking multiplies error | 4 looks unadjusted → 0.127 FWER; OBF at `t=0.5` needs `|z|>2.7718` |
+| 10 | Diagnosis | Post-assignment filters are the first suspect when a restricted readout is large | True ITT 0.000 can present as -1.50 pp among clickers |
+
+The card in prose, for the three rows that matter most:
+
+**Row 2 is the only arithmetic most readouts need.** Write it as a single expression so that no intermediate rounding happens: `(y1/n1 - y0/n0) ± 1.959964*sqrt(p1*(1-p1)/n1 + p0*(1-p0)/n0)`. Compute the standard error from the unpooled rates; the pooled variant belongs in the hypothesis test, not the interval.
+
+**Row 8 converts a statistical result into a business decision.** Compute it before the test launches, because its value determines whether the test can answer the question at all. If break-even is 1.389 pp and the MDE at the planned sample is 1.9 pp, the test is underpowered by construction and no analysis will repair that.
+
+**Row 10 is the fastest diagnostic.** When a segmentation or exposure-restricted result is dramatically larger than the all-assigned result, the default hypothesis is post-treatment conditioning, and the check is comparing inclusion rates by arm. In the constructed example those rates were 0.600 versus 0.200 on a zero-effect treatment.

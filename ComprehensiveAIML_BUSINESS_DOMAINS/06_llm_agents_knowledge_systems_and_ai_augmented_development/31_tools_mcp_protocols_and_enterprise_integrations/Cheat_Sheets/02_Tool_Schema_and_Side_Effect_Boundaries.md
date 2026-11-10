@@ -319,6 +319,10 @@ COST CHECK [T-02b]:
 INTERPRETATION: this is an upper bound that assumes all duplicates are detected and reworked at the
   blended cost. Undetected duplicates usually cost more per event but occur at unknown frequency,
   which is an argument for detection, not for a smaller budget.
+VALIDITY: T-02 and its cost form hold only while coverage is uniform across the population and retries
+  are independent of the failures that cause them. Both conditions are routinely violated during a
+  correlated outage, when coverage falls and retries rise together; in that case the estimate is a lower
+  bound, and the design question becomes whether fail-closed is cheaper than duplicating.
 ```
 
 ### 4.3 Variants
@@ -468,7 +472,7 @@ CONSTRAINT: 86,400 s/day; index overhead is included in b, which is why b is muc
 NUMERICAL EXAMPLE: λ_avg = 24 ops/s, d = 7, b = 768 bytes.
   Records = 24 * 86,400 * 7 = 2,073,600 * 7 = 14,515,200.
   Bytes = 14,515,200 * 768 = 11,147,673,600. S = 11.1 GB.
-  At d = 30 the same ledger needs 11.1 * 30 / 7 = 47.7 GB.
+  At d = 30 the same ledger needs 11.148 * 30 / 7 = 47.8 GB.
 INTERPRETATION: a week of dedup state is single-digit gigabytes at this scale, which is cheap; the
   cost that surprises teams is the write rate and the index churn, not the bytes. Keep the audit
   store separate, append-only, and free of the uniqueness constraint the dedup store needs.
@@ -508,6 +512,28 @@ NUMERICAL EXAMPLE: λ = 24 ops/s, W = 0.35 s (admission 45 ms + dispatch 90 ms +
 INTERPRETATION: if the worker pool is 16 and the mean is 8.4, there is no headroom for the tail; the
   pool will be saturated by the slowest decile, which then becomes the new mean.
 ```
+
+**Validity conditions for the variants.** Stated once, compactly, because each one is the sentence a
+reviewer should ask you to defend:
+
+- T-03 holds only while rates are constant within an interval and the recovery lane is dedicated. If the
+  lane shares workers with the live lane, μ_r is not a constant and the piecewise integration must use
+  the shared-resource model instead.
+- T-04 holds only for Poisson arrivals, exponential service, and a single FIFO server. With a bounded
+  pool and a queue cap, the interesting quantity becomes blocking probability, not waiting time.
+- T-05 holds only for independent attempts under a hard cap. Under correlated failure the expectation
+  collapses to R, and the peak rate — not the mean — is what the sink experiences.
+- T-06 holds only when ν is measured for authority-relevant changes, not all changes. Using total change
+  rate inflates P(stale) and pushes teams toward needlessly short tokens.
+- T-07 holds only as a screening count. It says nothing about consequence and must be paired with a
+  named-field review of amount, currency, target, and verb.
+- T-08 holds only while record size is stable. Adding a per-record payload snapshot for audit doubles b,
+  which is why the snapshot belongs in the audit store rather than the dedup ledger.
+- T-09 holds only for uniformly distributed keys in a single namespace. Multi-region key spaces that are
+  merged later break the uniformity the bound assumes.
+- T-10 holds only in steady state. During a ramp, in-flight count lags the product, and capacity sized
+  from L alone will be short exactly when the ramp is steepest.
+
 
 ### 4.4 Limits and counterexamples
 
@@ -1668,6 +1694,14 @@ minutes, and who decides?
 
 ## 12. Quick Reference Card
 
+**Three sentences to keep.** A schema grants shape, never authority. A receipt comes from the sink, never
+from your own optimism. A key identifies an intention, so it outlives the request that carried it.
+
+**Status.** Draft. Invariants in sections 4 and 10 are DERIVED; every parameter in sections 5, 9, and 11
+is an ILLUSTRATIVE construction whose arithmetic was recomputed by hand. No deployed integration, vendor
+behaviour, or measured incident is asserted, and protocol details are version-specific and must be
+rechecked against the current specification.
+
 | Situation | Rule | Critical assumption | Avoid | Consequence if wrong |
 |---|---|---|---|---|
 | Designing a write tool | classify effect class first (E0–E4) | sink reversibility is known | treating a create as an upsert | duplicate documents that look like edits |
@@ -1680,13 +1714,3 @@ minutes, and who decides?
 | Dedup retention | W = max(retry, reconciliation p99, support) + margin | maximum replay age is measurable | a default 24-hour TTL | weekend replay duplicates |
 | Sink ignores your key | treat as E3 and reconcile | sink state is queryable | claiming exactly-once | unprovable duplicate suppression |
 | Incident with growth | check whether surplus is positive before adding lanes | arrival rate known | adding capacity at parity | no drain, ever |
-
-**Three sentences to keep.** A schema grants shape, never authority. A receipt comes from the sink, never
-from your own optimism. A key identifies an intention, so it outlives the request that carried it.
-
-**Status.** Draft. All invariants and derivations in sections 4 and 10 are DERIVED from the stated
-definitions; all parameter values in sections 5, 9, and 11 are ILLUSTRATIVE constructions whose
-arithmetic was recomputed by hand. No deployed integration, vendor behaviour, measured incident, or
-company result is asserted. Protocol details are version-specific and must be rechecked against the
-current specification before being relied on; the original catalog source bodies were not available when
-this sheet was written.

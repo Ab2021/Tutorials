@@ -67,7 +67,6 @@ The pipeline below is the mental model for the whole file. Read it left to right
 scored event ---> eligible cohort ---> alert set ---> investigated set ---> labelled set
    (2.0M)          (policy filter)      (8,800)        (human action)        (mature only)
       |                 |                  |                |                     |
-      |                 |                  |                |                     |
    score at t0      exclusions         threshold +        disposition         label after lag
    features at t0   (test, dup,        capacity cap       codes, notes         (mean 55 days)
                      policy-blocked)
