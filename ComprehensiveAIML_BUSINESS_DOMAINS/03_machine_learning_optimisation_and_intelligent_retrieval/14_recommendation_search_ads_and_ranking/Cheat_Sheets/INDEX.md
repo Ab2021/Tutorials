@@ -8,7 +8,7 @@ This collection carries 6 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
-| core | Ranking metrics and candidate generation, Recommendation architectures, Online Experimentation and Bandits, Phrase and positional retrieval | Build from prerequisites to production judgement |
+| core | Ranking metrics and candidate generation, Recommendation architectures, Online Experimentation and Bandits, Retrieval index correctness and BM25, Phrase and positional retrieval, Autocomplete admission and freshness | Build from prerequisites to production judgement |
 | advanced | Common issues: recommendation and retrieval | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
@@ -60,9 +60,9 @@ This collection carries 6 reference card(s) and 1 troubleshooting artifact(s) fo
 | 1 | [Ranking metrics and candidate generation](./01_ranking_metrics.md) | core | DERIVED | authored |
 | 2 | [Recommendation architectures](./02_recsys_architectures.md) | core | DERIVED | authored |
 | 3 | [Online Experimentation and Bandits](./03_online_experimentation_checklist.md) | core | DERIVED | draft (lint open) |
-| 4 | [Retrieval index correctness and BM25](./04_retrieval_index_correctness.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [Retrieval index correctness and BM25](./04_retrieval_index_correctness.md) | core | DERIVED | authored |
 | 5 | [Phrase and positional retrieval](./05_phrase_and_positional_retrieval.md) | core | DERIVED | authored |
-| 6 | [Autocomplete admission and freshness](./06_autocomplete_admission_and_freshness.md) | 2 | DERIVED | draft (lint open) |
+| 6 | [Autocomplete admission and freshness](./06_autocomplete_admission_and_freshness.md) | core | DERIVED | authored |
 | 7 | [Common issues: recommendation and retrieval](./07_25_Common_Issues.md) | advanced | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator

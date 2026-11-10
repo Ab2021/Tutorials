@@ -585,7 +585,7 @@ NUMERICAL EXAMPLE (three fields, ILLUSTRATIVE m and u)
   surname  m=0.92, u=0.021   -> w = log2(0.92/0.021)  =  5.453 bits
   dob      m=0.96, u=0.0009  -> w = log2(0.96/0.0009) = 10.059 bits
   postcode m=0.88, u=0.031   -> w = log2(0.88/0.031)  =  4.827 bits
-  all agree:  W = 20.33923 bits, LR = 2^20.33923 = 1,326,322
+  all agree:  W = 20.33923 bits, LR = 2^20.33923 = 1,326,534
   with prior 1/500 (odds 0.002): posterior odds = 2,653.07, p = 0.99962
   dob disagrees only:
      W = 20.339 - 10.059 + log2(0.04/0.9991) = 20.339 - 10.059 - 4.643 = 5.638

@@ -50,7 +50,7 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Fraud Taxonomy and Decision Grain](./01_Fraud_Taxonomy_and_Decision_Grain.md) | 1 | DERIVED | draft (lint open) |
+| 1 | [Fraud Taxonomy and Decision Grain](./01_Fraud_Taxonomy_and_Decision_Grain.md) | 1 | DERIVED | authored |
 | 2 | [Decision Cut-offs and Losses](./02_Decision_Cutoffs_and_Losses.md) | 2 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator

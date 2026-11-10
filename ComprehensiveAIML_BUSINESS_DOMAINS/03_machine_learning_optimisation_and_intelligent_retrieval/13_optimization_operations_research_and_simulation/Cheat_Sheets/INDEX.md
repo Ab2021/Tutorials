@@ -9,6 +9,7 @@ This collection carries 7 reference card(s) and 0 troubleshooting artifact(s) fo
 | Level | Cards | Purpose |
 |---|---|---|
 | foundation | Optimisation formulation and duality | Build from prerequisites to production judgement |
+| core | Solver Selection, Simulation experiment plan, Integer programming, Metaheuristics | Build from prerequisites to production judgement |
 | advanced | Network and Scheduling Models | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
@@ -16,7 +17,7 @@ This collection carries 7 reference card(s) and 0 troubleshooting artifact(s) fo
 | If you need to… | Read |
 |---|---|
 | work on optimisation formulation and duality | [Optimisation formulation and duality](./01_optimisation_formulation.md) |
-| work on solver selection | [Solver selection](./02_solver_selection.md) |
+| work on solver selection | [Solver Selection](./02_solver_selection.md) |
 | work on simulation experiment plan | [Simulation experiment plan](./03_simulation_experiment_plan.md) |
 | work on network and scheduling models | [Network and Scheduling Models](./04_network_and_scheduling_models.md) |
 | work on integer programming | [Integer programming](./05_integer_programming.md) |
@@ -58,11 +59,11 @@ This collection carries 7 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Optimisation formulation and duality](./01_optimisation_formulation.md) | foundation | DERIVED | draft (lint open) |
-| 2 | [Solver selection](./02_solver_selection.md) | 2 | DERIVED | draft (lint open) |
-| 3 | [Simulation experiment plan](./03_simulation_experiment_plan.md) | 2 | DERIVED | draft (lint open) |
+| 2 | [Solver Selection](./02_solver_selection.md) | core | DERIVED | authored |
+| 3 | [Simulation experiment plan](./03_simulation_experiment_plan.md) | core | DERIVED | authored |
 | 4 | [Network and Scheduling Models](./04_network_and_scheduling_models.md) | advanced | DERIVED | draft (lint open) |
-| 5 | [Integer programming](./05_integer_programming.md) | 2 | DERIVED | draft (lint open) |
-| 6 | [Metaheuristics](./06_metaheuristics.md) | 2 | DERIVED | draft (lint open) |
+| 5 | [Integer programming](./05_integer_programming.md) | core | DERIVED | authored |
+| 6 | [Metaheuristics](./06_metaheuristics.md) | core | DERIVED | authored |
 | 7 | [Interval Greedy and Weighted Scheduling](./07_interval_greedy_and_weighted_scheduling.md) | 2 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator

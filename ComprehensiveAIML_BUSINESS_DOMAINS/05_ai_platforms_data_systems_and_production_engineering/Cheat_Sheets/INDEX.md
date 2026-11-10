@@ -2,18 +2,21 @@
 
 ## 1. Overview
 
-This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Part 05 — AI Platforms, Data Systems and Production Engineering`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
+This collection carries 1 reference card(s) and 1 troubleshooting artifact(s) for `Part 05 — AI Platforms, Data Systems and Production Engineering`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
 | Level | Cards | Purpose |
 |---|---|---|
+| core | Distributed Training Checkpoint and Recovery | Build from prerequisites to production judgement |
+| advanced | 25 Common Issues — AI Platforms, Data Systems and Production Engineering | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
 | If you need to… | Read |
 |---|---|
-| work on 1. file header | [1. File Header](./01_Distributed_Training_Checkpoint_and_Recovery.md) |
+| work on distributed training checkpoint and recovery | [Distributed Training Checkpoint and Recovery](./01_Distributed_Training_Checkpoint_and_Recovery.md) |
+| diagnose a failure that keeps recurring | [25 Common Issues — AI Platforms, Data Systems and Production Engineering](./02_25_Common_Issues.md) |
 
 ## 4. Reading paths
 
@@ -49,11 +52,12 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [1. File Header](./01_Distributed_Training_Checkpoint_and_Recovery.md) | 3 | DERIVED | draft (lint open) |
+| 1 | [Distributed Training Checkpoint and Recovery](./01_Distributed_Training_Checkpoint_and_Recovery.md) | core | ILLUSTRATIVE | authored |
+| 2 | [25 Common Issues — AI Platforms, Data Systems and Production Engineering](./02_25_Common_Issues.md) | advanced | ILLUSTRATIVE | authored |
 
 ## 9. Common Issues locator
 
-- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+- [25 Common Issues — AI Platforms, Data Systems and Production Engineering](./02_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
 ## 10. Sources, versions, maintenance
 
@@ -69,5 +73,5 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
 - [ ] Independent technical review of each card.

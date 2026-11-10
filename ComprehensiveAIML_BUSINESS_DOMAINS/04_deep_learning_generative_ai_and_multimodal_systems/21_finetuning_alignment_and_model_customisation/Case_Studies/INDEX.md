@@ -15,7 +15,8 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-2026-FT01 | [Should support draft generation use a domain adapter?](./01_support_domain_adaptation.md) | Module 21 â€” Fine-Tuning, Alignment and Model Customisation | llm-agentic | decision record in the linked case | evaluation-mismatch | data-leakage, atomic-release-bundle | not-measured | proposed | null | draft (lint open) |
+| CASE-2026-FT01 | [Should support draft generation use a domain adapter?](./01_support_domain_adaptation.md) | Module 21 â€” Fine-Tuning, Alignment and Model Customisation | llm-agentic | decision record in the linked case | evaluation-mismatch | data-leakage, atomic-release-bundle | not-measured | proposed | null | authored |
+| CASE-2026-FT02 | [Customize tenant assistants without crossing isolation boundaries](./02_Customize_Tenant_Assistants_Without_Crossing_Isolation_Boundarie.md) | Module 21 â€” Fine-Tuning, Alignment and Model Customisation | llm-agentic | decision record in the linked case | isolation-boundary | evaluation-mismatch, atomic-release-bundle | not-measured | proposed | null | draft (lint open) |
 | PLAN-2026-IR004 | Customize tenant assistants without crossing isolation boundaries | Module 21 â€” Fine-Tuning, Alignment and Model Customisation | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-2026-IR009 | Allocate a domain-training budget with restart headroom | Module 21 â€” Fine-Tuning, Alignment and Model Customisation | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-2026-IR010 | Compare specialized models with authorized shared-model baselines | Module 21 â€” Fine-Tuning, Alignment and Model Customisation | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
@@ -35,7 +36,7 @@
 
 ## 4. Similarity / contrast map
 
-This collection holds 1 authored case(s) and 6 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+This collection holds 2 authored case(s) and 6 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
@@ -53,6 +54,7 @@ Planned commitments, retained without silent deletion:
 | Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
 | 2026-11-10 | [Should support draft generation use a domain adapter?](./01_support_domain_adaptation.md) | index regenerated from disk | not-measured / proposed unchanged |
+| 2026-11-10 | [Customize tenant assistants without crossing isolation boundaries](./02_Customize_Tenant_Assistants_Without_Crossing_Isolation_Boundarie.md) | index regenerated from disk | not-measured / proposed unchanged |
 
 ## 7. Pre-publish checks
 

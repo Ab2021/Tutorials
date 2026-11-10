@@ -8,7 +8,8 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
-| core | Clustering and Embeddings, Segmentation Evaluation | Build from prerequisites to production judgement |
+| core | Clustering and Embeddings, Change-point detection, Segmentation Evaluation, Human Review Loops | Build from prerequisites to production judgement |
+| advanced | Common Issues: Anomaly Detection and Segmentation | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -18,8 +19,8 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 | work on clustering and embeddings | [Clustering and Embeddings](./02_Clustering_and_Embeddings.md) |
 | work on change-point detection | [Change-point detection](./03_Change_Point_Detection.md) |
 | work on segmentation evaluation | [Segmentation Evaluation](./04_Segmentation_Evaluation.md) |
-| work on human review loops | [Human review loops](./05_Human_Review_Loops.md) |
-| diagnose a failure that keeps recurring | [Common issues: anomaly detection and segmentation](./06_25_Common_Issues.md) |
+| work on human review loops | [Human Review Loops](./05_Human_Review_Loops.md) |
+| diagnose a failure that keeps recurring | [Common Issues: Anomaly Detection and Segmentation](./06_25_Common_Issues.md) |
 
 ## 4. Reading paths
 
@@ -57,14 +58,14 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 |---|---|---|---|---|
 | 1 | [Anomaly Detection Triage](./01_Anomaly_Detection_Triage.md) | 2 | DERIVED | authored |
 | 2 | [Clustering and Embeddings](./02_Clustering_and_Embeddings.md) | core | ILLUSTRATIVE | draft (lint open) |
-| 3 | [Change-point detection](./03_Change_Point_Detection.md) | 2 | DERIVED | draft (lint open) |
+| 3 | [Change-point detection](./03_Change_Point_Detection.md) | core | DERIVED | authored |
 | 4 | [Segmentation Evaluation](./04_Segmentation_Evaluation.md) | core | DERIVED | draft (lint open) |
-| 5 | [Human review loops](./05_Human_Review_Loops.md) | 2 | DERIVED | draft (lint open) |
-| 6 | [Common issues: anomaly detection and segmentation](./06_25_Common_Issues.md) | 2 | DERIVED | draft (lint open) |
+| 5 | [Human Review Loops](./05_Human_Review_Loops.md) | core | DERIVED | authored |
+| 6 | [Common Issues: Anomaly Detection and Segmentation](./06_25_Common_Issues.md) | advanced | ILLUSTRATIVE | authored |
 
 ## 9. Common Issues locator
 
-- [Common issues: anomaly detection and segmentation](./06_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
+- [Common Issues: Anomaly Detection and Segmentation](./06_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
 ## 10. Sources, versions, maintenance
 

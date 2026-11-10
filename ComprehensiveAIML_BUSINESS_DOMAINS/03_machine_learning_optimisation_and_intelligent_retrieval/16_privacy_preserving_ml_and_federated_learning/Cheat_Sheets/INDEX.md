@@ -8,16 +8,17 @@ This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
-| core | Data Minimisation and Synthetic-Data Limits | Build from prerequisites to production judgement |
+| core | Privacy method selection and differential privacy, Federated learning architecture and secure aggregation, Data Minimisation and Synthetic-Data Limits | Build from prerequisites to production judgement |
+| advanced | Common issues: privacy-preserving ML and federated learning | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
 | If you need to… | Read |
 |---|---|
 | work on privacy method selection and differential privacy | [Privacy method selection and differential privacy](./01_privacy_method_selection.md) |
-| work on federated learning and secure aggregation | [Federated learning and secure aggregation](./02_federated_learning_architecture.md) |
+| work on federated learning architecture and secure aggregation | [Federated learning architecture and secure aggregation](./02_federated_learning_architecture.md) |
 | work on data minimisation and synthetic-data limits | [Data Minimisation and Synthetic-Data Limits](./03_data_minimisation_list.md) |
-| diagnose a failure that keeps recurring | [Common issues: privacy-preserving ML](./04_25_Common_Issues.md) |
+| diagnose a failure that keeps recurring | [Common issues: privacy-preserving ML and federated learning](./04_25_Common_Issues.md) |
 
 ## 4. Reading paths
 
@@ -53,14 +54,14 @@ This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Privacy method selection and differential privacy](./01_privacy_method_selection.md) | 2 | DERIVED | draft (lint open) |
-| 2 | [Federated learning and secure aggregation](./02_federated_learning_architecture.md) | 2 | DERIVED | draft (lint open) |
+| 1 | [Privacy method selection and differential privacy](./01_privacy_method_selection.md) | core | DERIVED | authored |
+| 2 | [Federated learning architecture and secure aggregation](./02_federated_learning_architecture.md) | core | DERIVED | authored |
 | 3 | [Data Minimisation and Synthetic-Data Limits](./03_data_minimisation_list.md) | core | DERIVED | authored |
-| 4 | [Common issues: privacy-preserving ML](./04_25_Common_Issues.md) | 2 | DERIVED | draft (lint open) |
+| 4 | [Common issues: privacy-preserving ML and federated learning](./04_25_Common_Issues.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-- [Common issues: privacy-preserving ML](./04_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
+- [Common issues: privacy-preserving ML and federated learning](./04_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
 ## 10. Sources, versions, maintenance
 

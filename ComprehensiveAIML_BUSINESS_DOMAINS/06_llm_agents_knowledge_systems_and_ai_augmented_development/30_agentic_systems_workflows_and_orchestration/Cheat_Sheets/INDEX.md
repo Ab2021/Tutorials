@@ -8,6 +8,8 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| foundation | Agent Boundaries and Request Ownership | Build from prerequisites to production judgement |
+| advanced | Agent Sessions, State Ownership, Isolation and Run Lifecycle | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -51,8 +53,8 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Agent Boundaries and Request Ownership](./01_agent_boundaries_and_request_ownership.md) | 1 | DERIVED | draft (lint open) |
-| 2 | [Agent Sessions, State Ownership, Isolation and Run Lifecycle](./04_agent_sessions_state_isolation_and_lifecycle.md) | 3 | DERIVED | draft (lint open) |
+| 1 | [Agent Boundaries and Request Ownership](./01_agent_boundaries_and_request_ownership.md) | foundation | DERIVED | authored |
+| 2 | [Agent Sessions, State Ownership, Isolation and Run Lifecycle](./04_agent_sessions_state_isolation_and_lifecycle.md) | advanced | DERIVED | authored |
 | 3 | [Durable workflows and idempotent execution](./05_durable_workflows_and_idempotent_execution.md) | 3 | DERIVED and ILLUSTRATIVE; source contents unavailable | draft (lint open) |
 
 ## 9. Common Issues locator

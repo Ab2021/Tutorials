@@ -1065,9 +1065,9 @@ A reader should therefore treat 45 as an upper bound under central assumptions r
 - [Should support draft generation use a domain adapter?](./01_support_domain_adaptation.md) — the single-tenant version of the same adapter economics, where the deciding quantity is the marginal accuracy point rather than the marginal tenant.
 - [LoRA Parameter-Efficient Fine-Tuning](../Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md) — the rank and target-module arithmetic that produces 18.4 million parameters at rank 8.
 - [QLoRA Quantized Base Adapter Fine-Tuning](../Cheat_Sheets/02_QLoRA_Quantized_Base_Adapter_Finetuning.md) — the quantised base loading that makes 45 cached adapters fit on one device.
-- [Advanced PEFT Methods](../../8.4_Advanced_PEFT_Methods.md) — multi-adapter routing and composition, including the adapter-identity concerns this case treats as a boundary control.
-- [Model Merging and Weight Averaging](../../8.5_Model_Merging_and_Weight_Averaging.md) — the compatibility gate that generalises the base-build binding here.
-- [Why PEFT and the Fine-Tuning Spectrum](../../8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md) — the parameter and storage accounting behind the per-tenant artifact cost.
+- [Advanced PEFT Methods](../8.4_Advanced_PEFT_Methods.md) — multi-adapter routing and composition, including the adapter-identity concerns this case treats as a boundary control.
+- [Model Merging and Weight Averaging](../8.5_Model_Merging_and_Weight_Averaging.md) — the compatibility gate that generalises the base-build binding here.
+- [Why PEFT and the Fine-Tuning Spectrum](../8.1_Why_PEFT_and_the_Fine_Tuning_Spectrum.md) — the parameter and storage accounting behind the per-tenant artifact cost.
 
 ### 14.2 Source boundaries
 

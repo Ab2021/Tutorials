@@ -52,7 +52,7 @@ This collection carries 1 reference card(s) and 1 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Matrix and Vector Identities](./01_Matrix_and_Vector_Identities.md) | 1 | DERIVED | authored |
-| 2 | [25 Common Issues — Mathematics, Probability, Statistics and Linear Algebra](./99_25_Common_Issues.md) | core | DERIVED | draft (lint open) |
+| 2 | [25 Common Issues — Mathematics, Probability, Statistics and Linear Algebra](./99_25_Common_Issues.md) | core | DERIVED | authored |
 
 ## 9. Common Issues locator
 

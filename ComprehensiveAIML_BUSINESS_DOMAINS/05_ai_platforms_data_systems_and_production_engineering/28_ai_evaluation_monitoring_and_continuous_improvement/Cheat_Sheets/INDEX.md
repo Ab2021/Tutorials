@@ -2,18 +2,21 @@
 
 ## 1. Overview
 
-This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) for `Module 28 â€” AI Evaluation, Monitoring and Continuous Improvement`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
+This collection carries 1 reference card(s) and 1 troubleshooting artifact(s) for `Module 28 â€” AI Evaluation, Monitoring and Continuous Improvement`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
 | Level | Cards | Purpose |
 |---|---|---|
+| core | Model Evaluation and Production Monitoring | Build from prerequisites to production judgement |
+| advanced | 25 Common Issues — AI Evaluation, Monitoring and Continuous Improvement | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
 | If you need to… | Read |
 |---|---|
 | work on model evaluation and production monitoring | [Model Evaluation and Production Monitoring](./04_Model_Evaluation_and_Production_Monitoring.md) |
+| diagnose a failure that keeps recurring | [25 Common Issues — AI Evaluation, Monitoring and Continuous Improvement](./05_25_Common_Issues.md) |
 
 ## 4. Reading paths
 
@@ -49,11 +52,12 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Model Evaluation and Production Monitoring](./04_Model_Evaluation_and_Production_Monitoring.md) | 3 | DERIVED | draft (lint open) |
+| 1 | [Model Evaluation and Production Monitoring](./04_Model_Evaluation_and_Production_Monitoring.md) | core | DERIVED | authored |
+| 2 | [25 Common Issues — AI Evaluation, Monitoring and Continuous Improvement](./05_25_Common_Issues.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+- [25 Common Issues — AI Evaluation, Monitoring and Continuous Improvement](./05_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
 ## 10. Sources, versions, maintenance
 
@@ -69,5 +73,5 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
 - [ ] Independent technical review of each card.

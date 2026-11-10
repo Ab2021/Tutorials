@@ -1151,7 +1151,7 @@ third, evidence label fourth — is the transferable part.
 ## 14. Connections & Cross-References
 
 **Sibling cases in this collection.** The airline and hotel revenue-management case
-([02_Airline_And_Hotel_Revenue_Management.md](./02_Airline_And_Hotel_Revenue_Management.md)) shares
+(02_Airline_And_Hotel_Revenue_Management.md (planned in `INDEX.md`; not yet authored)) shares
 this case's core object — a price or a booking limit set against uncertain demand — and differs in
 that its capacity is fixed per departure or per night, so the constraint binds every day rather than
 on a subset. Reading the two together separates the elasticity question from the allocation question.

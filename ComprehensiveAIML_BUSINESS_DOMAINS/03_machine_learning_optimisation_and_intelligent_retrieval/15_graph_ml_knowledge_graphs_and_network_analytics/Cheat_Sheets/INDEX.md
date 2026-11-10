@@ -8,8 +8,8 @@ This collection carries 8 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
-| core | Graph ML for Fraud and AML Ring Detection, Graph data-model patterns, GNN decision guide | Build from prerequisites to production judgement |
-| advanced | Graph evaluation, Common issues: graph ML | Build from prerequisites to production judgement |
+| core | Graph ML for Fraud and AML Ring Detection, Graph data-model patterns, Centrality and communities, GNN decision guide, Knowledge graphs and ontologies | Build from prerequisites to production judgement |
+| advanced | Graph evaluation, Bounded traversal and entity resolution, Common issues: graph ML | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -52,19 +52,32 @@ This collection carries 8 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Symbol / term | Meaning | Units | Shape / type | Domain | First use |
 |---|---|---|---|---|---|
-| — | no card defines a symbol yet | — | — | — | — |
+| Block | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Blocking completeness | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Sentinel block | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Sorted-neighbourhood blocking | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Canopy / LSH blocking | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Match weight | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Threshold | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Pair-level precision and recall | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| B-cubed precision and recall | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Transitive closure | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Correlation clustering | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Canonical identifier | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Identity version | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
+| Frontier | as defined at first use in the linking card | see card | see card | see card | `01_graph_fraud_detection.md` |
 
 ## 8. Card directory
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Graph ML for Fraud and AML Ring Detection](./01_graph_fraud_detection.md) | core | DERIVED | authored |
-| 2 | [Graph data-model patterns](./02_graph_data_model_patterns.md) | core | DERIVED | draft (lint open) |
-| 3 | [Centrality and communities](./03_centrality_and_communities.md) | 2 | DERIVED | draft (lint open) |
+| 2 | [Graph data-model patterns](./02_graph_data_model_patterns.md) | core | DERIVED | authored |
+| 3 | [Centrality and communities](./03_centrality_and_communities.md) | core | DERIVED | authored |
 | 4 | [GNN decision guide](./04_gnn_decision_guide.md) | core | DERIVED | draft (lint open) |
-| 5 | [Knowledge graphs and ontologies](./05_knowledge_graphs_and_ontologies.md) | 2 | DERIVED | draft (lint open) |
+| 5 | [Knowledge graphs and ontologies](./05_knowledge_graphs_and_ontologies.md) | core | DERIVED | authored |
 | 6 | [Graph evaluation](./06_graph_evaluation.md) | advanced | DERIVED | draft (lint open) |
-| 7 | [Bounded traversal and entity resolution](./07_bounded_traversal_and_entity_resolution.md) | 2 | DERIVED | draft (lint open) |
+| 7 | [Bounded traversal and entity resolution](./07_bounded_traversal_and_entity_resolution.md) | advanced | DERIVED | authored |
 | 8 | [Common issues: graph ML](./09_25_common_issues.md) | advanced | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator

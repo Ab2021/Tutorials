@@ -54,7 +54,7 @@ This collection carries 5 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Vision Evaluation and Error Taxonomy](./01_Vision_Evaluation_and_Error_Taxonomy.md) | 1 | DERIVED | authored |
-| 2 | [CNNs, Attention and Transfer Learning](./02_CNNs_Attention_and_Transfer_Learning.md) | 1 | DERIVED | draft (lint open) |
+| 2 | [CNNs, Attention and Transfer Learning](./02_CNNs_Attention_and_Transfer_Learning.md) | 1 | DERIVED | authored |
 | 3 | [Vision Transformers: Patch Tokens, Position, and Attention Budgets](./03_Vision_Transformers.md) | 2 | DERIVED | draft (lint open) |
 | 4 | [Detection and Segmentation](./04_Detection_and_Segmentation.md) | 2 | DERIVED | draft (lint open) |
 | 5 | [Self-Supervision and Contrastive Learning](./05_Self_Supervision_and_Contrastive_Learning.md) | 2 | DERIVED | draft (lint open) |

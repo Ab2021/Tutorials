@@ -2,12 +2,14 @@
 
 ## 1. Overview
 
-This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) for `Module 21 â€” Fine-Tuning, Alignment and Model Customisation`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
+This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) for `Module 21 â€” Fine-Tuning, Alignment and Model Customisation`. Cards teach a reusable method, calculation, or selection rule; the Common Issues file turns those rules into diagnostics. Status is measured, not asserted: a card is `authored` only when `Tools/manuscript_lint.py` exits 0 for it.
 
 ## 2. Topic ladder
 
 | Level | Cards | Purpose |
 |---|---|---|
+| core | LoRA Parameter-Efficient LLM Fine-Tuning | Build from prerequisites to production judgement |
+| advanced | Common Issues in Fine-Tuning, Alignment and Model Customisation | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -16,6 +18,7 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 | work on lora parameter-efficient llm fine-tuning | [LoRA Parameter-Efficient LLM Fine-Tuning](./01_LoRA_Parameter_Efficient_Finetuning.md) |
 | work on quantized-base low-rank adapter fine-tuning and qlora | [Quantized-Base Low-Rank Adapter Fine-Tuning and QLoRA](./02_QLoRA_Quantized_Base_Adapter_Finetuning.md) |
 | work on rope and position interpolation | [RoPE and Position Interpolation](./03_RoPE_and_Position_Interpolation.md) |
+| diagnose a failure that keeps recurring | [Common Issues in Fine-Tuning, Alignment and Model Customisation](./04_25_Common_Issues.md) |
 
 ## 4. Reading paths
 
@@ -51,13 +54,14 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [LoRA Parameter-Efficient LLM Fine-Tuning](./01_LoRA_Parameter_Efficient_Finetuning.md) | 2 | DERIVED | draft (lint open) |
+| 1 | [LoRA Parameter-Efficient LLM Fine-Tuning](./01_LoRA_Parameter_Efficient_Finetuning.md) | core | DERIVED | authored |
 | 2 | [Quantized-Base Low-Rank Adapter Fine-Tuning and QLoRA](./02_QLoRA_Quantized_Base_Adapter_Finetuning.md) | 3 | DERIVED | authored |
 | 3 | [RoPE and Position Interpolation](./03_RoPE_and_Position_Interpolation.md) | 3 | DERIVED | authored |
+| 4 | [Common Issues in Fine-Tuning, Alignment and Model Customisation](./04_25_Common_Issues.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 
-- Not yet authored. The collection is incomplete until this artifact exists with at least 25 distinct issues.
+- [Common Issues in Fine-Tuning, Alignment and Model Customisation](./04_25_Common_Issues.md) — the unit's final troubleshooting artifact; entries use stable `CI-` ids.
 
 ## 10. Sources, versions, maintenance
 
@@ -73,5 +77,5 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [x] A final Common Issues artifact exists with at least 25 distinct issues.
 - [ ] Independent technical review of each card.

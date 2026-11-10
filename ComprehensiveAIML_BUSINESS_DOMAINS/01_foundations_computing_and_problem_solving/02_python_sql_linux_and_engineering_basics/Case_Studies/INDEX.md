@@ -16,7 +16,7 @@
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-02-001 | [Build a Data Quality CLI](./01_Build_Data_Quality_CLI.md) | Module 02 â€” Python, SQL, Linux and Engineering Basics | analytical | decision record in the linked case | data-quality-gate | contract-first, idempotent-operation | illustrative | proposed | null | authored |
-| CASE-02-002 | [Design an Analytics API](./02_Design_Analytics_API.md) | Module 02 â€” Python, SQL, Linux and Engineering Basics | analytical | decision record in the linked case | contract-first-api | correctness-contract, bounded-work | illustrative | proposed | null | draft (lint open) |
+| CASE-02-002 | [Design an Analytics API](./02_Design_Analytics_API.md) | Module 02 â€” Python, SQL, Linux and Engineering Basics | analytical | decision record in the linked case | contract-first-api | correctness-contract, bounded-work | illustrative | proposed | null | authored |
 
 ## 3. Canonical reusable patterns
 

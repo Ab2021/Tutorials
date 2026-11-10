@@ -16,7 +16,7 @@
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-05-001 | [Calibrate a Risk Model](./01_Calibrate_a_Risk_Model.md) | Module 05 â€” Mathematics, Probability, Statistics and Linear Algebra | analytical | decision record in the linked case | calibration-under-capacity | expected-value-decision-rule, label-maturity | illustrative | proposed | null | draft (lint open) |
-| CASE-05-002 | [Derive Gradient Descent for Regression](./02_Derive_Gradient_Descent_for_Regression.md) | Module 05 â€” Mathematics, Probability, Statistics and Linear Algebra | analytical | decision record in the linked case | optimization-contract | correctness-contract | illustrative | proposed | null | draft (lint open) |
+| CASE-05-002 | [Derive Gradient Descent for Regression](./02_Derive_Gradient_Descent_for_Regression.md) | Module 05 â€” Mathematics, Probability, Statistics and Linear Algebra | analytical | decision record in the linked case | optimization-contract | numerical-conditioning, correctness-contract | illustrative | proposed | null | authored |
 
 ## 3. Canonical reusable patterns
 

@@ -62,7 +62,7 @@ This collection carries 6 reference card(s) and 1 troubleshooting artifact(s) fo
 | 4 | [Docker and Containers](./04_Docker_and_Containers.md) | 2 | DERIVED | authored |
 | 5 | [SQL Analytics Patterns: Grain, Joins, Windows, and Metric Defence](./05_SQL_Analytics_Patterns.md) | 1 | DERIVED | authored |
 | 6 | [SQL Window Frames and Aggregate Semantics](./06_SQL_Window_Frames_and_Aggregate_Semantics.md) | core | DERIVED | authored |
-| 7 | [25 Common Issues — diagnostic catalog for async Python, HTTP/WebSocket I/O, LLM inference, containers, and SQL analytics](./99_25_Common_Issues.md) | core | ILLUSTRATIVE | draft (lint open) |
+| 7 | [25 Common Issues — diagnostic catalog for async Python, HTTP/WebSocket I/O, LLM inference, containers, and SQL analytics](./99_25_Common_Issues.md) | core | ILLUSTRATIVE | authored |
 
 ## 9. Common Issues locator
 

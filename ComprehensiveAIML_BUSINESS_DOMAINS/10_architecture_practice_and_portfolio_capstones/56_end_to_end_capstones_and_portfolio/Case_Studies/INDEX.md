@@ -15,7 +15,8 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-CAPSTONE-001 | [Choose a release gate for a local signal-to-explanation demonstrator](./01_local_signal_demo_release_gate.md) | Module 56 â€” End-to-End Capstones and Portfolio | hybrid | decision record in the linked case | evidence-bounded release gate | end-to-end, contract, bounded-work | illustrative | proposed | null | draft (lint open) |
+| CASE-CAPSTONE-001 | [Choose a release gate for a local signal-to-explanation demonstrator](./01_local_signal_demo_release_gate.md) | Module 56 â€” End-to-End Capstones and Portfolio | hybrid | decision record in the linked case | evidence-bounded release gate | end-to-end, contract, bounded-work | illustrative | proposed | null | authored |
+| CASE-CAPSTONE-002 | [Choose from six cross-domain capstones](./02_Choose_From_Six_Cross_Domain_Capstones.md) | Module 56 â€” End-to-End Capstones and Portfolio | analytical | decision record in the linked case | screen-then-rank selection under effort uncertainty | evidence-credit, scoring, minimax, versus, expected, value | illustrative | proposed | null | draft (lint open) |
 | PLAN-CAPSTONE-002 | Choose from six cross-domain capstones | Module 56 â€” End-to-End Capstones and Portfolio | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-CAPSTONE-003 | Complete architecture review | Module 56 â€” End-to-End Capstones and Portfolio | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 
@@ -31,7 +32,7 @@
 
 ## 4. Similarity / contrast map
 
-This collection holds 1 authored case(s) and 2 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+This collection holds 2 authored case(s) and 2 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 
@@ -45,6 +46,7 @@ Planned commitments, retained without silent deletion:
 | Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
 | 2026-11-10 | [Choose a release gate for a local signal-to-explanation demonstrator](./01_local_signal_demo_release_gate.md) | index regenerated from disk | illustrative / proposed unchanged |
+| 2026-11-10 | [Choose from six cross-domain capstones](./02_Choose_From_Six_Cross_Domain_Capstones.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 

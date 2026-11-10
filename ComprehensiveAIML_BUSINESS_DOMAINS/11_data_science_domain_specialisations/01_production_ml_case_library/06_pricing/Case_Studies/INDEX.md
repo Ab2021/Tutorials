@@ -15,7 +15,7 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-06-001 | [Dynamic pricing for an ecommerce retail assortment](./01_Dynamic_Pricing_Ecommerce_Retail.md) | Pricing and Revenue Management | hybrid | decision record in the linked case | causal-confounding | evaluation-mismatch, model-monitoring | not-measured | proposed | null | draft (lint open) |
+| CASE-01-06-001 | [Dynamic pricing for an ecommerce retail assortment](./01_Dynamic_Pricing_Ecommerce_Retail.md) | Pricing and Revenue Management | hybrid | decision record in the linked case | causal-confounding | evaluation-mismatch, constraint-violation | illustrative | proposed | null | authored |
 | PLAN-01-06-02 | Airline and hotel revenue management | Pricing and Revenue Management | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-01-06-03 | Insurance rating engine | Pricing and Revenue Management | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-01-06-04 | Rideshare surge pricing | Pricing and Revenue Management | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
@@ -48,7 +48,7 @@ Planned commitments, retained without silent deletion:
 
 | Date | Artifact | Event | Evidence / stage change |
 |---|---|---|---|
-| 2026-11-10 | [Dynamic pricing for an ecommerce retail assortment](./01_Dynamic_Pricing_Ecommerce_Retail.md) | index regenerated from disk | not-measured / proposed unchanged |
+| 2026-11-10 | [Dynamic pricing for an ecommerce retail assortment](./01_Dynamic_Pricing_Ecommerce_Retail.md) | index regenerated from disk | illustrative / proposed unchanged |
 
 ## 7. Pre-publish checks
 

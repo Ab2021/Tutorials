@@ -8,6 +8,7 @@ This collection carries 0 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| advanced | 25 Common Issues — API Platforms, Cloud-Native Systems and FinOps | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -49,7 +50,7 @@ This collection carries 0 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [25 Common Issues — API Platforms, Cloud-Native Systems and FinOps](./06_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
+| 1 | [25 Common Issues — API Platforms, Cloud-Native Systems and FinOps](./06_25_Common_Issues.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 

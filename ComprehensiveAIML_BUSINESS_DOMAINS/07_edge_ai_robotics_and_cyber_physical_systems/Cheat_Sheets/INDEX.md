@@ -8,6 +8,7 @@ This collection carries 0 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| advanced | 35 Common Issues Across Edge AI and Robotics Boundaries | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -49,7 +50,7 @@ This collection carries 0 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [35 Common Issues Across Edge AI and Robotics Boundaries](./99_35_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
+| 1 | [35 Common Issues Across Edge AI and Robotics Boundaries](./99_35_Common_Issues.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 

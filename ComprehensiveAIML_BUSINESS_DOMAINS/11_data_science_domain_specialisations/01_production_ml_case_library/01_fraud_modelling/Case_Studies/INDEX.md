@@ -15,9 +15,9 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-01-001 | [Real-time payment-card fraud detection under a friction budget](./01_real_time_payment_card_fraud_detection.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, cost-latency-tradeoff | not-measured | proposed | null | draft (lint open) |
+| CASE-01-01-001 | [Real-time payment-card fraud detection under a friction budget](./01_real_time_payment_card_fraud_detection.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, cost-latency-tradeoff | not-measured | proposed | null | authored |
 | CASE-01-01-002 | [Claims investigation triage under delayed adjudication](./02_insurance_claims_fraud_detection.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, human-in-the-loop | not-measured | proposed | null | authored |
-| CASE-01-01-003 | [Account takeover challenge policy with incomplete identity signals](./03_account_takeover_application_fraud.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, cost-latency-tradeoff | not-measured | proposed | null | draft (lint open) |
+| CASE-01-01-003 | [Account takeover challenge policy with incomplete identity signals](./03_account_takeover_application_fraud.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, cost-latency-tradeoff | not-measured | proposed | null | authored |
 | CASE-01-01-004 | [AML alert prioritization at fixed investigator capacity](./04_aml_transaction_monitoring_system.md) | Fraud Modelling | predictive-ml | decision record in the linked case | evaluation-mismatch | label-delay, human-in-the-loop | not-measured | proposed | null | draft (lint open) |
 | PLAN-01-01-04 | AML transaction monitoring | Fraud Modelling | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-01-01-05 | Marketplace fraud-ring graph detection | Fraud Modelling | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |

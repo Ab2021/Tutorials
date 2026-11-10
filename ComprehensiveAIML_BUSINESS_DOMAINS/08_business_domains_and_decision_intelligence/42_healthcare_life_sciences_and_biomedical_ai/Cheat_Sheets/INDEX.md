@@ -52,7 +52,7 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Clinical Decision Support: Evidence, Decision-Time Data, and Clinician Handoff](./01_Clinical_Decision_Support_Evidence_and_Handoff.md) | 1 | DERIVED | authored |
-| 2 | [Biomedical Signal Pipeline and Validation](./02_Biomedical_Signal_Pipeline_and_Validation.md) | 1 | DERIVED | draft (lint open) |
+| 2 | [Biomedical Signal Pipeline and Validation](./02_Biomedical_Signal_Pipeline_and_Validation.md) | 1 | DERIVED | authored |
 | 3 | [Human Factors: Alert Design, Review, and Recovery](./03_Human_Factors_Alert_Design_and_Recovery.md) | 2 | DERIVED | authored |
 
 ## 9. Common Issues locator

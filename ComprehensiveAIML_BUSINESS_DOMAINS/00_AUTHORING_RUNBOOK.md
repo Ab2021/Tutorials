@@ -83,3 +83,44 @@ deleting manuscripts is not.
 - No invented company architecture or measured outcome.
 - A company name in a catalog is a research context, not a claim about its systems.
 - Unavailable sources stay unavailable and are recorded as gaps beside the affected conclusion.
+
+## Verification invariants
+
+These are the checks the integration pass actually runs, and what each can and cannot prove.
+
+| Check | Command | Proves |
+|---|---|---|
+| Per-file acceptance | `python Tools/manuscript_lint.py <file>` | headings, depth, distinctness, no placeholders, arithmetic blocks present |
+| Arithmetic spot-audit | recompute in a kernel | printed numbers follow from stated assumptions |
+| Link integrity | `python Tools/verify_course.py --links` | no link points at a missing file |
+| Link repair | `python Tools/fix_links.py --check` | wrong-depth links are identified; ambiguous ones are never guessed |
+| Index fidelity | `python Tools/gen_indexes.py` | an index lists only files that exist |
+| Coverage | `python Tools/coverage_report.py --md` | how many manuscripts actually pass |
+
+Lint passing is necessary, not sufficient. A file can pass and still contain wrong arithmetic,
+so the audit recomputes printed figures. Corrections found this way are listed below.
+
+## Corrections applied by the integration owner
+
+| File | Defect | Fix |
+|---|---|---|
+| `.../15_graph_ml.../Cheat_Sheets/07_bounded_traversal_and_entity_resolution.md` | `2^20.33923` printed as `1,326,322` (inconsistent with its own posterior) | corrected to `1,326,534`; `0.002 x LR = 2,653.07` now matches |
+| `.../21_finetuning.../Case_Studies/01_support_domain_adaptation.md` | links overshot with `../../` | repaired to `../` |
+| `.../21_finetuning.../Case_Studies/02_Customize_Tenant_Assistants_...md` | same overshoot on three links | repaired |
+| `.../01_production_ml_case_library/06_pricing/.../01_Dynamic_Pricing_Ecommerce_Retail.md` | linked an unauthored sibling | unlinked, named as planned |
+
+Independently brute-forced and confirmed correct (no change needed):
+
+| File | Checked |
+|---|---|
+| `.../13_optimization.../Case_Studies/03_scheduling_objective_and_constraints.md` | 158 compatible subsets of 4,096, closed-interval 77, 1 h buffer 77, max value 29 = (A,D,F,J,L), greedy 26, max cardinality 5 |
+| `.../05_math.../Case_Studies/02_Derive_Gradient_Descent_for_Regression.md` | Sxx=10, Sxy=6, slope 0.6, intercept 2.2, residuals sum to 0, SSE 2.4, R^2 0.6, RMSE 0.6928 |
+| `.../06_pricing/.../01_Dynamic_Pricing_Ecommerce_Retail.md` | k=0.915, m(18)=7.07, m(16.20)=5.423, -23.3% margin, +30.4% units, e_req=2.517 |
+| `.../21_finetuning.../Cheat_Sheets/01_LoRA_Parameter_Efficient_Finetuning.md` | base 5,801,771,008, adapter 36,831,232 (0.6348%), 421.5 MiB at 12 B, 562.0 MiB at 16 B, merge 181.46 GFLOP |
+
+## Known non-goals
+
+- Unit `INDEX.md` topic maps are generated, never authored per topic; they assert coverage only.
+- `AUTHORING_PROGRESS.md` rows are worker self-reports; the coverage report is the authority.
+- Provider quota can terminate a whole wave at once (HTTP 429). The pipeline is resumable from
+  disk; nothing is lost because every manuscript is written atomically.

@@ -1,1198 +1,1165 @@
 ---
+title: "Candidate Generation, Eligibility and Ranking"
+topic: "retrieval candidate generation, point-in-time eligibility, ranking handoff"
 collection: "recsys-playbook"
-file_id: "01"
-topic: "Candidate generation, eligibility and ranking"
-level: 3
-status: "draft"
-version: "1.0"
-created: "2026-11-07"
-reviewed: null
-review_trigger: "Policy, catalog, model, index or evaluation population changes"
-notation_style: "plain-text"
-prerequisites: []
-pattern_tags: [retrieval, ranking, evaluation]
-source_status: "OPEN"
-owner_role: "Recommendation engineering and product analytics"
+level: "core"
+evidence: "DERIVED"
+created: "2026-11-10"
+last_reviewed: null
+content_status: "draft"
+notation_style: "plain-text fenced blocks"
+prerequisites: ["set algebra", "dot products and cosine similarity", "binomial and hypergeometric reasoning", "event-time vs processing-time joins"]
+pattern_tags: ["candidate-generation", "eligibility", "filtered-ann", "recall-at-k", "exposure-bias"]
+owner_role: "recommendation engineering and product analytics"
 source_index: "INDEX.md"
+review_trigger: "Eligibility policy change, catalog or index schema change, ranker handoff contract change, or evaluation population change"
 ---
+
 # Candidate Generation, Eligibility and Ranking
 
 ## 1. File Header
 
-**Purpose:** Select, evaluate and operate retrieval and ranking without treating inaccessible or unobserved items as valid recommendations.
-**Audience:** Recommendation engineers, applied scientists, product analysts and technical interview candidates.
-**Prerequisites:** Set operations, vectors and dot products, probability, data joins, timestamps, and controlled experiments; [Stanford IR book](https://nlp.stanford.edu/IR-book/) supplies information-retrieval foundations.
-**Outcome:** Given a point-in-time authorized catalog, labels and retrieval outputs, compute matched recall and choose a safe candidate pipeline.
-**Excluded:** Detailed learning-to-rank loss design, causal policy optimization, and statutory interpretation; ranking-metric and exploration sheets remain planned in [INDEX](INDEX.md).
-**Status:** Draft, unreviewed; no product, deployment, performance or cost results measured.
-**Evidence:** DERIVED logical claims, ILLUSTRATIVE constructed data and assumptions, SOURCED claims with primary references, and OPEN operational evidence.
-**Source boundary:** The directory crosswalk names recommendation-system topics, but the original source files are unavailable and were not inspected.
-**Retrieval cue:** Begin at Section 8 for operational failures, Section 5 for the checked comparison, and Section 9 for sizing.
-**Takeaway:** The decision concerns an eligible candidate set and its downstream business impact, not a model score alone.
+**Purpose:** specify how a recommendation request moves from a catalog to a displayed slate, and how to measure that movement without confusing retrieval quality with ranking quality or with business outcome.
+**Audience:** recommendation engineers, applied scientists, product analysts, and interview candidates who must defend a candidate pipeline under scrutiny.
+**Prerequisites:** you should be comfortable with set intersection and difference, dot products, variance of a proportion, and reconstructing a row of features as of a stated timestamp. If joins between event-time and processing-time tables are unfamiliar, read a window-frame reference first.
+**Outcome:** given a point-in-time eligible catalog, a relevance-label rule, and two retrieval systems, you will be able to compute matched candidate recall with a confidence interval, detect filtered-ANN underfill before it reaches users, and size the candidate budget against a latency and cost envelope.
+**Excluded here:** learning-to-rank loss design, counterfactual policy optimisation, and statutory interpretation of content rights. Those are separate decisions with separate evidence standards.
+**Status:** draft and unreviewed. No product, deployment, latency percentile, or revenue figure in this card is measured; every number is either derived from a stated formula or labelled ILLUSTRATIVE.
+**Evidence posture:** DERIVED for the algebra and the bounds, ILLUSTRATIVE for constructed catalogs and request traces, OPEN for any claim about a specific vendor index's recall or a specific company's funnel.
+**Source boundary:** general information-retrieval and vector-search documentation informs the vocabulary; no source file for this unit was available for inspection, so no claim here rests on an unread primary source. Faiss project documentation is cited only for the existence of approximate search, not for measured properties.
+**Retrieval cue:** Section 4 for the formulas, Section 5 for one fully worked request set, Section 8 for diagnosis, Section 9 for sizing, Section 12 for the card.
+
+**The one decision this card supports.** Should a candidate pipeline be trusted to feed a ranker, and on what evidence? That question decomposes into three sub-decisions that fail for different reasons:
+
+1. Is the eligible set correct at the instant of the decision, including every rights, entitlement, availability, and safety constraint?
+2. Does the candidate set contain enough of the eligible relevant items for the ranker to have a chance?
+3. Does the evaluation that produced those two answers use the same population, cutoff, and label horizon as the decision it claims to inform?
+
+A pipeline can pass (1) and (3) while failing (2), and the symptom is not an error — it is a quiet loss of quality that looks like a ranking problem.
+
+**Why the stages are separated at all.** Scoring every eligible item with a heavy ranker is usually infeasible: a catalog of 12 million items against a 128-dimension embedding and a 60-feature ranker does not fit a 250 ms budget. The standard resolution is a cascade: cheap retrieval proposes a few hundred to a few thousand items, and an expensive model orders them. The cascade introduces a hard structural fact that governs everything else in this card: **a ranker cannot display what retrieval did not return.** Every relevant item lost at the candidate stage is lost permanently for that request, no matter how good the ranker is.
+
+**What "eligibility" means operationally.** Eligibility is not a property of an item in the abstract. It is a predicate over (item, viewer, surface, timestamp). A title can be eligible in one territory and not another, eligible for a subscriber and not for an ad-supported viewer, purchasable in one fulfilment zone and not another, and eligible at 10:00 but not at 10:01 after a rights revocation. Any evaluation that treats eligibility as an item-level attribute will silently average across incompatible populations.
+
+**Reading order for a practitioner under time pressure.** Start at Section 8, find the failure whose symptom you are seeing, follow its discriminating check, then return to Section 4 for the formula that check depends on. The formulas are ordered by increasing realism, so an early exit at 4.1 is legitimate when the catalog is small and the eligible set is trivially correct.
 
 ## 2. Concept Map / Mental Model
 
 ```text
-Request + context + event-time snapshot
-             |
-             v
-  Authorization / rights / safety constraints
-             |
-             v
-Popularity + collaborative + content + ANN retrieval
-             |
-             v
-Union -> deduplicate -> enforce current eligibility -> bounded candidate set
-             |
-             v
-Rank -> diversity / policy constraints -> final eligibility check -> display
-             |
-             v
-Impression + position + assignment + outcome logging -> evaluation and feedback
+event-time facts                 decision-time predicate              display
+--------------                   -----------------------              -------
+catalog ingest ----+
+rights change -----+--> snapshot at t ---> E(q,t) eligible set --+
+inventory move ----+          |                                   |
+entitlement ------+           |                                   v
+                              |                        retrieval sources
+                              |                     (popularity, co-visit,
+                              |                      content, embedding ANN)
+                              |                                   |
+                              |                                   v
+                              +-------------------> filter -> dedup -> cap k
+                                                                  |
+                                                                  v
+                                                          candidate set C(q)
+                                                                  |
+                                                                  v
+                                                    ranker -> policy -> slate
+                                                                  |
+                                                                  v
+                                              exposure log (item, position, arm)
+                                                                  |
+                                                                  v
+                                             outcome log (mature after horizon H)
+                                                                  |
+                                                                  v
+                                             labels -> next evaluation population
 ```
 
-Arrows depict data flow; the final arrow describes a feedback loop, not proof of causation.
-Offline evaluation reconstructs an earlier request's inputs and restrictions; a model must not read future outcomes.
-The index is an acceleration structure, not an authority for permissions.
-The ranker cannot recover relevant items absent from its candidate set.
-**Takeaway:** Protect eligibility across stages and evaluate retrieval separately from display ranking.
+The diagram has two distinct loops and they must not be merged. The top loop is a **state loop**: rights, inventory, and entitlement change state and invalidate cached decisions. The bottom loop is an **evidence loop**: exposures and outcomes become labels that feed the next offline evaluation. Merging them produces the classic defect where a model is trained on labels that were generated by the policy being evaluated.
+
+**Four invariants the diagram asserts.** These are properties to test, not aspirations:
+
+- **I1 Containment:** every ID in the candidate set is a member of the eligible set computed at the same timestamp. Formally C(q) ⊆ E(q,t).
+- **I2 Uniqueness:** no ID appears twice in the candidate set, regardless of how many sources proposed it.
+- **I3 Boundedness:** |C(q)| ≤ k for the declared budget k, or the underfill is explicitly reported.
+- **I4 Determinism:** given identical inputs and a declared tie rule, the candidate set is identical. Without I4, A/B comparisons cannot attribute a difference to the treatment.
+
+**The eligibility funnel, stated as attrition.** Eligibility is a sequence of independent-looking filters that are in fact correlated. A construct like "territory rights" and "platform availability" both depend on distribution deals, so a title excluded for one is often excluded for the other. Treating them as independent overestimates the surviving set. Section 4.2 gives the correction term; Section 5 works it numerically.
+
+**Where the model sits and where it does not.** Retrieval models and rankers estimate affinity. They do not estimate eligibility, and they must not be asked to. A common architectural error is to let a learned scorer produce a single fused score that mixes relevance with a soft eligibility penalty. The moment eligibility becomes a soft penalty, an ineligible item can outrank an eligible one, and the failure is a policy violation rather than a quality regression. Eligibility belongs in a hard filter that runs after scoring and again before display.
+
+**The three boundaries.** Practitioners conflate three different cuts, and most evaluation disputes come from mixing them:
+
+| Boundary | What it separates | What breaks if confused |
+|---|---|---|
+| Authorization boundary | permitted vs forbidden items | a rights or entitlement violation reaches a user |
+| Candidate boundary | proposed vs not proposed | recall is measured on a set the ranker cannot reach |
+| Display boundary | shown vs not shown | precision, position effects, and CTR are misread as preference |
+
+Each boundary has its own metric family: policy violation rate for the first, candidate recall and underfill for the second, exposure-weighted outcome metrics for the third. A single "quality score" that spans all three cannot be defended, because a gain in one can hide a loss in another.
+
+**The no-recovery lemma, as a mental shortcut.** For any request, the number of relevant items eventually displayed is at most the number of relevant items in the candidate set. This is trivially true and enormously useful: it converts an argument about end-to-end quality into an argument about a set, and sets can be counted. Every measurement in Section 4 is an instance of counting a set against a declared universe.
+
+**Takeaway.** Protect eligibility with hard filters at the last responsible moment, measure retrieval as a set-overlap problem against a declared universe, and never let a recall improvement be reported without the underfill and latency that paid for it.
 
 ## 3. Foundational Definitions
 
-| Term | Meaning and operational test | Units/type | Confusion to avoid |
+Definitions here are written as operational tests: each row states how you would determine membership or value from logs, not how the concept is described in a paper.
+
+| Term | Operational test | Units / type | Confusion to avoid |
 |---|---|---|---|
-| Request q | User, surface, context and decision timestamp for one recommendation opportunity | event | A user may have multiple requests. |
-| Catalog I(t) | Items known at timestamp t | set of item IDs | Current catalog is not necessarily historical catalog. |
-| Eligible set E(q,t) | Items allowed by applicable rights, policy, availability and access at decision time | subset of I(t) | Retrieved candidates are not automatically eligible. |
-| Relevant set R(q,t,H) | Eligible items satisfying a declared label rule in horizon H | subset of E | Unobserved does not imply irrelevant. |
-| Candidate set C(q) | Unique items admitted by retrieval for ranking | set, bounded by budget | Candidate count is not ordered-display length. |
-| Exact top-k X(q) | First k eligible items under a fixed score and deterministic tie rule | ordered list | Exact under an embedding score is not ground truth relevance. |
-| ANN top-k A(q) | Approximate nearest-neighbor result under the same score and eligible universe | ordered list | Approximation recall is different from relevance recall. |
-| Implicit feedback | Observed actions such as plays, clicks or purchases without explicit relevance judgment | event | Absence of action can reflect lack of exposure. |
-| Exposure | An item actually rendered or otherwise surfaced to a user under a recorded policy | event | A retrieved but unseen item is not an impression. |
-| Freshness | Age or lag of an index or its underlying catalog/features relative to the relevant event | seconds or duration | A fresh index build can contain stale inputs. |
-| Diversity | Declared spread of the displayed slate across item or provider attributes | metric-dependent | A relevance model does not guarantee variety. |
-| Guardrail | A separately monitored constraint or outcome that bounds acceptable policy changes | threshold or measure | A click increase does not establish guardrail compliance. |
+| Request q | One recommendation decision: viewer, surface, placement, and decision timestamp | event row | A page view can contain several requests; a session is not a request |
+| Catalog I(t) | Distinct item IDs with a valid ingest record as of t | set of IDs | The catalog is not the inventory; an item can be listed but unfulfillable |
+| Eligible set E(q,t) | IDs passing every hard predicate for this viewer, surface, and t | subset of I(t) | Eligibility is a predicate over a tuple, not an item property |
+| Relevance set R(q,H) | Eligible IDs satisfying the declared label rule within horizon H | subset of E | Unobserved is not irrelevant; R is defined only where labels exist |
+| Candidate set C(q) | Deduplicated IDs admitted by retrieval, before the ranker | set, cardinality ≤ k | Candidate count is not the displayed count |
+| Source list S_j(q) | Ordered output of retrieval source j, with scores | ordered list | Sources are not interchangeable; their score scales are not comparable |
+| Exact top-k X_k(q) | First k eligible IDs under a fixed score with a deterministic tie rule | ordered list | Exact with respect to a vector score, not with respect to utility |
+| Approximate top-k A_k(q) | ANN output under the same score and eligible universe | ordered list | Approximate-search fidelity is not relevance recall |
+| Exposure | Item rendered in a slot with a recorded position and arm | event | Retrieved is not exposed; logging failures make exposure unknowable |
+| Impression window | Declared interval after which an exposed item's outcome is counted | duration | A short window on a slow-converting item manufactures false negatives |
+| Label horizon H | Time from exposure to label maturity, fixed before evaluation | duration | Changing H between systems changes the estimand |
+| Underfill | Requests where the candidate set is smaller than k | count or rate | Underfill with a small catalog is legitimate; underfill from filtering is a defect |
+| Candidate recall@k | Share of R recovered by the first k candidates | proportion, [0,1] | Denominator is the eligible labelled count R ∩ E, not all labelled items |
+| ANN fidelity | Share of exact top-k recovered by an approximate index | proportion, [0,1] | Says nothing about whether those neighbours are relevant |
+| Eligibility density p | Share of the catalog passing all hard predicates for a request | proportion | Varies by request; a single global p hides per-cohort variation |
+| Staleness | Decision timestamp minus the timestamp of the snapshot used | seconds | A freshly built index can embed a stale rights feed |
+| Position bias | Dependence of the observed action on rendered slot | propensity by slot | CTR per item is not comparable across slots |
+| Slate diversity | Spread of a declared attribute across displayed slots | metric-specific | Diversity is a constraint on the slate, not a property of one item |
+| Guardrail | Separately monitored outcome bounding acceptable policy change | series with threshold | A recall gain does not satisfy a guardrail |
 
-Intuition: the eligible set is the legal and operational playing field; candidate generation chooses a manageable subset of it.
-For streaming, territory and subscription tier can change E; for retail, fulfillment location and inventory can change E.
-A relevance label may be based on a subsequent completion, but only after the selected outcome window is mature.
-Offline relevance is a proxy for utility; its coverage and observation mechanism are part of the definition.
-**Takeaway:** Define sets, time and observation mechanism before reporting any retrieval percentage.
+**How the sets nest.** E(q,t) is the universe for retrieval. R(q,H) is defined only inside E, because a label cannot be observed for an item that could not be shown. C(q) is drawn from the retrieval index and then intersected with E. The displayed slate D(q) is a prefix of the ranked C(q) after policy adjustment. This nesting is the reason candidate recall uses |R ∩ E| in the denominator: dividing by a larger, partially unshowable R produces a number that no pipeline could improve.
 
+**Why R requires a horizon.** A relevance label is an assertion about a user's future action. "Relevant" for a video may mean "watched at least 60 seconds within 7 days"; for a marketplace item, "purchased within 14 days"; for a news article, "engaged with within 24 hours". Without the horizon the label is undefined, and systems evaluated under different horizons cannot be compared. Two pipelines can differ by 8 points of recall while differing by zero in behaviour, simply because one was labelled at 24 hours and the other at 7 days.
+
+**Why exposure is a definition, not a log detail.** If exposure logging drops impressions for one surface, then R for that surface is computed over a subset of what users actually saw. The resulting recall estimate is biased in a direction that depends on which items were dropped. An exposure audit — counting logged exposures against server-side render decisions — is therefore a prerequisite for trusting any retrieval metric, not an optional data-quality chore.
+
+**Why "candidate" must exclude the post-ranker set.** Some teams call the top 100 after ranking "candidates". That usage destroys the diagnostic value of the term, because the post-ranker set is already a function of the score you are trying to evaluate. In this card, candidate always means pre-ranker, and the term for the later set is the slate.
+
+**Takeaway.** Before computing any percentage, fix four things on paper: the universe (E), the labelled subset (R with its horizon), the candidate budget (k), and the timestamp of the snapshot. A metric without those four is not comparable to anything.
 ## 4. Core Formulas with Full Derivation
 
-### 4.1 Simplest / Base Case
+Every result below follows the same anatomy: the formula, the symbols and their domains, the constraints that make it true, a checked numerical example, and the interpretation that the number licenses. Each subsection closes with an explicit validity condition, because the most common error is not arithmetic — it is applying a formula outside the population that defines it.
 
-Validity: one request; the relevant set is fully specified and nonempty, within the same eligible catalog used by the candidate system.
-Derivation: count relevant items recovered by the top-k candidate list, then divide by the number of relevant items.
-**[R1] FORMULA:** recall_at_k(q) = |C_k(q) intersect R(q)| / |R(q)|.
-**WHERE:** C_k is the first k distinct eligible candidate IDs; R is the relevant eligible ID set; bars denote counts.
-**CONSTRAINT:** |R| > 0; declare duplicate handling, ties, cutoff and label horizon before comparison.
-**NUMERICAL EXAMPLE:** C_2 = {A,B}, R = {B,C}; intersection has one item, so recall is 1/2 = 0.5.
-**INTERPRETATION:** One of the two eligible relevant items reached the candidate list; ranking can at best show one of them.
-Boundary: if R is empty, this per-request ratio is undefined; report the count and exclusion convention rather than silently substituting zero.
+Notation used throughout: `|X|` is the cardinality of set X; `∩` is intersection; `q` indexes requests; `k` is the candidate budget in items; `H` is the label horizon; `E(q,t)` is the eligible set at decision time; `R(q,H)` is the labelled relevant subset; `C_k(q)` is the first k candidates under the declared ordering.
 
-### 4.2 General Case
+### 4.1 Base Case — candidate recall for one request and one source
 
-Validity: a fixed collection Q+ of requests with nonempty relevant sets and the same as-of eligibility and labeling conventions across systems.
-Derivation: averaging per-request fractions weights each request equally; pooling hits and relevant items instead weights requests by relevant-item count.
-**[R2] FORMULA:** macro recall = sum over q in Q+ of recall_at_k(q) / |Q+|; micro recall = sum hits / sum relevant counts.
-**WHERE:** hits are |C_k(q) intersect R(q)|; all terms are nonnegative integer counts except the resulting ratios.
-**CONSTRAINT:** Q+ is nonempty; use identical Q+, k, E, label rule and horizon for the compared systems.
-**NUMERICAL EXAMPLE:** request recalls 1/2 and 1/1 give macro (0.5+1)/2 = 0.75 and micro 2/3.
-**INTERPRETATION:** The two summaries answer different weighting questions and need not agree.
-Boundary: a policy that changes which requests have labels changes the estimand; do not silently compare different Q+ populations.
+**FORMULA [R1]**
+```text
+recall_at_k(q) = |C_k(q) ∩ R(q,H)| / |R(q,H) ∩ E(q,t)|
+```
 
-### 4.3 Key Special Cases / Variants
+**WHERE**
+- `C_k(q)`: the first k distinct IDs emitted by the pipeline, ordered by the pipeline's own score with ties broken by the declared rule. Units: item IDs. Domain: subset of the retrieval index at time t.
+- `R(q,H)`: IDs satisfying the label rule inside horizon H after exposure. Units: item IDs. Domain: subset of E(q,t) by construction, because unshowable items cannot have observed labels.
+- `E(q,t)`: IDs passing every hard predicate for this viewer, surface, and timestamp.
+- Result: a proportion in [0,1], dimensionless, defined only when |R ∩ E| ≥ 1.
 
-Validity: ANN fidelity compares an approximate list with an exact score oracle under a common eligible universe, query vector, item vectors, metric and tie rule.
-Derivation: the fraction of exact top-k IDs recovered is an overlap divided by the exact-list length.
-**[A1] FORMULA:** ANN recall_at_k = |A_k intersect X_k| / |X_k|.
-**WHERE:** A_k is approximate output and X_k is exact top-k output; both consist of distinct eligible IDs.
-**CONSTRAINT:** |X_k| > 0; when fewer than k eligible items exist use the actual exact list length and disclose it.
-**NUMERICAL EXAMPLE:** X_3 = {A,B,C} and A_3 = {A,C,D}; overlap is 2, so ANN recall is 2/3.
-**INTERPRETATION:** Two of three exact-score neighbors were retrieved; relevance is not established by this comparison.
-Boundary: approximate output filtered after search may contain fewer than k items; evaluate the actual filtered list against the eligible exact oracle.
+**CONSTRAINT**
+1. `|R(q,H) ∩ E(q,t)| > 0`. With a zero denominator the ratio is undefined; report the count of excluded requests separately instead of substituting 0 or 1.
+2. The label horizon H is identical for every system being compared, and the outcome window for each request has matured.
+3. k counts distinct eligible IDs after deduplication, not raw source rows.
+4. Eligibility is evaluated at the decision timestamp t, not at label time. Using eligibility at label time lets a system that would have shown a revoked item appear correct.
+5. The label rule is fixed before inspection. Choosing the rule after seeing both systems' outputs converts measurement into selection.
 
-| Variant | Difference | Use condition | Disqualifier |
-|---|---|---|---|
-| Popularity | Order by permitted historical activity | Stable fallback with enough mature activity | Sensitive cohort or manipulable counts without safeguards |
-| Collaborative | Infer affinity from user-item interactions | Sufficient informative histories | New users and items without a fallback |
-| Content | Compare authorized item attributes and user preferences | Features exist for new items | Missing or unreliable metadata |
-| Dense exact | Score every eligible item in vector space | Oracle or small catalog within budget | Full scan exceeds resource budget |
-| Dense ANN | Approximate the vector-space search | Measured quality/resource tradeoff is acceptable | Eligibility, recall or freshness requirements cannot be met |
+**NUMERICAL EXAMPLE**
+Take one constructed request. The eligible set is E = {A, B, C, D, E} of five IDs. The labelled relevant set inside the horizon is R = {B, D}. System P returns C_3 = {A, B, C}. System Q returns C_3 = {B, A, D}.
 
-An exact dense search is exact only for the specified vector score, not for human preference or long-term value.
-Maximum inner product and cosine similarity are distinct unless vectors are normalized and the intended comparison permits it.
-SOURCED: Faiss documents similarity search and alternatives to exhaustive search in its [original project documentation](https://faiss.ai/); specific index properties depend on configuration and version.
+```text
+P: |{A,B,C} ∩ {B,D}| = |{B}| = 1        recall = 1/2 = 0.50
+Q: |{B,A,D} ∩ {B,D}| = |{B,D}| = 2      recall = 2/2 = 1.00
+gap = 0.50 absolute = 50 percentage points on this single request
+```
 
-### 4.4 Asymptotic / Limiting Behaviour and Counterexample
+**INTERPRETATION** System P gives the ranker one of the two relevant items; Q gives both. On this request only, no statement about population superiority, precision, revenue, or significance follows. The correct use is as a unit test of the harness: if a pipeline of known composition does not reproduce these two numbers, the harness is wrong and no aggregate is trustworthy.
 
-If k includes every eligible item, relevance recall equals one only when all items in R are present in that eligible set and there is no downstream truncation.
-If k is zero and R is nonempty, recall is zero.
-If R is empty, the per-request fraction is undefined, not automatically perfect or zero.
-Counterexample: searching the unrestricted global top-k and filtering afterward can exclude all returned items even when eligible exact top-k items exist.
-Over-retrieval can mitigate underfill but does not guarantee enough eligible results; a sufficiently selective filter can still remove them all.
-A strict authorization check must run at the last responsible moment because rights or inventory can change between retrieval and display.
+**Related count that is not complementary.** Precision at k is `|C_k ∩ R| / k`. For P it is 1/3 = 0.333 and for Q it is 2/3 = 0.667. Recall and precision both move here, but they need not: if R contained ten items and both systems returned two hits, recall would be identical at 0.2 while precision stayed 0.333 and 0.667. Precision measures how much of the budget was wasted; recall measures what was lost. Only recall is bounded by the candidate stage.
 
-**Input contract:** request q, as-of eligibility snapshot E, source lists with scores, budget k and deterministic tie rules.
-**Transition:** obtain source outputs, filter under E, deduplicate item IDs, score or merge, and take at most k items.
-**Invariant:** every retained ID belongs to E; the output contains no repeated ID and has size at most k.
-**Correctness sketch:** filtering removes IDs outside E, deduplication removes repeated IDs, and truncation cannot introduce either kind of violation.
-**Termination:** each input list is finite and each item is processed at most once per list in this abstract procedure.
-**Operation model:** with n total source entries and expected constant-time hash membership, filtering and deduplication take expected O(n); merge/sort costs depend on the selected ordering algorithm.
-**Takeaway:** Correctness is relative to a defined point-in-time authorization set and deterministic score contract.
+**The no-recovery bound, proved in one line.** For any displayed slate D ⊆ C_k, we have D ∩ R ⊆ C_k ∩ R, so |D ∩ R| ≤ |C_k ∩ R|. Dividing by the positive denominator |R ∩ E| preserves the inequality. Therefore display recall ≤ candidate recall for every request, with equality only when the ranker surfaces every relevant candidate. This is why an end-to-end recall regression can be diagnosed by checking candidate recall first: if candidate recall already fell, no ranker change can be the explanation.
 
+**Validity condition for 4.1.** Applies to a single request with a nonempty eligible labelled set, a fixed cutoff k, and a declared determination of what counts as a candidate. It does not extend to a population until Section 4.2's aggregation rules are applied.
+
+### 4.2 General Case — aggregating across requests, and correcting for filter correlation
+
+**FORMULA [R2] — three defensible aggregates**
+```text
+macro   = (1/|Q+|) * sum over q in Q+ of recall_at_k(q)
+micro   = (sum over q of hits(q)) / (sum over q of |R(q) ∩ E(q)|)
+weighted= (sum over q of |R(q)| * recall_at_k(q)) / (sum over q of |R(q)|)
+```
+where `Q+` is the set of requests with |R(q) ∩ E(q)| ≥ 1 and `hits(q) = |C_k(q) ∩ R(q)|`.
+
+**WHERE:** each `recall_at_k(q)` is the [R1] value; all three are proportions in [0,1]; `Q+` is a set of requests, so |Q+| is a count, not a rate.
+
+**CONSTRAINT:** all three must be computed over the identical request set `Q+`, cutoff k, eligibility snapshot rule, and horizon H. Substituting one for another between systems invalidates the comparison. Micro equals weighted algebraically — both pool hits against pooled relevant counts — so the real choice is macro versus pooled, not three options.
+
+**NUMERICAL EXAMPLE** Three constructed requests with candidate sets of size k = 4:
+
+```text
+request   hits   |R ∩ E|   recall
+q1          2        4      0.50
+q2          1        1      1.00
+q3          2        8      0.25
+totals      5       13
+
+macro    = (0.50 + 1.00 + 0.25) / 3 = 1.75 / 3 = 0.58333
+micro    = 5 / 13                                    = 0.38462
+weighted = (4*0.50 + 1*1.00 + 8*0.25) / 13
+         = (2 + 1 + 2) / 13                          = 0.38462
+```
+
+**INTERPRETATION** The macro figure says the typical request recovers about 58% of its relevant items. The pooled figure says 38% of all relevant item-request pairs were recovered. The gap of 19.9 percentage points exists entirely because q3 has eight relevant items and drags the pair-level rate down. Reporting only one of them without naming the weighting is the single most common way two teams disagree about the same pipeline.
+
+**Why the choice is a product decision, not a statistical one.** If the business question is "does each user get a reasonable slate", weight by request (macro). If it is "what fraction of the inventory a user might want actually reaches them", weight by relevant items (pooled). A pipeline can be improved on one and degraded on the other simultaneously: adding a targeted source that only helps heavy-interest requests raises pooled recall while leaving macro flat, and adding a fallback that gives every request one hit raises macro while barely moving pooled.
+
+**FORMULA [R3] — uncertainty on a proportion**
+```text
+Wilson: ( p̂ + z²/(2n) ± z * sqrt( p̂(1-p̂)/n + z²/(4n²) ) ) / (1 + z²/n)
+```
+with `p̂ = x/n`, x the count of successes, n the number of independent units, z = 1.96 for 95%.
+
+**WHERE:** p̂ ∈ [0,1]; n is a count of independent units; the interval is on the same scale as p̂. For candidate recall, the "success" must be defined as a binary event per unit — for example "this request recovered at least one relevant item" or "this labelled pair was recovered" — because a per-request proportion is not a Bernoulli count.
+
+**CONSTRAINT:** the units must be approximately independent. Labelled items clustered inside a request are not independent, and requests clustered inside a user are not independent either. When clustering is present the Wilson width is too narrow; multiply the variance by a design effect estimated from between-cluster variance before quoting the interval.
+
+**NUMERICAL EXAMPLE** A constructed evaluation of 400 requests in which 180 recovered at least one relevant candidate.
+
+```text
+p_hat   = 180/400 = 0.450
+z²/n    = 3.8416/400       = 0.0096040
+z²/(2n) = 3.8416/800       = 0.0048020
+centre  = (0.450 + 0.0048020) / 1.0096040 = 0.4548020/1.0096040 = 0.450470
+variance term = p(1-p)/n = 0.45*0.55/400 = 0.00061875
+z²/(4n²)      = 3.8416/640000            = 0.0000060025
+root          = sqrt(0.0006247525)        = 0.02499505
+half          = 1.96 * 0.02499505 / 1.0096040 = 0.048524
+interval      = 0.450470 ± 0.048524       = [0.40195, 0.49899]
+```
+
+Rounded to four decimals the interval is [0.4020, 0.4990], which matches a direct numerical evaluation of the Wilson formula. At n = 40 requests with 18 successes the same computation gives [0.3071, 0.6017] — a width of 29.5 points, which is why a 40-request offline sample cannot adjudicate a 3-point difference.
+
+**INTERPRETATION** With 400 requests, a 6-point gap between two arms (0.45 versus 0.39) yields a standard error of sqrt(0.45·0.55/400 + 0.39·0.61/400) = 0.0348 and z = 1.72, which is not significant at 95%. Reaching 80% power for that gap needs roughly 1,057 requests per arm; detecting a 3-point gap needs about 4,228 per arm. The arithmetic is the argument for a large offline cohort or a paired design, not for lowering the threshold.
+
+**FORMULA [R4] — eligibility attrition with correlated filters**
+```text
+surviving(r1, r2, omega) = 1 - r1 - r2 + (r1*r2 + omega)
+```
+where `r1`, `r2` are rejection rates of two filters, and `omega = P(reject A ∩ reject B) - r1*r2` is the excess co-rejection above independence.
+
+**WHERE:** r1, r2, ω ∈ [0,1]; survival ∈ [r1,r2-dependent], and the formula is exact by inclusion–exclusion: `P(keep both) = 1 - P(A) - P(B) + P(A ∩ B)` and `P(A ∩ B) = r1·r2 + ω`.
+
+**CONSTRAINT:** ω must be estimated from a sample where both filters are evaluated on the same items. If the filters are applied in sequence and the second is only evaluated on survivors of the first, ω is unobservable from production logs and must come from an offline join.
+
+**NUMERICAL EXAMPLE** Two filters: territory rights rejects r1 = 0.12, platform availability rejects r2 = 0.18.
+
+```text
+base            = 1 - 0.12 - 0.18        = 0.70
+independence    = 0.70 + 0.12*0.18       = 0.70 + 0.0216 = 0.7216
+co-rejecting    = 0.70 + 0.0216 + 0.06   = 0.7816      (omega = 0.06)
+```
+
+The independence assumption survives 72.16% of items; measured co-rejection of 6 points means only 78.16% are rejected overall, i.e. 6 more points survive than independence predicted. A planner who used independence would under-provision the candidate budget by 8.3% of the surviving set.
+
+**INTERPRETATION** Filters driven by the same underlying commercial fact co-reject. Rights and platform availability both derive from distribution deals, so the overlap is large in practice; the sign of the error from ignoring ω is knowable in advance if you check which upstream system feeds both predicates. For two filters with ω = 0 the correction is exact and small; the estimate should still be recomputed per territory, because the overlap is a property of the deal book, not of the platform.
+
+**Validity condition for 4.2.** Applies to a fixed request set with matched eligibility snapshot, horizon, cutoff, and label rule, with clustering accounted for in any interval. It does not license comparison across different k, different H, or different eligibility vintages.
+
+### 4.3 Variants
+
+**FORMULA [A1] — approximate-search fidelity**
+```text
+ann_fidelity_at_k = |A_k(q) ∩ X_k(q)| / |X_k(q)|
+```
+with `X_k` the exact top-k under the same vectors, metric, eligible universe, and tie rule, and `A_k` the index's output.
+
+**WHERE:** both lists contain distinct eligible IDs; the denominator is the length of the exact list, which equals k only when at least k eligible items exist.
+
+**CONSTRAINT:** identical item vectors and query vector at the same snapshot; identical similarity function (inner product and cosine diverge unless vectors are normalised); identical tie-breaking, otherwise the comparison is dominated by arbitrary order among equal scores.
+
+**NUMERICAL EXAMPLE** Exact eligible top-3 X_3 = {A, B, C}, approximate A_3 = {A, C, D}. Overlap = {A, C}, so fidelity = 2/3 = 0.667. If ties at the boundary are numerous (say 40 items share the third-highest score), fidelity becomes a random variable with expectation depending on the tie rule, and the correct statement is a distribution over tie resolutions, not a point value.
+
+**INTERPRETATION** Two of three exact-score neighbours were returned. This is a property of the index, not of the recommendations: a fidelity of 0.667 is compatible with excellent relevance and with terrible relevance, because X_k itself may be irrelevant.
+
+**FORMULA [D1] — filtered-search depth requirement**
+```text
+P(survive) = sum_{i=k}^{m} C(m,i) p^i (1-p)^(m-i)   must be >= 1 - alpha
+```
+Solve for the smallest m given k, p, and a tolerance `alpha` (commonly 0.05). The model treats the top-m returned by the index as an ordered sample whose eligibility is Bernoulli(p) — an assumption justified when eligibility is independent of score, and violated when it is not.
+
+**WHERE:** m = retrieval depth requested from the index; k = eligible items wanted; p = eligibility density for this request; alpha = tolerated underfill probability.
+
+**CONSTRAINT:** independence of eligibility from rank position. This fails in exactly the interesting cases: geography-keyed catalogs, language filters, and subscription tier filters all correlate with score, because the model was trained on a catalog skewed the same way. When p is correlated with score, the binomial model under-predicts underfill.
+
+**NUMERICAL EXAMPLE** Checked by direct summation of the binomial tail:
+
+```text
+k=20  p=0.01  m=2784  P(X>=20)=0.9501   (depth/k = 139.2)
+k=20  p=0.02  m=1390  P(X>=20)=0.9502   (depth/k =  69.5)
+k=20  p=0.05  m= 554  P(X>=20)=0.9509   (depth/k =  27.7)
+k=20  p=0.10  m= 275  P(X>=20)=0.9514   (depth/k =  13.8)
+k=10  p=0.02  m= 782  P(X>=10)=0.9501   (depth/k =  78.2)
+k=50  p=0.05  m=1237  P(X>=50)=0.9502   (depth/k =  24.7)
+k=50  p=0.01  m=6211  P(X>=50)=0.9501   (depth/k = 124.2)
+
+sensitivity at k=20, p=0.02:
+m=1000 -> P=0.5306   m=1390 -> P=0.9502
+m=1500 -> P=0.9791   m=2000 -> P=0.9998
+```
+
+Mean survivors at m = 1390 with p = 0.02 is 1390 × 0.02 = 27.8, with standard deviation sqrt(1390 × 0.02 × 0.98) = 5.22. The 5% lower quantile of that distribution is 20, which is exactly the condition being imposed by requiring P(X ≥ 20) ≥ 0.95.
+
+**INTERPRETATION** At 2% eligibility density, a depth-1000 request underfills more than 46% of the time. This quantifies the difference between "we request 1000 and keep 20" and "we reliably obtain 20" — the ratio m/k is 69.5 at p = 0.02 and k = 20, and 15.4 at p = 0.10 and k = 10. Depth is not a tuning knob; it is a cost that scales inversely with eligibility density.
+
+**FORMULA [U1] — union coverage across independent sources**
+```text
+coverage(s) = 1 - (1 - p)^s
+```
+for s independent sources each independently recovering a given relevant item with probability p.
+
+**WHERE:** p ∈ [0,1] per-source recovery probability, s ∈ integers ≥ 1, coverage = probability at least one source recovers the item.
+
+**CONSTRAINT:** source independence. Popularity and co-visitation sources on a head-heavy catalog are strongly dependent, so the formula overstates coverage; the correct generalisation replaces `(1-p)^s` with the probability that all sources miss, measured empirically per item segment.
+
+**NUMERICAL EXAMPLE** With p = 0.25 per source, three sources give 1 − 0.75³ = 1 − 0.4219 = 0.5781, and five sources give 1 − 0.75⁵ = 1 − 0.2373 = 0.7627. Adding the fourth and fifth sources buys 18.5 points, roughly half of what the first three bought.
+
+**INTERPRETATION** Diminishing returns are structural, not an implementation flaw. A fifth source is worth adding only if its marginal coverage exceeds its marginal latency and its marginal risk of injecting low-quality or ineligible items.
+
+**FORMULA [E1] — graded ranking quality and exposure concentration**
+```text
+DCG@n = sum_{i=1}^{n} (2^{rel_i} - 1) / log2(i + 1)
+nDCG@n = DCG@n / IDCG@n
+Gini  = sum_{i} (2i - n - 1) x_(i) / (n * sum_i x_(i))     with x sorted ascending
+```
+
+**WHERE:** `rel_i` is an integer grade ≥ 0 for the item at position i; IDCG is the DCG of the grading sorted descending; `x_(i)` are exposure shares summing to 1.
+
+**CONSTRAINT:** gains must be defined on a fixed grade scale; a single swap of adjacent items changes DCG by an amount that depends on both grades, so DCG differences are not comparable across different grade scales.
+
+**NUMERICAL EXAMPLE — nDCG with a real recomputation.**
+```text
+position:      1      2      3      4      5      6      7      8      9     10
+grade:         3      2      0      1      0      2      1      0      0      1
+gain 2^g-1:    7      3      0      1      0      3      1      0      0      1
+log2(i+1):  1.000  1.585  2.000  2.322  2.585  2.807  3.000  3.170  3.322  3.459
+discounted: 7.000  1.893  0.000  0.431  0.000  1.069  0.333  0.000  0.000  0.289
+DCG@10 = 7.000+1.893+0.431+1.069+0.333+0.289 = 11.0145
+
+ideal order [3,2,2,1,1,1,0,0,0,0]:
+discounted: 7.000  1.893  1.500  0.431  0.387  0.356  ... = 11.5665
+nDCG@10 = 11.0145 / 11.5665 = 0.9523
+
+truncated at 5:
+DCG@5   = 7.000+1.893+0+0.431+0 = 9.3235
+IDCG@5  = 7.000+1.893+1.500+0.431+0.387 = 11.2103
+nDCG@5  = 9.3235 / 11.2103 = 0.8317
+```
+
+The same ranking scores 0.952 at cutoff 10 and 0.832 at cutoff 5, so quoting "nDCG" without a cutoff is meaningless. The cutoff-5 penalty appears because two of the three remaining graded items sit at positions 6 and 7, outside the measured window.
+
+**A single adjacent swap, sized.** Consider [3,0,2] versus [3,2,0] over three slots:
+```text
+DCG([3,0,2]) = 7/1.000 + 0/1.585 + 3/2.000 = 7 + 0 + 1.500 = 8.5000
+DCG([3,2,0]) = 7/1.000 + 3/1.585 + 0/2.000 = 7 + 1.893 + 0 = 8.8928 = IDCG
+nDCG         = 8.5000/8.8928 = 0.9558   versus   8.8928/8.8928 = 1.0000
+```
+A single swap of a grade-2 item from slot 3 to slot 2 moves nDCG by 4.4 points. Any claimed nDCG gain smaller than the granularity of one realistic swap is not evidence of a better ranker.
+
+**Exposure concentration, sized.** Twelve constructed exposure shares summing to 1.00:
+```text
+[0.20, 0.14, 0.12, 0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02]
+Gini = 0.3233
+```
+For comparison, a five-item distribution [0.50, 0.20, 0.15, 0.10, 0.05] gives Gini = 0.4000, and [0.25, 0.24, 0.23, 0.22, 0.06] gives 0.1600. Gini is scale-free in n but not in the truncation of the tail: computing it over the top 12 items of a 12-million-item catalog measures slate concentration, not catalog coverage.
+
+**INTERPRETATION** nDCG answers "was the ordering good within the shown slots"; Gini answers "was exposure spread across the eligible inventory". A pipeline can maximise nDCG while driving Gini toward 1, and that combination is the signature of a feedback loop that only ever exposes what it already exposed.
+
+**FORMULA [S1] — staleness exposure window**
+```text
+expected_stale_requests = (refresh_interval / 2) * request_rate
+```
+for uniformly distributed revocation times relative to a periodic refresh.
+
+**WHERE:** refresh_interval in seconds, request_rate in requests per second, result in requests.
+
+**CONSTRAINT:** uniform arrival of state changes relative to refresh boundaries; a batch rights feed landing at a fixed hour violates this and produces a deterministic window instead of an average.
+
+**NUMERICAL EXAMPLE** A 900-second rebuild with 40 requests per second:
+```text
+mean age = 900/2 = 450 s
+expected requests served from the pre-change snapshot = 450 * 40 = 18,000
+```
+**INTERPRETATION** Rebinding the catalog cannot bound the window; only a check at request time can. The 18,000 figure is the arithmetic argument for a last-mile eligibility check: it is the number of decisions that a periodic refresh alone would have made on stale state.
+
+**Validity condition for 4.3.** Each variant holds under its stated independence or comparability assumption. A and D assume eligibility independent of score; U assumes source independence; E assumes a fixed grade scale and a declared cutoff; S assumes uniform arrival. Every one of those assumptions is testable.
+
+### 4.4 Limits and Counterexamples
+
+**Limit 1 — the random-selection floor.** The D1 binomial model says nothing about relevance; it only says whether the returned items are eligible. The relevant question is how many relevant items arrive by chance. For uniform random selection of k items from E containing R relevant items:
+```text
+P(no relevant in k) = C(E-R, k) / C(E, k)
+E = 240,000, R = 40, k = 20:  C(239,960,20)/C(240,000,20) = 0.99667181
+P(>=1 relevant) = 0.003328   versus the approximation kR/E = 20*40/240000 = 0.003333
+```
+Random retrieval recovers at least one relevant item about 0.33% of the time. A measured recall of 0.45 at k = 20 is therefore about 5,400 times the random floor, which is the honest way to express the strength of a retrieval signal: report lift over the floor, not the raw proportion, because a raw proportion near 0.45 is uninterpretable without knowing how many relevant items exist.
+
+**Limit 2 — hypergeometric versus binomial.** The D1 depth calculation assumes independent draws with replacement-like eligibility; the exact finite-population statement is hypergeometric. At p = 0.02 and m = 1390 out of a 240,000-item eligible pool, the binomial and hypergeometric tails differ in the fourth decimal, so the approximation is safe. It stops being safe when m approaches the pool size, which happens for narrow cohorts: a small territory with 3,000 eligible items and a depth of 1,390 makes the finite-population correction material, and the required depth becomes smaller than the binomial model predicts.
+
+**Counterexample 1 — filter after global search.** A pipeline requests the global top-20, then filters. Suppose the eligible relevant items exist but every one of the 20 global neighbours is ineligible in this territory. Retrieval recall is 0 while eligible exact neighbours are abundant. The defect is architectural: filtering after truncation cannot recover items below the truncation boundary. The discriminating check is to compare measured recall against a filter-aware oracle, not against the global list.
+
+**Counterexample 2 — exact is not correct.** An exact top-k under a single embedding is exact only with respect to that embedding. If the embedding was trained on click data collected under a click-maximising policy, its exact neighbours are the items the old policy was already inclined to show. Calling this list "ground truth" mistakes the estimand for the truth, and an ANN index that deviates from it may be better rather than worse.
+
+**Counterexample 3 — recall 1.0 by construction.** If k ≥ |E|, recall@k is 1.0 for every system that returns the whole eligible set. The metric saturates and can no longer discriminate. This happens quietly when a test fixture uses a ten-item catalog with k = 100. Guard: assert k < |E| in any fixture used to compare systems.
+
+**Counterexample 4 — the empty denominator.** If R ∩ E is empty for a request — perfectly possible when the label horizon has not matured, or when the user's interest lies entirely outside the rights envelope — recall is 0/0. Teams that silently set it to 0 will report a pipeline as worse in proportion to how many immature requests a cohort contains. Teams that silently set it to 1 will report the reverse. Both are fabricated numbers; the correct output is the count of undefined requests and the reason distribution.
+
+**Counterexample 5 — weighting flips the winner.** Under the [R2] example, suppose System P improves q3 (the eight-relevant-item request) by 0.10 and System Q improves q1 (four relevant items) by 0.30. Macro moves +0.033 for P and +0.100 for Q; pooled moves +0.80/13 = +0.062 for P and +1.20/13 = +0.092 for Q. The two aggregates agree in direction here, but with eight-relevant-item dominance reversed they readily disagree. The lesson is procedural: the weighting must be declared before the results are seen, because after the fact both aggregates are defensible.
+
+**Counterexample 6 — union coverage with dependent sources.** With p = 0.25 per source and perfect dependence, five sources give coverage 0.25, not 0.7627. Measured values between 0.25 and 0.7627 identify the effective number of independent sources, which is a useful diagnostic: it tells you how much of the ensemble is redundant.
+
+**Limit 3 — attrition compounding.** Sequential filters multiply. Starting from 1,000 candidates with rejection rates 0.12, 0.18, 0.05, and 0.07 in sequence:
+```text
+1000.0 -> 880.0 -> 721.6 -> 685.5 -> 637.5
+```
+Four modest-looking filters remove 36.3% of the candidates. A team that planned for "about 10% loss per filter" expects 656 survivors and is close; a team that planned for one filter's loss only is off by a factor of 1.57 in candidate budget.
+
+**Validity condition for 4.4.** Each limit names the assumption it breaks. The general rule: any metric quoted without its universe, cutoff, horizon, and weighting is not a measurement but an anecdote with a decimal point.
 ## 5. Worked Numerical Example
 
-**ILLUSTRATIVE and arithmetically checked:** A hypothetical video request has six catalog items at decision time.
-**Decision:** Compare two retrieval candidates, holding eligibility, relevance labels, cutoff and request fixed.
-**Snapshot:** A, B, C, D and E are authorized and available; F is outside territory rights.
-**Mature observed relevant labels:** B and D, both within the eligible set; no claim is made that unlabeled items are disliked.
-**Candidate budget:** Three unique eligible IDs per system; ties already resolved consistently.
+**Status: ILLUSTRATIVE.** Every quantity below is constructed to exercise the formulas, and every ratio has been recomputed independently. The arithmetic is verified; the scenario is not a measurement of any product.
 
-| Item | Eligible? | Relevant under declared label? | System P rank | System Q rank |
-|---|---|---|---:|---:|
-| A | yes | no | 1 | 2 |
-| B | yes | yes | 2 | 1 |
-| C | yes | no | 3 | absent |
-| D | yes | yes | absent | 3 |
-| E | yes | no | absent | absent |
-| F | no: rights | not in target population | absent | excluded before output |
+**Setting.** A subscription video surface in one territory. The global catalog holds 12,000,000 items with 128-dimensional float32 embeddings. A request is one home-screen render for one viewer at one timestamp, and the candidate budget is k = 20 because the ranker and the slate both take 20. Relevance means "watched at least 60 seconds within 7 days of an impression", so the label horizon is 7 days and the cohort below is drawn from requests whose windows have matured.
 
-P yields {A,B,C}; Q yields {B,A,D}.
-P has one relevant hit and Q has two; both are scored against the same R = {B,D}.
-Using R1, P recall@3 = 1/2 = 0.5; Q recall@3 = 2/2 = 1.0.
-The absolute difference is 0.5, or 50 percentage points, for this one constructed request only.
-The values do not establish population superiority, precision, satisfaction, business impact or statistical significance.
-**Independent check:** Enumerating hits gives P = {B} and Q = {B,D}; both denominators are two eligible labeled IDs.
-**Wrong path:** Including F as relevant adds an unauthorized item to the denominator and changes the target population; the comparison is no longer eligible-item recall.
-**Production change:** Reconstruct rights and features as of each request, mature the outcome window, and aggregate over a representative query cohort with uncertainty.
-**Remaining uncertainty:** A user may have liked an eligible item never displayed; implicit labels are exposure-selected rather than complete relevance truth.
-**Takeaway:** A fair retrieval comparison holds eligibility, labeled population and cutoff fixed, and does not equate one example with measured product impact.
+### 5.1 The eligible set
+
+Hard predicates applied for this request: territory rights, subscription entitlement, device capability, availability of a playable asset, and safety policy.
+
+```text
+catalog with embeddings            I        = 12,000,000
+passes territory + entitlement + device + asset + safety
+                                   E(q,t)   =    240,000
+eligibility density                p = 240,000 / 12,000,000 = 0.0200
+labelled relevant inside E         R(q,H)   =          7
+```
+
+The density of 0.02 is the single most consequential input in the whole calculation, and it is the one teams most often replace with a global average. Territory-level density here is 2%; a global average across all territories would be higher because large catalogs serve large territories, so planning from the global number under-provisions depth for small ones.
+
+### 5.2 Depth requirement before filtering
+
+Using [D1] with k = 20, p = 0.02 and tolerance alpha = 0.05, the smallest depth whose binomial tail reaches 0.95 is m = 1390. Independent re-check by a different route: the distribution has mean m·p = 27.8 and standard deviation sqrt(m·p·(1−p)) = sqrt(1390 × 0.02 × 0.98) = sqrt(27.244) = 5.220. Twenty is (27.8 − 20)/5.220 = 1.494 standard deviations below the mean. For a normal approximation the lower tail at 1.494 is about 0.068; the exact binomial tail is 0.0498 because the distribution is slightly right-skewed. Both routes say "just under a 5% shortfall", which is the intended condition; the exact value governs.
+
+```text
+mean kept at m=1390      = 1390 * 0.02            = 27.8
+sd                       = sqrt(1390*0.02*0.98)   = 5.220
+normalised margin        = (27.8 - 20)/5.220      = 1.494
+exact tail P(X < 20)     = 1 - 0.9502             = 0.0498
+```
+
+### 5.3 Three pipelines on the same request
+
+| Pipeline | Mechanism | Candidates kept | Relevant in candidates | Candidate recall | Underfill |
+|---|---|---:|---:|---:|---|
+| A — popularity + co-visit | Two pre-computed lists intersected with E, capped at 20 | 20 | 2 | 2/7 = 0.2857 | 0 |
+| B — filter-aware ANN | Depth 1390, eligibility filter during traversal, cap 20 | 20 | 4 | 4/7 = 0.5714 | 0 |
+| C — global ANN then filter | Depth 20 on the full index, filter afterwards | 3 | 1 | 1/7 = 0.1429 | 17 of 20 |
+
+Pipeline C is the interesting one. Its configured budget is 20 and its delivered candidate set is 3. The ranker receives three items and the slate has twenty slots, so seventeen slots must either be filled by a fallback or left empty. Recall of 0.1429 is not a ranking failure; it is arithmetic. With p = 0.02 and depth 20, the expected number of eligible survivors is 20 × 0.02 = 0.4, and P(at least one survivor) = 1 − 0.98²⁰ = 1 − 0.6676 = 0.3324. That is, in two of every three requests, the global-then-filter pipeline returns *nothing* eligible at all.
+
+```text
+P(no eligible survivor of 20) = 0.98^20 = 0.6676
+P(>=1 eligible survivor)      = 0.3324
+expected survivors            = 20 * 0.02 = 0.4
+```
+
+Pipeline B's realised keep of 24 items (before capping at 20) is a draw of the m = 1390, p = 0.02 binomial, mean 27.8, and lies within one standard deviation of the mean.
+
+### 5.4 Cohort comparison
+
+The same request is not enough to choose a pipeline, so the evaluation runs over 400 sampled requests with matured labels.
+
+```text
+requests in cohort                         400
+total eligible labelled pairs             3,120      (mean 7.8 per request)
+pipeline A recovered pairs                1,200      pooled recall 1200/3120 = 0.3846
+pipeline B recovered pairs                1,500      pooled recall 1500/3120 = 0.4808
+absolute difference                                        0.0962 = 9.62 pp
+relative improvement                    0.0962/0.3846  = 0.2501 = 25.0%
+```
+
+Wilson intervals at 95% on the per-request "recovered at least one relevant item" indicator, computed on 400 requests:
+
+```text
+A: 120/400 = 0.3000   interval [0.2572, 0.3466]
+B: 180/400 = 0.4500   interval [0.4020, 0.4990]
+```
+
+The intervals do not overlap, which is consistent with a real difference on that indicator. For the pooled pair-level difference the standard error is sqrt(0.4808×0.5192/3120 + 0.3846×0.6154/3120) = 0.0125, giving z = 0.0962/0.0125 = 7.70. That z is optimistic because pairs within a request are correlated; with a design effect of 2 the effective sample halves and z falls to about 5.4, still large. The honest statement is "the difference is large relative to sampling noise under an independence assumption", not "p < 0.001 in production".
+
+### 5.5 Independent re-check of the headline comparison
+
+Recompute both pooled ratios from the raw counts rather than accepting the percentages.
+
+```text
+A: 1,200 / 3,120
+   3120 * 0.38 = 1185.6   remainder 14.4 / 3120 = 0.00462
+   => 0.38462, matches 0.3846
+
+B: 1,500 / 3,120
+   3120 * 0.48 = 1497.6   remainder 2.4 / 3120 = 0.00077
+   => 0.48077, matches 0.4808
+
+difference: 0.48077 - 0.38462 = 0.09615
+```
+
+A second, independent check reads the table the other way: if B recovers 300 more pairs out of 3,120, that is 300/3120 = 0.09615, identical. Both routes agree, which is the minimum bar for trusting a comparison table in a review.
+
+### 5.6 The costs that paid for the gain
+
+```text
+latency budget, p99 target                            250 ms
+authorization / entitlement lookup                      6 ms
+ANN traversal at depth 1390                            38 ms
+eligibility filter, union and dedup                     9 ms
+deduplication hash pass                                 3 ms
+ranker over 20 candidates                              52 ms
+policy and diversity adjustment                        11 ms
+serialization                                           7 ms
+network to edge                                        24 ms
+--------------------------------------------------------------
+total                                                 150 ms
+headroom                                             100 ms  (40% of budget)
+```
+
+Embedding memory, which is the recurring cost rather than the per-request cost:
+
+```text
+float32: 12,000,000 * 128 * 4 bytes = 6,144,000,000 B = 6.144 GB per replica
+two replicas: 12.288 GB
+graph links at 64 neighbours, 4 B each: 12e6*64*4 = 3,072,000,000 B = 3.072 GB per replica
+per-replica total: 6.144 + 3.072 = 9.216 GB;  two replicas: 18.432 GB
+int8 quantized vectors: 12e6*128*1 = 1,536,000,000 B = 1.536 GB per replica
+```
+
+Quantising to int8 cuts the vector payload by 4× (6.144 GB to 1.536 GB) but changes the score ordering, so it is a change of system, not a storage optimisation: it must be re-measured with [A1] fidelity against the float32 exact list before it is treated as equivalent.
+
+### 5.7 Sensitivity
+
+Four inputs dominate the conclusion, and each is perturbed independently.
+
+```text
+1. eligibility density falls to 0.01 (smaller territory):
+   required depth 20 -> 2784 (ratio 139.2); ANN time 38 ms -> approx 76 ms
+   new total 188 ms; headroom 62 ms (25% of budget)
+
+2. k rises from 20 to 50 at p = 0.02:
+   required depth 3102 (from the k=50 p=0.02 row: ratio 62.0 at k=50 p=0.02)
+   ranker cost grows with candidates, not with k alone only if capped
+
+3. label horizon cut from 7 days to 1 day:
+   R shrinks; per-request relevant counts fall; recall rises mechanically
+   because the denominator fell, not because retrieval improved
+
+4. k >= |E| (small test catalog):
+   recall saturates at 1.0; the metric stops discriminating
+```
+
+The fourth input is not hypothetical: a fixture with a 30-item catalog and k = 20 is close to saturation, and any A/B run on such a fixture reports a difference of zero or one and calls it a tie.
+
+**Takeaway.** The worked example's real content is the ratio 1390/20 = 69.5: to reliably deliver 20 eligible candidates at 2% density you must look at about seventy times more items than you keep, and that multiplier is set by eligibility, not by the model.
 
 ## 6. Visual / Geometric Intuition
 
+**Set nesting.** The three sets nest strictly, and the nesting order is what makes the metrics well-defined.
+
 ```text
-Time increases left to right (schematic, not to scale)
-feature event ---- request t ---- display ---- outcome ---- label maturity
-                      |                         |
-                 retrieval snapshot       outcome window H
++-----------------------------------------------------------+
+| catalog I(t)                                   12,000,000 |
+|  +-------------------------------------------------------+|
+|  | eligible E(q,t)                            240,000    ||
+|  |   +---------------------------------------------------+|
+|  |   | labelled relevant R(q,H)                     7     ||
+|  |   +---------------------------------------------------+|
+|  +-------------------------------------------------------+|
++-----------------------------------------------------------+
+
+recall denominator lives here: |R ∩ E| = 7
+recall numerator lives here:   |C_k ∩ R| <= 7
 ```
 
-Caption: request t is the temporal boundary; features and index contents must be available at or before it.
-The outcome may occur later, but must not feed the model or catalog snapshot used to reconstruct that same decision.
+Caption: the outer ring is everything the platform knows about; the middle ring is everything a policy allows this viewer to see now; the inner ring is everything with a matured label. A metric that divides by the outer ring is unattainable by construction.
+
+**The truncation geometry of filtering.** Score is roughly monotone in distance from the query, so the index returns a prefix. Eligibility is a separate predicate that is not monotone in score. Filtering the prefix therefore keeps an unpredictable subset.
+
 ```text
-All catalog items: [ A B C D E F ]
-Eligible E:        [ A B C D E   ]
-Relevant R:        [   B   D     ]
-Q candidates:      [ A B   D     ]
+rank:      1    2    3    4    5    6    7    8 ...  1390
+eligible:  E    .    E    .    .    E    .    E        .
+                      |
+depth 20:  [. . . . . . . . . . . .]  -> 0 or 1 survivor, usually 0
+depth 1390:[. . . . . . . . . . . . . . . . . . . .] -> ~28 survivors
+
+E = passes filter, . = fails filter
 ```
-Caption: F lies outside E; both relevant IDs lie in Q's eligible candidates.
-Set overlap illustrates recall, not the rank order or the user's latent preferences.
-**Takeaway:** The time boundary prevents leakage; the set boundary prevents unauthorized comparisons.
+
+Caption: increasing depth does not improve the precision of the filter; it increases the number of draws. The expected survivor count is depth × density, and the requirement is a tail probability, not an expectation.
+
+**The candidate-to-display funnel as a multiplicative chain.**
+
+```text
+eligible relevant in E       7        (of 240,000 eligible)
+retrieved into candidates    4        candidate recall 4/7  = 0.5714
+survives ranking to slate    4        ranker retention      = 1.0000 for this request
+displayed and acted on       3        label rate            = 0.75
+```
+
+Caption: the product 0.5714 × 1.0 × 0.75 = 0.4286 is the end-to-end relevant-display rate for this request. Attenuation anywhere in the chain is bounded by the first factor; a ranker cannot lift the product above 0.5714.
+
+**Position and score are correlated, so raw CTR is not preference.**
+
+```text
+slot:        1     2     3     4
+observed CTR: 0.080 0.052 0.041 0.033
+examination:  1.00  0.62  0.48  0.40
+corrected:    0.080 0.084 0.085 0.083
+
+observed spread across slots: 0.080 -> 0.033   (2.4x)
+corrected spread:              0.080 -> 0.083   (1.04x)
+```
+
+Caption: dividing observed click-through by an examination propensity collapses a 2.4× apparent slot effect into roughly nothing. Constructed numbers; the point is the direction and magnitude of the correction, not the specific values. If the corrected series had *increased* with slot, that would suggest examination propensities were estimated too aggressively.
+
+**Latency as a fixed-width container.** Each stage consumes a slice of the 250 ms p99 budget. Depth is the only slice that scales with a policy parameter, which is why it is the first place to look when latency regresses.
+
+```text
+|auth 6| ANN 38 |filter 9|dedup 3| rank 52 |policy 11|ser 7| net 24 | headroom 100 |
+0                                                                            250 ms
+```
+
+Caption: at 150 ms of committed work, a 60% depth increase fits inside headroom; a 100% increase does not, which is why the density-falls-to-0.01 case in 5.7 consumes most of the remaining slack.
+
+**Diminishing returns of additional sources.**
+
+```text
+sources:   1      2      3      4      5
+coverage: 0.250  0.438  0.578  0.684  0.763     (p=0.25, independent)
+
+marginal:   --    +0.188 +0.141 +0.105 +0.079
+```
+
+Caption: each added source contributes less than the previous one under independence, and much less in practice because popularity and co-visit sources overlap heavily on head items. The series is the geometric decay of (1 − p)^s, not a tuning artefact.
+
+**Takeaway.** The pictures encode three facts worth memorising: metrics must divide by the middle ring, depth requirements grow like k/p, and every added stage both costs latency and attenuates the fraction of relevant items that survives to display.
 
 ## 7. Comparison / Selection Table
 
-| Method | Preconditions | Quality or guarantee | Cost model | Use when | Avoid when | Evidence |
+Selection is by pipeline, not by model, because the failure modes live in the composition. Each row states the precondition that must hold before the method is admissible.
+
+| Pipeline | Preconditions | What it guarantees | Cost driver | Choose when | Avoid when | Evidence |
 |---|---|---|---|---|---|---|
-| Popularity | Point-in-time counts and availability | No personalization guarantee | Precompute and filter | Cold start or resilient baseline | Popularity manipulation or narrow coverage dominates | HEURISTIC |
-| Collaborative | History and stable entity identity | Learns interaction association, not causality | Training and serving depend on model | Sufficient data and repeat preference | Cold users/items dominate | HEURISTIC |
-| Content | Reliable authorized metadata | Can retrieve new catalog items | Feature maintenance and similarity scoring | Metadata is available before exposure | Metadata sparse, sensitive or misleading | HEURISTIC |
-| Exact dense | Fixed query and vectors, score and filter | Exact top-k for defined eligible score | Full eligible scan | Oracle and manageable workload | Scan violates measured budget | DERIVED |
-| ANN dense | Same vector semantics and measurable oracle | Approximate; no general fixed recall promise | Index build, memory and query tuning | Exact scan is too costly and quality measured | Authorization or recall cannot be verified | SOURCED / OPEN |
+| Pre-filtered popularity | Point-in-time activity counts and a cheap eligibility filter over a small list | Nothing about personalisation; coverage of head items only | One small lookup plus filter | Cold start, degraded mode, guardrail baseline | Catalog is long-tailed or cohort sensitive | HEURISTIC |
+| Co-visitation | Interaction matrix with stable item identity and enough density | Learns co-occurrence, not causation | Offline job plus adjacency lookup | Repeat-interest surfaces with dense behaviour | New items, sparse users, or item churn is high | HEURISTIC |
+| Content similarity | Authoritative item metadata present at ingest | Can surface new items with no interactions | Feature store plus similarity scoring | New-item cold start and metadata-rich catalogs | Metadata is sparse, stale, or itself sensitive | HEURISTIC |
+| Exact dense scan | Vectors and score fixed; eligible set small or compute ample | Exact top-k under the defined score | O(|E|·d) per request | Oracle construction and small eligible sets | |E|·d exceeds the latency budget at target QPS | DERIVED |
+| Global ANN then filter | Index over the whole catalog | Approximate top-k of the *global* index | Fixed depth; cost independent of eligibility | Never for a narrow-segment surface | Eligibility density is low or correlated with score | DERIVED |
+| Filter-aware ANN at depth m | Depth provisioned from k, p, and alpha; filter inside traversal | Approximate top-k of the *eligible* set with bounded underfill | Depth, hence roughly k/p | Density is low and underfill is unacceptable | Depth from k/p breaks the latency budget | DERIVED |
+| Filtered brute force on a per-segment index | Segments align with the dominant eligibility predicate | Exact eligible top-k within the segment | Segment index build and storage multiplication | One predicate dominates and segments are few | Segments proliferate per viewer or per entitlement tier | DERIVED |
+| Two-stage rank then re-filter | Ranker cheap enough to score more than k | Ranked eligible set, but only up to ranker recall | Ranker cost times candidate count | Eligibility changes between stage and display | Final filter runs after truncation with no fallback | HEURISTIC |
 
-Priority: fail closed on access, rights and safety; do not trade authorization for a recall gain.
-Then select a feasible baseline and compare variants on the same eligible and labeled request population.
-When latency, recall and freshness conflict, quantify the tradeoff and escalate the policy decision instead of assuming the largest candidate list wins.
-Cold users can receive locally eligible popularity, contextual or explicitly provided preference candidates.
-Cold items can enter content-based pools with appropriate safety and exposure controls, rather than requiring interaction history first.
-Diversity can be enforced during slate construction, but its constraint should not bypass availability or permissions.
-**Benchmark status: NOT MEASURED.** Fix dataset snapshot, request cohort, score, index version, hardware, load, k and filter policy; report latency distributions, recall, underfill, uncertainty and cost for each method.
-**Takeaway:** Compare methods as complete authorized pipelines, not as unconstrained scores from different populations.
+**Selection procedure, in order.**
 
+1. **Fail closed on authorization first.** Whatever the retrieval method, the last check before display must consult current authoritative policy. Depth tuning cannot substitute, because a revocation can land between the index refresh and the request.
+2. **Measure eligibility density per segment, not globally.** Density is the input that sets depth. A single global number will mis-provision every small territory and every narrow entitlement tier.
+3. **Compute the depth requirement from [D1] and compare against the latency envelope.** If m from k/p does not fit, the honest options are to reduce k, pre-partition the index by the dominant predicate, or accept a stated underfill rate. The dishonest option is to keep depth 20 and hope.
+4. **Choose the retrieval family for the cohort with the least data.** New items need content features; new viewers need non-personalised or contextual retrieval. A pipeline whose only source is co-visitation fails both.
+5. **Fix the evaluation cohort before running the comparison.** Same requests, same labels, same horizon, same cutoff, same eligibility snapshot.
+6. **Report recall, underfill, latency, and exposure concentration together.** Any one alone permits a harmful trade.
+
+**Why a pre-partitioned exact index is often better than deeper ANN.** If one predicate explains most of the rejection — territory is the classic case — then holding one exact index per large territory removes that rejection entirely, and the remaining density within a territory partition is much higher. The cost is storage multiplication and index build time; the benefit is that exactness replaces a tail-probability argument. The decision is a multiplication factor on storage versus a depth multiplier on latency, and both are computable before you build anything.
+
+**Why the global-ANN row says "never".** It is listed to be explicitly rejected, because it is the default in most tutorials and the most common cause of a silent quality ceiling. It is defensible only when eligibility density is high and uncorrelated with score, which in practice describes a catalog with no rights or inventory constraints at all.
+
+**Benchmark status: NOT MEASURED.** Any comparison of these pipelines must fix catalog snapshot, request cohort, embedding version, index build parameters, hardware, concurrency, k, filter policy, and label horizon, and must report latency distributions (p50 and p99), underfill rate, candidate recall with intervals, and memory. No such measurement is reported in this card, and none should be inferred from the constructed numbers in Section 5.
+
+**Takeaway.** The pipeline chooses the ceiling; the model only chooses how much of the ceiling is reached. Comparing two rankers without first comparing their candidate pipelines measures the ceiling, not the ranker.
 ## 8. Failure Modes & Edge Cases
 
-All scenarios in this section are HYPOTHETICAL diagnostic exercises, not observed incidents.
-The planned Common Issues artifact does not yet exist; no issue IDs are claimed.
-
-### F-01: Rights violation after cache hit
-
-- **Trigger / symptom:** A revoked title appears in a cached slate.
-- **Competing hypotheses:** Stale cache versus missing authorization check.
-- **Discriminating check:** Compare policy version and decision-time revocation with final-check audit.
-- **Immediate bounded action:** Remove affected item, fail closed and revalidate every cache hit.
-- **Prevention and verification:** Replay revocation across cache and serve path; audit zero unauthorized displays.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-02: Filtered ANN underfills
-
-- **Trigger / symptom:** Candidates disappear after filtering.
-- **Competing hypotheses:** Postfilter selectivity versus an empty catalog.
-- **Discriminating check:** Compare prefilter counts, rejection reasons and exact eligible count.
-- **Immediate bounded action:** Use eligible partitioning or bounded over-retrieval with safe fallback.
-- **Prevention and verification:** Measure underfill per eligible-count bucket; never promise filling.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-03: Offline recall spikes
-
-- **Trigger / symptom:** Sudden improvement follows a feature pipeline change.
-- **Competing hypotheses:** Future features versus genuine gain.
-- **Discriminating check:** Check event availability times and reconstruct a sample request.
-- **Immediate bounded action:** Roll back leaking feature and rebuild point-in-time data.
-- **Prevention and verification:** Add temporal availability assertions and compare on fixed requests.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-04: New user receives empty slate
-
-- **Trigger / symptom:** No personalized embedding exists.
-- **Competing hypotheses:** Absent history versus upstream identity outage.
-- **Discriminating check:** Distinguish unknown-user state from feature-service failures.
-- **Immediate bounded action:** Serve authorized context or popularity fallback.
-- **Prevention and verification:** Track cold-user fill and fallback reasons by cohort.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-05: New items receive no exposure
-
-- **Trigger / symptom:** Items exist but cannot be retrieved.
-- **Competing hypotheses:** Missing embeddings versus policy exclusion.
-- **Discriminating check:** Compare item creation, embedding, index and policy timestamps.
-- **Immediate bounded action:** Enable verified metadata retrieval or controlled eligible exploration.
-- **Prevention and verification:** Monitor creation-to-index lag and new-item exposure.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-06: Approximation recall drops
-
-- **Trigger / symptom:** ANN differs from the exact oracle.
-- **Competing hypotheses:** Changed index configuration versus vector mismatch.
-- **Discriminating check:** Run both on identical vectors, eligibility and tie rule.
-- **Immediate bounded action:** Restore compatible index or tune the search budget.
-- **Prevention and verification:** Track matched oracle overlap by cohort and catalog snapshot.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-07: Recall stays high while online outcomes fall
-
-- **Trigger / symptom:** Offline retrieved labels remain stable.
-- **Competing hypotheses:** Position bias, objective mismatch or ranking regression.
-- **Discriminating check:** Compare displayed positions, randomized assignment and downstream outcomes.
-- **Immediate bounded action:** Hold rollout and inspect guardrails and ranking changes.
-- **Prevention and verification:** Maintain independent business and relevance metrics.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-08: Expired catalog entries persist
-
-- **Trigger / symptom:** Removed items remain in candidates.
-- **Competing hypotheses:** Deletion propagation lag versus stale replica.
-- **Discriminating check:** Trace item tombstone through source, index and serving replica.
-- **Immediate bounded action:** Block item at final authorization layer and propagate removal.
-- **Prevention and verification:** Test deletion propagation and monitor oldest pending tombstone.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-09: Popularity fallback becomes unsafe
-
-- **Trigger / symptom:** Fallback returns ineligible or manipulated items.
-- **Competing hypotheses:** Unfiltered precomputed list versus activity manipulation.
-- **Discriminating check:** Recompute allowed list and inspect source-event quality.
-- **Immediate bounded action:** Apply current checks and remove suspect activity.
-- **Prevention and verification:** Audit fallback provenance, policy and anomaly alerts.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-10: Two services disagree on eligibility
-
-- **Trigger / symptom:** Offline and online sets differ.
-- **Competing hypotheses:** Clock skew, policy version mismatch or missing attributes.
-- **Discriminating check:** Compare decision timestamp, input attributes and versioned policy trace.
-- **Immediate bounded action:** Use consistent policy contract and quarantine unresolved discrepancies.
-- **Prevention and verification:** Log version and replay sampled decisions.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-11: Duplicate items crowd candidates
-
-- **Trigger / symptom:** Same item appears from several sources.
-- **Competing hypotheses:** Union without canonical ID or duplicate handling.
-- **Discriminating check:** Inspect raw source IDs and canonicalization mapping.
-- **Immediate bounded action:** Canonicalize then deduplicate before budget truncation.
-- **Prevention and verification:** Test cross-source duplicate cases and count unique candidates.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-12: Recall calculation divides by zero
-
-- **Trigger / symptom:** A request has no observed relevant labels.
-- **Competing hypotheses:** Unmatured outcome window versus genuinely no observed positives.
-- **Discriminating check:** Check label maturity and outcome join completeness.
-- **Immediate bounded action:** Mark undefined and report exclusions separately.
-- **Prevention and verification:** Publish population flow and maturity lag with every report.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-13: A minority cohort sees poor coverage
-
-- **Trigger / symptom:** Aggregate recall masks cohort failures.
-- **Competing hypotheses:** Sparse history, rights restrictions or metadata quality.
-- **Discriminating check:** Compare cohort-specific eligible counts, missingness and uncertainty.
-- **Immediate bounded action:** Improve safe fallback and collect cohort-relevant evidence.
-- **Prevention and verification:** Monitor disaggregated quality with privacy-preserving thresholds.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-14: A provider dominates the slate
-
-- **Trigger / symptom:** Many near-identical items fill the display.
-- **Competing hypotheses:** Popularity feedback versus ranker score concentration.
-- **Discriminating check:** Measure provider and category mix at retrieval and display.
-- **Immediate bounded action:** Apply reviewed diversity rules within the eligible pool.
-- **Prevention and verification:** Monitor relevance and exposure tradeoffs together.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-15: Inventory vanishes before purchase
-
-- **Trigger / symptom:** Retrieved item becomes unavailable after ranking.
-- **Competing hypotheses:** Stale inventory versus concurrent reservation.
-- **Discriminating check:** Compare inventory event and serve timestamps with reservation log.
-- **Immediate bounded action:** Recheck availability and support substitution or safe omission.
-- **Prevention and verification:** Track stale inventory age and downstream failed actions.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-16: Evaluation accidentally compares different cohorts
-
-- **Trigger / symptom:** One system appears better after filtering requests.
-- **Competing hypotheses:** Different label maturity, eligibility or query sampling.
-- **Discriminating check:** Join by request ID and compare population flow at every stage.
-- **Immediate bounded action:** Recompute on the common prespecified request population.
-- **Prevention and verification:** Report request counts and reasons for exclusions.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-17: A vector rebuild changes rankings unexpectedly
-
-- **Trigger / symptom:** Similarity scores drift after deployment.
-- **Competing hypotheses:** Normalization mismatch versus changed model or metric.
-- **Discriminating check:** Compare vector norms, model IDs and score implementations.
-- **Immediate bounded action:** Restore matched embedding and index versions.
-- **Prevention and verification:** Gate incompatible versions and test score consistency.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-18: Long-tail items disappear
-
-- **Trigger / symptom:** Coverage falls despite stable aggregate relevance.
-- **Competing hypotheses:** Index truncation, filtering or popularity bias.
-- **Discriminating check:** Break down catalog inclusion and retrieval by age and activity.
-- **Immediate bounded action:** Fix catalog ingestion or adjust bounded source allocation.
-- **Prevention and verification:** Track eligible coverage and retrieval by age bucket.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-19: User deletion is incomplete
-
-- **Trigger / symptom:** Personal data persists after deletion request.
-- **Competing hypotheses:** Untracked training, feature store, cache or logs.
-- **Discriminating check:** Trace identifiers through data inventory and deletion receipts.
-- **Immediate bounded action:** Remove or isolate data per applicable policy and escalate exceptions.
-- **Prevention and verification:** Test deletion propagation and retention boundaries.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-20: Latency spikes during index refresh
-
-- **Trigger / symptom:** Serving slows while rebuilds run.
-- **Competing hypotheses:** Resource contention versus traffic burst.
-- **Discriminating check:** Compare refresh interval, resource saturation and request rate.
-- **Immediate bounded action:** Isolate build resources or stagger and roll back refresh.
-- **Prevention and verification:** Capacity-test refresh under representative traffic.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-21: Exposure logging is missing
-
-- **Trigger / symptom:** Clicks exist but impression records are absent.
-- **Competing hypotheses:** Instrumentation loss versus inconsistent identifiers.
-- **Discriminating check:** Join clicks to request, item and render logs with timestamps.
-- **Immediate bounded action:** Repair logging and exclude unsupported causal analyses.
-- **Prevention and verification:** Alert on join completeness and version the event schema.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-22: An apparently negative item was never displayed
-
-- **Trigger / symptom:** Training treats every unseen item as rejected.
-- **Competing hypotheses:** Exposure censoring versus actual user rejection.
-- **Discriminating check:** Inspect rendered impression records and position.
-- **Immediate bounded action:** Distinguish unexposed examples from observed nonactions.
-- **Prevention and verification:** Document sampling and test sensitivity to missing exposure.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-23: Stale embeddings survive rollback
-
-- **Trigger / symptom:** Model and index vectors are incompatible.
-- **Competing hypotheses:** Partial deployment versus mismatched artifact selection.
-- **Discriminating check:** Check version IDs for query encoder, item encoder and index.
-- **Immediate bounded action:** Rollback compatible artifact set atomically.
-- **Prevention and verification:** Use compatibility manifests and staged rollout gates.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-24: Label horizon is not mature
-
-- **Trigger / symptom:** Recent requests show low recall or conversion.
-- **Competing hypotheses:** Delayed outcomes versus a real behavioral change.
-- **Discriminating check:** Plot label arrival by request age and compare mature cohorts.
-- **Immediate bounded action:** Restrict primary comparison to matured windows.
-- **Prevention and verification:** Record outcome cutoff and report censoring sensitivity.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-25: Zero eligible items
-
-- **Trigger / symptom:** All catalog items fail rights or availability.
-- **Competing hypotheses:** True no supply versus policy service failure.
-- **Discriminating check:** Inspect authoritative catalog and policy service status.
-- **Immediate bounded action:** Return an honest empty or approved safe response.
-- **Prevention and verification:** Monitor empty set rate and distinguish policy errors.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-26: Security boundary crossed in logs
-
-- **Trigger / symptom:** Detailed recommendation logs reveal private attributes.
-- **Competing hypotheses:** Overcollection versus access control misconfiguration.
-- **Discriminating check:** Inspect schemas, roles, retention and access audit.
-- **Immediate bounded action:** Restrict access and remove unnecessary fields under policy.
-- **Prevention and verification:** Apply minimization, encryption and reviewed retention.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-27: Position confounds a source comparison
-
-- **Trigger / symptom:** Top-ranked source has more clicks.
-- **Competing hypotheses:** Better relevance versus higher exposure position.
-- **Discriminating check:** Compare randomized assignments or position-balanced exposures.
-- **Immediate bounded action:** Run a controlled test or use defensible bias adjustment.
-- **Prevention and verification:** Record position, policy probability and render status.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-28: Item update never reaches index
-
-- **Trigger / symptom:** Feature changes remain invisible to retrieval.
-- **Competing hypotheses:** Failed event versus rebuild watermark lag.
-- **Discriminating check:** Trace item version through event, embedding and index.
-- **Immediate bounded action:** Replay or rebuild missing updates and enforce final filters.
-- **Prevention and verification:** Monitor watermark lag and missing-version reconciliation.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-29: Low diversity hurts discovery
-
-- **Trigger / symptom:** Similar items occupy every position.
-- **Competing hypotheses:** Candidate pool too narrow versus reranker constraint.
-- **Discriminating check:** Measure category mix before and after ranking.
-- **Immediate bounded action:** Expand eligible sources or tune explicit slate constraints.
-- **Prevention and verification:** Evaluate relevance and diversity jointly by cohort.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-### F-30: Exact comparison is deceptively favorable
-
-- **Trigger / symptom:** ANN is scored against an unrestricted oracle.
-- **Competing hypotheses:** Oracle has different filters or ties.
-- **Discriminating check:** Compare eligible IDs and score/tie rules for sampled queries.
-- **Immediate bounded action:** Recompute oracle on the same authorized universe.
-- **Prevention and verification:** Version oracle inputs and keep matched cohort checks.
-- **Escalation:** If evidence does not distinguish the alternatives, preserve the trace and involve the owning service or policy team; do not infer a root cause.
-
-
-### Operational measurement catalog
-
-Each entry below is a proposed measurement, not an observed result or a universal threshold. Rates require nonzero denominators, explicit event-time windows and documented missing-data handling.
-
-#### M-01 — Eligible catalog size
-- **Numerator or value:** distinct eligible item IDs.
-- **Denominator or observation unit:** request.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Empty catalogs can be legitimate.
-- **Action on change:** Inspect policy and supply.
-- **Useful breakdown:** Territory and surface.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-02 — Rights rejection rate
-- **Numerator or value:** rights-rejected candidate IDs.
-- **Denominator or observation unit:** candidate IDs checked for rights.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** A high rate can reflect expected geography.
-- **Action on change:** Inspect index partitioning and rights changes.
-- **Useful breakdown:** Territory and policy version.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-03 — Availability rejection rate
-- **Numerator or value:** availability-rejected candidate IDs.
-- **Denominator or observation unit:** candidate IDs checked for availability.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Stock volatility changes the expected rate.
-- **Action on change:** Compare inventory event timestamps.
-- **Useful breakdown:** Fulfillment location and item age.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-04 — Safety rejection rate
-- **Numerator or value:** safety-rejected candidate IDs.
-- **Denominator or observation unit:** candidate IDs checked for safety.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Policy changes alter the population.
-- **Action on change:** Inspect reason codes and policy version.
-- **Useful breakdown:** Surface and policy version.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-05 — Authorization error rate
-- **Numerator or value:** authorization checks returning errors.
-- **Denominator or observation unit:** authorization checks attempted.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Errors are not equivalent to denials.
-- **Action on change:** Fail closed and investigate service health.
-- **Useful breakdown:** Policy service version and region.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-06 — Candidate underfill rate
-- **Numerator or value:** requests with fewer than k eligible candidates.
-- **Denominator or observation unit:** eligible retrieval requests.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Catalog scarcity can make underfill unavoidable.
-- **Action on change:** Compare with the exact eligible catalog size.
-- **Useful breakdown:** Eligible catalog size and source.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-07 — Duplicate source rate
-- **Numerator or value:** duplicate canonical IDs in the source union.
-- **Denominator or observation unit:** raw source-list IDs.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Multiple sources may legitimately return the same id.
-- **Action on change:** Inspect canonicalization before changing allocation.
-- **Useful breakdown:** Source pair and catalog family.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-08 — Candidate uniqueness
-- **Numerator or value:** distinct canonical candidate IDs.
-- **Denominator or observation unit:** candidate IDs admitted before truncation.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Deduplication after truncation can hide crowding.
-- **Action on change:** Deduplicate before applying the budget.
-- **Useful breakdown:** Source combination and surface.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-09 — Popularity source contribution
-- **Numerator or value:** unique eligible candidates attributed to popularity.
-- **Denominator or observation unit:** unique eligible candidates in the union.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Attribution must declare how overlaps are assigned.
-- **Action on change:** Review source allocation and overlap.
-- **Useful breakdown:** User history bucket.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-10 — Collaborative source contribution
-- **Numerator or value:** unique eligible candidates attributed to collaborative retrieval.
-- **Denominator or observation unit:** unique eligible candidates in the union.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Overlap attribution is convention dependent.
-- **Action on change:** Inspect history coverage and source health.
-- **Useful breakdown:** User history bucket.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-11 — Content source contribution
-- **Numerator or value:** unique eligible candidates attributed to content retrieval.
-- **Denominator or observation unit:** unique eligible candidates in the union.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Metadata coverage changes the eligible pool.
-- **Action on change:** Inspect feature completeness and source allocation.
-- **Useful breakdown:** Item age and category.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-12 — Dense source contribution
-- **Numerator or value:** unique eligible candidates attributed to dense retrieval.
-- **Denominator or observation unit:** unique eligible candidates in the union.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Embedding coverage and overlapping sources affect contribution.
-- **Action on change:** Inspect artifact compatibility and index coverage.
-- **Useful breakdown:** Item age and model version.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-13 — Eligible item embedding coverage
-- **Numerator or value:** eligible items with compatible embeddings.
-- **Denominator or observation unit:** eligible items.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Eligibility and embedding snapshots must have the same timestamp.
-- **Action on change:** Repair missing embeddings or use a fallback source.
-- **Useful breakdown:** Item age and encoder version.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-14 — Eligible index inclusion
-- **Numerator or value:** eligible items present in the index.
-- **Denominator or observation unit:** eligible items.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** A present id may have an outdated vector.
-- **Action on change:** Compare indexed and source versions.
-- **Useful breakdown:** Item age and shard.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-15 — Index update lag
-- **Numerator or value:** elapsed time from source change to searchable update.
-- **Denominator or observation unit:** one successfully propagated update.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Undelivered updates are missing from successful-only distributions.
-- **Action on change:** Monitor backlog and failed propagation separately.
-- **Useful breakdown:** Shard and update type.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-16 — Deletion propagation lag
-- **Numerator or value:** elapsed time from deletion event to removal from index.
-- **Denominator or observation unit:** one completed deletion.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Incomplete deletions must be reported as outstanding.
-- **Action on change:** Block at authorization and investigate the backlog.
-- **Useful breakdown:** Replica and deletion type.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-17 — Stale index entries
-- **Numerator or value:** indexed IDs whose item version is older than source.
-- **Denominator or observation unit:** indexed IDs reconciled.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Reconciliation itself may use a stale source snapshot.
-- **Action on change:** Compare consistent watermarks and replay updates.
-- **Useful breakdown:** Shard and item age.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-18 — ANN oracle overlap
-- **Numerator or value:** approximate IDs also present in exact eligible top-k.
-- **Denominator or observation unit:** exact eligible top-k IDs.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** This measures score fidelity rather than user relevance.
-- **Action on change:** Tune the index or investigate vector mismatch.
-- **Useful breakdown:** Query cohort and filter selectivity.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-19 — Candidate relevant recall
-- **Numerator or value:** observed eligible relevant IDs recovered in top-k.
-- **Denominator or observation unit:** observed eligible relevant IDs.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Implicit labels are exposure-selected.
-- **Action on change:** Audit labels and compare matched request cohorts.
-- **Useful breakdown:** Cohort and label horizon.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-20 — Display relevant recall
-- **Numerator or value:** observed eligible relevant IDs displayed.
-- **Denominator or observation unit:** observed eligible relevant IDs.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Slate length and position affect the outcome.
-- **Action on change:** Compare with candidate recall to localize loss.
-- **Useful breakdown:** Slate size and cohort.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-21 — Ranking retention of candidate hits
-- **Numerator or value:** candidate relevant IDs retained in the displayed slate.
-- **Denominator or observation unit:** candidate relevant IDs.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Undefined when candidate hits are absent.
-- **Action on change:** Inspect ranking and slate constraints.
-- **Useful breakdown:** Surface and candidate-source mix.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-22 — Observed click rate
-- **Numerator or value:** clicked rendered impressions.
-- **Denominator or observation unit:** rendered impressions.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Position and exposure policy confound interpretation.
-- **Action on change:** Compare within randomized assignment.
-- **Useful breakdown:** Position and surface.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-23 — Observed completion rate
-- **Numerator or value:** completed eligible plays.
-- **Denominator or observation unit:** started eligible plays.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Completion may be unavailable or delayed.
-- **Action on change:** Inspect event completeness and outcome maturity.
-- **Useful breakdown:** Content duration and client.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-24 — Mature-label coverage
-- **Numerator or value:** requests whose full outcome horizon has elapsed.
-- **Denominator or observation unit:** requests selected for evaluation.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Mature time alone does not guarantee complete ingestion.
-- **Action on change:** Inspect outcome watermarks.
-- **Useful breakdown:** Request date and outcome type.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-25 — Impression join completeness
-- **Numerator or value:** rendered impressions joined to a request and item.
-- **Denominator or observation unit:** rendered impressions received.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Missing logs can occur before either side of the join.
-- **Action on change:** Audit independent client and server counters.
-- **Useful breakdown:** Client version and surface.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-26 — Click join completeness
-- **Numerator or value:** click events joined to a recorded impression.
-- **Denominator or observation unit:** click events received.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Some interactions may have valid non-impression entry points.
-- **Action on change:** Classify missing joins before exclusion.
-- **Useful breakdown:** Client version and entry point.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-27 — Logged policy probability coverage
-- **Numerator or value:** randomized decisions with recorded assignment probability.
-- **Denominator or observation unit:** randomized decisions.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Correctness of the probability also requires auditing.
-- **Action on change:** Repair assignment logging and validate values.
-- **Useful breakdown:** Experiment and policy version.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-28 — Cold-user fill rate
-- **Numerator or value:** cold-user requests with a nonempty eligible slate.
-- **Denominator or observation unit:** cold-user requests.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** A cold-user definition must be fixed over time.
-- **Action on change:** Inspect fallback and eligibility decisions.
-- **Useful breakdown:** Region and cold-start definition.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-29 — Cold-item index coverage
-- **Numerator or value:** eligible new items indexed within a declared age window.
-- **Denominator or observation unit:** eligible new items in that window.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Items excluded for rights must not be counted as missing.
-- **Action on change:** Trace ingestion and embedding generation.
-- **Useful breakdown:** Item age and provider.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-30 — New-item exposure
-- **Numerator or value:** eligible new items rendered at least once.
-- **Denominator or observation unit:** eligible new items in a declared observation period.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Opportunity time differs by item creation time.
-- **Action on change:** Compare age-matched items and review exploration.
-- **Useful breakdown:** Age bucket and category.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-31 — Catalog coverage
-- **Numerator or value:** distinct eligible items displayed in a period.
-- **Denominator or observation unit:** distinct items eligible during the same period.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Changing catalog turnover alters the denominator.
-- **Action on change:** Inspect source diversity and eligibility.
-- **Useful breakdown:** Surface and category.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-32 — Provider concentration
-- **Numerator or value:** displayed impressions attributable to the largest provider.
-- **Denominator or observation unit:** displayed impressions.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Provider identifiers and time window must be stable.
-- **Action on change:** Inspect source and reranker concentration.
-- **Useful breakdown:** Surface and territory.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-33 — Category diversity
-- **Numerator or value:** distinct declared categories in a slate.
-- **Denominator or observation unit:** one displayed slate.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Category taxonomy and slate length affect interpretation.
-- **Action on change:** Compare with relevance and catalog availability.
-- **Useful breakdown:** Slate size and taxonomy version.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-34 — Policy version mismatch
-- **Numerator or value:** requests with different eligibility versions across recorded stages.
-- **Denominator or observation unit:** requests with versions recorded at both stages.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Intentional version changes may require a final recheck.
-- **Action on change:** Trace version transition and decision time.
-- **Useful breakdown:** Service pair and region.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-35 — Final eligibility rejection
-- **Numerator or value:** ranked candidates rejected by the final check.
-- **Denominator or observation unit:** ranked candidates checked immediately before display.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Late changes can make some rejection legitimate.
-- **Action on change:** Inspect staleness and final-check reasons.
-- **Useful breakdown:** Reason and time since retrieval.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-36 — Unauthorized display count
-- **Numerator or value:** displayed items that fail an independently reconstructed authorization check.
-- **Denominator or observation unit:** displayed items audited.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Reconstruction itself requires accurate policy history.
-- **Action on change:** Escalate immediately and remove affected access.
-- **Useful breakdown:** Policy and territory.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-37 — Experiment assignment balance
-- **Numerator or value:** assigned users in each experimental arm.
-- **Denominator or observation unit:** all assigned users.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Expected proportions depend on the assignment design.
-- **Action on change:** Investigate assignment and logging before interpreting outcomes.
-- **Useful breakdown:** Experiment and assignment stratum.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-38 — Fallback invocation rate
-- **Numerator or value:** requests served by a declared fallback path.
-- **Denominator or observation unit:** eligible recommendation requests.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Fallback may be deliberate for cold starts.
-- **Action on change:** Distinguish intended fallback from service failure.
-- **Useful breakdown:** Fallback reason and cohort.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-39 — Candidate stage latency
-- **Numerator or value:** elapsed time from retrieval start to candidate completion.
-- **Denominator or observation unit:** one request.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** Component percentiles cannot simply be summed into end-to-end percentiles.
-- **Action on change:** Trace slow requests and resource contention.
-- **Useful breakdown:** Source and region.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-#### M-40 — End-to-end recommendation latency
-- **Numerator or value:** elapsed time from request receipt to recommendation response.
-- **Denominator or observation unit:** one request.
-- **Interpretation:** Track this measure over a declared observation window rather than treating it as a product outcome by itself.
-- **Critical limitation:** A timeout or failed response must be included in service-level accounting.
-- **Action on change:** Inspect full traces under representative traffic.
-- **Useful breakdown:** Surface and traffic bucket.
-- **Comparison discipline:** Keep eligibility policy, event definition and time window comparable before attributing a change to the retrieval method.
-
-
-### Point-in-time and serving acceptance traces
-
-The following are hypothetical test cases, not executed tests or observed incidents.
-
-#### T-01: Revoked rights
-- **Setup:** A title is revoked after retrieval.
-- **Required condition:** Final check observes the new policy.
-- **Expected behavior:** The item is omitted.
-- **Disqualifying behavior:** A displayed revoked item.
-- **Diagnostic trace:** Replay the policy change across cache and serving.
-#### T-02: Country transition
-- **Setup:** A user changes territory between requests.
-- **Required condition:** Each request resolves current territory.
-- **Expected behavior:** The eligible set changes only as policy permits.
-- **Disqualifying behavior:** Old territory reused after the move.
-- **Diagnostic trace:** Exercise a territory change with versioned attributes.
-#### T-03: Subscription downgrade
-- **Setup:** Entitlement changes before a new request.
-- **Required condition:** The current entitlement is checked.
-- **Expected behavior:** Premium-only items are excluded.
-- **Disqualifying behavior:** Cached premium slate returned without recheck.
-- **Diagnostic trace:** Replay downgrade and inspect final authorization.
-#### T-04: Rights service unavailable
-- **Setup:** Authorization dependency times out.
-- **Required condition:** The system uses a fail-closed contract.
-- **Expected behavior:** No unchecked item is displayed.
-- **Disqualifying behavior:** Timeout treated as implicit allow.
-- **Diagnostic trace:** Inject a controlled timeout in a test environment.
-#### T-05: Availability changes
-- **Setup:** Inventory reaches zero after retrieval.
-- **Required condition:** The display path rechecks availability.
-- **Expected behavior:** The unavailable item is omitted.
-- **Disqualifying behavior:** A stale positive inventory response is trusted indefinitely.
-- **Diagnostic trace:** Trace inventory event and response timestamps.
-#### T-06: No eligible supply
-- **Setup:** All items fail current constraints.
-- **Required condition:** The eligible set is genuinely empty.
-- **Expected behavior:** Return an honest empty or approved response.
-- **Disqualifying behavior:** Fabricating an ineligible substitute to fill the slate.
-- **Diagnostic trace:** Audit policy state and distinguish service failure.
-#### T-07: Filter underfill
-- **Setup:** Global ANN returns only excluded items.
-- **Required condition:** Eligible exact neighbors exist.
-- **Expected behavior:** Underfill is reported and a safe fallback may run.
-- **Disqualifying behavior:** Assuming the catalog has no eligible items.
-- **Diagnostic trace:** Compare prefilter output with an eligible oracle.
-#### T-08: Duplicate canonical items
-- **Setup:** Two source IDs map to one item.
-- **Required condition:** Canonicalization precedes final budget.
-- **Expected behavior:** Only one canonical ID consumes a slot.
-- **Disqualifying behavior:** Deduplication occurs after truncation.
-- **Diagnostic trace:** Trace raw IDs through union and output.
-#### T-09: Missing user history
-- **Setup:** A new user has no interaction vector.
-- **Required condition:** Cold-start routing is enabled.
-- **Expected behavior:** An eligible contextual or popular pool is used.
-- **Disqualifying behavior:** Missing embedding is treated as an error without fallback.
-- **Diagnostic trace:** Compare cold-user and warm-user routing.
-#### T-10: Missing item vector
-- **Setup:** A new eligible item has no embedding.
-- **Required condition:** Content features are already available.
-- **Expected behavior:** It can enter a permitted content source.
-- **Disqualifying behavior:** An absent vector permanently suppresses discovery.
-- **Diagnostic trace:** Trace item creation through all retrieval sources.
-#### T-11: Stale item vector
-- **Setup:** An item changes metadata after vector generation.
-- **Required condition:** A compatible update is indexed.
-- **Expected behavior:** New searches use the current item representation.
-- **Disqualifying behavior:** Current metadata and old vector silently diverge.
-- **Diagnostic trace:** Compare source, encoder and index versions.
-#### T-12: Encoder incompatibility
-- **Setup:** A new query encoder is deployed with an old item index.
-- **Required condition:** The deployment manifest detects incompatible versions.
-- **Expected behavior:** The rollout is blocked or matching artifacts are selected.
-- **Disqualifying behavior:** Mismatched vectors silently reach similarity search.
-- **Diagnostic trace:** Inspect manifest and compare selected artifact IDs.
-#### T-13: Normalization mismatch
-- **Setup:** One path normalizes vectors and another does not.
-- **Required condition:** The score contract specifies both sides.
-- **Expected behavior:** Exact and ANN use the intended metric consistently.
-- **Disqualifying behavior:** Comparing cosine scores with raw inner products.
-- **Diagnostic trace:** Recompute sample scores from recorded vectors.
-#### T-14: Tied exact scores
-- **Setup:** Two eligible items have equal exact score.
-- **Required condition:** A stable tie rule is specified.
-- **Expected behavior:** The oracle returns the same ordered list on replay.
-- **Disqualifying behavior:** Arbitrary ties appear as ANN errors.
-- **Diagnostic trace:** Recompute using deterministic item-ID tie breaking.
-#### T-15: Fewer than k eligible
-- **Setup:** The eligible universe contains two items and k is three.
-- **Required condition:** Both items have defined scores.
-- **Expected behavior:** The exact list has length two.
-- **Disqualifying behavior:** Dividing ANN overlap by three instead of two.
-- **Diagnostic trace:** Verify actual exact-list length and report it.
-#### T-16: Zero relevant labels
-- **Setup:** A mature request has no observed relevant items.
-- **Required condition:** The per-request denominator is zero.
-- **Expected behavior:** Per-request recall is undefined.
-- **Disqualifying behavior:** Substituting a perfect score without disclosure.
-- **Diagnostic trace:** Report zero-label count and aggregation convention.
-#### T-17: Immature outcome window
-- **Setup:** A recent request has not completed its observation horizon.
-- **Required condition:** Label maturity is recorded.
-- **Expected behavior:** Exclude it from a mature-cohort primary analysis.
-- **Disqualifying behavior:** Calling delayed outcomes negative labels.
-- **Diagnostic trace:** Compare request age with horizon and ingestion watermark.
-#### T-18: Future user action
-- **Setup:** A click occurs after the request timestamp.
-- **Required condition:** Feature availability is tracked separately from outcome time.
-- **Expected behavior:** The click may become a label but not an input to that decision.
-- **Disqualifying behavior:** A training join loads that future click as a feature.
-- **Diagnostic trace:** Inspect feature event and availability timestamps.
-#### T-19: Late-arriving feature
-- **Setup:** An event occurred before the request but arrived afterward.
-- **Required condition:** Availability time is part of reconstruction.
-- **Expected behavior:** The event is not treated as available at decision time.
-- **Disqualifying behavior:** Using only event time to justify feature availability.
-- **Diagnostic trace:** Compare event time and ingestion time against request time.
-#### T-20: Incomparable cohorts
-- **Setup:** A system excludes a portion of requests before evaluation.
-- **Required condition:** A common request cohort is available.
-- **Expected behavior:** Both systems use the same request IDs.
-- **Disqualifying behavior:** A score gain comes from different query inclusion.
-- **Diagnostic trace:** Produce an explicit request-level population flow.
-#### T-21: Incomparable relevance
-- **Setup:** Two methods use different outcome horizons.
-- **Required condition:** Both label rules can be reconstructed.
-- **Expected behavior:** Recompute both under a common definition.
-- **Disqualifying behavior:** Comparing seven-day and one-day recall directly.
-- **Diagnostic trace:** Join both outputs to a common matured label snapshot.
-#### T-22: Different authorization sets
-- **Setup:** The exact baseline scores a global catalog.
-- **Required condition:** Candidate method is filtered to territory.
-- **Expected behavior:** Rebuild the oracle using the same eligible universe.
-- **Disqualifying behavior:** Comparing filtered ANN to unrestricted exact neighbors.
-- **Diagnostic trace:** Compare eligible ID snapshots and tie rules.
-#### T-23: Unlogged impressions
-- **Setup:** Clicks are present but corresponding rendered impressions are missing.
-- **Required condition:** Client and server event paths can be audited.
-- **Expected behavior:** Separate missing logs from actual unexposed items.
-- **Disqualifying behavior:** Inferring that a click proves complete impression logging.
-- **Diagnostic trace:** Trace request, render and click identifiers.
-#### T-24: Position confounding
-- **Setup:** One source appears more often at the top position.
-- **Required condition:** Position is logged and assignment can be randomized.
-- **Expected behavior:** Compare policies under appropriate experimental design.
-- **Disqualifying behavior:** Attributing raw click-rate differences entirely to relevance.
-- **Diagnostic trace:** Inspect position distributions and randomized arms.
-#### T-25: Logging probability error
-- **Setup:** An exploration event logs the wrong probability.
-- **Required condition:** Assignment records and randomizer configuration are available.
-- **Expected behavior:** Correct the instrumentation and assess affected analyses.
-- **Disqualifying behavior:** Using inverse-propensity weights with erroneous probabilities.
-- **Diagnostic trace:** Audit logged probabilities against the assignment implementation.
-#### T-26: No propensity support
-- **Setup:** A historical policy never displays a target action.
-- **Required condition:** The target policy would display that action.
-- **Expected behavior:** Recognize that historical data cannot identify its outcome without additional assumptions.
-- **Disqualifying behavior:** Assigning infinite or arbitrary weights to zero probability.
-- **Diagnostic trace:** Document support gaps and design safe exploration.
-#### T-27: Popularity feedback loop
-- **Setup:** Popular items repeatedly receive most exposures.
-- **Required condition:** Candidate and display exposures are both logged.
-- **Expected behavior:** Separate retrieval concentration from ranking concentration.
-- **Disqualifying behavior:** Equating more clicks with unbiased preference.
-- **Diagnostic trace:** Compare eligible coverage and provider mix by stage.
-#### T-28: Over-concentrated slate
-- **Setup:** Many candidates have the same provider.
-- **Required condition:** A diversity constraint is explicitly defined.
-- **Expected behavior:** Apply the constraint only within eligible inventory.
-- **Disqualifying behavior:** Violating rights to satisfy a diversity target.
-- **Diagnostic trace:** Inspect source mix, slate composition and policy exclusions.
-#### T-29: Index rebuild contention
-- **Setup:** A refresh overlaps high request traffic.
-- **Required condition:** Build and serve resource usage can be separated.
-- **Expected behavior:** Identify whether contention explains latency.
-- **Disqualifying behavior:** Assuming every latency spike is caused by the model.
-- **Diagnostic trace:** Compare timelines for build, traffic and resource saturation.
-#### T-30: Partial artifact rollback
-- **Setup:** Model rollback leaves a newer index active.
-- **Required condition:** Artifact compatibility is versioned.
-- **Expected behavior:** Restore an approved compatible set.
-- **Disqualifying behavior:** Rolling back only the query model.
-- **Diagnostic trace:** Trace model and index IDs in served requests.
-
-**Takeaway:** Diagnose competing causes with a discriminating trace before changing retrieval, ranking or policy.
+### 8.1 How to use this section
 
+Each failure below is written so that a reader with production access can move from a symptom to a test that discriminates between competing causes. The discipline matters because the obvious explanation is usually wrong: a drop in click-through is attributed to the ranker when candidate recall fell, and a spike in empty slates is attributed to a catalog problem when a filter was applied after truncation.
+
+The structure of each entry: **symptom** (what the alert says), **competing causes** (at least two, because a single-cause failure needs no diagnosis), **discriminating check** (a query or comparison that separates them and whose outcome is observable today), **correction** (what to change), **prevention** (what makes the class of failure impossible). Failures that share a symptom are grouped so the checks can be read against each other.
+
+### F-01 — Revoked rights reach a display
+
+**Symptom:** a policy audit finds a title rendered after its rights window closed. No error was logged and latency was normal.
+**Competing causes:** (a) the cached slate was reused across requests without re-evaluating eligibility; (b) the index refresh ran but the served replica was the pre-refresh one; (c) the revocation was ingested with a future effective timestamp and the request time comparison used processing time instead of effect time.
+**Discriminating check:** for the specific request, print the policy version and effective timestamp observed by the final check, and compare with the revocation record's effective timestamp. If the final check observed the post-revocation version, cause is not (a). If the replica identity in the response header is stale, cause is (b).
+**Correction:** move the authoritative eligibility check to the last responsible moment before render, and make the check return a versioned decision that is logged with the response.
+**Prevention:** an invariant test in staging that revokes a title mid-request and asserts the item is absent from the rendered slate, run on every deployment.
+
+### F-02 — Filtered ANN underfills while eligible items exist
+
+**Symptom:** slates with fewer items than slots, concentrated in narrow territories; recall unchanged on the global cohort.
+**Competing causes:** (a) depth too small for the local density; (b) the filter is applied after truncation instead of during traversal; (c) the eligible set genuinely is small for that segment.
+**Discriminating check:** compare |C(q)| against the maximum eligible relevant count over the same segment. If a filter-aware exact oracle on the same query returns 20 items regularly, cause (c) is excluded and the defect is in depth or in filter placement. Then check whether increasing depth from 20 to 400 changes the delivered count: if it does, cause is (a) or (b); if the delivered count stays at zero across all depths, the filter predicate is wrong.
+**Correction:** provision depth from [D1] using the segment's measured density, and push the predicate into traversal so rejection does not consume the depth budget.
+**Prevention:** a per-segment underfill dashboard with the eligible-set size as the companion series, so a small catalog and a broken filter never look alike.
+
+### F-03 — Offline recall spikes after a label change
+
+**Symptom:** recall@20 rises 12 points overnight with no deployment.
+**Competing causes:** (a) the label horizon was shortened, shrinking the denominator; (b) the label rule's threshold changed (for example a minimum watch time); (c) a logging change increased exposure capture, adding labelled items that were previously invisible; (d) a genuine retrieval improvement shipped silently in a config change.
+**Discriminating check:** recompute recall on the frozen cohort with the old and new label definitions. If the number moves with the definition, the metric moved, not the system. Then compare the denominator count: a rise in recall at constant numerator means the denominator fell, which points at (a) or (b), never at (d).
+**Correction:** version the label rule alongside the model, and store the rule identifier in the evaluation output.
+**Prevention:** make the label rule a first-class artefact with a version that appears in every metric's metadata; refuse to compare metrics whose label versions differ.
+
+### F-04 — New viewer receives an empty slate
+
+**Symptom:** first-session viewers get zero recommendations on the primary surface.
+**Competing causes:** (a) the personalisation source requires an interaction history and returns nothing, and there is no fallback; (b) the fallback exists but its own eligibility filter removed everything because it keyed on a viewer attribute that is null for new accounts; (c) the request is malformed at the edge and never reaches retrieval.
+**Discriminating check:** count requests by stage reached and by source-attempted outcome code. A request that reached the popularity source and got zero items after filtering points at (b); a request with no source attempts points at (c); a request with attempts and an explicit "insufficient history" code points at (a).
+**Correction:** implement a tiered fallback: contextual, then locally eligible popularity, then editorial, each with its own eligibility filter that does not depend on the missing attribute.
+**Prevention:** a synthetic new-account fixture in staging that must produce a full slate; alert on the share of requests whose slate is shorter than the slot count, split by account age.
+
+### F-05 — New items never receive exposure
+
+**Symptom:** items ingested in the last 14 days account for under 1% of impressions despite being 4% of the catalog.
+**Competing causes:** (a) no retrieval source can propose an item without interactions, so content similarity is missing or unused; (b) exploration quota is set to zero; (c) the item is eligible but its embedding is a zero vector because the feature pipeline had not populated it at ingest; (d) the eligibility predicate rejects it for a legitimate reason such as an unapproved asset.
+**Discriminating check:** for a sample of unexposed new items, compute their presence in each source's output when queried with a synthetic probe vector. Present in content source but never in slates points at (b). Absent from every source with a zero-norm embedding points at (c). Absent from the candidate pool entirely with a policy rejection code points at (d).
+**Correction:** add a content-based source with its own quota, backfill embeddings before the item becomes eligible, and instrument a per-item "proposed count" counter.
+**Prevention:** make "eligible but never proposed" a tracked state with an alert, because it is invisible in every outcome metric.
+
+### F-06 — Approximate index degrades after a parameter change
+
+**Symptom:** recall@20 drops 3 points two days after an index rebuild. No model changed.
+**Competing causes:** (a) the rebuild used different graph parameters, changing fidelity; (b) the rebuild used a different embedding version because the artifact pointer moved; (c) the rebuild dropped vectors for a shard that failed and served from a smaller index.
+**Discriminating check:** compute [A1] fidelity of the new index against a float32 exact oracle on a frozen query set. Fidelity down with identical vectors points at (a). Fidelity normal but score distribution shifted points at (b). Vector count in the index versus the catalog's eligible count points at (c).
+**Correction:** pin the embedding version and index parameters in the build manifest; fail the build if the vector count deviates from expectation beyond a tolerance.
+**Prevention:** store a fidelity report as a build artefact and gate promotion on it, so an index cannot reach production unmeasured.
+
+### F-07 — Recall is high and outcomes are flat
+
+**Symptom:** candidate recall improves from 0.38 to 0.48, and the online primary metric does not move.
+**Competing causes:** (a) the ranker had already been saturating on the relevant items that were present, so extra candidates are redundant; (b) the added candidates are relevant under the offline label but not under the online objective (a label/objective mismatch); (c) the added candidates arrive late in the slate and are never examined; (d) the traffic split was not honoured, so the comparison is between cohorts that differ in ways unrelated to the treatment.
+**Discriminating check:** compute ranker retention — the share of relevant candidates that reach the slate — before and after. If retention was already near 1.0, cause is (a). Then check the exposure-weighted position distribution of newly added relevant items; if they land below the last examined slot, cause is (c). Sample-inspect arm assignment against the configured split to exclude (d).
+**Correction:** if (a) holds, the constraint is the ranker or the slate, so improving retrieval further has no value; re-target the work at ranking or at slot count.
+**Prevention:** declare the binding constraint before starting work: candidate recall below roughly 0.6 with high ranker retention means retrieval is binding; the reverse means ranking is.
+
+### F-08 — Two services disagree about eligibility
+
+**Symptom:** an item appears in retrieval output and is rejected at display, at a rate of 9% of candidate rows.
+**Competing causes:** (a) the two services read different policy sources, one of which lags; (b) they evaluate the predicate at different timestamps within the same request; (c) one service applies a default-allow on a policy lookup failure while the other applies default-deny.
+**Discriminating check:** join both services' decision records for the same request and diff the policy version, the evaluated timestamp, and the failure code. A version mismatch points at (a); identical versions with timestamps a second apart points at (b); a failure code on one side with an allow decision points at (c).
+**Correction:** make one service own the decision and have the other consume its signed result within a bounded age; treat any lookup failure as deny at both.
+**Prevention:** a contract test that asserts both services return identical decisions for a corpus of constructed (item, viewer, timestamp) triples, run on every deploy of either.
+
+### F-09 — A minority cohort sees poor coverage
+
+**Symptom:** one language cohort has 30% fewer distinct items per week than the platform average.
+**Competing causes:** (a) the cohort's eligible catalog is genuinely smaller; (b) the embedding model was trained on the majority cohort's behaviour and places the cohort's items far from its users' vectors; (c) a fallback source has no items in that cohort's language and dominates the slate.
+**Discriminating check:** compare eligible catalog size per cohort first. If comparable, compute coverage — distinct items exposed over distinct eligible items — for each source separately, which isolates (c) from (b).
+**Correction:** for (b), evaluate a per-cohort content source, and report recall per cohort rather than pooled so the deficit is visible.
+**Prevention:** make cohort-stratified recall a standard output of the evaluation job, with a minimum sample per cohort, so pooled averages cannot hide a cohort at zero.
+
+### F-10 — Duplicate items crowd the candidates
+
+**Symptom:** the ranker sees 20 candidates but only 13 distinct product concepts; the slate looks repetitive.
+**Competing causes:** (a) the same item ID appears from several sources and dedup keys on the row, not the ID; (b) variants (colour, size, edition) are distinct IDs but one concept, and dedup has no concept key; (c) the sources themselves contain duplicates because the upstream feed did.
+**Discriminating check:** count rows, distinct item IDs, and distinct concept keys for the candidate set. rows > IDs points at (a); IDs > concepts points at (b); duplicates present within a single source's output points at (c).
+**Correction:** dedup by ID first, then apply a concept-level cap so one concept cannot occupy more than a declared number of candidate slots.
+**Prevention:** a candidate-set integrity assertion in the request path's test harness that fails when rows ≠ distinct IDs.
+
+### F-11 — Latency regresses during index refresh
+
+**Symptom:** p99 latency doubles for about 10 minutes every rebuild, then recovers.
+**Competing causes:** (a) the rebuild competes for the same CPU or memory bandwidth as serving; (b) serving swaps to a cold index whose pages are not resident; (c) the swap causes a burst of cache misses in a downstream eligibility cache; (d) the new index is physically larger and traversal cost rose permanently, with the "recovery" being traffic variation rather than a fix.
+**Discriminating check:** compare p99 in the window after swap with p99 an hour later at equal traffic. No recovery means (d). Rising resident-set size after swap with page-fault counters elevated means (b). Rebuild CPU pinned to the serving hosts means (a).
+**Correction:** rebuild off-cluster, warm the new index with a replay of recent queries before the swap, and keep the old index resident until the new one is warm.
+**Prevention:** measure p99 during a synthetic swap in staging, and make the swap a distinct deployable step with its own acceptance criteria.
+
+### F-12 — A popularity fallback becomes unsafe
+
+**Symptom:** the fallback source, meant for cold start, serves 40% of traffic after a primary outage and starts surfacing policy-sensitive items.
+**Competing causes:** (a) the fallback was built before a policy was introduced and never re-filtered; (b) the fallback's precomputed list was snapshotted at build time and is stale; (c) the fallback bypasses the final eligibility check because it is considered trusted.
+**Discriminating check:** run the fallback's output through the same eligibility oracle used for the primary. Non-empty rejections point at (a) or (b); distinguishing them requires comparing the list's build timestamp with the policy's effective timestamp. A fallback whose output never reaches the final check is visible in the trace as a missing policy call.
+**Correction:** route fallback output through the identical filter chain, and rebuild the list from current state rather than embedding eligibility decisions in it.
+**Prevention:** treat every source as untrusted for eligibility; the final check is the only place that decides.
+
+### F-13 — Recall calculation divides by zero for a cohort
+
+**Symptom:** a cohort reports recall of 0.00 or 1.00 with perfect confidence; the pipeline looks either broken or perfect.
+**Competing causes:** (a) the cohort's labels are immature so R is empty; (b) the cohort's label rule never fires because its surface does not emit the outcome event; (c) the cohort is genuinely outside the rights envelope so R ∩ E is empty.
+**Discriminating check:** report the count of requests with |R ∩ E| = 0 and the reason. If the count is high and the horizon is recent, cause is (a). If the outcome event count is zero for the surface, cause is (b).
+**Correction:** exclude undefined requests from the ratio, report the exclusion count and reason distribution, and never substitute a numeric placeholder.
+**Prevention:** make the metric function return a discriminated union — `defined(value, n)` or `undefined(reason)` — so a silent zero is impossible in the type system.
+
+### F-14 — Item update never reaches the index
+
+**Symptom:** an edited title or price is correct on the detail page and wrong in recommendations for days.
+**Competing causes:** (a) the index is rebuilt on a schedule and the update fell between rebuilds; (b) the update event is consumed by the feature store but not by the index pipeline; (c) the index stores a copy of mutable fields and serves them as truth.
+**Discriminating check:** compare the update event's consumption offsets across the two pipelines. A gap in the index pipeline's offset points at (b). An index that stores mutable fields is visible in its schema, which excludes (c) as a separate cause only if the schema is immutable.
+**Correction:** index only identifiers and embeddings; hydrate mutable attributes at request time from the authoritative store.
+**Prevention:** design the index as a pure retrieval structure with immutable keys, and enforce it with a schema check in the build.
+
+### F-15 — Position confounds a source comparison
+
+**Symptom:** source X appears better than source Y in a slate where X is placed first.
+**Competing causes:** (a) genuine quality difference; (b) position effect, since the first slot is examined far more; (c) allocation policy that places the higher-scoring source first by construction; (d) different candidate budgets per source so X simply had more chances.
+**Discriminating check:** compare per-source outcomes at matched slots. If the advantage disappears at slot 3 and above, cause is (b) or (c). If X also had a larger candidate count, cause is (d).
+**Correction:** randomise slot assignment for the comparison, or correct by measured examination propensities, and equalise the candidate budget per source.
+**Prevention:** log rendered position and arm for every exposure; without position in the log, no such correction is possible after the fact.
+
+### F-16 — Vector rebuild changes rankings unexpectedly
+
+**Symptom:** after an embedding retrain with unchanged evaluation metrics, the top-10 slate overlap with the previous model is 40%.
+**Competing causes:** (a) the new model is genuinely different and the offline metric is insensitive; (b) vector normalisation changed so cosine and inner product no longer agree; (c) the item encoder and the query encoder were updated in different deployments, producing mismatched spaces.
+**Discriminating check:** compute [A1] fidelity between the new index and its own exact oracle. High fidelity with low cross-version overlap isolates the change to the embedding, not the index. Then compare a cosine-ranked list with an inner-product-ranked list on the same vectors: divergence points at (b). Check encoder version metadata on both sides for (c).
+**Correction:** deploy encoder pairs atomically with a shared version identifier and refuse to serve mismatched versions.
+**Prevention:** evaluate not only recall but also slate stability — the overlap of top-k between versions on a frozen query set — so a large behavioural change is visible before rollout.
+
+### F-17 — Exposure logging is incomplete
+
+**Symptom:** a surface shows 20 items but the exposure table records 14 on average.
+**Competing causes:** (a) client-side logging fires only for items that enter the viewport, while the server renders all 20; (b) the logger samples at a rate that was not recorded; (c) the client drops events on backgrounding; (d) the server renders a fallback the logger does not know about.
+**Discriminating check:** join server render decisions with client exposure events by request ID and count the deficit by slot index. A deficit concentrated in low slots points at (a). A uniform 30% deficit points at (b). A deficit correlated with session-end points at (c).
+**Correction:** log the server render decision as the authoritative exposure record and use client events only for viewability.
+**Prevention:** an exposure reconciliation job whose output is a required field in every evaluation report.
+
+### F-18 — Long-tail items disappear from candidates
+
+**Symptom:** the bottom 80% of the eligible catalog by historical engagement accounts for 4% of exposures.
+**Competing causes:** (a) popularity and co-visitation sources structurally cannot propose tail items; (b) the ANN graph is disconnected for tail items because they had too few neighbours during construction; (c) the ranker demotes them because their features are sparse; (d) exploration is disabled.
+**Discriminating check:** measure presence of tail items in the raw source output before ranking. Present in candidates but absent from slates points at (c). Absent from candidates while present in the exact oracle points at (b). Absent from every source's output points at (a).
+**Correction:** add an explicit tail source with a quota, ensure the index build includes items ingested after the last full rebuild, and reserve exploration slots.
+**Prevention:** track coverage of the eligible catalog as a first-class metric, since no recall metric computed against observed labels will reveal items that never had a chance to be observed.
+
+### F-19 — A deleted user's data persists in a derived store
+
+**Symptom:** a deletion request is honoured in the primary store and the user still receives personalised recommendations.
+**Competing causes:** (a) the feature store's deletion is asynchronous and lagging; (b) the interaction matrix used by co-visitation is rebuilt nightly and contains the user's rows until the next build; (c) the recommendations are non-personalised but appear personalised because they are popular.
+**Discriminating check:** trace the deletion identifier through each derived store by lookup. Presence in the nightly matrix points at (b). Presence in the feature store with a lagging deletion timestamp points at (a). Absence everywhere plus identical output for a control account points at (c).
+**Correction:** make deletion a pipeline with per-store verification and a bound on propagation time, not a single primary-store operation.
+**Prevention:** maintain a derived-store inventory with an owner per store, and a deletion rehearsal that runs on a schedule and reports per-store latency.
+
+### F-20 — Candidate budget grows without a decision
+
+**Symptom:** the candidate budget silently rises from 200 to 1,400 over a year through successive small increases, and p99 latency rises with it.
+**Competing causes:** (a) each change was locally justified by a recall measurement at constant k; (b) the ranker's cost per candidate fell, making more candidates cheap; (c) k was raised for a different surface and inherited by all surfaces.
+**Discriminating check:** plot k over time against the deploy log. Attribute each step to a change record. If steps coincide with ranker efficiency work, cause is (b) and the increase may be justified; if steps coincide with retrieval changes, cause is (a).
+**Correction:** declare k as a policy constant per surface with a written justification, and require a latency measurement with every change.
+**Prevention:** put k, depth, and the latency budget in one versioned configuration reviewed together, so a change to one cannot land without the others in view.
+
+### F-21 — An apparently negative item was never displayed
+
+**Symptom:** a model learns to suppress a class of items, and inspection shows those items have low label rates.
+**Competing causes:** (a) genuine low preference; (b) the class was never exposed above slot 12 where examination is near zero, so its label rate reflects position, not preference; (c) the class is legitimately constrained to a surface whose outcome event is under-logged.
+**Discriminating check:** compute the label rate conditioned on slot for the affected class. If the rate is comparable to other classes at the same slot, cause is (b) rather than (a).
+**Correction:** train with exposure and position as features, or restrict training to exposures in examined slots, and never treat an unexposed item as a negative.
+**Prevention:** include "was exposed in an examined slot" as a filter in the label pipeline, and report label-rate-by-slot as a standard diagnostic.
+
+### F-22 — Underfill is masked by a fallback
+
+**Symptom:** every request returns 20 items and no alert fires, yet the personalisation appears weak.
+**Competing causes:** (a) the fallback is filling most slots because the primary retrieval is under-delivering; (b) the fallback is genuinely appropriate for the cohort mix; (c) both are true for different cohorts.
+**Discriminating check:** report candidate-set composition by originating source per request. A fallback share above roughly half means the primary path is not delivering, which is cause (a) whether or not the resulting slate looks acceptable.
+**Correction:** alert on primary-path contribution, not on slate fill; a filled slate is not evidence that retrieval worked.
+**Prevention:** make "slots filled by source" a required breakdown in the on-call dashboard, so a healthy-looking fill rate cannot hide an outage.
+
+### 8.2 Measurement catalog
+
+Each row is a proposed measurement. None of the thresholds are universal; they are starting points to be calibrated against a measured baseline. Rates require nonzero denominators and a declared window.
+
+| Metric | Numerator | Denominator | What it detects | Benign explanation |
+|---|---|---|---|---|
+| Eligible catalog size | distinct IDs passing all predicates | request | segment starvation and policy over-reach | a genuinely narrow catalog in a small territory |
+| Candidate recall@k | relevant eligible IDs in C_k | relevant eligible IDs | retrieval ceiling | an immature label horizon inflating the denominator |
+| Pooled recall | hits summed over requests | relevant pairs summed | inventory-level recovery | a few heavy-interest requests dominating |
+| Macro recall | per-request recall summed | requests with non-empty R | typical-request quality | tiny denominators making each request near 0 or 1 |
+| Underfill rate | requests with fewer than k candidates | requests | depth provisioning and filter placement | catalog smaller than k |
+| Primary-source share | candidates from the primary path | all candidates | hidden outages masked by fallback | a cohort that legitimately has no history |
+| Rights rejection rate | candidates rejected for rights | candidates checked | territory misconfiguration | expected geography |
+| Availability rejection rate | candidates rejected for stock | candidates checked | inventory lag versus index lag | genuine stock volatility |
+| Authorization error rate | checks returning an error | checks attempted | fail-closed behaviour under dependency failure | a known dependency blip with no exposure |
+| ANN fidelity@k | exact top-k IDs recovered | k, or exact list length | index configuration drift | tie-heavy score distributions |
+| Depth-to-keep ratio | requested depth | delivered candidates | depth mis-provisioning | a dense cohort where depth is generous |
+| Slate stability | top-k overlap with previous version | k | behaviour change from a model swap | an intended exploration increase |
+| Exposure concentration | Gini over per-item exposure | — | feedback-loop narrowing | a head-heavy catalog with genuine demand |
+| Coverage of eligible catalog | distinct items exposed | distinct eligible items | tail starvation | short measurement window |
+| Label rate by slot | labelled outcomes at slot s | exposures at slot s | position confounding | a genuinely better item at slot 1 |
+| Exposure reconciliation | client exposure events | server render decisions | logging loss | viewport-based logging by design |
+| Primary-path latency p99 | request duration at p99 | — | depth or index regression | a rebuild window |
+| Fallback activation rate | requests served with any fallback | requests | dependency health | a new-cohort influx |
+
+### 8.3 Point-in-time and serving acceptance traces
+
+These are constructed test cases for a deployment gate, not records of executed tests. Each names the behaviour that must hold and the wrong behaviour the trace is designed to catch. A trace that cannot fail is not a test.
+
+| Trace | Setup | Required behaviour | Wrong behaviour it catches |
+|---|---|---|---|
+| Rights revoked mid-request | revoke between retrieval and render | item omitted; decision logged with the new policy version | cached allow replayed |
+| Territory change between sessions | viewer attribute changes at t | next request uses new territory; no stale slate | territory cached at profile level |
+| Entitlement downgrade | subscription ends before request | premium items excluded in the same request | slate cached across tier change |
+| Policy service timeout | inject a controlled timeout | deny; no unchecked item rendered | timeout treated as allow |
+| Inventory reaches zero | stock hits zero after retrieval | item omitted or shown as unavailable per policy | stale positive inventory served |
+| Eligibility predicate empty | all items fail by construction | honest empty or editorial response | ineligible substitute injected |
+| Global ANN underfill | depth 20 with density 0.02 | underfill reported, fallback invoked | silent 3-item candidate set passed to ranker |
+| Segment density halved | territory density 0.01 | depth recomputed; underfill rate stays bounded | fixed depth retained, underfill doubles |
+| Tie-heavy score boundary | 40 items share the k-th score | deterministic tie rule reproduced exactly | order-dependent output across replicas |
+| Embedding version skew | query and item encoder versions differ | request refused; version mismatch logged | silent quality loss |
+| Duplicate across sources | same ID from three sources | one candidate row | three rows consuming budget |
+| Concept cap | six variants of one product | at most the declared per-concept cap | one concept filling the slate |
+| Deleted account | deletion propagated | no personalised candidates | derived store still serving |
+| Index swap | new index promoted | p99 within budget; fidelity report present | cold index served unmeasured |
+| Exposure logging loss | client drops 30% of events | reconciliation flags the deficit | analysis run on partial exposures |
+| Label horizon not matured | request inside the horizon | excluded from recall with a reason code | request counted as zero recall |
+
+**Takeaway.** Diagnosis is a comparison, not an inspection: every entry above ends in a check that produces a number separating at least two hypotheses. A failure mode without such a check is a suspicion, and a runbook built from suspicions sends responders to the wrong service.
 ## 9. Complexity & Cost Analysis
 
-### 9a. Algorithmic Complexity
+Cost analysis for a candidate pipeline has three distinct parts that are routinely conflated: the algorithmic cost of the retrieval primitive, the serving cost of the whole request path, and the recurring cost of keeping the index and the evaluation consistent. Each is dominated by a different term, and optimising the wrong one produces no visible benefit.
 
-Let N be the number of eligible items, d the embedding dimensions, k the output size, and n the total source-list entries.
-An exact brute-force dot-product scan requires O(Nd) arithmetic and can retain the top k with O(k) auxiliary storage using a heap, plus O(N log k) heap operations in a straightforward implementation.
-Stored dense vectors require O(Nd) numbers; input storage is distinct from auxiliary heap memory.
-A full sort instead uses O(N log N) comparison work and requires a suitable score representation.
-ANN build, memory, search and update complexity depend on index family, parameters, dataset and implementation; no universal sublinear worst-case claim is made.
-Index refresh requires embedding generation, transfer, build or update, validation, and replication; recovery and rebuild may overlap with live traffic.
-Distributed retrieval adds fan-out, network transfer, merge work, skew and stragglers; index-wide latency cannot be inferred from a single shard's average.
-Cache hits can reduce work, but policy checks and cache invalidation remain mandatory.
+### 9a. Algorithmic complexity
 
-### 9b. Back-of-Envelope Sizing
+**Exact scan over the eligible set.**
+```text
+FORMULA:   work = |E| * d multiplications per request, plus |E| log k for top-k selection
+WHERE:     |E| = eligible items, d = embedding dimensions, k = cutoff
+CONSTRAINT: dense float32 vectors resident or streamed at line rate
+NUMERICAL EXAMPLE:
+  |E| = 240,000, d = 128
+  multiplications = 240,000 * 128 = 30,720,000 MACs
+  FLOPs (2 per MAC)                  = 61,440,000
+  at 200 GFLOP/s  -> 0.307 ms
+  at 1000 GFLOP/s -> 0.061 ms
+INTERPRETATION: arithmetic is not the binding constraint; memory movement is (see below).
+```
 
-**ILLUSTRATIVE inputs:** 1,000,000 item vectors, each with 128 float32 components, four bytes per component, and two complete replicas.
-**Validity:** dense uncompressed vector payload only; no ANN graph, item IDs, metadata, allocator overhead or query features.
-**Derivation:** item count times dimensions gives component count; multiplying by bytes gives payload; replication doubles it.
-**[S1] FORMULA:** payload bytes = items * dimensions * bytes_per_component * replicas.
-**WHERE:** each quantity is a nonnegative count and every replica stores the complete payload.
-**CONSTRAINT:** homogeneous vectors with no compression, padding or sharding-dependent duplication.
-**NUMERICAL EXAMPLE:** 1,000,000 * 128 * 4 * 2 = 1,024,000,000 bytes = 1.024 GB decimal, approximately 0.954 GiB.
-**INTERPRETATION:** This is a lower-bound payload estimate under these assumptions, not a provisioned-memory recommendation.
-**Independent arithmetic check:** one replica stores 512,000,000 bytes; two store 1,024,000,000 bytes.
-**Boundary:** vector quantization, mixed dimensions, replicas with unequal contents, metadata and build-time copies change the estimate.
-At 100 hypothetical requests/s, an exhaustive scan over one million items entails 100,000,000 item scores/s before filtering and batching assumptions; 128 components imply 12.8 billion component multiplications/s if every score uses all components.
-These are operation counts, not measured throughput, FLOPs, power, or latency; hardware, batching, caching, concurrency and memory traffic determine real behavior.
-**Cost model:** If provisioned memory costs a hypothetical $10 per GB-month, charging exactly 1.024 decimal GB for one month gives $10.24/month in payload-only memory charges.
-This is not a real price quotation; storage, replicas beyond two, compute, network, logs, idle capacity and labor are excluded.
-A useful-outcome unit cost requires an observed outcome denominator; no cost per successful recommendation is claimed.
-**Environment and budgets:** Hardware, software, latency SLO, peak traffic and index type are OPEN and must be supplied before capacity or currency estimates can support deployment.
-**Sensitivity:** Doubling dimensions to 256 doubles payload to 2.048 GB with all other assumptions fixed.
-Measure build-time peak memory, index footprint, freshness lag, end-to-end tail latency and capacity under representative bursts before provisioning.
-**Takeaway:** Arithmetic produces an assumption-bound capacity floor, not a benchmark or operational budget.
+**Why the arithmetic figure is misleading.** A 128-dimension float32 vector is 512 bytes. Scanning 240,000 of them reads 122.88 MB per request. At a sustained 100 GB/s that is 1.23 ms; at 50 GB/s, 2.46 ms. Now scale to the full catalog of 12 million: 6.144 GB per request, which is 61.4 ms at 100 GB/s and 122.9 ms at 50 GB/s. The scan is bandwidth-bound, not FLOP-bound, which is exactly why approximate indexes exist: they trade a small amount of exactness for a thousand-fold reduction in bytes touched.
+
+```text
+bytes touched per request, float32, d=128
+  eligible set   240,000 * 512 B =   122,880,000 B = 122.88 MB
+  full catalog 12,000,000 * 512 B = 6,144,000,000 B =   6.144 GB
+
+at 100 GB/s: 122.88 MB -> 1.23 ms     6.144 GB -> 61.4 ms
+at  50 GB/s: 122.88 MB -> 2.46 ms     6.144 GB -> 122.9 ms
+at 400 GB/s: 122.88 MB -> 0.31 ms     6.144 GB -> 15.4 ms
+```
+
+**ANN traversal.** A graph index visits roughly `m + hops × M` nodes, where m is the requested depth, `hops ≈ log_N` for a graph with branching factor N, and M is the number of neighbours followed per hop.
+
+```text
+FORMULA:   D ≈ m + hops * M        hops ≈ log_16(|I|)
+WHERE:     D = distance computations, m = depth, |I| = index size, M = neighbour fan-out
+CONSTRAINT: graph is connected and vectors are resident in RAM
+NUMERICAL EXAMPLE:
+  |I| = 12,000,000 -> log_16 = log(12e6)/log(16) = 16.19/2.77 = 5.88 hops
+  M = 16, m = 1390:  D ≈ 1390 + 5.88*16 = 1390 + 94 = 1,484
+  M = 16, m =   20:  D ≈   20 + 5.88*16 = 20 + 94   =   114
+  ratio = 1484/114 = 13.0
+INTERPRETATION: a 69.5x increase in requested depth costs only 13x more distance computations,
+because the graph-walk overhead is amortised. This is the quantitative case for deepening.
+```
+
+Bytes touched: 1,484 × 512 B = 759,808 B ≈ 742 KiB, versus 122.88 MB for the exact scan on the eligible set — a factor of 162 fewer bytes, at the price of approximate rather than exact ordering within the traversal.
+
+**Union, filter, and dedup.** With `n` total source entries and expected constant-time hash membership:
+```text
+FORMULA:   expected O(n) time, O(k) space for the retained set
+WHERE:     n = sum of source list lengths before dedup
+CONSTRAINT: a good hash function and a bounded load factor; no sorting inside the union
+NUMERICAL EXAMPLE: four sources of 500 rows = 2,000 rows; pairwise overlap 20% removes
+  approximately 6 * 500 * 0.20 = 600 duplicate pairs, so the union is about 2,000 - 600 = 1,400
+  distinct rows, well above k = 20 and therefore capped.
+INTERPRETATION: the union is cheap per row but it is the stage where the candidate count
+  becomes unpredictable, which is why it must be measured rather than estimated.
+```
+
+**Ranking.** Ranker cost is `c × f` feature evaluations for `c` candidates. It is linear in candidates and therefore the stage that punishes a large `k` most directly: at 2.6 ms per candidate, 20 candidates cost 52 ms and 1,400 candidates cost 3,640 ms. A cheap pre-ranker at 0.05 ms per candidate would cost 12,000 ms over the whole 240,000-item eligible set — which is why exact ranking of the eligible universe is not an option even though exact retrieval of it is.
+
+**End-to-end.** The request path is a sum, not a product, of latencies, with the exception of any parallel source fan-out, which is a maximum.
+
+### 9b. Back-of-envelope sizing
+
+**Serving fleet.** The constructed budget in Section 5 commits 150 ms of p99 against a 250 ms target, of which 126 ms is server-side work (150 minus 24 ms of network). At 40 requests per second and a 50% target utilisation:
+
+```text
+server work per request                 = 126 ms = 0.126 s
+concurrency needed at 40 rps            = 40 * 0.126        = 5.04 core-equivalents
+at 50% target utilisation               = 5.04 / 0.5        = 10.08 cores
+on 8-vCPU instances                     = 10.08 / 8         = 1.26 -> 2 instances (with N+1)
+monthly compute at USD 0.30/vCPU-hour   = 2 * 8 * 0.30 * 730 = 3,504 USD
+```
+
+The per-request figure is the useful one: 1,000,000 requests at 40 rps is 1e6/40/3600 = 6.94 hours, so the compute attributed to a million requests is 6.94 × 0.126 = 0.875 core-hours before utilisation headroom, or 1.75 core-hours at 50%.
+
+**Memory.** The dominant recurring cost is vectors, and it is a constant rather than a per-request cost:
+```text
+float32 vectors        12e6 * 128 * 4 B = 6.144 GB per replica
+graph links (M=64)     12e6 * 64  * 4 B = 3.072 GB per replica
+per replica                              = 9.216 GB
+two replicas                             = 18.432 GB
+int8 vectors           12e6 * 128 * 1 B = 1.536 GB per replica
+int8 + graph, 2 replicas                 = 9.216 GB
+```
+
+At 8 GB per node the float32 layout needs 2.30 nodes before the operating system and query working set are counted, so the practical minimum is three nodes per replica group, not two. Quantising to int8 halves the footprint but changes score ordering, so it is a re-measurement obligation, not a free saving.
+
+**Index build.** At a constructed 2,000 vectors per second per thread, a full rebuild of 12 million items is 6,000 seconds = 100 minutes single-threaded, or 6.25 minutes across 16 threads. Embedding generation, if done fresh at 5 ms per item, costs 12e6 × 0.005 = 60,000 seconds = 16.7 core-hours. This is why rebuilds are incremental: a full re-embed per rebuild costs more than serving.
+
+**Offline evaluation.** An exact oracle over 400 requests against 240,000 eligible items is 400 × 240,000 = 9.6e7 distances, touching 9.6e7 × 512 B = 49.2 GB. That is a batch job of a few minutes, and it is the cost that makes matched-population evaluation affordable: the expensive part is not the oracle, it is assembling the point-in-time inputs.
+
+**Cost of the depth decision, in one line.** Going from depth 20 to depth 1390 multiplies distance computations by 13.0 and index traversal time roughly in proportion, while leaving memory untouched. That is why depth is the first lever to try and why it must be bounded by a measured underfill target rather than by intuition.
+
+**Cache layers change the shape, not the total.** A 70% hit rate at 4 ms with a 30% miss path at 150 ms gives a mean of 0.7 × 4 + 0.3 × 150 = 47.8 ms, but p99 is still governed by the miss path. Sizing a fleet from the mean under-provisions by more than 3× relative to the p99 requirement.
+
+**Takeaway.** Compare pipelines on bytes touched and candidates scored, not on FLOPs and not on model quality alone; the two former quantities determine whether the design fits the latency and cost envelope at all.
 
 ## 10. Key Theorems / Results Reference
 
-| Result | Statement and hypotheses | Consequence | Does not imply | Source |
-|---|---|---|---|---|
-| Set containment bound | For displayed slate D contained in C and relevance set R, D intersect R is contained in C intersect R | Displayed relevant hits cannot exceed retrieved relevant hits | A larger candidate set guarantees better ranked outcomes | DERIVED from set containment |
-| Exact ranking by scan | Evaluating the fixed score for every eligible item and selecting k greatest with fixed ties returns exact top-k under that score | Supplies a matched oracle for ANN | Human relevance or policy utility is exact | DERIVED from exhaustive enumeration |
-| Exposure selection | Feedback is observed under a serving policy rather than for all possible items | Logged clicks are not automatically unbiased preference labels | Every bias can be repaired without overlap or logging | SOURCED: [Joachims et al., Unbiased Learning-to-Rank with Biased Feedback](https://doi.org/10.1145/3018661.3018699) |
-| Randomized assignment | Under a valid randomized experiment and appropriate analysis, assignment supports causal comparison of assigned policies | Online experiments can assess end-to-end impact | Every online difference is significant or free from interference | SOURCED: [Kohavi et al., Online Controlled Experiments](https://doi.org/10.1017/9781108653985) |
+Each result is stated with the condition under which it holds, because every one of them is false outside that condition, and the standard misapplication is to quote the conclusion and drop the premise.
 
-**References and claim boundaries:** [Hu, Koren and Volinsky, Collaborative Filtering for Implicit Feedback Datasets](https://doi.org/10.1109/ICDM.2008.22) describes a model for implicit observations; it does not validate the illustrative workflow here.
-[Covington et al., Deep Neural Networks for YouTube Recommendations](https://doi.org/10.1145/2959100.2959190) is an original research example of candidate generation and ranking; its historical architecture is not a claim about any present deployment.
-[Faiss project](https://faiss.ai/) documents similarity search tools; specific deployed index behavior is version-dependent and not verified here.
-[NIST Privacy Framework](https://www.nist.gov/privacy-framework) offers a privacy risk-management framework; legal applicability and organization-specific controls require review.
-All links identify primary research, project or institutional sources; no external benchmark is imported as a result for this example.
-Publication dates and software versions should be checked by a reviewer before external reliance; empirical workload and product results remain OPEN.
-**Takeaway:** Exactness, causal validity and eligibility are separate claims with separate assumptions.
+**T1 — No-recovery bound.** For any slate D drawn from a candidate set C_k and any relevant set R, `|D ∩ R| ≤ |C_k ∩ R|`. Consequently display recall ≤ candidate recall for every request. *Holds:* always, given D ⊆ C_k. *Misapplication:* quoting it as "ranking does not matter" — the bound is an upper limit, and the ranker determines how close to that limit the system operates.
+
+**T2 — Saturation of recall at k ≥ |E|.** If k ≥ |E(q,t)| then recall@k = 1 for any pipeline returning all eligible items. *Holds:* given complete return. *Misapplication:* comparing systems on a fixture where this is true, which produces a guaranteed tie and is often misinterpreted as "the systems are equivalent".
+
+**T3 — Pooled equals relevant-count weighting.** `sum(hits)/sum(|R|)` and `sum(|R|·recall)/sum(|R|)` are algebraically identical. *Holds:* always, by expansion. *Misapplication:* presenting them as two independent confirmations; they are one estimator computed twice.
+
+**T4 — Macro and pooled can disagree in sign.** There exist request sets where a change increases macro recall and decreases pooled recall. *Holds:* constructible whenever the per-request relevant counts vary. *Misapplication:* defending a chosen aggregate after seeing results; the weighting must be declared in advance.
+
+**T5 — Depth requirement grows like k/p.** The smallest m with `P(Binomial(m,p) ≥ k) ≥ 1−α` scales approximately as k/p, with the exact constant growing slowly as α falls. *Holds:* eligibility independent of rank position. *Misapplication:* applying it when eligibility correlates with score — the correlation always makes the true requirement larger.
+
+**T6 — Independence overestimates joint survival when filters co-reject.** For rejection rates r1, r2 with excess co-rejection ω ≥ 0, survival is `1−r1−r2+r1r2+ω`, which exceeds the independence prediction by exactly ω. *Holds:* by inclusion–exclusion. *Misapplication:* assuming ω = 0 for filters fed by the same upstream system, which is the common case for rights and platform availability.
+
+**T7 — Union coverage is concave in source count.** `1−(1−p)^s` has a strictly decreasing marginal gain `p(1−p)^{s−1}`. *Holds:* source independence. *Misapplication:* planning a five-source ensemble expecting linear coverage growth; the fifth source adds 0.079 where the first added 0.250 at p = 0.25.
+
+**T8 — Approximate top-k fidelity is not relevance.** Fidelity measures agreement with an exact list under a fixed score; it is invariant to whether that score is a good model of utility. *Holds:* always. *Misapplication:* reporting high fidelity as evidence of recommendation quality.
+
+**T9 — Cosine and inner product agree only on the unit sphere.** For unnormalised vectors, `argmax cos(q,x) ≠ argmax q·x` in general. *Holds:* equality when all item vectors have equal norms. *Misapplication:* switching the metric or dropping normalisation during a rebuild and assuming identical ranking behaviour.
+
+**T10 — DCG is cutoff-dependent and grade-scale-dependent.** The same ranking yields different nDCG at different cutoffs, and DCG differences are not comparable across grade scales. *Holds:* always. *Misapplication:* reporting "nDCG improved by 0.03" without the cutoff and grade definition; in the worked example the identical ordering scores 0.952 at cutoff 10 and 0.832 at cutoff 5.
+
+**T11 — Position correction requires positivity.** Inverse-propensity correction of slot effects is unbiased only where the examination propensity is strictly positive for every slot in the analysis. *Holds:* under the positivity condition. *Misapplication:* correcting slot-20 outcomes with an estimated propensity of nearly zero, which produces enormous variance and unstable estimates rather than a correction.
+
+**T12 — Staleness exposure scales linearly with refresh interval.** For state changes arriving uniformly, the expected number of requests served from a stale snapshot is `(T/2)·λ`. *Holds:* uniform arrival. *Misapplication:* using the formula for a rights feed that lands in a daily batch, where the window is deterministic and can be far longer than T/2.
+
+**T13 — Hypergeometric and binomial converge when the sample is small relative to the population.** For sampling m from a population of size E with m/E → 0, the hypergeometric distribution converges to the binomial. *Holds:* approximately when m/E ≤ 0.05. *Misapplication:* using the binomial for a small territory where depth approaches the eligible pool size, which overstates the required depth.
+
+**T14 — Recall is undefined, not zero, on an empty relevant set.** `0/0` is undefined; any reported numeric value is a convention. *Holds:* always. *Misapplication:* substituting zero, which makes a cohort with immature labels look like a retrieval failure proportional to its label lag.
+
+**T15 — Exposure concentration is a fixed point of a feedback loop.** A policy that trains on exposure-selected labels and selects by predicted engagement can drive Gini toward 1 without any change in user preference. *Holds:* for policies whose training distribution is their own output distribution. *Misapplication:* interpreting rising concentration as evidence of genuine demand concentration; the two are observationally similar and must be separated by exploration.
+
+**T16 — Coverage of the eligible catalog bounds recall against observed labels.** Items that were never exposed cannot be labelled, so a recall metric computed on observed labels cannot detect a retrieval regression that affects only unexposed items. *Holds:* always. *Misapplication:* treating a stable recall figure as evidence that the candidate pipeline is healthy while coverage falls.
+
+**Takeaway.** Each theorem is a constraint on a claim, not a result to cite. The useful reading is the "misapplication" line: those are the sentences that appear in review documents just before a decision goes wrong.
 
 ## 11. Interview / Exam Questions
 
-### Q01 — Level 1 — Definition / Recall
+Fifteen questions with independent answers. Questions 4, 5, 6, 8, 9, 10, 12, and 14 require a computation or a diagnostic decision; the rest test definitions and judgement. Answers are written to be scored on content, not on confidence.
 
-**Prompt:** What distinguishes retrieval from ranking?
+### Q01 — Why does a ranker's quality not determine end-to-end recommendation quality?
 
-**Answer:** Retrieval selects a manageable candidate set; ranking orders those candidates for a display objective. A ranker cannot rank an item absent from its input.
+**Answer:** Because the ranker only reorders what retrieval supplies. For any slate D ⊆ C_k, |D ∩ R| ≤ |C_k ∩ R|, so display recall cannot exceed candidate recall. If candidate recall is 0.45 and the ranker perfectly surfaces every relevant candidate, the ceiling is still 0.45. A better ranker closes the gap between 0.45 and the ceiling; it cannot raise the ceiling.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Scoring:** full credit states the bound and attributes the ceiling to retrieval; partial credit says "both matter" without the inequality.
 
-### Q02 — Level 1 — Definition / Recall
+### Q02 — Define eligibility so that it can be computed from logs.
 
-**Prompt:** Why is an unseen item not a negative label?
+**Answer:** Eligibility is a predicate over the tuple (item, viewer, surface, decision timestamp) that returns true when every hard constraint — rights for the viewer's territory, entitlement, asset availability, device capability, safety policy — is satisfied at that instant. It is computable from a versioned policy state plus the viewer's attributes at the same timestamp. It is not a per-item attribute, and it is not a model score.
 
-**Answer:** It may never have been exposed or visible; even an impression without a click can reflect position or context rather than dislike.
+**Scoring:** full credit names the tuple and the timestamp; no credit for "whether the user can see the item" without the timestamp.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+### Q03 — Why is an item that was never exposed not a negative label?
 
-### Q03 — Level 1 — Definition / Recall
+**Answer:** Its outcome is unobserved, and the observation mechanism depends on the policy that chose not to expose it. Encoding it as negative teaches the model to reproduce the exposure policy rather than to estimate preference, and the effect compounds because exposure decisions are then made from those predictions. The correct handling is to exclude unexposed items from label-based training or to model exposure explicitly.
 
-**Prompt:** How does ANN recall differ from relevance recall?
+**Scoring:** full credit identifies the selection mechanism; partial credit mentions "missing data" without the policy dependence.
 
-**Answer:** ANN recall measures overlap with exact nearest neighbors under a fixed score; relevance recall measures overlap with labeled eligible items.
+### Q04 — With E = 240,000, R = 7, and C_20 containing 4 relevant items, compute candidate recall and state what it does not tell you.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Answer:** Recall = 4/7 = 0.5714. It does not tell you the ranker's quality, the slate's quality, whether the other three relevant items were reachable, the precision (4/20 = 0.20), or anything about the population — this is one request. It also does not tell you whether the four items were ranked highly or placed at the bottom of the slate.
 
-### Q04 — Level 2 — Derivation / Apply
+**Scoring:** full credit gives 0.5714 and at least three distinct limitations; the common error is reporting 4/20 = 0.20, which is precision.
 
-**Prompt:** For R={B,D} and C={A,B,C}, what is recall@3?
+### Q05 — At 2% eligibility density, k = 20, and a 5% underfill tolerance, how deep must you retrieve? Show the check.
 
-**Answer:** The intersection is {B}; its size is one and |R| is two, so recall@3 is 1/2 = 0.5, provided the eligible universe and label horizon match.
+**Answer:** m = 1390. Check: the binomial tail with mean 1390 × 0.02 = 27.8 and sd sqrt(1390 × 0.02 × 0.98) = 5.22 gives P(X ≥ 20) = 0.9502, so P(underfill) = 0.0498 ≤ 0.05. The ratio m/k = 69.5. At density 1% the same requirement is m = 2784; at 10% it falls to 275.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Scoring:** full credit gives a depth within about 5% of 1390 and shows the tail computation; partial credit gives the ratio intuition (roughly k/p) without the tolerance.
 
-### Q05 — Level 2 — Derivation / Apply
+### Q06 — A pipeline requests depth 20 globally and filters afterwards. With p = 0.02, what fraction of requests gets any eligible candidate?
 
-**Prompt:** Two requests have one hit each and relevant counts two and one. Compute macro and micro recall.
+**Answer:** Each of the 20 returned items survives filtering with probability 0.02 independently, so P(no survivor) = 0.98²⁰ = 0.6676 and P(at least one) = 0.3324. The expected number of survivors is 20 × 0.02 = 0.4. So roughly two thirds of requests receive an empty candidate set from this path, and the average request receives 0.4 items against a budget of 20.
 
-**Answer:** Macro is (1/2 + 1)/2 = 0.75; micro is (1+1)/(2+1) = 2/3. Their weighting differs.
+**Scoring:** full credit computes 0.3324 and the expectation 0.4; partial credit recognises the problem without the probability.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+### Q07 — Two filters reject 12% and 18% of items. What survives, and what changes if they co-reject?
 
-### Q06 — Level 2 — Derivation / Apply
+**Answer:** Under independence, survival is 1 − 0.12 − 0.18 + 0.12 × 0.18 = 0.7216, so 72.16% survive. If the excess co-rejection ω is 0.06, survival rises to 0.7816 because more items are rejected by both filters simultaneously. The direction is counter-intuitive but forced by inclusion–exclusion: correlation in rejection increases joint survival.
 
-**Prompt:** Prove that a ranker cannot display a relevant item absent from its candidate input.
+**Scoring:** full credit gives both numbers and explains the direction; partial credit gives 0.7216 only.
 
-**Answer:** For display D subset C, every element of D intersect R is also in C intersect R. Therefore its number of relevant hits cannot exceed the candidate hit count.
+### Q08 — Recall rises from 0.38 to 0.48 and the online primary metric is flat. Give three causes and the check for each.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Answer:** (a) Ranker saturation — retention was already near 1.0, so extra candidates were redundant; check the share of relevant candidates reaching the slate before and after. (b) Objective mismatch — the added candidates satisfy the offline label but not the online objective; check the online outcome rate conditional on the newly added items. (c) Position — the new items land below the last examined slot; check their exposure-weighted position distribution. A fourth: the split was not honoured; check arm assignment against configuration.
 
-### Q07 — Level 2 — Derivation / Apply
+**Scoring:** full credit gives at least three causes each with an observable check; naming causes without checks is partial.
 
-**Prompt:** What happens to recall for an empty relevant set?
+### Q09 — Design an eligibility check that cannot be defeated by a stale index.
 
-**Answer:** The ratio has zero denominator and is undefined. Report exclusions and label-maturity status rather than silently setting it to zero.
+**Answer:** Keep the index as a pure retrieval structure containing only IDs and embeddings, with no eligibility decisions. Evaluate eligibility against a versioned policy service at request time, after retrieval and again immediately before render, and fail closed on lookup errors. Log the policy version and evaluated timestamp with the response so the check is auditable. Index freshness then affects candidate *quality* only, never correctness, and the residual risk is bounded to the latency of the policy service rather than to the refresh interval.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Scoring:** full credit separates retrieval freshness from eligibility correctness and specifies fail-closed plus logging; partial credit proposes frequent rebuilds only, which does not bound the window.
 
-### Q08 — Level 2 — Derivation / Apply
+### Q10 — You must choose between depth 1400 filtered ANN and a per-territory exact index. What decides it?
 
-**Prompt:** How much raw vector payload do one million 128-dimensional float32 vectors require with two replicas?
+**Answer:** Two quantities. First, eligibility density: if territory is the dominant rejection and per-territory density is high (say 25%), the exact index is cheap and exactness is free. Second, storage multiplication: n territories multiplies vector memory by n, so ten territories at 9.216 GB per replica becomes 92.16 GB. The comparison is depth-induced latency (about 38 ms at depth 1390 in the constructed budget) against storage and rebuild time. If territories are few and large, partition; if many and small, use filter-aware depth.
 
-**Answer:** One million times 128 times four times two is 1,024,000,000 bytes, or 1.024 decimal GB, before index and runtime overhead.
+**Scoring:** full credit names both density and storage multiplication with numbers; partial credit names one.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+### Q11 — What is the difference between ANN fidelity and candidate recall?
 
-### Q09 — Level 3 — Judgement / Design / Debug
+**Answer:** Fidelity is |A_k ∩ X_k|/|X_k|, the share of the exact top-k under a fixed score that the approximate index recovered. It measures the index. Candidate recall is |C_k ∩ R|/|R ∩ E|, the share of labelled relevant items the candidate set contains. It measures the pipeline against ground-truth relevance. A pipeline can have fidelity 1.0 and recall 0.1: it reproduces the exact neighbours perfectly, and the exact neighbours are mostly irrelevant.
 
-**Prompt:** How should a new user be served without history?
+**Scoring:** full credit gives both formulas and the 1.0/0.1 example; partial credit contrasts them only qualitatively.
 
-**Answer:** Use an eligible contextual or popularity baseline, optionally incorporating consented explicit preferences; monitor cohort outcomes and do not infer a personal preference from missing data.
+### Q12 — Compute nDCG@3 for grades [3,0,2] and for [3,2,0]. What does the difference mean?
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Answer:** DCG([3,0,2]) = 7/1 + 0/1.585 + 3/2 = 8.5000. DCG([3,2,0]) = 7/1 + 3/1.585 + 0/2 = 8.8928. The ideal ordering of these grades is [3,2,0], so IDCG = 8.8928 and nDCG is 0.9558 versus 1.0000. The difference of 4.4 points is what one adjacent swap of a grade-2 item is worth at these positions — so any claimed gain smaller than that is within the granularity of a single move.
 
-### Q10 — Level 3 — Judgement / Design / Debug
+**Scoring:** full credit computes both and interprets the granularity; partial credit computes without interpreting.
 
-**Prompt:** Why can global ANN followed by filtering underfill even when eligible results exist?
+### Q13 — Why can a higher candidate recall be a bad decision?
 
-**Answer:** The global top results can all be ineligible; eligible items below the global cutoff are never returned. Use an eligible oracle, filter-aware retrieval or bounded over-retrieval with a safe fallback.
+**Answer:** Because recall is bought with depth, and depth costs latency, memory bandwidth, and often quality through the inclusion of marginal items. If the ranker cannot use the extra candidates (retention already near 1.0, or the slate has 20 slots), the gain is invisible to users while the latency regression is visible to all of them. Recall must be reported with the depth, latency, and underfill that produced it.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+**Scoring:** full credit names the cost side and the saturation mechanism; partial credit says "it depends on the cost" without mechanism.
 
-### Q11 — Level 3 — Judgement / Design / Debug
+### Q14 — A cohort reports recall of exactly 1.00 with no variance. Diagnose.
 
-**Prompt:** Recall rises but retention falls. What next?
+**Answer:** Almost certainly a degenerate denominator or a fixture artefact: k ≥ |E| so every pipeline returns everything (T2), or |R ∩ E| = 1 for every request so each recall is 0 or 1 and the mean happens to be 1, or a fallback guarantees the single labelled item. Check the distribution of |R ∩ E| and of k/|E|. A genuine 1.00 across a cohort with varied denominators is essentially impossible.
 
-**Answer:** Do not assume recall caused retention. Pause or gate rollout, verify experimental assignment and data quality, compare guardrails, and investigate ranking, quality and affected cohorts.
+**Scoring:** full credit names saturation and the denominator distribution check; partial credit says "suspicious" without a check.
 
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
+### Q15 — What single measurement would you require before shipping a retrieval change?
 
-### Q12 — Level 3 — Judgement / Design / Debug
+**Answer:** Candidate recall on a matched cohort with confidence intervals, computed against an eligible labelled population with a fixed horizon, reported together with underfill rate and p99 latency at the target QPS. The three together prevent the two failure modes that pass a recall-only gate: a recall gain bought with underfill, and a recall gain bought with latency. If forced to choose one, candidate recall on a matched cohort, because without it nothing else is attributable.
 
-**Prompt:** A rights revocation arrives after the index refresh. What must protect the user?
+**Scoring:** full credit names matched cohort plus intervals and at least one companion metric; partial credit names recall alone.
 
-**Answer:** A current authoritative eligibility check near display must remove the item. Refresh and cache invalidation are necessary but cannot replace the final check.
-
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
-
-### Q13 — Level 3 — Judgement / Design / Debug
-
-**Prompt:** How would you compare exact and approximate methods fairly?
-
-**Answer:** Use identical request vectors, item vectors, score, tie policy, eligibility snapshot and cutoff; evaluate filtered output against exact eligible top-k and report underfill.
-
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
-
-### Q14 — Level 3 — Judgement / Design / Debug
-
-**Prompt:** How can exploration be assessed without confusing position with preference?
-
-**Answer:** Log randomized assignment, rendered position and exposure; use a suitable controlled design with consent and guardrails. Propensity methods need correct probabilities and support.
-
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
-
-### Q15 — Level 3 — Judgement / Design / Debug
-
-**Prompt:** What would invalidate an offline gain?
-
-**Answer:** A future feature, changed eligible universe, immature labels, unequal query cohort or inconsistent event logging can invalidate the comparison; rerun only with matched point-in-time inputs and audited exclusions.
-
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
-
-### Q16 — Level 3 — Judgement / Design / Debug
-
-**Prompt:** How would you balance diversity and relevance?
-
-**Answer:** Define a slate diversity objective or constraint within the authorized candidate set, report relevance and business tradeoffs by cohort, and validate the combined policy online.
-
-**Scoring:** Full credit requires the stated assumptions and an explicit boundary; a confident claim without them is partial.
-
-**Takeaway:** Strong answers identify the universe, time boundary, observation mechanism and a falsifiable validation plan.
-
+**Takeaway.** The distinguishing feature of a strong answer here is that it states what the number does *not* license. Every question above has a plausible wrong answer that sounds more confident than the right one.
 ## 12. Quick Reference Card
 
-| Item | Value |
+| Item | Value and condition |
 |---|---|
-| Topic | Choose and evaluate authorized retrieval candidates before ranking. |
-| Core formula | Relevant recall@k = eligible relevant IDs in candidate top-k / eligible relevant IDs, for a nonempty matched relevant set. |
-| Key assumption | Systems use the same as-of eligibility, query cohort, label horizon, cutoff and relevance definition. |
-| Complexity | Exact scan is O(Nd + N log k) with heap selection and O(k) auxiliary space, for N eligible d-dimensional vectors. |
-| Use when | A candidate set must fit a downstream ranking budget while preserving eligible relevance. |
-| Avoid when | Authorization, outcome maturity, compatible vectors or a comparable evaluation population cannot be established. |
-| Go deeper | [Collection index](INDEX.md); ranking metrics and exploration sheets are planned, not yet available. |
+| Core decision | Trust a candidate pipeline to feed a ranker only when eligibility is checked at decision time, candidate recall is measured on a matched cohort, and underfill plus latency are reported alongside it |
+| Candidate recall | `|C_k ∩ R| / |R ∩ E|`, defined only when the eligible labelled count is positive; denominators must use the eligible universe, never the whole catalog |
+| Aggregates | macro weights requests equally; pooled (identical to relevant-count weighting) weights requests by their relevant-item count; the choice is a product decision and must be declared before results are seen |
+| Depth requirement | smallest m with `P(Binomial(m, p) ≥ k) ≥ 1 − α`; at p = 0.02, k = 20, α = 0.05 the answer is m = 1390, a ratio of 69.5 |
+| Eligibility attrition | `1 − r1 − r2 + (r1·r2 + ω)`; excess co-rejection ω raises joint survival, so independence under-estimates the surviving set |
+| Approval gate | fail closed on authorization; push eligibility into retrieval traversal or partition the index; keep the index free of eligibility decisions so staleness affects quality only |
+| Complexity | exact scan is bandwidth-bound at d·4 bytes per item (6.144 GB for 12M × 128 float32); ANN touches about m + log·M nodes, roughly 742 KiB at m = 1390 |
+| Cost anchors | float32 vectors 6.144 GB per 12M-item replica; graph at M = 64 adds 3.072 GB; ranker cost dominates candidate count growth at roughly 2.6 ms per candidate |
+| Use when | a ranker or slate budget constrains how many items can be scored, and eligibility is a nontrivial fraction of the catalog |
+| Avoid when | the eligible labelled population cannot be assembled point-in-time, the label horizon is immature, or the comparison differs in k, H, or eligibility vintage |
+| Signature failure | a full slate with weak personalisation: the fallback is filling slots because the primary path under-delivers, and slate fill hides it |
+| Go deeper | [Collection index](INDEX.md) for sibling cards and the planned ranking-metric, exploration, and common-issues artefacts |

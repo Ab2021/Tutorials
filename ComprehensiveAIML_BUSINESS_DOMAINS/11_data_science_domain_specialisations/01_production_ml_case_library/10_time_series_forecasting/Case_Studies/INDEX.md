@@ -15,7 +15,7 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-01-10-001 | [Retail CPG demand forecasting for bounded replenishment](./01_Retail_CPG_Demand_Forecasting_At_Scale.md) | Time Series Forecasting | predictive-ml | decision record in the linked case | evaluation-mismatch | data-leakage, model-monitoring | not-measured | proposed | null | draft (lint open) |
+| CASE-01-10-001 | [Retail CPG demand forecasting for bounded replenishment](./01_Retail_CPG_Demand_Forecasting_At_Scale.md) | Time Series Forecasting | predictive-ml | decision record in the linked case | evaluation-mismatch | data-leakage, model-monitoring | not-measured | proposed | 2026-11-10 | authored |
 | CASE-01-10-002 | [Ride-hailing demand forecasting for operational planning](./02_Ride_Hailing_Demand_Forecasting.md) | Time Series Forecasting | predictive-ml | decision record in the linked case | evaluation-mismatch | data-leakage, model-monitoring | not-measured | proposed | null | draft (lint open) |
 | CASE-01-10-003 | [Day-ahead energy load forecasting for utility planning](./03_Energy_Load_Forecasting.md) | Time Series Forecasting | predictive-ml | decision record in the linked case | evaluation-mismatch | data-leakage, model-monitoring | not-measured | proposed | null | draft (lint open) |
 | TS-VOL-04 | [Point-in-time financial volatility forecasts for a risk review](./04_Financial_Volatility_Forecasting.md) | Time Series Forecasting | predictive-ml | decision record in the linked case | time-series forecasting | - | not-measured | proposed | null | draft (lint open) |

@@ -16,8 +16,8 @@
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-2026-OR001 | [Last-mile routing optimisation](./01_last_mile_routing_optimisation.md) | Module 13 â€” Optimisation, Operations Research and Simulation | analytical | decision record in the linked case | constrained vehicle routing with time windows | constructive, savings, heuristic, independent, feasibility,  | illustrative | proposed | null | authored |
-| CASE-2026-OR002 | [Workforce scheduling under uncertainty](./02_workforce_scheduling_under_uncertainty.md) | Module 13 â€” Optimisation, Operations Research and Simulation | analytical | decision record in the linked case | - | - | illustrative | proposed | null | draft (lint open) |
-| CASE-2026-OR003 | [Scheduling objective and constraints](./03_scheduling_objective_and_constraints.md) | Module 13 â€” Optimisation, Operations Research and Simulation | analytical | decision record in the linked case | - | - | illustrative | proposed | null | draft (lint open) |
+| CASE-2026-OR002 | [Workforce scheduling under uncertainty](./02_workforce_scheduling_under_uncertainty.md) | Module 13 â€” Optimisation, Operations Research and Simulation | analytical | decision record in the linked case | two-stage stochastic staffing with scenario-weighted service penalty | shift-cover, matrix, absence, overlay, via, binomial, availa | illustrative | proposed | null | authored |
+| CASE-2026-OR003 | [Scheduling objective and constraints](./03_scheduling_objective_and_constraints.md) | Module 13 â€” Optimisation, Operations Research and Simulation | analytical | decision record in the linked case | objective-choice failure between cardinality and weighted interval selection | half-open, interval, convention, audit, buffer-gap, sensitiv | illustrative | proposed | null | authored |
 
 ## 3. Canonical reusable patterns
 

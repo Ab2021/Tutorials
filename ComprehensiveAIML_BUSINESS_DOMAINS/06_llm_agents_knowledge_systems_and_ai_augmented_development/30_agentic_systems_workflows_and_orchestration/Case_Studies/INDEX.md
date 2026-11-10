@@ -15,8 +15,8 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-2026-030 | [Approval gate for an enterprise agent facing untrusted instructions](./01_enterprise_agent_approval_gate.md) | Module 30 â€” Agentic Systems, Workflows and Orchestration | llm-agentic | decision record in the linked case | exact-action-approval | least-privilege-execution, idempotent-side-effects | not-measured | proposed | null | draft (lint open) |
-| CASE-2026-032 | [Claims operations agent: promote a release bundle only when its guardrails survive a canary](./02_claims_operations_agent.md) | Module 30 â€” Agentic Systems, Workflows and Orchestration | llm-agentic | decision record in the linked case | atomic-release-bundle | rollout-regression, human-in-the-loop | illustrative | proposed | null | draft (lint open) |
+| CASE-2026-030 | [Approval gate for an enterprise agent facing untrusted instructions](./01_enterprise_agent_approval_gate.md) | Module 30 â€” Agentic Systems, Workflows and Orchestration | llm-agentic | decision record in the linked case | exact-action-approval | least-privilege-execution, idempotent-side-effects | not-measured | proposed | null | authored |
+| CASE-2026-032 | [Claims operations agent: promote a release bundle only when its guardrails survive a canary](./02_claims_operations_agent.md) | Module 30 â€” Agentic Systems, Workflows and Orchestration | llm-agentic | decision record in the linked case | atomic-release-bundle | rollout-regression, human-in-the-loop | illustrative | proposed | null | authored |
 
 ## 3. Canonical reusable patterns
 
