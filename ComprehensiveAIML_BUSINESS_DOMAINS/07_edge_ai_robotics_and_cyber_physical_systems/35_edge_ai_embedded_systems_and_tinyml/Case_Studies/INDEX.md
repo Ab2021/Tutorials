@@ -53,6 +53,6 @@
 - [x] Assign stable `CASE` IDs only when a real case file exists (`CASE-M35-01` is an illustrative draft; `PLAN-M35-02` remains planned).
 - [x] CASE-M35-01 preserves 15 case sections, 5a–5e, 12 answered interview questions and Section 15 last.
 - [ ] Obtain primary evidence or label every scenario and numerical result illustrative/not-measured.
-- [x] Recompute CASE-M35-01 workload, memory, latency, freshness and energy arithmetic with units and sensitivity; target measurements remain required.
+- [x] Recompute CASE-M35-01 workload, memory, latency, freshness, overflow, and energy arithmetic with units and meaningful failed-state boundaries; target measurements remain required.
 - [ ] Test successful and failed request/recovery paths on stated target inputs.
 - [x] Link the supporting Module 35 sheet and update catalog evidence/stage/editorial status independently; preserve PLAN-M35-02 and source limitations.

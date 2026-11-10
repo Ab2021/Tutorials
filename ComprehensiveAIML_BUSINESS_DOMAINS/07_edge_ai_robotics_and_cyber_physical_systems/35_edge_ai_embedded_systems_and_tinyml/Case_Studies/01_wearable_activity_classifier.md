@@ -237,6 +237,18 @@ INTERPRETATION: error magnitude is at most s/2=0.01 g without saturation.
 
 Counterexample: `x=3.00 g` with the same scale maps to 150 before clipping and becomes 127; dequantized value is 2.54 g, so the error is 0.46 g, not bounded by half a step. Track saturation per axis and reject a calibration/model claim if clipping differs materially across participant partitions.
 
+### 6.3.1 Bounded signal conditioning before quantization
+
+The proposed conditioning path is deliberately short: validate frame count and timestamp continuity; convert signed sensor counts using the manifest's count-to-`g` factor; optionally subtract the training-derived channel center; apply the declared affine INT8 transform; then count saturation. It has no adaptive filter state, per-session normalization, interpolation, or dynamic allocation. Those omissions are boundaries: an adaptive value learned from a held-out session would change the input distribution, and interpolation would invent a frame after a gap.
+
+For a channel with raw count `r`, count-to-`g` factor `c`, and training-only center `mu`, the stated pre-quantization value is `x=c*r-mu`. Both `c` and `mu` are manifest fields. If gravity is retained during training, it remains in `x`; if it is removed during training, the removal operation and its state initialization must be reproducible on target. This case does not select either convention.
+
+The implementation must use a wide intermediate before adding the zero point: compute `round(x/s)` in a representation that cannot wrap for the declared calibration range, then add `z`, then clamp once to `[-128,127]`. Clamping the raw sensor count before unit conversion or allowing signed overflow can create a tensor that appears valid while representing another value.
+
+For each window, record saturation counts by axis and total input values (`128` values per axis; `384` total). The count is a quality diagnostic, not a substitute label. A future acceptance rule may define a maximum count only before final-test inspection; until then, observed clipping requires reporting rather than a claim of harmlessness.
+
+The conditioning revision belongs in the same identity bundle as the model. A change from nearest-even to away-from-zero rounding, a different integer division rule for negative values, or a reordered center subtraction changes model input and therefore requires new golden vectors and target parity evidence.
+
 ### 6.4 Ownership, sequence integrity, and freshness
 
 Precondition: DMA is the only writer of a `FILLING` block. At completion, ISR code stamps `q` and `t_end`, changes the block to `READY`, and posts its index. A single inference task changes `READY` to `PROCESSING`; only it changes `PROCESSING` to `FREE`. DMA selects only `FREE` blocks. The invariant is that a model input is constructed only from completed, consecutive sequences and never from storage currently owned by DMA.
@@ -399,7 +411,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Windows from one person share gait, device fit, and overlapping samples, so random windows estimate recognition of known people rather than generalization to a new wearer.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** Participant grouping prevents both shared identities and the 78 reused adjacent frames from crossing the final-test boundary.
 
 **Follow-up:** Ask for the split manifest before model code.
 
@@ -415,7 +427,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Overlap is (128-50)/128=78/128=60.9375%; 1.56 seconds of each 2.56-second window recurs.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** The numerator is repeated frames, while the denominator is the complete 128-frame window; seconds provide an independent check.
 
 **Follow-up:** What changes if H=128?
 
@@ -431,7 +443,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** It describes a motion class only and must not infer disease, fitness, adherence, impairment, or risk.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** The permitted output vocabulary names observed motion categories, whereas the excluded claims require health or risk evidence absent here.
 
 **Follow-up:** Who reviews wording?
 
@@ -447,7 +459,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Completion transfers a bounded block; circular DMA will reuse it after two future 1-second blocks with K=3.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** With three blocks, two subsequent one-second completions return the original store to DMA eligibility, making the reuse interval 2.0 seconds.
 
 **Follow-up:** What happens at 2010 ms?
 
@@ -463,7 +475,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Subtract window end time from UI-use time; CPU time alone omits queue and UI delay.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** The decision is consumed at rendering, so a correct score can still be stale after queueing or UI scheduling.
 
 **Follow-up:** What is the response at 1360 ms?
 
@@ -479,7 +491,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** A wrong scale, zero point, axis order, rounding rule, calibration range, or saturation pattern changes inputs or kernels.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** Quantization changes both numeric values and discrete implementation behavior; matching float accuracy does not prove tensor parity.
 
 **Follow-up:** What artifact detects it?
 
@@ -495,7 +507,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** The ledger totals 36,916 bytes; 65,536 minus that equals 28,620 bytes, before proving target stack peak.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** The subtraction is a static ledger calculation, not an allocation trace; stack peaks and alignment can consume remaining capacity.
 
 **Follow-up:** Does that prove fit?
 
@@ -511,7 +523,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Different exclusions create different denominators, so an apparent model gain may be selection rather than classification improvement.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** Holding interval identity constant isolates the classifier decision from eligibility and coverage differences.
 
 **Follow-up:** What if the baseline cannot emit STAIRS?
 
@@ -527,7 +539,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Instruction, visible time marker, participant confirmation, reviewer adjudication, and transition exclusion define the interval.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** The label is an interval-level claim, so a transition can contain more than one instructed motion even when each frame has a timestamp.
 
 **Follow-up:** Why exclude transitions?
 
@@ -543,7 +555,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** From 40 to 400 ms/minute, the stated model gives 0.81247 mA and 6.1541 illustrative days instead of 0.70477 mA and 7.0945 days.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** Radio active charge grows by 6.48 mA·s/minute, while sleep shrinks by 0.36 mA·s/minute, producing the stated net increase.
 
 **Follow-up:** Does this establish battery life?
 
@@ -559,7 +571,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** Possible causes include timestamp assignment in the ISR, clock resolution, or consumer metadata reuse; inspect raw q/time pairs and ownership transitions.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** Sequence establishes order, not timestamp provenance; comparing payload, metadata, and ownership state separates these fault families.
 
 **Follow-up:** What would distinguish sensor replay?
 
@@ -575,7 +587,7 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 **Checked answer:** That is a separate safety/clinical decision with different labels, false-negative consequences, escalation, validation, and likely regulatory analysis; this case cannot authorize it.
 
-**Reasoning:** The answer follows from the stated contract rather than a device benchmark.
+**Reasoning:** Changing the output purpose changes consequences and required evidence, not merely the number of classes in the existing tensor.
 
 **Follow-up:** Can the current label be reused?
 
@@ -589,400 +601,389 @@ Related local material: [Embedded Acquisition, Firmware Contracts and TinyML Int
 
 ### Operational evidence checklist
 
-These controls are proposed evidence obligations, not claims that they ran.
+These are proposed acceptance records, not claims that a device run occurred. Each record has a named artifact, an explicit population or injected-fault denominator, and a disposition that prevents uncertain input from becoming a label.
 
-### Evidence control 01: Acquisition Trace
+### Evidence control 01: Acquisition trace
 
-**Record.** Record timer tick, DMA completion tick, block index, epoch, and sequence for every completion.
+**Artifact.** For every DMA completion, retain timer tick, block index, epoch, `q`, frame count, and state transition.
 
-**Decision relevance.** A monotonic sequence makes a dropped block observable even when payload values happen to repeat.
+**Question answered.** Did the advertised sample cadence and one-frame-per-tick contract actually reach the firmware boundary?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All DMA completions in a timed capture, with the capture duration and timer source stated.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A repeated `q`, skipped `q`, count other than 50, or completion before the expected tick is a trace failure.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Mark the affected interval invalid, clear the rolling window, and require 128 newly contiguous frames.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recollect after changing the sensor ODR, bus, ISR, DMA configuration, or clock source.
 
-### Evidence control 02: Timestamp Convention
+### Evidence control 02: Capture-time convention
 
-**Record.** Define window end as the capture time of frame 128, not DMA interrupt arrival.
+**Artifact.** Document whether `t_end` is latched at the 128th sample capture, at DMA transfer completion, or at ISR entry.
 
-**Decision relevance.** Interrupt latency is processing delay; it cannot move the physical observation forward in time.
+**Question answered.** Is display age measured from the physical observation rather than a later software event?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every rendered result in a clock-alignment trace, including ones rejected for lateness.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A result whose age shrinks when ISR delay is injected uses an invalid timestamp origin.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Reject the result; do not substitute the interrupt time for the frame time.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recheck after timer wrap handling, sensor timestamp mode, or scheduler changes.
 
-### Evidence control 03: Axis Contract
+### Evidence control 03: Axis and units contract
 
-**Record.** Record sensor orientation convention and whether gravity is retained.
+**Artifact.** Bind axis order, handedness, count-to-`g` conversion, gravity treatment, and tensor channel order in one manifest.
 
-**Decision relevance.** Changing orientation preprocessing at inference makes a new model input space.
+**Question answered.** Does firmware feed the representation that training and calibration expected?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every model artifact revision and its golden-vector set, not merely one successful inference.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** An X/Y/Z permutation or units mismatch changes the expected INT8 tensor.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Disable inference for that artifact revision and retain the raw diagnostic code.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Rebuild evidence after sensor placement convention, preprocessing, or model conversion changes.
 
-### Evidence control 04: Range Contract
+### Evidence control 04: Full-scale and clipping contract
 
-**Record.** Record configured full scale and count-to-g conversion.
+**Artifact.** Record configured accelerometer range, conversion factor, per-axis clipped-value count, and calibration range.
 
-**Decision relevance.** A range change without scale revision silently rescales every feature.
+**Question answered.** Is an apparent activity pattern produced by bounded physical input rather than silently clipped counts?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All channel values in each declared participant/class partition; report counts and total values.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A held-out partition has clipping outside the predeclared acceptance rule or a range differs from its manifest.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Classify the window as quality-ineligible and investigate range/calibration before changing the model.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat for sensor range, placement, collection-protocol, or quantization-scale changes.
 
-### Evidence control 05: Label Consent
+### Evidence control 05: Consent and withdrawal lineage
 
-**Record.** Record consent version and withdrawal handling before collection.
+**Artifact.** Store consent revision, participant pseudonym, session inclusion state, and withdrawal processing event in the data manifest.
 
-**Decision relevance.** A withdrawn session must be excluded through the manifest rather than silently retained.
+**Question answered.** Which sessions are permitted to contribute to the stated research population?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All scheduled sessions, including incomplete, withdrawn, and rejected sessions.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A derived window refers to a missing consent record or a withdrawn session remains in an export.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Remove all derived records for that session, regenerate split/window manifests, and report the changed denominator.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Reconcile before each data export or protocol revision.
 
-### Evidence control 06: Session Boundary
+### Evidence control 06: Session boundary trace
 
-**Record.** Record donning, removal, charging, and clock-reset events.
+**Artifact.** Log donning, removal, charging, clock reset, firmware restart, and declared session start/end events.
 
-**Decision relevance.** A session boundary prevents physical discontinuity from masquerading as continuous behavior.
+**Question answered.** Are contiguous sample sequences also physically continuous observations?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All sessions and all reset/restart events during collection or fault injection.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A rolling window spans a declared physical or clock discontinuity.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Increment epoch, discard partial history, and begin eligibility only after 128 new frames.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat when session tooling or reset recovery changes.
 
-### Evidence control 07: Transition Policy
+### Evidence control 07: Transition exclusion policy
 
-**Record.** Mark starts, stops, turns, and instruction changes as excluded intervals.
+**Artifact.** Preserve instruction-change markers, settling durations, start/stop/turn markers, and the rule that excluded each interval.
 
-**Decision relevance.** The exclusion rule must be set before reviewing model errors.
+**Question answered.** Does one retained training window have one defensible activity target?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All candidate windows touching an instruction or adjudication boundary.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A window crosses labels, a transition zone, or an unadjudicated boundary.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Exclude it from training and performance denominators rather than assigning its majority label.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Freeze the rule before model-error review; revise only with a new protocol version.
 
-### Evidence control 08: Class Balance
+### Evidence control 08: Class exposure accounting
 
-**Record.** Report labeled seconds and eligible windows by class and participant.
+**Artifact.** Report prompted seconds, retained seconds, eligible windows, and participant count for each display class.
 
-**Decision relevance.** Window counts alone overweight long recordings and repeated overlap.
+**Question answered.** Is a high count caused by more people or simply more overlapping windows from a long session?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Declared participants and labeled seconds, alongside derived windows; never windows alone.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A class appears supported only by one participant or by transition-heavy retained intervals.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** State the limitation and collect according to the protocol; do not fabricate balance by duplicating windows.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recompute after any label, exclusion, hop, or split-manifest change.
 
-### Evidence control 09: Missingness
+### Evidence control 09: Missing-frame handling
 
-**Record.** Report missing frames, not just missing windows.
+**Artifact.** Retain expected tick, observed tick, missing-frame count, and first missing sequence for each discontinuity.
 
-**Decision relevance.** A filled-in frame is fabricated motion unless a separate imputation method is validated.
+**Question answered.** Did the pipeline distinguish absent motion measurements from a low-motion signal?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All expected sample ticks in a capture plus every deliberate dropped-frame injection.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A gap is followed by a retained window before 128 consecutive replacement frames arrive.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Never interpolate for this case; invalidate the window and surface `UNAVAILABLE`.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat after bus retry, DMA, or sequence-counter changes.
 
-### Evidence control 10: Threshold Policy
+### Evidence control 10: Threshold-selection isolation
 
-**Record.** Bind score threshold and margin to a validation-only revision.
+**Artifact.** Version the score threshold, margin rule, validation participant IDs, and selection date with the model configuration.
 
-**Decision relevance.** Selecting it after reading test errors is test-set tuning.
+**Question answered.** Was abstention policy selected without observing final test participants?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every candidate configuration considered before the single final-test run.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A threshold revision cites test errors, test participants, or pooled test score distributions.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Invalidate that comparison and repeat selection on training/validation partitions only.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Reopen after class definition, model, calibration, or decision-cost changes.
 
-### Evidence control 11: Ui Policy
+### Evidence control 11: UI time semantics
 
-**Record.** Render the capture interval and unavailable reason category where appropriate.
+**Artifact.** Capture rendered text, capture interval/end time, reason category, and UI-use timestamp for result-state transitions.
 
-**Decision relevance.** A label without time semantics invites an assumption of real-time certainty.
+**Question answered.** Can a wearer distinguish a current descriptive label from an unavailable or expired observation?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All render attempts, including suppressed labels and repeated UI refreshes.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** The UI retains a prior label after a rejected result or omits the unavailable state.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Replace prior content with `UNAVAILABLE`; preserve the reason without presenting it as activity evidence.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recheck after copy, localization, UI scheduler, or freshness-limit changes.
 
-### Evidence control 12: Radio Policy
+### Evidence control 12: Telemetry isolation
 
-**Record.** Bound payload, attempts, and queue depth independently from acquisition.
+**Artifact.** Record summary payload schema, enqueue time, retry count, queue depth, drop count, and radio active intervals.
 
-**Decision relevance.** Telemetry is expendable; acquisition integrity is not.
+**Question answered.** Can optional communication consume storage or scheduler time owned by acquisition and local display?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every summary enqueue attempt and every radio transaction in the stated observation interval.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A full radio queue blocks an assembler, inference, UI task, or DMA-block release.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Drop the summary according to policy; never retain a DMA block or delay the local outcome.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat for payload, retry, transport, or priority changes.
 
-### Evidence control 13: Power Trace
+### Evidence control 13: Power-state attribution
 
-**Record.** Measure current with state markers that identify sensing, inference, radio, and sleep.
+**Artifact.** Measure current with synchronized markers for sensing, preprocessing, inference, radio, and sleep.
 
-**Decision relevance.** An average current without state attribution cannot guide a design change.
+**Question answered.** Which design state explains a charge increase rather than merely whether average current changed?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Timed state occupancy over a stated interval, with instrument bandwidth and sampling method recorded.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** An average-current claim has no state marker, duration, or repeatable configuration identity.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Keep the arithmetic illustrative and decline a battery-life claim until a trace can be attributed.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Re-measure after firmware, radio duty, model, battery, temperature, or regulator changes.
 
-### Evidence control 14: Arena Evidence
+### Evidence control 14: Arena peak and failure path
 
-**Record.** Capture allocator peak and failure behavior on target build.
+**Artifact.** Retain target-build allocator peak, requested arena size, runtime/model hash, and behavior when the arena is insufficient.
 
-**Decision relevance.** A desktop allocation report is not SRAM evidence.
+**Question answered.** Does static inference memory fit with a known refusal path rather than a desktop assumption?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Each supported model/runtime build and all inference initialization attempts in its target trace.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Peak exceeds the 22 KiB assumption, allocation fails ambiguously, or an error leaves a prior result visible.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Reject the artifact, report `UNAVAILABLE`, and resize or redesign before enabling inference.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat for converter, operator set, compiler, model, or runtime updates.
 
-### Evidence control 15: Stack Evidence
+### Evidence control 15: Stack and interrupt margin
 
-**Record.** Measure high-water marks during overload and error paths.
+**Artifact.** Capture task stack high-water marks and ISR nesting/latency under normal, logging, radio, and injected-overload paths.
 
-**Decision relevance.** Normal-path stack use does not bound exception/logging paths.
+**Question answered.** Is the 6 KiB stack ledger credible when error handling and preemption occur?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every named execution scenario, with a separate measurement for each task and interrupt context.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Watermark crosses reserve, stack growth is unmeasured, or a high-priority path delays block release.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Reduce stack use or allocate a bounded stack; do not borrow the 4 KiB reserve silently.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recollect after scheduler priority, logging, compiler, or error-path changes.
 
-### Evidence control 16: Golden Vectors
+### Evidence control 16: Golden-vector parity
 
-**Record.** Store representative raw frames, expected quantized tensor, and expected scores.
+**Artifact.** Store immutable raw frames, expected scaled values, INT8 tensor, scores, class order, and tolerances.
 
-**Decision relevance.** Golden vectors locate preprocessing drift before aggregate accuracy hides it.
+**Question answered.** Where does float-to-firmware divergence first appear: conditioning, quantization, or runtime?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** A preselected vector set spanning zero, rounding ties, negative values, near-range values, and saturation.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Tensor bytes differ where equality is required, or scores exceed the declared tolerance.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Block the artifact and compare intermediate arrays before retraining or changing thresholds.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Regenerate only from training/calibration provenance after any manifest or arithmetic change.
 
-### Evidence control 17: Model Identity
+### Evidence control 17: Artifact identity
 
-**Record.** Bundle model hash, class order, input shape, and quantization manifest atomically.
+**Artifact.** Atomically bind model hash, input shape, class order, scales, zero points, rounding policy, converter, and runtime version.
 
-**Decision relevance.** A model blob without metadata has no stable interpretation.
+**Question answered.** Does a byte blob have one unambiguous semantic interpretation?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every boot-time artifact load and every model package accepted by the update path.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A required field is absent, hashes disagree, or metadata is paired with another model blob.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Refuse inference and record `ARTIFACT_MISMATCH`; a fallback label is not permitted.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recheck at build, packaging, update, and rollback boundaries.
 
-### Evidence control 18: Update Boundary
+### Evidence control 18: Atomic update boundary
 
-**Record.** Reject partial updates and record accepted artifact version.
+**Artifact.** Record package version, integrity result, accepted/rejected state, prior active version, and restart behavior.
 
-**Decision relevance.** Mixing old scales with new weights is a silent semantic failure.
+**Question answered.** Can weights, quantization metadata, and class mapping change as one transaction?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All update and rollback attempts, including power-interruption injection where applicable.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** A reboot selects partially written contents or combines a new model with old scale metadata.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Retain the last complete accepted package or disable inference; do not use a mixed package.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat after packaging, storage layout, authorization, or bootloader changes.
 
-### Evidence control 19: Overrun Injection
+### Evidence control 19: Ready-queue overload
 
-**Record.** Delay the consumer until a ready queue fills, then assert no stale label renders.
+**Artifact.** Trace block state, ready-queue depth, claim/release times, and reason code while delaying the consumer.
 
-**Decision relevance.** A performance test that never reaches overflow does not exercise recovery.
+**Question answered.** Does the system identify saturation before DMA is offered a non-FREE block?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Each injected consumer delay and every completion during that delay.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Queue depth reaches capacity, a READY block is overwritten, or a label survives an overflow epoch.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Declare overflow, invalidate rolling history, drain stale work, increment epoch or loss generation, and rebuild 128 frames.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat after queue capacity, priorities, block count, processing time, or logging changes.
 
-### Evidence control 20: Clock Reset
+### Evidence control 20: Clock reset and wrap
 
-**Record.** Inject reset during a window and require epoch change plus invalidation.
+**Artifact.** Record clock width, wrap period, epoch increment, reset marker, and age calculation around induced reset/wrap.
 
-**Decision relevance.** Sequence wrap and reset must not be confused.
+**Question answered.** Can age remain nonnegative and meaningful when a monotonic counter restarts or wraps?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All injected resets and wrap-boundary traces, plus every result immediately after them.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Age becomes negative, implausibly huge, or is computed across epochs.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Invalidate partial windows and labels from the old epoch, then restart accumulation from the new epoch.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Revalidate after clock driver, timebase width, sleep mode, or timestamp representation changes.
 
-### Evidence control 21: Participant Report
+### Evidence control 21: Participant-level reporting
 
-**Record.** Report median and range across test participants, not only pooled score.
+**Artifact.** Publish per-held-out-participant eligible-window count, class recall, availability, and abstention reasons beside pooled values.
 
-**Decision relevance.** A pooled metric can hide a consistently failing wearer subgroup.
+**Question answered.** Does aggregate performance hide a wearer whose recordings consistently fail the declared contract?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Each final-test participant and their eligible labeled windows; disclose participants with zero eligible windows.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Only a pooled metric is reported or a participant is silently omitted after split assignment.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Retain the participant row, state the limitation, and investigate protocol or model boundaries without relabeling outcomes.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Recompute after any final-test inclusion, eligibility, or class-definition change.
 
-### Evidence control 22: Placement Shift
+### Evidence control 22: Placement-shift boundary
 
-**Record.** Test declared placement changes separately from intended placement.
+**Artifact.** Record intended placement, declared alternative placement, strap condition, and whether data belong to the primary or shift slice.
 
-**Decision relevance.** A shift result is a limitation, not evidence of normal performance.
+**Question answered.** Is a placement change distinguished from normal variation in the intended use condition?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Separate windows and participants for intended placement and each declared shift condition.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Shift recordings are pooled into the primary metric or a placement flag is missing.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Report shift behavior as a limitation; do not reinterpret it as evidence of general population performance.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat when hardware form, wear instructions, sensor orientation, or target population changes.
 
-### Evidence control 23: Free-Living Boundary
+### Evidence control 23: Free-living `OTHER` boundary
 
-**Record.** Keep free-living OTHER separate from scripted activity labels.
+**Artifact.** Separate collection purpose, labeling rule, reviewer basis, and retention decision for free-living recordings.
 
-**Decision relevance.** Unreviewed free-living recordings cannot become clean labels by default.
+**Question answered.** Is `OTHER` a defined non-target category rather than a container for unknown quality or unreviewed activity?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** All free-living intervals offered for `OTHER`, with accepted, rejected, and ambiguous intervals counted separately.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Missing labels, removal events, or transition segments are silently assigned `OTHER`.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Route quality failures to `UNAVAILABLE`; retain only intervals meeting the independent `OTHER` rule.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Revisit after changing the display taxonomy or free-living protocol.
 
-### Evidence control 24: Manual Comparator
+### Evidence control 24: Baseline comparator timing
 
-**Record.** Time manual review from capture to review decision and state its coverage.
+**Artifact.** Record capture-to-review elapsed time, reviewer availability, data coverage, and eligible interval IDs for upload/manual review.
 
-**Decision relevance.** Manual review is not automatically a real-time baseline.
+**Question answered.** Does the stated baseline answer the same immediate-descriptive-label question as the local path?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** The same predeclared eligible windows used by the local model and threshold comparator.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Manual review uses additional context, different intervals, or an unstated delay while being called real-time.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Describe it as an offline comparator and prevent headline accuracy or latency comparisons across mismatched sets.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Repeat when review protocol, upload policy, or decision deadline changes.
 
-### Evidence control 25: Privacy Boundary
+### Evidence control 25: Data-egress boundary
 
-**Record.** Document whether raw samples, summaries, and identifiers leave the device.
+**Artifact.** List every field leaving the device, destination, retention event, raw-frame prohibition, and summary drop rule.
 
-**Decision relevance.** Local inference does not itself prove minimal data collection.
+**Question answered.** Does local inference correspond to the stated data-flow boundary rather than an unsupported privacy claim?
 
-**Test.** Capture both a conforming trace and a deliberately violated trace; identify the first field or state transition that distinguishes them.
+**Denominator.** Every egress message type and every attempted transaction in a reviewed firmware configuration.
 
-**Denominator.** State whether the evidence covers all attempted windows, all participant sessions, calibration-only inputs, or one injected fault. A success count without this denominator is not a rate.
+**Failure signature.** Raw frames, persistent identifiers, or an undeclared diagnostic payload appear in the radio queue.
 
-**Containment.** A missing, contradictory, or out-of-scope record makes the affected result ineligible; preserve its reason code and show `UNAVAILABLE` rather than inheriting a prior label.
+**Disposition.** Block the message type, update the data-flow record, and require review before re-enabling it.
 
-**Recheck.** Reopen this evidence when the producing sensor, data protocol, model artifact, compiler/runtime, population, or energy/radio policy changes.
+**Change trigger.** Re-audit after telemetry schema, debug build, transport, or retention-policy changes.
 
 ### Cross-control decision boundaries
 
-A successful model score is eligible only when acquisition, sequence, label provenance, tensor manifest, and display age all pass; eligibility is an AND contract, not an average.
+**Window identity.** A displayed result must trace to `{epoch,q_start,q_end,t_end}` and an immutable assembly history; an unlabeled pointer is not evidence.
 
-A single failed boundary must name the earliest failed condition so that firmware repair does not become a data-science guessing exercise.
+**Population identity.** Each participant belongs to exactly one partition and each session inherits that assignment before windows exist.
 
-When a condition is unknown rather than failed, record `UNKNOWN` separately from `PASS` and `FAIL`; an unknown denominator must not be silently counted as success.
+**Interval identity.** A retained label requires one final activity interval and no transition, gap, removal, or exclusion flag.
 
-A recovery trace begins at the discontinuity, clears the rolling window, obtains 128 contiguous frames, and only then permits a new label.
+**Tensor identity.** Axis order, units, scale, zero point, rounding, saturation, shape, class order, and model hash must agree as one contract.
 
-The local UI path has priority over optional telemetry because a delayed summary is a data-loss cost, while a delayed label changes the meaning of the feature.
+**Memory identity.** DMA payload, metadata, staging, tensor, arena, stacks, queues, alignment, and reserve must reconcile to the target linker/map evidence.
 
-### Boundary ledger for release review
+**Reuse identity.** The producer may select only FREE storage; a consumer must release its block before the 2,000 ms reuse boundary.
 
-**Window identity:** The release reviewer traces a displayed label backward through `q_end`, epoch, and end time to the immutable input interval; a label without that chain is ineligible.
+**Queue identity.** A queue's capacity is an admission limit, not permission to preserve old work after overflow.
 
-**Split identity:** The data reviewer checks that every participant is assigned once, every session inherits that assignment, and every derived window carries the same partition.
+**Freshness identity.** The UI calculates `t_use-t_end` using one epoch-aware monotonic timebase and rejects age above 1,350 ms.
 
-**Label identity:** The protocol reviewer checks that every retained label interval has a prompt, confirmation or adjudication source, and an exclusion decision at both boundaries.
+**Energy identity.** Sensing, inference, radio, and sleep charge remain separately attributable; an average is not a battery result.
 
-**Tensor identity:** The embedded reviewer compares axis order, units, scale, zero point, tensor shape, class order, and model hash against the approved manifest before inference is enabled.
+**Comparator identity.** Threshold, local model, and upload/manual review disclose which identical eligible intervals they do and do not cover.
 
-**Memory identity:** The build reviewer reconciles DMA storage, staging, arena, stacks, queue objects, alignment, and reserve against the linker map rather than relying on source declarations.
+**Abstention identity.** Quality, sequence, overflow, artifact, runtime, and freshness rejection stay distinguishable in records and UI semantics.
 
-**Timing identity:** The scheduler trace records completion-to-render age and block-release time separately; passing the reuse bound does not pass the freshness bound.
+**Scope identity.** A request for fall response, diagnosis, emergency action, adherence, or productivity inference creates a new decision contract.
 
-**Energy identity:** The power trace ties each measured current region to sensing, preprocessing, inference, radio, or sleep, so a change in average current has an actionable cause.
+**Recovery identity.** After a discontinuity, 128 consecutive new frames—not old buffer contents or a prior label—are the earliest path back to eligibility.
 
-**Abstention identity:** The UI records whether `UNAVAILABLE` arose from quality, sequence, overflow, artifact, or freshness; these reasons must not be pooled into an unexplained accuracy exclusion.
+**Evidence identity.** Illustrative arithmetic remains illustrative until a named target configuration, method, trace, and denominator support a narrower statement.
 
-**Comparator identity:** The threshold, local model, and upload/manual alternative use the same participant-held-out intervals when their descriptive-label quality is compared.
-
-**Scope identity:** Any request to infer health, emergency, adherence, productivity, or fall state triggers a new decision contract rather than expanding the meaning of `WALK`.
-
-**Recovery identity:** After an epoch change, the first permitted decision follows a newly assembled 128-frame window; partial pre-reset history has no owner.
-
-**Radio identity:** A retry counter belongs to the summary transaction, not to the local label, so communication failure cannot create duplicate activity decisions.
-
-**Evidence identity:** Illustrative calculations remain labeled as assumptions until a named target trace, measurement method, and population make a narrower observed claim possible.
-
-**Decision identity:** The owner may choose the baseline when any ledger entry is unresolved; deferral is a valid result, not a hidden implementation failure.
-This ledger makes the rejection reason inspectable at the same granularity as the claimed label.
+**Decision identity.** The product owner may retain a baseline or defer the feature when any required evidence record is absent or contradictory.
 
 ## 15. Quick Reference Card
 

@@ -1,16 +1,31 @@
-# Module 02 Case Studies â€” Python, SQL, Linux and Engineering Basics
+# 02 Python Sql Linux And Engineering Basics Case Studies
 
-## Authoring standard
+## 1. Collection metadata
+Illustrative teaching cases for bounded decisions. Evidence, implementation stage, and editorial state are separate; every listed artifact remains draft and no case claims a deployment.
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 2. Case catalog
+| Case ID | Title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-001 | [01 Build Data Quality CLI ](01_Build_Data_Quality_CLI.md) | foundations | analytical | bounded illustrative decision | correctness-contract | — | illustrative | proposed | 2026-11-10 | Draft; source verification and publication review OPEN |
+| CASE-002 | [02 Design Analytics API ](02_Design_Analytics_API.md) | foundations | analytical | bounded illustrative decision | correctness-contract | — | illustrative | proposed | 2026-11-10 | Draft; source verification and publication review OPEN |
 
-## Planned cases
+## 3. Canonical reusable patterns
+- **Correctness contract:** define the input cutoff, output, owner, and oracle before optimizing.
+- **Bounded work:** cap admission and retain a safe deferral path when capacity is uncertain.
+- **Idempotent decision ledger:** one final action per stable decision key.
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Build a data quality CLI | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | design an analytics API | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 4. Similarity / contrast map
+All cases use illustrative queue arithmetic and a human approval boundary. Their decision units differ; no workload or outcome transfers between them without new evidence.
 
-## Suggested file naming
+## 5. Questions and future-case backlog
+Source-derived reference commitments and unavailable source bodies remain OPEN. Future cases need primary evidence or explicitly illustrative scope, not reconstructed results.
 
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
+## 6. Review / retirement log
+| Date | Change | Editorial state | Limitation |
+|---|---|---|---|
+| 2026-11-10 | Canonical cases cataloged | draft | publication review, source verification, and operational validation OPEN |
+
+## 7. Pre-publish checks
+- [x] Each listed link resolves to a canonical manuscript.
+- [x] Evidence and stage are not reported as measured deployment.
+- [ ] Independently review source claims, detailed arithmetic, links, and editorial completeness before publication.

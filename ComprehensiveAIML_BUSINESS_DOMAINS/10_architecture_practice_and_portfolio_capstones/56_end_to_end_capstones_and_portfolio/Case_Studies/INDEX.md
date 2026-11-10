@@ -8,7 +8,7 @@
 
 | Case ID | Case title | Domain | Case type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-CAPSTONE-001 | [Choose a release gate for a local signal-to-explanation demonstrator](01_local_signal_demo_release_gate.md) | edge portfolio demonstrator | hybrid | Is evidence sufficient for a trace-checked claim? | evidence-bounded release gate | end-to-end contract; bounded-work | illustrative | proposed | not reviewed | No execution, HIL, or operational result; arithmetic is hand-derived. |
+| CASE-CAPSTONE-001 | [Choose a release gate for a local signal-to-explanation demonstrator](01_local_signal_demo_release_gate.md) | edge portfolio demonstrator | hybrid | Is evidence sufficient for a trace-checked claim? | evidence-bounded release gate | end-to-end contract; bounded-work | illustrative | proposed | not reviewed | Standalone constructed-oracle smoke checks state and arithmetic; no app, UI visual, HIL, or operational result. |
 | PLAN-CAPSTONE-002 | Choose from six cross-domain capstones | cross-domain | analytical | Which scope is feasible with actual evidence? | scope selection | milestone evidence | not-measured | proposed | not reviewed | planned; no file |
 | PLAN-CAPSTONE-003 | Complete architecture review | portfolio review | analytical | Does a proposed architecture meet stated contracts? | architecture review | failure-path review | not-measured | proposed | not reviewed | planned; no file |
 
@@ -41,6 +41,7 @@
 | Case ID | Date | Change | Evidence trigger | Action | Owner |
 |---|---|---|---|---|---|
 | CASE-CAPSTONE-001 | 2026-11-09 | initial illustrative draft | visible source inventory only | draft; not reviewed | capstone technical lead |
+| CASE-CAPSTONE-001 | 2026-11-10 | expanded source/frame/queue/retrieval/tier recovery analysis and embedded synthetic oracle | illustrative documentation smoke only | remains draft DESIGN-only; not reviewed | capstone technical lead |
 
 ## 7. Pre-publish checks
 

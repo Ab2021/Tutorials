@@ -98,10 +98,10 @@ The decision is bounded: select the policy and minimum modeled replica count for
 | ID | Assumption or constraint | Type | Verification plan | Status | Impact if wrong | Fallback | Owner |
 |---|---|---|---|---|---|---|---|
 | A-01 | Maximum resident tokens per request are 2,048. | workload | Validate input plus output reservation bound at gateway. | illustrative | Reservation can understate cache. | Lower cap or reserve actual declared bound. | application owner |
-| A-02 | KV footprint is 0.75 MiB per resident token. | model/runtime | Measure target runtime allocation by length and concurrency. | illustrative | All memory concurrency math changes. | Use measured worst class footprint. | serving engineer |
-| A-03 | A device has 72 GiB cache budget after weights and runtime reserve. | hardware | Inspect configured process memory and allocator. | illustrative | Raw device capacity is misused. | Reduce cache budget. | platform owner |
-| A-04 | One device provides 120 decode output tokens/s for the declared mix. | performance | Closed-loop trace with synchronized timestamps. | illustrative | Queue/device count conclusion changes. | Lower accepted rate or add replicas. | performance engineer |
-| A-05 | One model replica uses TP=2 ranks. | architecture | Measure rank-local weights, cache, and collective behavior. | illustrative | Rank budget or communication behavior differs. | Recompute per-rank policy. | serving engineer |
+| A-02 | KV footprint is 0.75 MiB per resident token on each TP rank. | model/runtime | Measure each rank's target-runtime allocation by length and concurrency. | illustrative | All memory concurrency math changes. | Use measured rank-local footprint. | serving engineer |
+| A-03 | Each device/rank has 72 GiB residual cache budget after its weights and runtime reserve. | hardware | Inspect rank-local allocator and non-cache accounting. | illustrative | Aggregate fit can conceal a rank overrun. | Reduce each rank's budget independently. | platform owner |
+| A-04 | One complete TP=2 replica supplies 120 aggregate decode output tokens/s under the stipulated mix. | performance | Measure the replica, not a rank in isolation. | illustrative | Request-rate sizing changes. | Lower accepted work or add complete replicas. | performance engineer |
+| A-05 | One replica uses exactly two TP ranks, one device per rank. | architecture | Verify group membership and rank-local state. | illustrative | Device count, cost and failure grouping change. | Recompute the group-level plan. | serving engineer |
 | A-06 | Peak offered load is 36 valid attempts/s for 20 seconds. | workload | Capture event-time arrivals and retry chains. | illustrative | Queue calculation is not representative. | Use observed peak envelope. | application owner |
 | C-01 | No request starts without tenant-authorized reservation. | security | Negative authorization and key-audit tests. | required | Isolation violation. | Fail closed. | security owner |
 | C-02 | Admitted queue wait budget is two seconds. | product | Written SLO decision. | scenario constraint | Policy target changes. | Revise SLO explicitly. | product owner |
@@ -111,7 +111,7 @@ The decision is bounded: select the policy and minimum modeled replica count for
 
 - A-02, A-03, and A-04 are the assumptions most likely to reverse the selected device count.
 - Weights and runtime reserve must be established before treating the residual as cache budget.
-- The stated cache budget is per device rank only if the runtime allocation boundary is per rank; otherwise it is a replica-level figure that must be divided consistently.
+- Memory figures below are rank-local unless explicitly aggregated. Both ranks host each admitted sequence; TP=2 does not double independent sequence slots.
 - A token cap bounds a sequence only when input and reserved output are both included; a request count cap alone does not.
 - A two-second queue budget is a policy target, not a percentile derivable from a mean rate without an arrival and service distribution.
 
@@ -202,10 +202,10 @@ INTERPRETATION: 72 GiB is a constructed residual, not a claim about installed ha
 
 ```text
 FORMULA [M-02]: M_request = T_resident * m_token
-WHERE: M_request [MiB/sequence]; T_resident [tokens/sequence]; m_token [MiB/token].
+WHERE: M_request [MiB/sequence/rank]; T_resident [tokens/sequence]; m_token [MiB/token/rank].
 CONSTRAINT: fixed-footprint approximation; non-cache bytes already excluded; actual runtime allocation must be measured.
 NUMERICAL EXAMPLE: 2,048 tokens/sequence * 0.75 MiB/token = 1,536 MiB/sequence = 1.5 GiB/sequence.
-INTERPRETATION: a long sequence reserves 1.5 GiB before it enters the service queue.
+INTERPRETATION: reserve 1.5 GiB on each of two ranks, 3 GiB summed over the replica; neither rank may borrow the other's spare bytes.
 ```
 
 The dimensions are tokens/sequence times MiB/token, yielding MiB/sequence.
@@ -277,13 +277,11 @@ It is useful only to reject the false implication that 38 memory-resident long s
 
 ### 6.6 Queue boundary and admission rate
 
-For a deliberately simple burst boundary, suppose valid arrivals are 36 requests/s for 20 seconds.
-Suppose the scheduler admits at most 30 service units/s during that same period.
-The word “unit” is deliberately abstract here; it is not equated to output tokens.
+This separate one-class fluid example stipulates 36 unit requests/s and 30 completed unit requests/s for 20 seconds. It is a queue-policy counterexample, not an inference that a 120-output-token/s replica completes 30 long requests/s. Its unit requests are deliberately not mapped to the earlier 512-output-token class.
 
 ```text
 FORMULA [Q-01]: backlog = max(0, lambda - mu) * t
-WHERE: backlog [requests]; lambda arrivals [requests/s]; mu accepted service units [requests/s]; t [s].
+WHERE: backlog [requests]; lambda arrivals [requests/s]; mu completions [requests/s]; t [s].
 CONSTRAINT: initially empty fluid queue, constant rates, lossless requests, and no retries; not a percentile model.
 NUMERICAL EXAMPLE: (36-30)*20 = 120 requests.
 INTERPRETATION: allowing the excess to queue creates 120 pending requests under this approximation.
@@ -291,7 +289,7 @@ INTERPRETATION: allowing the excess to queue creates 120 pending requests under 
 
 If arrivals then fall to 24 requests/s while service stays 30 requests/s, the spare rate is 6 requests/s.
 The fluid drain time is 120/6 = 20 seconds.
-A two-second admitted-queue target is already contradicted by this 20-second drain behavior.
+Drain time is not request wait. With FIFO service at 30 requests/s, the 120-request burst-end queue implies approximately 120/30=4 seconds of queueing at that point, exceeding the two-second target. Its 20-second drain includes continuing recovery arrivals.
 If recovery arrivals equal service, the spare-rate denominator is zero and a positive backlog never drains in the model.
 If recovery arrivals exceed service, backlog grows; adding a larger queue is not a remedy.
 Queue percentiles cannot be deduced from these means because arrivals and service variability are intentionally unspecified.
@@ -327,11 +325,219 @@ The context sensitivity is particularly important because a 4,096-token bound do
 The retry sensitivity is not free demand: it can be prevented by idempotency and bounded retry policy, unlike a genuine new request.
 The service sensitivity is deliberately incomplete: it gives no p99 estimate and must not be used to publish one.
 
+### 6.9 Rank-local conservation before replica aggregation
+
+A sequence belongs to a complete replica, but its cache occupies every required TP rank.
+The rank-local reservation vector for one maximum-length sequence is `(1.5, 1.5) GiB`.
+The replica-wide sum is 3 GiB; that sum is useful for inventory, not a replacement for two feasibility checks.
+Each rank has 72 GiB of residual cache before the policy margin and 57.6 GiB after it.
+The group therefore has 115.2 GiB of summed policy cache, but not one freely interchangeable 115.2-GiB heap.
+The mirrored allocation pattern permits 38 simultaneous maximum-length sequences per complete group.
+Thirty-eight sequences reserve 57 GiB on each rank and 114 GiB summed across both.
+The unused 0.6 GiB per rank cannot host another 1.5-GiB reservation.
+Thirty-nine sequences require 58.5 GiB per rank, exceeding policy even though they remain below raw residual capacity.
+For the mixed snapshot, 36 short plus 12 long sequences reserve 24.75 GiB on each rank.
+Their replica-wide sum is 49.5 GiB across the same 48 logical sequences, not 96 independent requests.
+This snapshot proves only that the stipulated byte reservations fit the stipulated rank budgets.
+It does not establish prompt processing time, decode cadence, response completion or a production concurrency setting.
+If one rank's measured residual falls to 40 GiB, its 80% policy budget becomes 32 GiB.
+That rank permits only floor(32/1.5)=21 maximum-length sequences.
+The other rank's 38-slot capacity cannot raise that group limit above 21.
+This is why inspecting the largest or average free-memory value produces an unsafe admission decision.
+The limiting-rank calculation must use the actual allocation vector if the model shards cache unevenly.
+
+### 6.10 Output-token conservation exposes missing arrival evidence
+
+An output throughput and an arrival rate have different denominators.
+To connect them, multiply logical requests per second by the mean generated output tokens per logical request.
+Only then can output tokens per second be compared with the complete replica's stipulated decode throughput.
+The resident mix of 36 short and 12 long requests is not an observed arrival distribution.
+Long requests remain resident longer and can be overrepresented in a concurrent snapshot.
+Consequently, using its 3:1 ratio as the incoming traffic mix would add an unsupported assumption.
+The case does not supply a measured output-length distribution, so a production replica count remains unselected.
+An explicit all-long counterfactual is nevertheless calculable: every request generates 512 output tokens.
+At 36 logical requests/s this counterfactual demands 18,432 output tokens/s.
+At 120 output tokens/s per complete replica, its decode-only requirement is 153.6 replicas.
+Integer provisioning rounds that requirement upward to 154 complete replicas, or 308 devices at TP=2.
+This is a conditional conservation lower bound, not a recommended purchase or a benchmark result.
+It excludes prefill, communication changes, scheduler losses, target utilization, cold starts and failure headroom.
+It also assumes the stipulated replica throughput remains available for the all-long workload.
+If that throughput is not a valid upper bound for the all-long class, the numerical bound itself must be revised.
+Even 154 replicas do not prove a two-second queue target or a particular first-token latency.
+Conversely, output caps lower than 512 could reduce decode demand, but only by changing the declared product contract.
+One cannot retain a 512-token promise and calculate costs using an undocumented shorter completion.
+At a stipulated 90 output tokens/s, the same counterfactual needs ceil(18,432/90)=205 replicas.
+Its corresponding device count is 410; the throughput sensitivity is not repaired by additional cache on existing ranks.
+
+### 6.11 Configuration accounting without a production-capacity claim
+
+The following rows compare complete groups under the same constructed 120-token/s and rank-cache assumptions.
+All-long completion capacity is output throughput divided by 512, before every omitted timing component.
+The hourly multiplier uses the unpriced device-hour rate c; it is not a quoted hardware price.
+
+| Complete replicas | Devices at TP=2 | All-long resident slots | Decode-only long completions/s | Hourly device-rate multiplier |
+|---|---|---|---|---|
+| 1 | 2 | 38 | 0.234375 | 2c |
+| 2 | 4 | 76 | 0.468750 | 4c |
+| 3 | 6 | 114 | 0.703125 | 6c |
+| 154 | 308 | 5,852 | 36.093750 | 308c |
+
+The first three rows are suitable configurations for a staged measurement campaign, not proof of peak service.
+The final row barely exceeds the conditional decode demand and contains almost no throughput headroom.
+Losing one complete replica from that row leaves 153 replicas and 35.859375 long completions/s.
+That is below the stipulated 36/s arrival rate, so its all-long queue grows after the loss.
+Under the same idealized arithmetic, 155 provisioned replicas are needed to retain at least 154 after one group loss.
+This N+1 arithmetic does not cover correlated failure, simultaneous maintenance or a slower degraded runtime.
+It also does not mean that adding one device restores a lost two-device replica.
+
+### 6.12 Free aggregate bytes can coexist with an impossible placement
+
+Consider two replicas with identical 57.6-GiB rank budgets and equal occupancy within each group.
+Replica A has 0.9 GiB free on each rank; replica B has 0.9 GiB free on each rank.
+There are 3.6 GiB free when every device's spare bytes are summed.
+One long request needs only 3 GiB in total, but requires 1.5 GiB on both ranks of the same replica.
+Neither replica can place it, so admission must reject or defer it under the declared policy.
+Moving half its state to another independently scheduled replica is not a supported operation in this case.
+Increasing a global free-byte counter therefore cannot fix the placement failure.
+The router must select a feasible complete group before committing the reservation.
+If A instead has 1.6 GiB on both ranks, one long request fits there and leaves 0.1 GiB on each.
+If A has `(1.6, 1.4) GiB` free, the same request does not fit despite a 3-GiB summed remainder.
+The equality case is permitted only when every individual required allocation is at or below its own remaining budget.
+Real allocator granularity can impose a stricter condition than this teaching byte model.
+Reserve fragmentation uncertainty before making promises; do not claim these calculations prove allocatability.
+A measured contiguous-block or allocator failure is a reason to reduce admission, not to bypass the rank constraint.
+
+### 6.13 Group reservation and partial-commit recovery
+
+The admission pseudocode requires a coordinator-owned durable group lease, not unrelated best-effort rank increments.
+Its lease records tenant, logical request, model version, policy version, rank membership and the full byte vector.
+Authorization and cap validation precede the attempted reservation so unauthorized work cannot consume capacity.
+The coordinator commits only if all required rank budgets can accept the recorded vector.
+A successful rank-0 increment followed by a failed rank-1 increment is an incomplete reservation, not admitted work.
+The coordinator either rolls the partial allocation back under the same fence or retains it as pending reconciliation.
+Pending bytes remain unavailable to other admissions until their ownership is resolved.
+Dispatch is forbidden while any required rank reservation is missing or belongs to a different worker epoch.
+The recovery journal needs to distinguish preparation, committed admission, dispatch, cancellation and terminal release.
+A client timeout does not authorize a second group lease for the same scoped logical request.
+An old worker's release event cannot decrement the replacement worker's current reservation.
+After rank loss, do not infer that the surviving rank is safe to reuse merely because the group stopped returning tokens.
+The terminal decision must fence execution and confirm which rank allocations have actually ended.
+This contract is an intended implementation boundary; no distributed reservation service is implemented or tested here.
+The local numerical oracle below verifies accounting only and cannot establish those distributed guarantees.
+
+### 6.14 Executable arithmetic oracle for the declared boundaries
+
+The following self-contained Python example uses exact rational inputs to avoid floating-point floor errors.
+It recomputes rank-local sequence slots, output-demand replica counts, device counts and failure capacity.
+Its function is a teaching calculator, not a serving endpoint, a load generator or a hardware benchmark.
+All measurements in a real capacity review must replace these constructed arguments rather than inherit them.
+
+```python
+from fractions import Fraction as F
+
+def ceil_fraction(value):
+    return -(-value.numerator // value.denominator)
+
+def capacity_bounds(rank_gib, footprint_mib, resident_tokens,
+                    output_tokens, arrivals, decode_per_replica, tp):
+    rank_policy = [F(value) * F(4, 5) for value in rank_gib]
+    reservation_gib = F(footprint_mib) * resident_tokens / 1024
+    rank_slots = [int(budget // reservation_gib) for budget in rank_policy]
+    slots_per_replica = min(rank_slots)
+    output_demand = F(arrivals) * output_tokens
+    replica_floor = ceil_fraction(output_demand / F(decode_per_replica))
+    return {
+        "rank_policy_gib": rank_policy,
+        "reservation_gib_per_rank": reservation_gib,
+        "slots_per_replica": slots_per_replica,
+        "decode_only_replicas": replica_floor,
+        "decode_only_devices": tp * replica_floor,
+        "after_one_loss_long_per_second":
+            F(max(0, replica_floor - 1)) * F(decode_per_replica) / output_tokens,
+    }
+
+base = capacity_bounds([72, 72], F(3, 4), 2048, 512, 36, 120, 2)
+slow = capacity_bounds([72, 72], F(3, 4), 2048, 512, 36, 90, 2)
+asymmetric = capacity_bounds([72, 40], F(3, 4), 2048, 512, 36, 120, 2)
+long_context = capacity_bounds([72, 72], F(3, 4), 4096, 512, 36, 120, 2)
+print("base", base)
+print("slower replica floor", slow["decode_only_replicas"])
+print("limiting-rank slots", asymmetric["slots_per_replica"])
+print("4096-token slots", long_context["slots_per_replica"])
+print("mixed rank GiB", F(36 * 256 + 12 * 2048) * F(3, 4) / 1024)
+```
+
+The base output must report a 3/2-GiB reservation per rank and 38 slots per complete replica.
+Its decode-only floor is 154 replicas and 308 devices, subject to the counterfactual throughput assumption.
+The slower-replica example changes that count to 205 without changing the reservation footprint.
+The asymmetric-memory example changes the group slot limit to 21 without changing the stipulated decode rate.
+The context example changes the slot limit to 19; it does not by itself change the 512-token output demand.
+The mixed-rank result is 99/4 GiB, or 24.75 GiB on each rank.
+These independent changes expose why a single generic “GPU capacity” number loses essential dimensions.
+The calculator does not derive output lengths from resident context or estimate token throughput from memory bandwidth.
+Those relationships require additional architecture, scheduling and workload evidence absent from this case.
+Fractional request-completion capacity in this fluid approximation is a long-run rate, not a fractional real request.
+
+### 6.15 Queue wait, drain time and bounded rejection are different decisions
+
+Return only to Section 6.6's independent 30-completion/s unit-request example.
+For a FIFO fluid queue with that service rate, a two-second waiting target corresponds to at most 60 queued units.
+Starting empty at 36 arrivals/s, the queue grows at six units/s and reaches 60 after ten seconds.
+An unbounded queue accepts all 720 arrivals over the 20-second burst.
+It completes 600 units during that burst and leaves 120 queued.
+The burst-end fluid wait is four seconds, while subsequent drain at a six-unit/s surplus takes 20 seconds.
+These quantities answer different questions and cannot be substituted for each other.
+A constructed fluid admission policy caps pending work at 60 and rejects excess arrivals once the cap is reached.
+It accepts the initial ten seconds' 360 arrivals and the next ten seconds' 300 arrivals.
+The burst therefore admits 660 requests, rejects 60, completes 600 and ends with 60 pending.
+After arrival rate falls to 24/s, the remaining 60 units drain in ten seconds.
+This trades acceptance for a bounded modeled queue; it does not improve the underlying completion rate.
+It is not a real-time scheduler proof because real arrivals, service variance and dispatch granularity are unspecified.
+The exact-cap boundary may require an additional margin when measuring includes network or scheduler delay.
+In a real trace, report rejected work alongside admitted latency so improved percentiles cannot hide lost service.
+Requests must not spend unrecorded time in a gateway, retry loop or upstream queue before the measured queue begins.
+End-to-end deadlines start at their declared product boundary, not whichever internal timestamp yields the best chart.
+
+### 6.16 Version changes cannot rewrite already-promised bytes
+
+Every live lease retains the footprint and policy that determined its original reservation.
+Suppose 20 live leases were each admitted at 1.5 GiB per rank: their recorded total is 30 GiB per rank.
+A new compatible reservation policy requiring 1.8 GiB has 27.6 GiB of remaining rank-local budget.
+Under accounting-only coexistence, at most 15 new reservations fit, adding 27 GiB.
+The combined total is then 57 GiB per rank; a sixteenth new reservation would reach 58.8 GiB and must be denied.
+Repricing all 35 live leases at 1.8 GiB would incorrectly report 63 GiB of originally promised bytes.
+Repricing the new leases at 1.5 GiB would instead understate the new policy's future growth promise.
+Maintain the actual byte vector and version on each lease rather than reconstruct it from the latest global default.
+Accounting compatibility does not prove that two cache formats, runtimes or model versions can physically coexist.
+Changed weights, workspace or communication buffers require a new residual-memory inventory before admission.
+Use separate replica pools for incompatible model/runtime revisions instead of pretending a policy counter enables hot coexistence.
+If the new budget is below current occupancy, stop new admissions and drain or explicitly terminate work under contract.
+Do not make the counter negative, hide old leases or redefine their model revision to force apparent compliance.
+Retiring a policy version is safe only after its live leases and required terminal/idempotency records are reconciled.
+
+### 6.17 Evidence-gated sizing conclusion
+
+Select one complete two-device TP group as a minimum validation configuration, not a production purchase decision.
+Measure its rank-local memory inventory before enabling the example's 38-long-sequence admission limit.
+Establish sustainable output throughput separately for each declared prompt/output class and relevant concurrency.
+Measure the arrival distribution from logical requests, retaining transport attempts as a separate load source.
+Collect class-conditional queue wait, TTFT and stream cadence, including cancellation and rejection outcomes.
+Fit the replica count only after those inputs and the acceptable utilization/failure envelope are established.
+The all-long 308-device arithmetic is a warning about unit consistency, not a claim that the deployment needs 308 GPUs.
+A cheaper runtime or shorter permitted outputs could change it; unsupported multiplication of TP ranks cannot.
+The original one/two/three-replica experiment remains useful for validating accounting and scheduler behavior at bounded offered load.
+It must explicitly throttle load below its measured capacity rather than claim to serve the illustrative peak by construction.
+An unresolved residual-memory boundary, missing rank acknowledgement or unknown execution epoch is an admission blocker.
+A favorable mean throughput alone does not close target-tail, tenant-isolation or failure-recovery review.
+The release gate remains OPEN until target-runtime traces and independently reviewed source/configuration evidence exist.
+No local calculator result promotes this manuscript from illustrative design to measured production evidence.
+
+
 ## 7. The Finding
 
 For the constructed inputs, propose bounded admission with a 1.5-GiB reservation for a 2,048-resident-token long sequence, a 57.6-GiB per-policy-boundary budget, and a 38-long-sequence integer limit.
 Reject the accept-all baseline because it cannot identify promised work, limit queue growth, or reconcile retry and cancellation state.
-A second replica doubles modeled independent admission capacity only if it is a true replica rather than a second TP rank, but neither one nor two devices has a measured latency claim in this case.
+A second complete replica adds independent modeled capacity; another TP rank does not. One, two and three TP=2 replicas require two, four and six devices. These are validation configurations, not demonstrated capacity for the offered 36 requests/s.
 The 36-versus-30 fluid burst demonstrates a 120-request modeled backlog and therefore rules out silently queuing excess work under a two-second objective; it does not calculate queue percentiles.
 The decision is proposed, illustrative, and contingent on a closed-loop test that measures target runtime footprint, prefill/decode behavior, retries, cancellations, fragmentation, and failure recovery.
 
@@ -362,11 +568,11 @@ INPUT: authorized request r with declared bound b, deadline d, idempotency key k
 OUTPUT: existing result, rejection reason, or one live lease l
 PRECONDITION: b is derived from validated policy caps; r carries tenant/model/policy scope.
 1. if terminal_or_live_record(k, tenant, model, policy) exists: return its recorded result.
-2. choose an eligible policy boundary with remaining budget >= b and deadline feasibility policy.
-3. if none exists: persist rejection(reason=budget_or_deadline) and return it.
-4. atomically create l and increment exactly one boundary counter by b.
-5. enqueue l with d; scheduler dispatches only while l is live.
-INVARIANT: sum(bytes of live leases at boundary) <= boundary policy budget.
+2. choose an eligible replica group whose every rank can reserve its component of b, with a deadline-feasibility policy.
+3. if none exists: persist rejection(reason=rank_budget_or_deadline) and return it.
+4. atomically journal one group lease and reserve its byte vector for every required rank; partial reservation cannot dispatch.
+5. enqueue the group lease; dispatch only when the fenced lease and every rank reservation remain valid.
+INVARIANT: for every rank r, sum(live_lease_bytes[r]) <= rank_policy_budget[r].
 TERMINATION: terminal event atomically fences l, decrements exactly once, and retains idempotency outcome.
 RECOVERY: expiry is reclaimed only after runtime/worker reconciliation proves no current-epoch execution.
 ```
@@ -395,8 +601,8 @@ RECOVERY: expiry is reclaimed only after runtime/worker reconciliation proves no
 
 ### 8.5 Failure headroom and modeled cost
 
-Let c be a constructed device-hour planning rate in currency/device-hour; c is deliberately unpriced in this manuscript.
-One replica costs c per hour in the planning model, two cost 2c, and three cost 3c before storage, networking, labor, and failed work.
+Let c be an unpriced teaching rate in currency/device-hour. With one device per rank and TP=2, device-hours equal `2×replica-hours`.
+One replica therefore costs 2c/hour, two cost 4c/hour and three cost 6c/hour before shared services, networking, labor and failed work; treating c as a replica-hour rate would underprice this configuration by a factor of two.
 Cost per completed valid task would be (device cost + attributable shared cost + failed-work cost) / completed valid tasks for a named window.
 No such numerator or denominator is observed here, so no cost-per-request number is claimed.
 If a two-replica cluster must tolerate one loss while peak requires more than one replica’s bounded capacity, it needs load shedding, more replicas, or a revised availability objective.
@@ -493,153 +699,153 @@ The source-tree commitments concerning continuous batching, chunked prefill, pag
 
 1. **Why is memory fit not a latency guarantee?**
    **Answer:** Memory says a reservation may coexist; it says nothing about queue delay, prefill, decode service distribution, scheduler fairness, or retries.
-   **Reasoning:** Memory says a reservation may coexist; it says nothing about queue delay, prefill, decode service distribution, scheduler fairness, or retries.
+   **Reasoning:** Capacity is a coexistence constraint; queueing and token service impose separate time constraints even when no allocation fails.
    **Follow-up:** Which timing components would you measure?
    **Follow-up answer:** Queue wait, TTFT, prefill duration, and inter-token latency by request class.
    **Acceptable alternative:** A validated queueing model with explicit distributions.
    **Red flag:** “More memory always lowers p99.”
    **Scoring:** 2: separates memory from time; 1: mentions queue.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Sections 6.3, 6.5 and 6.6 distinguish memory, decode work and waiting.
 
 2. **Derive the long-request reservation.**
    **Answer:** 2,048 resident tokens times 0.75 MiB/token equals 1,536 MiB, which is 1.5 GiB using 1,024 MiB/GiB.
-   **Reasoning:** 2,048 resident tokens times 0.75 MiB/token equals 1,536 MiB, which is 1.5 GiB using 1,024 MiB/GiB.
+   **Reasoning:** The footprint is rank-local; binary conversion divides MiB by 1,024, and both TP ranks must reserve the sequence.
    **Follow-up:** What is it at 0.90 MiB/token?
    **Follow-up answer:** 1,843.2 MiB, or 1.8 GiB.
    **Acceptable alternative:** Equivalent binary-unit derivation.
    **Red flag:** Treating MB and MiB as identical.
    **Scoring:** 2: arithmetic and units; 1: correct product only.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** M-02 and A-02 define the token footprint and its per-rank units.
 
 3. **Why are tokens and sequences different denominators?**
    **Answer:** A sequence is one request lifecycle containing many resident tokens; cache grows with tokens while concurrency is counted in sequences.
-   **Reasoning:** A sequence is one request lifecycle containing many resident tokens; cache grows with tokens while concurrency is counted in sequences.
+   **Reasoning:** Replacing a length-weighted sum with a request count loses the eightfold short/long difference in this example.
    **Follow-up:** Can 48 sequences have equal cache?
    **Follow-up answer:** No; their token lengths determine the sum.
    **Acceptable alternative:** Explicit per-sequence token vector.
    **Red flag:** Using request count as cache bytes.
    **Scoring:** 2: names both denominators; 1: says lengths vary.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Section 6.3's 36-short/12-long snapshot computes the mixed reservation.
 
 4. **What is the TP versus replication distinction?**
    **Answer:** TP ranks jointly serve one model replica and one sequence; replicas independently schedule separate sequences and duplicate non-sharded state.
-   **Reasoning:** TP ranks jointly serve one model replica and one sequence; replicas independently schedule separate sequences and duplicate non-sharded state.
+   **Reasoning:** A failed TP rank can invalidate its entire replica; counting it as another independent server overstates both capacity and resilience.
    **Follow-up:** Does TP=2 double admission slots?
    **Follow-up answer:** No; it changes rank-local allocation and communication.
    **Acceptable alternative:** A precisely defined alternative parallelism scheme.
    **Red flag:** Counting ranks as replicas.
    **Scoring:** 2: shared-sequence consequence; 1: says they differ.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** A-05 and Sections 6.1 and 6.7 establish complete replica groups.
 
 5. **Why reserve output before it exists?**
    **Answer:** Future generated tokens can grow resident state, so the policy reserves the declared worst permitted growth before promising queue service.
-   **Reasoning:** Future generated tokens can grow resident state, so the policy reserves the declared worst permitted growth before promising queue service.
+   **Reasoning:** Admission happens before generation; reserving only the current prompt lets several promises compete later for the same future cache.
    **Follow-up:** When can the reservation shrink?
    **Follow-up answer:** Only under an immutable lower output contract or fenced re-admission.
    **Acceptable alternative:** Measured runtime policy with safe dynamic resizing.
    **Red flag:** Borrowing headroom silently.
    **Scoring:** 2: future growth plus contract; 1: mentions cap.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Sections 8.2–8.3 bind immutable input/output caps to a group lease.
 
 6. **Show the headroom calculation.**
    **Answer:** 0.80 times 72 GiB is 57.6 GiB; floor(57.6/1.5) is 38, while 39 would reserve 58.5 GiB.
-   **Reasoning:** 0.80 times 72 GiB is 57.6 GiB; floor(57.6/1.5) is 38, while 39 would reserve 58.5 GiB.
+   **Reasoning:** Floor is required because a fraction of a sequence cannot satisfy a whole admission; raw capacity and policy permission are different constraints.
    **Follow-up:** Why not use raw 72 GiB?
    **Follow-up answer:** The 20% policy margin is reserved for uncertainty, fragmentation, and recovery.
    **Acceptable alternative:** Different measured headroom with evidence.
    **Red flag:** Calling 39 permissible because raw bytes fit.
    **Scoring:** 2: floor and policy distinction; 1: states 38.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** M-03 and M-04 show the 57.6-GiB policy and the 39th-sequence rejection.
 
 7. **What does the 36 versus 30 burst establish?**
    **Answer:** Under a constant fluid approximation, excess is 6 requests/s for 20 seconds, so backlog is 120 requests.
-   **Reasoning:** Under a constant fluid approximation, excess is 6 requests/s for 20 seconds, so backlog is 120 requests.
+   **Reasoning:** Arrival-minus-completion rate has units requests/second; multiplying by elapsed seconds gives pending requests, not a latency percentile.
    **Follow-up:** What p99 follows?
    **Follow-up answer:** None; distributions and discipline are unspecified.
    **Acceptable alternative:** A validated stochastic model.
    **Red flag:** Inventing a percentile from means.
    **Scoring:** 2: states bound and limit; 1: arithmetic only.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Q-01 and the following FIFO/drain distinction bound only the constructed fluid trace.
 
 8. **How do prefill and decode change scheduling?**
    **Answer:** Prefill concentrates input work and affects TTFT; decode repeatedly services active sequences and affects stream cadence, so equal token totals can have different latency.
-   **Reasoning:** Prefill concentrates input work and affects TTFT; decode repeatedly services active sequences and affects stream cadence, so equal token totals can have different latency.
+   **Reasoning:** A large prompt can occupy shared execution before short jobs start, while repeated decode steps compete after streams become active.
    **Follow-up:** What experiment isolates this?
    **Follow-up answer:** Hold total token volume and vary prompt versus output composition.
    **Acceptable alternative:** Trace-based critical-path analysis.
    **Red flag:** One aggregate rate explains both.
    **Scoring:** 2: distinct mechanisms; 1: names both.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Section 6.4 describes the separate prefill and decode scheduling paths.
 
 9. **What is the correct cancellation release rule?**
    **Answer:** Keep the lease until a fenced runtime terminal confirmation or reconciled expiry proves current-epoch work stopped; then release exactly once.
-   **Reasoning:** Keep the lease until a fenced runtime terminal confirmation or reconciled expiry proves current-epoch work stopped; then release exactly once.
+   **Reasoning:** The caller's transport and the device's execution are separate lifecycles; freeing bytes before execution stops admits overlapping ownership.
    **Follow-up:** Why not release on disconnect?
    **Follow-up answer:** The runtime may still execute or flush.
    **Acceptable alternative:** A bounded cancellation handshake.
    **Red flag:** Disconnect equals completion.
    **Scoring:** 2: fence and exactly-once; 1: delayed release.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** C-05, Section 8.4 and lifecycle steps 7–10 define terminal fencing.
 
 10. **How should retries be counted?**
    **Answer:** Transport attempts are grouped by idempotency key into one logical request; a duplicate returns existing state and creates no second lease.
-   **Reasoning:** Transport attempts are grouped by idempotency key into one logical request; a duplicate returns existing state and creates no second lease.
+   **Reasoning:** Reusing one scoped identity preserves a single effect and reservation despite several network attempts; a new key represents different logical work.
    **Follow-up:** What if expiry permits retry?
    **Follow-up answer:** Reuse the logical key with a bounded attempt budget and explicit terminal/retry state.
    **Acceptable alternative:** Durable request ledger.
    **Red flag:** Counting every retry as completed work.
    **Scoring:** 2: logical/attempt separation; 1: idempotency mention.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** C-04 and lifecycle step 3 require reuse without allocating another lease.
 
 11. **How do you test tenant isolation?**
    **Answer:** Submit structurally identical cacheable prefixes under distinct tenants and audit every lease/cache lookup key and authorization decision.
-   **Reasoning:** Submit structurally identical cacheable prefixes under distinct tenants and audit every lease/cache lookup key and authorization decision.
+   **Reasoning:** Equal text is not shared authority; cross-tenant collisions can disclose state even when returned answer bytes look harmless.
    **Follow-up:** Is a UI namespace sufficient?
    **Follow-up answer:** No; the boundary must bind every stateful lookup and dispatch path.
    **Acceptable alternative:** Cryptographic partition plus audit.
    **Red flag:** Relying on application display identity.
    **Scoring:** 2: end-to-end key audit; 1: negative test.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Section 8.1 and lifecycle invariant four define tenant-scoped resource identity.
 
 12. **What fails under one replica loss?**
    **Answer:** Two replicas at their normal limit may leave only one 38-long-equivalent boundary after loss, so peak continuity is not implied.
-   **Reasoning:** Two replicas at their normal limit may leave only one 38-long-equivalent boundary after loss, so peak continuity is not implied.
+   **Reasoning:** Capacity must be recomputed for surviving complete groups; normal-state totals do not establish what remains after a rank or replica fails.
    **Follow-up:** What is the recovery choice?
    **Follow-up answer:** Load shed, provision N+1 capacity, or revise the degraded SLO.
    **Acceptable alternative:** Warm standby with measured failover.
    **Red flag:** “Two devices are automatically highly available.”
    **Scoring:** 2: remaining-capacity calculation; 1: names load shedding.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** The one-device-loss sensitivity and Section 8.5 describe group-level failure capacity.
 
 13. **Why can successful-work cost be misleading?**
    **Answer:** A denominator of completed requests hides rejected, cancelled, retried, and failed work unless the metric publishes its population and shared-cost attribution.
-   **Reasoning:** A denominator of completed requests hides rejected, cancelled, retried, and failed work unless the metric publishes its population and shared-cost attribution.
+   **Reasoning:** Selective omission of rejected and failed work can improve a ratio while total device spend and useful completion deteriorate.
    **Follow-up:** What is required?
    **Follow-up answer:** Named numerator, denominator, window, and treatment of failed work.
    **Acceptable alternative:** Separate unit economics by outcome class.
    **Red flag:** Divide device-hours by only happy-path tokens.
    **Scoring:** 2: denominator boundary; 1: says include failures.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Section 8.5 separates total attributable cost from the completed-valid-task denominator.
 
 14. **A new 4,096-token contract arrives. What changes?**
    **Answer:** At fixed 0.75 MiB/token, the reservation is 3 GiB and floor(57.6/3) is 19; remeasure because the footprint model may change.
-   **Reasoning:** At fixed 0.75 MiB/token, the reservation is 3 GiB and floor(57.6/3) is 19; remeasure because the footprint model may change.
+   **Reasoning:** Twice the resident bound doubles the fixed-footprint reservation, so the integer policy limit falls from 38 to 19 per replica.
    **Follow-up:** Can output caps offset it?
    **Follow-up answer:** Only if the resident bound and product contract genuinely change.
    **Acceptable alternative:** Route a separately measured long-context class.
    **Red flag:** Change the cap without changing admission.
    **Scoring:** 2: recalculation and evidence boundary; 1: says capacity falls.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Section 6.8's context sensitivity changes both the declared contract and M-04's divisor.
 
 15. **What result reverses the recommendation?**
    **Answer:** Measured target runtime evidence showing a different cache footprint, non-cache reserve, latency distribution, isolation requirement, or recovery behavior can invalidate the proposed policy.
-   **Reasoning:** Measured target runtime evidence showing a different cache footprint, non-cache reserve, latency distribution, isolation requirement, or recovery behavior can invalidate the proposed policy.
+   **Reasoning:** The recommendation is conditional on several independently unverified quantities; one favorable average cannot validate all constraints or tail behavior.
    **Follow-up:** Is one favorable mean benchmark enough?
    **Follow-up answer:** No; test mixed bursts, cancellation, fragmentation, and failure recovery.
    **Acceptable alternative:** Staged enablement with halt criteria.
    **Red flag:** Reinterpreting illustrative inputs as proof.
    **Scoring:** 2: names invalidator and test scope; 1: says measure first.
-   **Answer support:** Sections 4, 6, 8, 9, and 12 define the relevant boundary and limitation.
+   **Answer support:** Section 9's validation matrix identifies the measurements needed before a capacity claim.
 
 ### Request-lifecycle trace and oracle
 
@@ -656,7 +862,7 @@ The source-tree commitments concerning continuous batching, chunked prefill, pag
 | 9 | E/red reserves 1.5 GiB | D+E live; b0=3.0 GiB | uses released capacity |
 | 10 | stale A worker emits duplicate release | unchanged | reject duplicate terminal |
 
-Oracle invariant one: at every step, live lease bytes for boundary 0 are no greater than 57.6 GiB.
+Oracle invariant one: each required rank stays at or below its own 57.6-GiB budget. The trace shows rank 0; rank 1 must journal the same reservations in this symmetric example, not be inferred from a replica average.
 Oracle invariant two: a logical idempotency key has at most one live lease.
 Oracle invariant three: terminal transition decrements the matching live lease exactly once.
 Oracle invariant four: a tenant-scoped key cannot resolve a cache or lease owned by a different tenant.
@@ -670,374 +876,204 @@ It connects a state boundary to the evidence required before a capacity conclusi
 - **Decision boundary:** The declared maximum is 2,412 tokens, so admission must reject or alter the contract before lease creation.
 - **Required evidence:** Validated input count, output cap, and policy version.
 - **Do not infer:** A later output clamp is not evidence that the original reservation was valid.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-02 tokenizer mismatch
 - **Trigger:** The client’s token estimate is lower than the runtime tokenizer count.
 - **Decision boundary:** The runtime-authoritative tokenizer count must drive the reservation before dispatch.
 - **Required evidence:** Model revision, tokenizer revision, and counted token total.
 - **Do not infer:** Character count is not a safe substitute for token count.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-03 output-cap mutation
 - **Trigger:** A caller attempts to raise output cap after it receives a lease.
 - **Decision boundary:** Reject the mutation or fenced re-admit with a larger reservation; never mutate budget in place.
 - **Required evidence:** Lease version, original cap, requested cap, and counter delta.
 - **Do not infer:** A mutable cap makes the original admission guarantee false.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-04 short-to-long burst
 - **Trigger:** Thirty-six short reservations are followed by a burst of long reservations.
 - **Decision boundary:** The admission ledger sums each actual reservation; it does not rely on the earlier average.
 - **Required evidence:** Token-class histogram and live-byte total before each decision.
 - **Do not infer:** An average-request policy can accept a dangerous long tail.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-05 all-long burst
 - **Trigger:** Only 2,048-token requests arrive until the policy boundary is full.
 - **Decision boundary:** Admission stops at 38 long reservations per 57.6-GiB boundary under the constructed constants.
 - **Required evidence:** Integer lease count and live bytes.
 - **Do not infer:** This checks memory policy only, not whether 38 streams meet latency.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-06 prefill convoy
 - **Trigger:** Several long prompts enter ahead of short decode-sensitive requests.
 - **Decision boundary:** Measure prefill occupancy and queue delay by class before introducing class prioritization.
 - **Required evidence:** Prefill start/end times, TTFT, and queue order.
 - **Do not infer:** A decode-rate average cannot diagnose a prefill convoy.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-07 decode crowding
 - **Trigger:** Many active sequences each receive small decode slices and inter-token gaps rise.
 - **Decision boundary:** Bound active decode concurrency or use a measured scheduler policy; do not call memory headroom a cure.
 - **Required evidence:** Active sequence count and inter-token latency distribution.
 - **Do not infer:** Aggregate output rate can rise while an individual stream degrades.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-08 batching deadline
 - **Trigger:** Waiting for a fuller batch consumes an admitted request’s remaining two-second budget.
 - **Decision boundary:** Dispatch or reject based on remaining slack rather than batch fullness alone.
 - **Required evidence:** Admission time, dispatch time, deadline, and batch decision.
 - **Do not infer:** Batch efficiency is not an override for a stated SLO.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-09 queue-before-reserve
 - **Trigger:** A design queues requests before creating a lease.
 - **Decision boundary:** It must either reserve at queue entry or label queued work unadmitted; otherwise it promises unconstrained future capacity.
 - **Required evidence:** Queue state, lease creation timestamp, and rejection reason.
 - **Do not infer:** Queue length is not a capacity reservation.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-10 reservation-before-authorize
 - **Trigger:** A design increments a counter before checking tenant authorization.
 - **Decision boundary:** Authorization must precede reservation so rejected callers cannot consume or probe capacity.
 - **Required evidence:** Authorization decision timestamp and lease audit record.
 - **Do not infer:** Later release does not repair a capacity side channel.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-11 duplicate-before-dispatch
 - **Trigger:** A transport retry arrives while the original lease is queued.
 - **Decision boundary:** Return the original admission result and preserve one lease under the logical idempotency key.
 - **Required evidence:** Logical key, lease ID, and counter history.
 - **Do not infer:** Two queued attempts are not two user requests.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-12 duplicate-after-completion
 - **Trigger:** A retry arrives after a durable completed terminal record.
 - **Decision boundary:** Return the retained terminal result according to contract; do not regenerate work.
 - **Required evidence:** Terminal record retention and idempotency lookup.
 - **Do not infer:** Retention duration is a policy choice that must be explicit.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-13 disconnect-during-prefill
 - **Trigger:** The client disconnects while prefill is still executing.
 - **Decision boundary:** Record cancellation requested, signal runtime, and keep bytes reserved until terminal confirmation.
 - **Required evidence:** Disconnect, runtime cancellation acknowledgment, and terminal epoch.
 - **Do not infer:** A socket close is not proof device work ended.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-14 disconnect-after-output
 - **Trigger:** The client disconnects after some tokens were emitted but before terminal completion.
 - **Decision boundary:** Classify partial output and capacity release separately from completed-valid outcome.
 - **Required evidence:** Emitted-token count, terminal reason, and billing rule.
 - **Do not infer:** Partial work cannot silently become a full completion.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-15 lost-terminal-event
 - **Trigger:** A worker completed but its terminal callback was not persisted.
 - **Decision boundary:** Reconcile durable runtime evidence before expiry reclaim, then create one terminal state.
 - **Required evidence:** Worker epoch, heartbeat, output log, and lease state.
 - **Do not infer:** A timeout alone cannot distinguish slow from lost.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-16 stale-worker-release
 - **Trigger:** A restarted worker emits a release for an old lease epoch.
 - **Decision boundary:** Reject the stale epoch so it cannot decrement current capacity.
 - **Required evidence:** Lease ID, worker epoch, and fence value.
 - **Do not infer:** Lease ID without epoch is insufficient after restart.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-17 allocator-fragmentation
 - **Trigger:** Allocator bytes approach failure while summed reservations remain below policy.
 - **Decision boundary:** Lower allocatable fraction only after correlating fragmentation with allocation patterns and runtime state.
 - **Required evidence:** Reserved bytes, allocated bytes, free-block distribution, and request lengths.
 - **Do not infer:** Do not claim a fragmentation percentage without measurement.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-18 runtime-reserve-growth
 - **Trigger:** A compiler/runtime change raises non-cache workspace use.
 - **Decision boundary:** Reduce cache budget and rerun the full capacity arithmetic before increasing admission.
 - **Required evidence:** Versioned non-cache memory inventory.
 - **Do not infer:** KV measurements alone miss runtime-reserve drift.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-19 TP-rank-asymmetry
 - **Trigger:** One TP rank reports more allocation than another.
 - **Decision boundary:** The policy boundary must use the constraining rank or explicitly model rank-local budgets.
 - **Required evidence:** Per-rank weights, workspace, cache, and communication buffers.
 - **Do not infer:** A replica-wide average can overrun one rank.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-20 replica-imbalance
 - **Trigger:** One replica has free budget while another rejects.
 - **Decision boundary:** Use an explicit routing policy and report skew; do not aggregate bytes and assume immediate portability.
 - **Required evidence:** Per-replica live bytes, queue age, and route decisions.
 - **Do not infer:** State locality and TP grouping may prevent instant migration.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-21 device-loss
 - **Trigger:** A replica becomes unavailable after dispatch.
 - **Decision boundary:** Fence the old worker, reconcile in-flight leases, and load shed or reroute only under a new valid reservation.
 - **Required evidence:** Health epoch, lease ownership, and remaining capacity.
 - **Do not infer:** Failover cannot create N-1 capacity from a saturated plan.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-22 correlated-loss
 - **Trigger:** Two replicas share a failure domain.
 - **Decision boundary:** Capacity planning must name the failure domain rather than call device count availability.
 - **Required evidence:** Rack/host/power/network placement and outage assumptions.
 - **Do not infer:** Independent replica arithmetic does not prove independent failures.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-23 retry-storm
 - **Trigger:** Timeouts cause 1.2 attempts per logical request.
 - **Decision boundary:** The meter reports 43.2 attempts/s from 36 logical requests/s and admission deduplicates known keys.
 - **Required evidence:** Attempt-to-logical ratio and retry reason chain.
 - **Do not infer:** New idempotency keys for retries defeat deduplication.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-24 deadline-expiry
 - **Trigger:** A queued lease reaches its deadline before dispatch.
 - **Decision boundary:** Terminally reject or cancel it and release once; never start known-expired interactive work without a new contract.
 - **Required evidence:** Deadline, dispatch timestamp, terminal reason, and release event.
 - **Do not infer:** Completion after expiry cannot retroactively meet the SLO.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-25 policy-version-rollover
 - **Trigger:** A policy changes headroom from 20% to 30% while old leases exist.
 - **Decision boundary:** Keep each lease bound to its original policy version and apply new admission against a clearly reconciled budget.
 - **Required evidence:** Policy version on lease and budget transition audit.
 - **Do not infer:** Reinterpreting old leases under new math can double-count or undercount.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-26 model-version-rollover
 - **Trigger:** A model update changes weights or KV footprint.
 - **Decision boundary:** Treat it as a separate capacity pool until measured; do not reuse the old 72-GiB cache residual.
 - **Required evidence:** Model revision, runtime revision, and allocation inventory.
 - **Do not infer:** Same model name is not evidence of same memory shape.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-27 tenant-quota
 - **Trigger:** One tenant consumes all pooled leases with valid traffic.
 - **Decision boundary:** Apply an explicit tenant quota or weighted borrowing policy and report denied capacity separately.
 - **Required evidence:** Tenant live bytes, quota, borrow state, and rejection reason.
 - **Do not infer:** Global fairness is not implied by first-come-first-served.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-28 prefix-cache-boundary
 - **Trigger:** A cacheable prefix is reused across requests.
 - **Decision boundary:** Every reuse key must include tenant/policy/model authorization boundary or be disabled across tenants.
 - **Required evidence:** Cache key fields, authorization result, and lookup audit.
 - **Do not infer:** Identical text does not authorize shared state.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-29 cost-denominator
 - **Trigger:** Finance asks for cost per completed request after a rejection-heavy test.
 - **Decision boundary:** Publish attempts, accepted, completed, cancelled, failed, device-hours, and allocation rule before computing a ratio.
 - **Required evidence:** Named numerator, denominator, window, and outcome classes.
 - **Do not infer:** A happy-path denominator rewards indiscriminate rejection.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-30 scale-out-delay
 - **Trigger:** An autoscaler adds a replica after a burst begins.
 - **Decision boundary:** Admission still protects the current pool; future capacity cannot justify current overcommit.
 - **Required evidence:** Replica-ready time, queue age, and pre-scale decisions.
 - **Do not infer:** Autoscaling delay is part of the latency path.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-31 warmup
 - **Trigger:** A newly loaded replica has different first-request latency and reserve.
 - **Decision boundary:** Exclude it from steady-state capacity until warmup behavior is measured and tagged.
 - **Required evidence:** Load timestamp, first-request timings, and memory inventory.
 - **Do not infer:** A warmed benchmark does not prove cold-start readiness.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-32 clock-skew
 - **Trigger:** Gateway and runtime clocks disagree.
 - **Decision boundary:** Use a monotonic correlation method or declare which components cannot be compared.
 - **Required evidence:** Clock source, offsets, and event ordering.
 - **Do not infer:** Negative queue time is a telemetry defect, not low latency.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-33 metric-censoring
 - **Trigger:** Cancelled requests are removed from a TTFT chart.
 - **Decision boundary:** Report them as a distinct population and explain whether first token occurred before cancellation.
 - **Required evidence:** Cancellation timestamps, first-token timestamps, and inclusion rule.
 - **Do not infer:** Dropping hard cases can improve a percentile without improving users.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 #### D-34 source-boundary
 - **Trigger:** A reader asks whether the constructed 120-token/s value matches a product.
 - **Decision boundary:** State that it is illustrative and require a versioned closed-loop target measurement.
 - **Required evidence:** Evidence label, runtime configuration, and source availability.
 - **Do not infer:** No external benchmark is supported by this case.
-- **Owner:** The platform capacity owner owns admission policy; the serving engineer supplies runtime evidence; the SRE validates recovery evidence.
-- **Accounting:** Preserve attempted, admitted, terminal, and released states as separate fields for this scenario.
-- **Safety check:** The live-byte counter must remain at or below its versioned policy budget throughout the trace.
-- **Latency check:** Report queue wait, TTFT, and inter-token latency only for their named population and window.
-- **Recovery check:** Any terminal transition or reclaim must be idempotent and fenced against stale worker state.
 
 ## 15. Quick Reference Card
 

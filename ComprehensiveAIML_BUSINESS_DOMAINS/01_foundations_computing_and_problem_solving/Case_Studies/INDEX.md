@@ -1,22 +1,30 @@
-# Part 01 Case Studies â€” Foundations, Computing and Problem Solving
+# Part 01 Cross-Module Case Studies
 
-> **Mandatory authoring contract:** Every authored case must follow the [course authoring and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+## 1. Collection metadata
+Illustrative teaching cases for bounded decisions. Evidence, implementation stage, and editorial state are separate; every listed artifact remains draft and no case claims a deployment.
 
-## Purpose
+## 2. Case catalog
+| Case ID | Title | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
+|---|---|---|---|---|---|---|---|---|---|---|
+| CASE-001 | [01 Cross Module Evidence to Operation ](01_Cross_Module_Evidence_to_Operation.md) | foundations | analytical | bounded illustrative decision | correctness-contract | — | illustrative | proposed | 2026-11-10 | Draft; source verification and publication review OPEN |
 
-This collection will hold cross-module cases for **Foundations, Computing and Problem Solving**. Unlike module-specific cases, each case should require at least two modules from this part and show business context, constraints, architecture, metrics, trade-offs, failure modes, and evidence.
+## 3. Canonical reusable patterns
+- **Correctness contract:** define the input cutoff, output, owner, and oracle before optimizing.
+- **Bounded work:** cap admission and retain a safe deferral path when capacity is uncertain.
+- **Idempotent decision ledger:** one final action per stable decision key.
 
-## Planned case-study formats
+## 4. Similarity / contrast map
+All cases use illustrative queue arithmetic and a human approval boundary. Their decision units differ; no workload or outcome transfers between them without new evidence.
 
-1. **Design case:** ambiguous requirements to a justified architecture.
-2. **Implementation case:** data/model/platform choices with validation steps.
-3. **Incident case:** symptom, blast radius, diagnosis, remediation, and prevention.
-4. **Decision case:** compare alternatives using cost, risk, quality, latency, and adoption criteria.
+## 5. Questions and future-case backlog
+Source-derived reference commitments and unavailable source bodies remain OPEN. Future cases need primary evidence or explicitly illustrative scope, not reconstructed results.
 
-## Candidate threads
+## 6. Review / retirement log
+| Date | Change | Editorial state | Limitation |
+|---|---|---|---|
+| 2026-11-10 | Canonical cases cataloged | draft | publication review, source verification, and operational validation OPEN |
 
-- Program Orientation and AI Landscape: Select an AI use case portfolio; evaluate a vendor claim
-- Python, SQL, Linux and Engineering Basics: Build a data quality CLI; design an analytics API
-- Data Structures, Algorithms and Computational Thinking: Design a rate limiter; implement top-K stream processing
-- System Design, Distributed Systems and Cloud: Design a notification platform; design a feature-serving API
-- Mathematics, Probability, Statistics and Linear Algebra: Calibrate a risk model; derive gradient descent for regression
+## 7. Pre-publish checks
+- [x] Each listed link resolves to a canonical manuscript.
+- [x] Evidence and stage are not reported as measured deployment.
+- [ ] Independently review source claims, detailed arithmetic, links, and editorial completeness before publication.

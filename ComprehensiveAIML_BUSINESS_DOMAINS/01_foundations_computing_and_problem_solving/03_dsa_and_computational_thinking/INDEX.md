@@ -27,6 +27,11 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [DSA Patterns and Invariants](Cheat_Sheets/01_DSA_Patterns_and_Invariants.md) — pattern selection, complexity assumptions, invariants and oracle validation; source inventory only.
 
+## Canonical case studies
+
+- [Design a Rate Limiter](Case_Studies/01_Design_Rate_Limiter.md) — illustrative bounded-admission decision; draft.
+- [Implement Top-K Stream Processing](Case_Studies/02_Implement_Top_K_Stream_Processing.md) — illustrative deterministic snapshot decision; draft.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

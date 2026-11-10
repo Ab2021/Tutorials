@@ -1,42 +1,70 @@
-# Module 18 Case Studies â€” NLP, Speech and Document Intelligence
+# Module 18 Case Studies — NLP, Speech and Document Intelligence
 
-## Authoring standard
+## 1. Collection metadata
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+This draft collection retains original cases for claims extraction and transcription quality, plus
+reference-informed future decisions. No case manuscript, measured model result, deployment, or
+organisation-specific workflow is claimed here. The source filenames and interview references are
+planning inputs, not evidence that their assumed workloads or outcomes apply to a new case.
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Editorial state | Draft; no completed local canonical case |
+| Evidence / implementation state | not-measured / proposed |
+| Scope | Text, document, and speech decisions with human verification |
+| Review trigger | New primary evidence, labelled evaluation data, or completed canonical manuscript |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Claims document extraction | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | call-centre transcription quality | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title / canonical home | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR010 | Compare specialized models with authorized shared-model baselines | Supporting curriculum; shared brief | llm-agentic | When do repository-aware completion or language adapters justify their added complexity? | `data-leakage` | `authorization-scope`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR011 | Compare document VLMs with OCR for adjuster assistance | Supporting curriculum; shared brief | hybrid | Which claim fields can be extracted reliably, and which bundles require adjuster review? | `human-in-the-loop` | `evaluation-mismatch`, `delayed-selective-labels` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR016 | Distinguish speech, speaker and extraction errors in call analytics | Proposed home | hybrid | Which customer objections can be reported with reliable speaker attribution and evidence? | `evaluation-mismatch` | `authorization-scope`, `human-in-the-loop` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR017 | Adapt domain ASR while preserving supported-domain quality | Supporting curriculum; shared brief | hybrid | Should a speech adapter be promoted, and to which evaluated product and language domains? | `rollout-regression` | `distribution-shift`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |
+| CASE-18-01 | Claims document extraction — `01_claims_document_extraction.md` (planned) | Document intelligence | hybrid | Which extracted fields can be shown and which bundles require reviewer routing | `human-in-the-loop` | `evaluation-mismatch`, `authorization-scope` | not-measured | proposed | never | No manuscript, evaluation, or operational outcome |
+| CASE-18-02 | Call-centre transcription quality — `02_call_centre_transcription_quality.md` (planned) | Speech analytics | hybrid | Whether a transcript has adequate evidence and speaker attribution for aggregate reporting | `evaluation-mismatch` | `human-in-the-loop`, `authorization-scope` | not-measured | proposed | never | No manuscript, evaluation, or operational outcome |
+| PLAN-2026-IR010 | Repository-aware completion / language adapter (planned shared brief) | Code and multilingual assistance | llm-agentic | When added adaptation complexity is justified | `data-leakage` | `authorization-scope`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| PLAN-2026-IR011 | VLM/OCR adjuster assistance (planned shared brief) | Document intelligence | hybrid | Which claim fields require review | `human-in-the-loop` | `evaluation-mismatch`, `delayed-selective-labels` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| PLAN-2026-IR016 | Customer-objection aggregation (planned) | Speech analytics | hybrid | Whether objections have reliable speaker and evidence attribution | `evaluation-mismatch` | `authorization-scope`, `human-in-the-loop` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| PLAN-2026-IR017 | Domain ASR adaptation (planned shared brief) | Speech recognition | hybrid | Which product/language routes an adapter may be promoted to | `rollout-regression` | `distribution-shift`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 | Planning brief only |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
+| Pattern | Meaning | Boundary |
 |---|---|---|
-| PLAN-2026-IR010 | [REF-IR010](../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Code_And_Multilingual_Models.md) | Split this reference into two independent future narratives; code-test passage does not prove security or language accuracy |
-| PLAN-2026-IR011 | [REF-IR011](../../../../INTERVIEW_CASES/Agentic_AI_System/Multimodal/Insurance_Document_VLM.md) | Neither a similarity match nor a VLM fraud suspicion justifies denial; source scale and patch arithmetic need fresh sizing |
-| PLAN-2026-IR016 | [REF-IR016](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Multilingual_Call_Objections.md) | Transcript matching does not prove audio fidelity; aggregate coaching themes must not become unvalidated individual scores |
-| PLAN-2026-IR017 | [REF-IR017](../../../../INTERVIEW_CASES/Agentic_AI_System/Speech_STT/Whisper_Adaptation_And_Evaluation.md) | Model-generated transcripts are not independent gold; audio resampling does not restore missing frequencies |
+| `human-in-the-loop` | The system prepares fields, transcript, spans, or recommendations for an authorised reviewer. | Confidence cannot replace review authority. |
+| `evaluation-mismatch` | WER, field F1, and offline accuracy need not predict a valid workflow decision. | Include evidence coverage, calibration, correction effort, and abstention. |
+| `authorization-scope` | Audio, document regions, and derived text are governed by purpose and access scope. | A usable extraction may still be unauthorised to disclose. |
+| `data-leakage` | A split can expose future, same-repository, same-speaker, or duplicate-template information. | Random row splits do not establish generalisation. |
+| `rollout-regression` | An adaptation can improve a target slice while degrading a supported route. | Promotion requires independent target and regression evaluation. |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity and contrast map
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+| Item | Shared reasoning | Difference that changes validation |
+|---|---|---|
+| CASE-18-01 | Both document cases require provenance and review routing. | Claims cases need field/schema, page-region, and temporal contract checks. |
+| CASE-18-02 | Both speech cases need a human-gold comparison. | Reporting requires speaker-role and evidence-span validity, not only transcription. |
+| PLAN-2026-IR017 | ASR quality can vary by language and route. | Adapter promotion adds replay and cross-route regression requirements. |
+| PLAN-2026-IR010 | Language-aware systems need independent splits. | Code correctness and authorisation differ from ASR or document evidence. |
+
+## 5. Questions and future-case backlog
+
+1. Define whether the unit is a field, page region, utterance, speaker turn, call, or report before selecting a metric.
+2. Keep human gold independent of system-generated text and establish speaker, language, channel, and scan-quality slices.
+3. Treat OCR, ASR, extraction, attribution, and aggregation as separable error stages with their own diagnostics.
+4. Route uncertain cases to authorised reviewers; do not use an unsupported model score to determine a claim or person outcome.
+5. Test time, speaker, template, repository, and language isolation in every evaluation split.
+
+## 6. Review and retirement log
+
+| Item | State | Required action |
+|---|---|---|
+| CASE-18-01 | Planned | Author canonical case with field-level evidence and reviewer-workload validation. |
+| CASE-18-02 | Planned | Author canonical case with a checked WER/role/evidence diagnostic trace. |
+| IR010/011/016/017 | Planning only | Preserve reference limits; do not transfer reference figures as measurements. |
+| Collection | Draft | Reconcile case links, evidence, stage, and editorial status after each manuscript. |
+
+## 7. Pre-publish checks
+
+- [ ] Each real case has the 15 ordered sections and a final quick-reference card.
+- [ ] Each data contract names source, unit, cut-off, labels, permissions, exclusions, and split boundaries.
+- [ ] Quantitative examples have units, a checked calculation, sensitivity, and a failure boundary.
+- [ ] Each case has 12–18 answered interview questions and a concrete recovery path.
+- [ ] Catalog rows link only to real canonical manuscripts and retain planned/shared labels honestly.

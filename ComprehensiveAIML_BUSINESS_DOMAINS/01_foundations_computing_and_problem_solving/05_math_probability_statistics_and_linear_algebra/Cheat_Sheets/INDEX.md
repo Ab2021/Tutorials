@@ -1,17 +1,47 @@
-# Module 05 Cheat Sheets â€” Mathematics, Probability, Statistics and Linear Algebra
+# Cheat Sheets — 05 Math Probability Statistics And Linear Algebra
 
-## Authoring standard
+## 1. Overview
+This collection supplies reusable foundations and decision checks. Listed documents are drafts; illustrative examples do not establish operational outcomes.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining sheets and the final Common Issues artifact (at least 25 complete issues) are planned. A card alone is not a completed sheet.
+## 2. Topic ladder
+| Level | File | Testable outcome | Prerequisites | Key skill | Status |
+|---|---|---|---|---|---|
+| 1 | [01 Matrix and Vector Identities ](01_Matrix_and_Vector_Identities.md) | Apply the stated invariant or formula | Collection prerequisites | See file | draft |
 
-## Planned cheat sheets
+## 3. Quick topic lookup
+Use the catalog above to select a real sheet by the decision or diagnostic it names. Do not treat a missing topic as covered by a nearby title.
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | [Matrix and vector identities](01_Matrix_and_Vector_Identities.md) | Shapes, identities, least squares, conditioning and validation. | Draft; unreviewed. |
-| 2 | probability distributions | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | statistical test selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
+## 4. Reading paths — three options
+**Beginner:** read the first available foundation sheet, then its worked example. **Practitioner:** read all listed sheets in order and reproduce the stated calculation or trace. **Advanced:** read all sheets, inspect failures, and test a changed constraint. No forward file is a mandatory prerequisite unless its manuscript says so.
 
-## Suggested file naming
+## 5. Prerequisite skills
+Basic algebra, units, timestamp semantics, and the module's stated prerequisites are assumed. A reader must distinguish an illustrative calculation from observed evidence.
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+## 6. What this collection does NOT cover
+It does not certify a deployment, replace primary-source verification, or supply missing source bodies. Planned topics stay planned until a real manuscript exists.
+
+## 7. Master symbol glossary
+| Symbol / term | Meaning | Units | Type | Valid range | First use |
+|---|---|---|---|---|---|
+| λ | arrival or input rate | items/s | scalar | nonnegative | file-specific |
+| μ | service or processing rate | items/s | scalar | nonnegative | file-specific |
+| B | backlog | items | scalar | nonnegative | file-specific |
+
+## 8. Quick Reference Card directory
+| File | Card anchor | Core rule | Critical assumption |
+|---|---|---|---|
+| [01 Matrix and Vector Identities ](01_Matrix_and_Vector_Identities.md) | Section 12 | Inspect the file-specific card | Read its validity condition |
+
+## 9. Common Issues locator
+No final Common Issues artifact has been authored in this collection. Required issue count and complete diagnostics remain OPEN.
+
+## 10. Empirical sources, versions and collection maintenance
+| Item | Evidence status | Reviewed | Limitation | Trigger |
+|---|---|---|---|---|
+| Existing sheets | mixed illustrative / derived | not independently reviewed | source bodies may be unavailable | source, workload, or dependency change |
+
+## 11. Collection acceptance checklist
+- [x] Links above target real files.
+- [ ] Every planned topic has a canonical substantive manuscript.
+- [ ] Final Common Issues file has complete distinct issues.
+- [ ] Source verification and publication review are complete.

@@ -513,7 +513,7 @@ INTERPRETATION: approve below 0.20 and decline above 0.20 under this narrow mode
 | 1 | Is a feature decision-time valid? | Synthetic request A | Compare availability to decision timestamp | One late feature | Reject score request | Illustrative smoke |
 | 2 | What is the cost boundary? | `C_bad=1000`, `C_good_decline=250` | M-03 | `t*=0.20` | Cost tie | Derived illustrative |
 | 3 | Does the synthetic cohort give stated routes? | 100 applications | `0.12/0.28` thresholds | 45 approve, 40 review, 15 decline | Capacity exactly filled | Derived illustrative |
-| 4 | What is cohort expected cost? | Constructed outcomes | Confusion matrix costs | 13,450 units | Comparator arithmetic | Derived illustrative |
+| 4 | What is cohort decision cost? | Constructed outcomes, including synthetic counterfactual labels for declines | Confusion-matrix and review costs | 10,650 units | Synthetic scenario accounting, not identified live-policy value | Derived illustrative |
 | 5 | Does a wider band fit? | Same cohort | `0.10/0.30` | 55 reviews | Capacity breach | Derived illustrative |
 
 ### 6.1 Point-in-time decision trace
@@ -567,6 +567,8 @@ FAILURE BOUNDARY: this trace cannot validate source accuracy or eligibility poli
 - False positive means incorrectly declined good application.
 - False negative means incorrectly approved bad application.
 - True negative means correctly approved good application.
+
+The full 100-row outcome table is an omniscient synthetic oracle, not an observable lending dataset. A declined application does not originate the hypothetical loan, so its repayment label is counterfactual. The five good declines and 45 bad declines below are invented scenario values used only to demonstrate arithmetic. Do not reconstruct them from absent payments, rejected-application status or an analyst opinion. Actual policy-value evaluation needs a justified, governed identification strategy; approved-originated labels alone cannot validate this full-population matrix.
 
 | Final action interpretation | Actual bad | Actual good | Total |
 |---|---:|---:|---:|
@@ -640,6 +642,19 @@ INTERPRETATION: zero slack means any positive volume surprise breaches this simp
 - A capacity simulation needs score distributions from an actual validation population.
 - No such distribution is available here.
 - The wide-band example below exists to demonstrate the boundary.
+
+The following constructed score fixture reproduces the three routing counts. It tests interval boundaries and capacity only; it is not a calibrated sample, an observed score distribution or a joint outcome dataset validating the separate synthetic error matrix.
+
+| Synthetic score p | Application count |
+|---:|---:|
+| 0.05 | 35 |
+| 0.11 | 10 |
+| 0.13 | 8 |
+| 0.20 | 24 |
+| 0.26 | 8 |
+| 0.29 | 5 |
+| 0.40 | 10 |
+
 
 | Threshold scenario | Approve condition | Review condition | Decline condition | Synthetic review count | Capacity result |
 |---|---|---|---|---:|---|
@@ -889,15 +904,17 @@ ELSE: return configured overflow fallback.
 
 | Metric | Numerator | Denominator | Units | Population/window | Comparator | Status |
 |---|---|---|---|---|---|---|
-| Bad-approval rate | Approved applications later labeled bad | Final approvals | proportion | Mature final test | Rules baseline | Not executed |
-| Good-decline rate | Declined applications later labeled good | Final declines | proportion | Mature final test | Rules baseline | Not executed |
-| Expected decision cost | Sum of defined route/error costs | Applications | currency/application | Mature final test | Rules baseline | Illustrative arithmetic only |
-| Calibration error | Difference between observed and predicted rate by bin | Applications/bin | probability | Mature final test | Uncalibrated model | Not executed |
+| Bad-outcome rate among observed originations | Bad outcomes in approved-originated loans with complete follow-up | Approved-originated loans with mature observed labels | proportion | Mature observed-originations cohort | Same-population rules baseline | Not executed; conditional on origination and observation |
+| Counterfactual good-decline rate | Declined applications that would repay under the defined offered loan | Final declines | proportion | Synthetic oracle only in this case | Synthetic rules comparator | Not identified from approved-originated labels |
+| Cohort decision cost | Sum of defined error and review costs | All eligible applications | currency/application | Synthetic complete-label oracle | Synthetic rules comparator | Illustrative only; real full-population value requires identification |
+| Calibration by bin | Observed versus predicted bad frequency | Mature labelled originations per bin | probability | Observed-originations cohort | Uncalibrated score on the same cohort | Not executed; transport to all applicants unverified |
 | Review load | Review admissions | Eligible applications or day | count and proportion | Daily/hourly | Capacity K | Illustrative arithmetic only |
 | Fallback rate | Fallback routes | Eligible score requests | proportion | Serving period | Release baseline | Not executed |
 | Queue age | Time from admission to disposition | Review tasks | time | Operational period | Approved SLO | Not executed |
 
 - Accuracy is reported only as a diagnostic on the synthetic matrix.
+
+Do not interpret conditional performance on originated loans as performance for all applicants. The label horizon and selection process restrict which outcomes exist. A mature temporal holdout removes some timing errors but does not, by itself, identify declined applicants' counterfactual repayment or the value of a changed approval policy.
 - Accuracy is not the policy objective.
 - ROC-AUC can measure ranking but does not select thresholds.
 - PR-AUC can be useful under class imbalance but does not select thresholds.

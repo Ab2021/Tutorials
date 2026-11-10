@@ -1,42 +1,47 @@
-# Module 03 Cheat Sheets â€” Data Structures, Algorithms and Computational Thinking
+# Cheat Sheets — 03 Dsa And Computational Thinking
 
-## Authoring standard
+## 1. Overview
+This collection supplies reusable foundations and decision checks. Listed documents are drafts; illustrative examples do not establish operational outcomes.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining sheets and the final Common Issues artifact (at least 25 complete issues) are planned. A card alone is not a completed sheet.
+## 2. Topic ladder
+| Level | File | Testable outcome | Prerequisites | Key skill | Status |
+|---|---|---|---|---|---|
+| 1 | [01 DSA Patterns and Invariants ](01_DSA_Patterns_and_Invariants.md) | Apply the stated invariant or formula | Collection prerequisites | See file | draft |
 
-## Planned cheat sheets
+## 3. Quick topic lookup
+Use the catalog above to select a real sheet by the decision or diagnostic it names. Do not treat a missing topic as covered by a nearby title.
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | [DSA patterns and invariants](01_DSA_Patterns_and_Invariants.md) | Pattern selection, complexity assumptions, correctness invariants and oracle tests. | Draft; unreviewed. |
-| 2 | complexity reference | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | interview problem selection | Concise patterns, decision rules, assumptions, and common traps. | planned |
+## 4. Reading paths — three options
+**Beginner:** read the first available foundation sheet, then its worked example. **Practitioner:** read all listed sheets in order and reproduce the stated calculation or trace. **Advanced:** read all sheets, inspect failures, and test a changed constraint. No forward file is a mandatory prerequisite unless its manuscript says so.
 
-## Suggested file naming
+## 5. Prerequisite skills
+Basic algebra, units, timestamp semantics, and the module's stated prerequisites are assumed. A reader must distinguish an illustrative calculation from observed evidence.
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+## 6. What this collection does NOT cover
+It does not certify a deployment, replace primary-source verification, or supply missing source bodies. Planned topics stay planned until a real manuscript exists.
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+## 7. Master symbol glossary
+| Symbol / term | Meaning | Units | Type | Valid range | First use |
+|---|---|---|---|---|---|
+| λ | arrival or input rate | items/s | scalar | nonnegative | file-specific |
+| μ | service or processing rate | items/s | scalar | nonnegative | file-specific |
+| B | backlog | items | scalar | nonnegative | file-specific |
 
-## Reference-informed additions to develop
+## 8. Quick Reference Card directory
+| File | Card anchor | Core rule | Critical assumption |
+|---|---|---|---|
+| [01 DSA Patterns and Invariants ](01_DSA_Patterns_and_Invariants.md) | Section 12 | Inspect the file-specific card | Read its validity condition |
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+## 9. Common Issues locator
+No final Common Issues artifact has been authored in this collection. Required issue count and complete diagnostics remain OPEN.
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 10. Empirical sources, versions and collection maintenance
+| Item | Evidence status | Reviewed | Limitation | Trigger |
 |---|---|---|---|---|
-| PLAN-2026-IR018 | CH and A* assumptions; rolling-window semantics; clock skew; positional postings; BM25 statistics | Reference Dijkstra comparisons, admissible-heuristic checks, concurrent window simulations and brute-force phrase/ranking oracles. Boundary: Seven overlapping teaching units; source measurements are not independently verified and should not be added together. | [REF-IR018](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_01.md) | planned; not written |
-| PLAN-2026-IR019 | Coherent traffic snapshots; CH compatibility; fallback Dijkstra; map matching; route versus ETA objectives | Base-graph shortest-path oracle, closure and turn-restriction replays, ETA error and routing tail latency. Boundary: The OCR filename and ordinal ranges disagree; arbitrary traffic overlays do not preserve ordinary CH correctness. | [REF-IR019](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_02.md) | planned; not written |
-| PLAN-2026-IR022 | Token-bucket invariants; atomic refill and debit; leased budgets; expiry; failure policy | Aggregate-admission histories, refill boundaries, coordinator outages, lease races and rejected-request latency. Boundary: Periodic usage reporting alone is not coordinated allocation; token buckets and exact rolling windows have different contracts. | [REF-IR022](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Rate_Limiting/distributed_token_buckets.md) | planned; not written |
-| PLAN-2026-IR023 | Shortcut expansion; closure snapshots; CH compatibility; directed nonnegative Dijkstra fallback | Nested-shortcut and adversarial-closure queries compared with base Dijkstra, including unreachable pairs. Boundary: Finding a legal route after filtering does not prove completeness or optimality; richer time/turn state needs a separate contract. | [REF-IR023](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Routing/closure_aware_shortest_paths.md) | planned; not written |
-| PLAN-2026-IR024 | Rarest-term anchor; lazy postings; skips; relative positions; repeated terms; matching analyzers | Brute-force token-position oracle, peak memory and tail latency over frequent and repeated-term phrases. Boundary: Rarity affects work, not semantic order; deleted documents and analyzer versions must share a consistent snapshot. | [REF-IR024](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Search/phrase_search_postings.md) | planned; not written |
-| PLAN-2026-IR025 | Half-open intervals; deterministic ties; exchange proof; weighted interval DP boundary | Exhaustive small-instance optimum comparisons and counterexamples for weighted or buffered variants. Boundary: The reference proves equal-value single-room cardinality only; warehouse jobs and staffing need their own constraints. | [REF-IR025](../../../../INTERVIEW_CASES/DSA/index_basics/Greedy_Scheduling/activity_selection.md) | planned; not written |
-| PLAN-2026-IR026 | Cache policies; ranks/range queries; sketches; prefix/nearest-neighbor search; graphs; scheduling; online windows | Operation traces, exact small-data oracles, measured memory/latency and stated approximation or distributed guarantees. Boundary: Eight teaching units plus rapid prompts; approximate structures, local proofs and service guarantees must be distinguished. | [REF-IR026](../../../../INTERVIEW_CASES/DSA/index_basics/INTERVIEW_CASE_STUDIES.md) | planned; not written |
-| PLAN-2026-IR027 | Fenwick tree lowbit traversal; inclusive ranges; point deltas; wide arithmetic; atomic visibility | Randomized update/query comparisons with a simple array, boundary/overflow checks and update-visibility tests. Boundary: Fixed ordering and one logical writer are reference assumptions; a Fenwick tree alone does not provide distributed stock correctness. | [REF-IR027](../../../../INTERVIEW_CASES/DSA/index_basics/Range_Queries/fenwick_inventory_totals.md) | planned; not written |
-| PLAN-2026-IR028 | Hash collision amplification; catastrophic regex backtracking; pre-parse limits; bounded queues and downstream budgets | Adversarial near-match inputs, collision workload, CPU per request, timeout cascades and legitimate-input acceptance. Boundary: The hash and regex scenarios are separate; legacy runtime behavior and example input limits require fresh validation. | [REF-IR028](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Algorithmic_DoS/hash_and_regex_resource_exhaustion.md) | planned; not written |
-| PLAN-2026-IR030 | Hash flooding; BFS OOM; regex backtracking; recursive DFS depth; ORM N+1; overflow; unstable ties; floating search termination | Reproduce each mechanism separately with bounded adversarial traces; track latency, memory, database calls and deterministic outputs. Boundary: Ten reconstructed incident units include recurring mechanisms; reported timings are not measured outcomes of this library. | [REF-IR030](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/INTERVIEW_CASE_STUDIES.md) | planned; not written |
-| PLAN-2026-IR031 | N+1 detection; adjacency-list indexing; per-step authorization; cycle checks; stable assembly; snapshot reads | Reference traversal comparisons, round trips, rows scanned, unauthorized descendants, deep/wide trees and truncation behavior. Boundary: One SQL statement can still do excessive work; an outer LIMIT is not a universal recursion work bound. | [REF-IR031](../../../../INTERVIEW_CASES/DSA/Production_DSA_Incidents/Tree_Queries/policy_hierarchy_n_plus_one.md) | planned; not written |
-| PLAN-2026-IR035 | Score buckets; Fenwick count summaries; deterministic ties; deduplicated events; cross-shard moves; closing watermarks | Reference sorted snapshots, duplicate/late events, negative scores, bucket crossings and exact final-rank replay. Boundary: A sum of stale counters is not an exact settlement snapshot; tie semantics and late-event policy must be specified. | [REF-IR035](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Leaderboards/score_bucket_rank_consistency.md) | planned; not written |
+| Existing sheets | mixed illustrative / derived | not independently reviewed | source bodies may be unavailable | source, workload, or dependency change |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
-
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 11. Collection acceptance checklist
+- [x] Links above target real files.
+- [ ] Every planned topic has a canonical substantive manuscript.
+- [ ] Final Common Issues file has complete distinct issues.
+- [ ] Source verification and publication review are complete.

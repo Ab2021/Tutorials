@@ -27,6 +27,11 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [System Design Interview Flow](Cheat_Sheets/01_System_Design_Interview_Flow.md) — requirements, contracts, sizing, failure recovery and validation; visible source titles are inventory only, original bodies unavailable.
 
+## Canonical case studies
+
+- [Design a Notification Platform](Case_Studies/01_Design_Notification_Platform.md) — illustrative idempotent-delivery decision; draft.
+- [Design a Feature-Serving API](Case_Studies/02_Design_Feature_Serving_API.md) — illustrative point-in-time serving decision; draft.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

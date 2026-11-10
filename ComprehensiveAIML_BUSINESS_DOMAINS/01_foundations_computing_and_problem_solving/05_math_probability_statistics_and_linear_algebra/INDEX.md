@@ -27,6 +27,11 @@ After this module, a learner can turn a real problem into an appropriate technic
 
 - [Matrix and Vector Identities](Cheat_Sheets/01_Matrix_and_Vector_Identities.md) — shapes, least squares, conditioning and validation; visible source inventory only.
 
+## Canonical case studies
+
+- [Calibrate a Risk Model](Case_Studies/01_Calibrate_a_Risk_Model.md) — illustrative review-capacity decision; draft.
+- [Derive Gradient Descent for Regression](Case_Studies/02_Derive_Gradient_Descent_for_Regression.md) — illustrative checked-update decision; draft.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

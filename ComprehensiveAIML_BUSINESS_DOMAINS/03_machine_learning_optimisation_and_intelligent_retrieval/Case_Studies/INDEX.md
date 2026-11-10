@@ -8,7 +8,7 @@
 
 | Case ID | Linked title if authored | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-M11-01 | Credit-risk model design | lending | predictive-ml | action threshold under cost/capacity | calibrated classification | validation | not-measured | proposed | null | module 11 planned |
+| CASE-M11-01 (original PLAN-M11-01) | [Credit-risk model design](../11_supervised_ml_and_feature_engineering/Case_Studies/01_credit_risk_model_design.md) | lending | predictive-ml | action threshold under cost/capacity | calibrated classification | validation | illustrative; derived arithmetic | proposed | null | module 11 canonical authored draft; publication/source review open; no observed policy benefit |
 | PLAN-M11-02 | Churn leakage remediation | retention | predictive-ml | remove unavailable signals | temporal validation | features | not-measured | proposed | null | module 11 planned |
 | PLAN-M12-01 | Payment anomaly detection | payments | predictive-ml | review queue | anomaly triage | calibration | not-measured | proposed | null | module 12 planned |
 | PLAN-M12-02 | Campaign segmentation | marketing | analytical | segment/action choice | cluster validation | human review | not-measured | proposed | null | module 12 planned |

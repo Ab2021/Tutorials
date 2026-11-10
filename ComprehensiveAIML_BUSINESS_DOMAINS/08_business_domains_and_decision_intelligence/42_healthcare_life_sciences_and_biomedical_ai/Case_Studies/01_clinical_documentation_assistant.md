@@ -593,10 +593,10 @@ The same walkthrough checks that an approval boundary does not become a hidden w
 
 | Step | Hypothesis or decision | Input snapshot | Method and parameters | Intermediate output | Interpretation | Evidence/status |
 |---|---|---|---|---|---|---|
-| 1 | Define eligible workload. | 120 scheduled requests in one illustrative shift. | Partition by eligibility and abstention. | 90 eligible covered drafts, 20 abstentions, 10 ineligible. | Coverage must retain abstentions in denominator. | Derived/illustrative. |
-| 2 | Compare time burden. | Manual mean 12.0 min; proposed components stated below. | Sum drafting, review, correction, fallback, and unsafe follow-up. | 835.5 proposed minutes versus 1,080 manual minutes. | Estimated net saving is 244.5 minutes. | Derived/illustrative. |
-| 3 | Count review capacity. | 90 generated drafts and 20 abstentions. | Reviewer minutes include every eligible request. | 735.5 review/fallback minutes. | Generated drafts do not eliminate clinician work. | Derived/illustrative. |
-| 4 | Assess unsafe completion denominator. | 3 unsafe completed drafts among 72 completed draft reviews. | Divide by completed reviewed drafts; report pending/rejected separately. | 4.17% illustrative rate. | It is not a rate over all 120 requests. | Derived/illustrative. |
+| 1 | Define eligible workload. | 120 scheduled requests in one illustrative shift. | Partition by eligibility and abstention. | 90 displayed drafts, 20 abstentions, 10 ineligible requests. | Coverage must retain abstentions in the eligible denominator. | Derived/illustrative. |
+| 2 | Compare net time. | Manual mean 12.0 min; proposed components stated below. | Sum draft review, correction, fallback, rejection restart, and unsafe-completion follow-up. | 891 proposed clinician-minutes versus 1,320 manual clinician-minutes. | Estimated difference is 429 clinician-minutes. | Derived/illustrative. |
+| 3 | Count clinician capacity. | 90 displayed drafts and 20 abstentions. | Retain every eligible request and every proposed-path workload component. | 891 clinician-minutes across 110 eligible requests, or 8.10 clinician-minutes per eligible request. | Generation does not eliminate clinician work; 429 minutes is not a staffing result. | Derived/illustrative. |
+| 4 | Assess unsafe completion denominator. | 3 unsafe completed drafts among 72 adjudicated approved drafts. | Divide by adjudicated completed drafts; report pending and rejected drafts separately. | 4.17% illustrative rate. | It is not a rate over all 120 requests, all eligible requests, or all displayed drafts. | Derived/illustrative. |
 | 5 | Check approval boundary. | 90 draft actions, 72 clinician approvals. | Require zero assistant-originated record writes and zero nonclinician approvals. | 0 forbidden writes; 72 clinician-controlled authoring actions. | Approval is necessary but not quality proof. | Constructed state trace. |
 
 ### 6.1 Worked workload and net-time calculation
@@ -671,11 +671,11 @@ NUMERICAL EXAMPLE: N_eligible=110; t_manual=12.0 min; T_manual=110*12.0=1320.0 m
 INTERPRETATION: manual comparison must use eligible requests, including requests that would abstain in the proposed path.
 ```
 
-The earlier table used 1,080 manual minutes only for the 90 draft-eligible requests.
+The baseline and proposed totals deliberately cover the same 110 eligible requests.
 
-The complete service comparison must use all 110 eligible requests.
+The 20 abstentions remain manual fallback workload in both the baseline comparison and proposed total.
 
-This distinction prevents the proposed workflow from excluding abstentions from its baseline denominator.
+The 10 ineligible requests are outside this service comparison because neither path serves them under the stated scope.
 
 ```text
 FORMULA [DOC-05]: T_draft = N_draft*(t_open+t_review+t_finalize) + N_correct*t_correct

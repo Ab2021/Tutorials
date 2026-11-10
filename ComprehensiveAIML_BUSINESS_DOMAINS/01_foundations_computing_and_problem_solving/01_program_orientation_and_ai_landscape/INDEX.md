@@ -30,6 +30,10 @@ After this module, a learner can turn a real problem into an appropriate technic
 - [Technology Due Diligence](Cheat_Sheets/03_Technology_Due_Diligence.md) — claim interpretation, acceptance tests, total-cost assumptions, and evidence expiry.
 - [Select an AI Use-Case Portfolio](Case_Studies/01_Select_AI_Use_Case_Portfolio.md) — illustrative feasibility-first portfolio decision.
 
+## Additional canonical case
+
+- [Evaluate an AI Vendor Claim](Case_Studies/02_Evaluate_AI_Vendor_Claim.md) — illustrative procurement decision with an auditable claim, capacity, deferral, and owner-approval contract; draft and not a vendor evaluation result.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

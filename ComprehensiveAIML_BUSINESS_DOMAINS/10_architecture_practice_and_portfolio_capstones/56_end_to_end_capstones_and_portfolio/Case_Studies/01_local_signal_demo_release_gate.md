@@ -871,6 +871,175 @@ Each must become an artifact check in a future trace.
 - **Reject wording:** Polish substituted for disclosure.
 - **Permitted current wording:** “Design-only portfolio record.”
 - **Decision:** Conditional on honest labeling.
+### Synthetic trace oracle and tier-transition test
+
+The following small, executable oracle is a constructed fixture checker.
+It is deliberately narrower than an application.
+It makes no serial-port, board, browser, model, corpus, or HIL call.
+Its only evidence, if a future reviewer executes it with frozen inputs, is deterministic conformance of the stated policy.
+The `header` is exactly 24 bytes and the normal payload is exactly 144 bytes.
+Consequently a transmitted normal frame occupies `24 + 144 + 4 = 172 bytes`.
+The code computes CRC-32 over `header + actual_payload`, then compares that value with the transmitted field.
+This declares a concrete coverage convention for the illustrative oracle; a real protocol must also pin polynomial/reflection/initialization and byte order.
+
+```python
+from dataclasses import dataclass
+from zlib import crc32
+
+HEADER_BYTES = 24
+PAYLOAD_BYTES = 144
+CRC_BYTES = 4
+QUEUE_CAPACITY = 2
+STALE_MS = 1000
+
+@dataclass(frozen=True)
+class Arrival:
+    correlation_id: str
+    epoch: int
+    sequence: int
+    claimed_length: int
+    payload: bytes
+    transmitted_crc: int
+
+def canonical_header(epoch: int, sequence: int, claimed_length: int) -> bytes:
+    return (
+        b"SIG1"
+        + epoch.to_bytes(4, "big")
+        + sequence.to_bytes(8, "big")
+        + claimed_length.to_bytes(2, "big")
+        + b"\x00" * 6
+    )
+
+def make_arrival(correlation_id, epoch, sequence, claimed_length, payload,
+                 crc_override=None):
+    expected = crc32(canonical_header(epoch, sequence, claimed_length) + payload)
+    return Arrival(correlation_id, epoch, sequence, claimed_length, payload,
+                   expected if crc_override is None else crc_override)
+
+def classify(arrival: Arrival, committed: int, queue_depth: int):
+    actual_length = len(arrival.payload)
+    expected_crc = crc32(
+        canonical_header(arrival.epoch, arrival.sequence, arrival.claimed_length)
+        + arrival.payload
+    )
+    reasons = []
+    if arrival.claimed_length != actual_length:
+        reasons.append("LENGTH_MISMATCH")
+    if actual_length > PAYLOAD_BYTES:
+        reasons.append("PAYLOAD_LIMIT")
+    if arrival.transmitted_crc != expected_crc:
+        reasons.append("CRC_MISMATCH")
+    if reasons:
+        return "CORRUPT_QUARANTINE", tuple(reasons), committed, queue_depth
+    if arrival.sequence <= committed:
+        return "DUPLICATE_DROP", (), committed, queue_depth
+    if arrival.sequence != committed + 1:
+        return "GAP_QUARANTINE", ("MISSING_SEQUENCE",), committed, queue_depth
+    if queue_depth >= QUEUE_CAPACITY:
+        return "OVERFLOW_REJECT", ("QUEUE_FULL",), committed, queue_depth
+    return "ADMIT_COMMIT", (), arrival.sequence, queue_depth
+
+payload = bytes(range(72)) * 2
+t1 = make_arrival("T1", 7, 41, 144, payload)
+t2 = make_arrival("T2", 7, 41, 144, payload)
+t3 = make_arrival("T3", 7, 43, 144, payload)
+t4 = make_arrival("T4", 7, 42, 144, payload[:-1], crc_override=0)
+
+committed, state_version, queue_depth = 40, 18, 0
+observed = []
+for arrival in (t1, t2, t3, t4):
+    disposition, reasons, next_sequence, queue_depth = classify(
+        arrival, committed, queue_depth
+    )
+    if disposition == "ADMIT_COMMIT":
+        committed, state_version = next_sequence, state_version + 1
+    observed.append((arrival.correlation_id, disposition, reasons,
+                     committed, state_version))
+
+assert len(canonical_header(7, 41, 144)) == HEADER_BYTES
+assert HEADER_BYTES + len(payload) + CRC_BYTES == 172
+assert observed == [
+    ("T1", "ADMIT_COMMIT", (), 41, 19),
+    ("T2", "DUPLICATE_DROP", (), 41, 19),
+    ("T3", "GAP_QUARANTINE", ("MISSING_SEQUENCE",), 41, 19),
+    ("T4", "CORRUPT_QUARANTINE",
+     ("LENGTH_MISMATCH", "CRC_MISMATCH"), 41, 19),
+]
+assert 2301 - 1000 == 1301 and 1301 > STALE_MS
+assert 72 / 360 * 1000 == 200
+assert round(10 * 172 / 115200 * 1000, 4) == 14.9306
+assert round(200 + 10 * 172 / 115200 * 1000 + 15 + 20, 2) == 249.93
+assert round(249.93055555555554 + 2 / 4 * 1000, 2) == 749.93
+print(observed)
+```
+
+The oracle rejects the length-mismatched T4 before any semantic use.
+It also reports both independent reasons rather than letting CRC failure hide the structural defect.
+T2 demonstrates that a duplicate does not consume a queue slot or increment `state_version`.
+T3 demonstrates that a good checksum does not authorize a sequence advance.
+The capacity branch is not reached by T1–T4 because rejected candidates are never admitted.
+Its explicit `OVERFLOW_REJECT` disposition is nevertheless necessary for a full synthetic trace set.
+
+**Counterexample: CRC coverage drift.**
+If a sender computes CRC over a 20-byte header while the receiver uses 24 bytes, a frame can be internally consistent at each side and fail interchange.
+The recovery is not to disable CRC after a mismatch.
+Freeze the header layout, byte order, algorithm parameters, coverage endpoints, and test vector in the protocol artifact.
+Then rerun the oracle with the same raw bytes and record the changed manifest revision.
+Until the discrepancy is resolved, the candidate remains DESIGN because integrity semantics are ambiguous.
+
+**Counterexample: source-time misuse.**
+A sender can emit `source_time_ms=1000` while a host receipt clock is 5000 ms away through clock offset rather than transport delay.
+Subtracting those values as if they were synchronized would falsely diagnose a 4000 ms wire delay.
+The recovery is to label cross-clock age `UNKNOWN`, retain both timestamps with their domains, and obtain a declared synchronization method before publishing an external freshness claim.
+Within this constructed trace only, source and render use the stipulated common monotonic reference, so 2301 minus 1000 is an illustrative 1301 ms age.
+
+**Counterexample: queue-depth ambiguity.**
+“Two-frame queue” can mean capacity includes the in-service item or means two waiting items.
+Those interpretations yield different maximum waits and must not share the same 500 ms number.
+This case defines `K=2` as two frames waiting ahead under the B-04 FIFO calculation, independent of the in-service frame.
+The implementation manifest must state whether its capacity metric includes service; otherwise timing language is blocked.
+On overload, retain an arrival disposition and depth snapshot even when the candidate is rejected, so the denominator remains complete.
+
+**Counterexample: retrieval citation after state expiry.**
+A citation can be correctly mapped to a chunk while the underlying frame has become stale.
+Showing grounded prose beside a stale frame would still imply a current frame-derived explanation.
+The recovery predicate is conjunctive: a factual explanation needs both a CURRENT validated state and a complete claim-to-chunk mapping.
+If either predicate fails, show the reason-specific abstention and preserve the prior citation record for audit rather than presenting it as current support.
+
+### Exact promotion and demotion rules
+
+| Tier | Required artifact set | Allowed statement | Explicitly insufficient | Demotion trigger |
+|---|---|---|---|---|
+| DESIGN | declared contracts, illustrative math, proposed oracle, stated limitations | “Design-only release-gate specification.” | hand reasoning, diagrams, screenshots, code listing | any wording implying execution or measured behavior |
+| TRACE-CHECKED | frozen fixture bytes; pre-frozen oracle; executed result ledger; complete terminal denominator; hash-verifiable manifest; independent review record | “Deterministic fixture trace checked for this declared bundle.” | a successful parser log, partial pass rate, or UI screenshot | missing disposition, inaccessible referenced artifact, altered bundle, or oracle changed after run |
+| HIL-VALIDATED | every TRACE-CHECKED artifact plus declared board, firmware hash, wiring/connection, serial settings, acquisition source, timing method, raw hardware trace, repetitions, and observed-failure record | “Declared hardware path exercised under the recorded setup.” | desktop fixture, simulated serial bytes, or an undocumented bench observation | physical setup drift, absent raw trace, or unrecorded firmware/connection change |
+
+A tier is earned per immutable evidence bundle, not per project name.
+Promotion does not inherit through a source-code branch, a reused screenshot, or an assertion that a similar setup was previously tested.
+TRACE-CHECKED validates deterministic agreement with a fixture oracle; it does not validate serial electrical behavior, device timing, UI pixels, retrieval quality, or any clinical meaning.
+HIL-VALIDATED validates only the declared physical-path exercise and its recorded scope; it does not establish reliability, usability, safety, or deployment readiness.
+
+The transition procedure is atomic at the manifest level.
+First freeze fixture and oracle revisions before candidate execution.
+Second capture terminal records for every declared arrival, including duplicates, gaps, corrupt input, and overflow.
+Third bind the result ledger to the exact protocol, service, UI, and retrieval-policy versions in one manifest.
+Fourth have an independent reviewer check hashes, denominator, and permitted public wording.
+If any element changes, create a new candidate manifest; do not append a new version number to an old pass record.
+
+**Recovery after failed TRACE-CHECKED candidate.**
+Preserve the failed raw input and its terminal disposition.
+Do not overwrite the oracle to make the result pass.
+Classify the discrepancy as fixture error, oracle error, contract ambiguity, or implementation deviation.
+Correct the responsible artifact under a new revision, record why it changed, and execute the complete fixture set again.
+The replacement result may support a new candidate only after the complete denominator and independent comparison are recreated.
+
+**Recovery after failed HIL candidate.**
+Quarantine the claim, not merely the failing serial record.
+Record the exact board label, firmware hash, cable/connection setting, host revision, and timing instrument available at failure.
+If the physical setup cannot be reconstructed, downgrade to DESIGN or TRACE-CHECKED only if their own artifact sets remain intact.
+Never use a desktop replay to erase a hardware discrepancy.
+Hardware/app/UI visual verification remains unavailable and was not executed for this manuscript.
+
 ## 15. Quick Reference Card
 
 | Field | Case answer |

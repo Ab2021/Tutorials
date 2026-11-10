@@ -32,6 +32,11 @@ Visible source title `01_python_async_and_concurrency.md` is mapped from [`Train
 - [LLM Fundamentals](Cheat_Sheets/03_LLM_Fundamentals.md) — token prediction, inference contracts, decoding boundaries and validation.
 - [Docker and Containers](Cheat_Sheets/04_Docker_and_Containers.md) — build/runtime identity, secrets, health, state and capacity controls.
 
+## Canonical case studies
+
+- [Build a Data Quality CLI](Case_Studies/01_Build_Data_Quality_CLI.md) — illustrative batch-gating decision with idempotency and replay checks; draft.
+- [Design an Analytics API](Case_Studies/02_Design_Analytics_API.md) — illustrative query-publication decision with a contract and safe deferral path; draft.
+
 ## Dependency notes
 
 Prerequisites above are module identifiers. They are the minimum conceptual background, not a requirement to complete every earlier part. For a fast path, read the prerequisite indexes, then complete one module case before advancing.

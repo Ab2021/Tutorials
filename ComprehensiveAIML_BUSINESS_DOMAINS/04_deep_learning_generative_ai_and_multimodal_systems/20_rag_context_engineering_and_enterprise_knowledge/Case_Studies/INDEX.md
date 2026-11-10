@@ -1,40 +1,69 @@
-# Module 20 Case Studies â€” RAG, Context Engineering and Enterprise Knowledge
+# Module 20 Case Studies — RAG, Context Engineering and Enterprise Knowledge
 
-## Authoring standard
+## 1. Collection metadata
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+This draft collection retains two original decision cases and three reference-informed decision
+briefs. A case is canonical only in its named module home; a shared brief must not be duplicated.
+All listed systems, workloads, and outcomes remain proposed and not measured. Visible source
+titles are inventory evidence only; their original bodies were not inspected.
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Scope | Grounded, authorised enterprise knowledge decisions |
+| Editorial state | Draft collection; no completed local case manuscript |
+| Evidence / implementation boundary | not-measured / proposed |
+| Review trigger | New primary evidence, policy-version contract, or completed case manuscript |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Policy assistant with citations | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | knowledge-base migration evaluation | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title / canonical home | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR003 | Answer support questions from the applicable policy version | Proposed home | llm-agentic | When should a support assistant answer, abstain or escalate a policy question? | `evaluation-mismatch` | `authorization-scope`, `materialized-view` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR012 | Preserve answer evidence through ingestion and filtered retrieval | Proposed home | llm-agentic | Which chunking and index design retrieves every required authorized span within the service budget? | `materialized-view` | `authorization-scope`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR013 | Retrieve regulations applicable to the question date and jurisdiction | Proposed home | llm-agentic | Which sources are eligible before ranking, and when is legal-owner review required? | `eligibility-before-ranking` | `snapshot-consistency`, `human-in-the-loop` | not-measured | proposed | 2026-11-06 |  |
+| CASE-20-01 | Policy assistant with citations — `01_policy_assistant_with_citations.md` (planned) | Enterprise policy support | llm-agentic | Answer, abstain, or escalate a policy question | `eligibility-before-ranking` | `authorization-scope`, `human-in-the-loop` | not-measured | proposed | never | No manuscript, deployment, or outcome |
+| CASE-20-02 | Knowledge-base migration evaluation — `02_knowledge_base_migration_evaluation.md` (planned) | Knowledge-system migration | analytical | Whether a migrated corpus preserves authorised answer evidence | `materialized-view` | `evaluation-mismatch`, `snapshot-consistency` | not-measured | proposed | never | No manuscript, deployment, or outcome |
+| PLAN-2026-IR003 | Applicable-policy answer/abstain decision (planned) | Policy retrieval | llm-agentic | Whether an answer has authorised applicable support | `evaluation-mismatch` | `authorization-scope`, `materialized-view` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| PLAN-2026-IR012 | Chunk and index selection (planned) | Retrieval infrastructure | llm-agentic | Which design retrieves all required authorised spans | `materialized-view` | `authorization-scope`, `evaluation-mismatch` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| PLAN-2026-IR013 | Effective-date source eligibility (planned) | Time-aware retrieval | llm-agentic | Which sources are eligible before ranking | `eligibility-before-ranking` | `snapshot-consistency`, `human-in-the-loop` | not-measured | proposed | 2026-11-06 | Planning brief only |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
+| Pattern | Meaning | Hard boundary |
 |---|---|---|
-| PLAN-2026-IR003 | [REF-IR003](../../../../INTERVIEW_CASES/Agentic_AI_System/Applied_AI_engineering/grounded_policy_rag.md) | Citations and entailment checks require validation; never transfer the example refund window into a new business |
-| PLAN-2026-IR012 | [REF-IR012](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Chunking_And_Vector_Index.md) | Reranking cannot recover a missing candidate; the source embedding limit and tenant count are not platform requirements |
-| PLAN-2026-IR013 | [REF-IR013](../../../../INTERVIEW_CASES/Agentic_AI_System/RAG_Infra_Research/Regulatory_RAG_And_Reranking.md) | This is an architecture exercise, not current legal guidance; eligibility depends on maintained authoritative metadata |
+| `eligibility-before-ranking` | Filter by authority, permission, jurisdiction, and effective-time rules before scoring. | A high score cannot make an ineligible source valid. |
+| `authorization-scope` | Retrieval and displayed evidence are constrained by the requester and purpose. | A citation must not disclose an unauthorised span. |
+| `materialized-view` | Index state is a derived view with version, deletion, and freshness obligations. | Index presence does not prove source currency. |
+| `snapshot-consistency` | Evaluation and answer construction need a declared source/version time. | A mixed-time answer cannot claim one policy state. |
+| `evaluation-mismatch` | Retrieval metrics do not establish grounded answer correctness. | Test required-span coverage and human review outcomes. |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity and contrast map
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+| Item | Shared reasoning | Distinct validation |
+|---|---|---|
+| CASE-20-01 | An answer needs authorised evidence. | Validate abstention and citation applicability at question time. |
+| CASE-20-02 | Derived retrieval state can lose source evidence. | Compare migration snapshots, deletions, and source-to-chunk lineage. |
+| PLAN-2026-IR012 | Chunking changes evidence recall. | Use all-required-span success, not only top-k relevance. |
+| PLAN-2026-IR013 | Eligibility precedes ranking. | Replay boundary dates and amendments with maintained metadata. |
+
+## 5. Questions and future-case backlog
+
+1. Define the requester, policy effective time, jurisdiction, and decision authority before selecting a retrieval metric.
+2. Specify an exact filtered baseline and an all-required-span oracle before selecting an approximate index.
+3. Test deletion, permission-revocation, and policy-amendment propagation as correctness transitions.
+4. Separate citation presence from entailment, applicability, and authorised disclosure.
+5. Do not make legal or compliance determinations from a proposed retrieval design; route those to the authorised owner.
+
+## 6. Review and retirement log
+
+| Item | State | Required action |
+|---|---|---|
+| CASE-20-01 | Planned | Write the canonical case and independently check its eligibility/time worked trace. |
+| CASE-20-02 | Planned | Write the canonical case and independently check its migration reconciliation example. |
+| PLAN-2026-IR003/012/013 | Planning only | Preserve source-access limits and the planned/non-measured boundary. |
+| Collection | Draft | Reconcile links and catalog fields after each canonical manuscript is complete. |
+
+## 7. Pre-publish checks
+
+- [ ] Each real case has all 15 ordered sections, a bounded owner and baseline, and Section 15 last.
+- [ ] Claims distinguish illustrative, derived, sourced, and not-measured evidence.
+- [ ] Time, permission, version, and deletion semantics are explicit in data and evaluation contracts.
+- [ ] Quantitative examples include units, recalculation, and an invalidating boundary.
+- [ ] Interview packs contain 12–18 checked answers; catalog links point only to real canonical files.

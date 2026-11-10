@@ -1,15 +1,47 @@
-# Part 01 Cheat Sheets â€” Foundations, Computing and Problem Solving
+# Cheat Sheets — 01 Foundations Computing And Problem Solving
 
-> **Mandatory authoring contract:** Every authored sheet must follow the [course authoring and numerical standards](../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This is a planned catalog, not completed sheets; expand to all 11 collection-index sections and a final Common Issues artifact (at least 25 complete issues) before publication. A card alone is not a completed sheet.
+## 1. Overview
+This collection supplies reusable foundations and decision checks. Listed documents are drafts; illustrative examples do not establish operational outcomes.
 
-## Purpose
+## 2. Topic ladder
+| Level | File | Testable outcome | Prerequisites | Key skill | Status |
+|---|---|---|---|---|---|
+| — | No canonical sheet authored here | — | — | — | planned |
 
-This collection will hold concise, versioned references for the modules in this part. A cheat sheet must link to a deeper module or external canonical source, state its assumptions, and favour decision rules over uncontextualised snippets.
+## 3. Quick topic lookup
+Use the catalog above to select a real sheet by the decision or diagnostic it names. Do not treat a missing topic as covered by a nearby title.
 
-## Planned reference families
+## 4. Reading paths — three options
+**Beginner:** read the first available foundation sheet, then its worked example. **Practitioner:** read all listed sheets in order and reproduce the stated calculation or trace. **Advanced:** read all sheets, inspect failures, and test a changed constraint. No forward file is a mandatory prerequisite unless its manuscript says so.
 
-- Program Orientation and AI Landscape: AI market map; use-case charter; technology due-diligence questions
-- Python, SQL, Linux and Engineering Basics: Python data patterns; SQL analytics patterns; Git Docker commands
-- Data Structures, Algorithms and Computational Thinking: DSA patterns; complexity reference; interview problem selection
-- System Design, Distributed Systems and Cloud: system-design interview flow; capacity formulas; distributed-systems trade-offs
-- Mathematics, Probability, Statistics and Linear Algebra: matrix and vector identities; probability distributions; statistical test selection
+## 5. Prerequisite skills
+Basic algebra, units, timestamp semantics, and the module's stated prerequisites are assumed. A reader must distinguish an illustrative calculation from observed evidence.
+
+## 6. What this collection does NOT cover
+It does not certify a deployment, replace primary-source verification, or supply missing source bodies. Planned topics stay planned until a real manuscript exists.
+
+## 7. Master symbol glossary
+| Symbol / term | Meaning | Units | Type | Valid range | First use |
+|---|---|---|---|---|---|
+| λ | arrival or input rate | items/s | scalar | nonnegative | file-specific |
+| μ | service or processing rate | items/s | scalar | nonnegative | file-specific |
+| B | backlog | items | scalar | nonnegative | file-specific |
+
+## 8. Quick Reference Card directory
+| File | Card anchor | Core rule | Critical assumption |
+|---|---|---|---|
+| — | — | No artifact | — |
+
+## 9. Common Issues locator
+No final Common Issues artifact has been authored in this collection. Required issue count and complete diagnostics remain OPEN.
+
+## 10. Empirical sources, versions and collection maintenance
+| Item | Evidence status | Reviewed | Limitation | Trigger |
+|---|---|---|---|---|
+| Existing sheets | mixed illustrative / derived | not independently reviewed | source bodies may be unavailable | source, workload, or dependency change |
+
+## 11. Collection acceptance checklist
+- [x] Links above target real files.
+- [ ] Every planned topic has a canonical substantive manuscript.
+- [ ] Final Common Issues file has complete distinct issues.
+- [ ] Source verification and publication review are complete.

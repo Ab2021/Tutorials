@@ -1,38 +1,68 @@
-# Module 19 Case Studies â€” Transformers, LLMs and Foundation-Model Internals
+# Module 19 Case Studies — Transformers, LLMs and Foundation-Model Internals
 
-## Authoring standard
+## 1. Collection metadata
 
-Every authored case must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked case master: all 15 sections, bounded decision and baseline, traceable evidence, checked numerical walkthrough/sizing where applicable, failure diagnostics, 12–18 answered interview questions, and Section 15 last. This is a planned catalog, not completed cases; expand to all seven collection-index sections before publication. Evidence, implementation stage and editorial status remain separate.
+This is a draft catalog for bounded foundation-model decisions. It retains the two original
+case threads and the IR007/IR009 planning commitments without claiming a run, organisation,
+deployment, benchmark, or measured result. Visible source names identify syllabus inventory;
+they do not establish access to the original lesson bodies.
 
-## Planned cases
+| Field | Value |
+|---|---|
+| Collection state | Draft; no completed local case manuscript |
+| Evidence / implementation state | not-measured / proposed |
+| Scope | Model choice, context-quality diagnosis, inference admission, and training-budget allocation |
+| Review trigger | Completed canonical case, source access, or changed model/serving assumption |
 
-| # | Case | Required outcome | Status |
-|---:|---|---|---|
-| 1 | Choose a model for code assistance | Design the decision, architecture, metrics, risks, and validation plan. | planned |
-| 2 | diagnose long-context quality loss | Design the decision, architecture, metrics, risks, and validation plan. | planned |
+## 2. Case catalog
 
-## Suggested file naming
-
-Use **01_case-slug.md**, then **02_case-slug.md**. Add **00_framework.md** only for shared constraints that every case needs.
-
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
-
-## Reference-informed additions to develop
-
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
-
-| Planning ID | Proposed case brief | Editorial relationship | Type | Decision / business question | Primary pattern | Secondary patterns | Evidence | Stage | Planning reviewed | Result |
+| Case ID | Linked title / canonical home | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| PLAN-2026-IR007 | Balance interactive inference latency and admitted throughput | Supporting curriculum; shared brief | hybrid | Which scheduling and KV-memory policy meets latency and isolation requirements at the admitted load? | `resource-admission` | `cost-latency-tradeoff`, `authorization-scope` | not-measured | proposed | 2026-11-06 |  |
-| PLAN-2026-IR009 | Allocate a domain-training budget with restart headroom | Supporting curriculum; shared brief | hybrid | Should a domain model be trained from scratch or continued from an existing checkpoint within an all-in budget? | `cost-latency-tradeoff` | `data-leakage`, `atomic-release-bundle` | not-measured | proposed | 2026-11-06 |  |
+| CASE-19-01 | Choose a model for code assistance — `01_code_assistance_model_choice.md` (planned) | Developer tooling | llm-agentic | Which model and retrieval boundary should be evaluated against a manual baseline | `evaluation-mismatch` | `authorization-scope`, `cost-latency-tradeoff` | not-measured | proposed | never | No manuscript or measured comparison |
+| CASE-19-02 | Diagnose long-context quality loss — `02_long_context_quality_diagnosis.md` (planned) | Long-context evaluation | analytical | Whether quality loss is context, retrieval, position, or evaluation-contract failure | `evaluation-mismatch` | `distribution-shift`, `resource-admission` | not-measured | proposed | never | No manuscript or measured diagnosis |
+| PLAN-2026-IR007 | Interactive inference latency and admitted throughput (planned) | LLM inference | hybrid | Which scheduling and KV-memory policy meets isolated admitted load | `resource-admission` | `cost-latency-tradeoff`, `authorization-scope` | not-measured | proposed | 2026-11-06 | Planning brief only |
+| PLAN-2026-IR009 | Domain-training budget and restart headroom (planned shared brief) | Model training | hybrid | Whether continued training or from-scratch training is justified | `cost-latency-tradeoff` | `data-leakage`, `atomic-release-bundle` | not-measured | proposed | 2026-11-06 | Planning brief only |
 
-### Reference and transfer notes
+## 3. Canonical reusable patterns
 
-| Planning ID | Example reference only | Scope boundary |
+| Pattern | Meaning | Boundary |
 |---|---|---|
-| PLAN-2026-IR007 | [REF-IR007](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_Inference/continuous_batching_serving.md) | GPU geometry, concurrency limits and speedups require workload measurements; speculative decoding can be slower |
-| PLAN-2026-IR009 | [REF-IR009](../../../../INTERVIEW_CASES/Agentic_AI_System/LLM_TrainingSCALING/legal_pretraining_scaling.md) | The reference compute and GPU figures are assumptions; an internal legal checkpoint is not validated legal advice |
+| `evaluation-mismatch` | A token metric or synthetic benchmark can disagree with the real task contract. | Validate the specified task, slice, and comparator. |
+| `resource-admission` | Requests are accepted only when bounded cache, latency, and isolation resources exist. | Offered load is not admitted throughput. |
+| `cost-latency-tradeoff` | A faster or larger alternative changes cost, quality, and tail behaviour together. | A single average hides tail and restart costs. |
+| `authorization-scope` | Code/context input must be authorised at retrieval and serving boundaries. | Better completion does not justify exposure. |
+| `atomic-release-bundle` | Model, tokenizer, prompt/configuration, and evaluation evidence must move together. | A weight-only rollback may not restore behaviour. |
 
-Case metadata, pattern definitions, supporting/contrasting references, structured backlog, review log and authoring checks for these additions are maintained in the linked central planning catalog. Existing planned rows elsewhere in this index retain their original status. A brief may be split or merged before canonical case IDs are assigned.
+## 4. Similarity and contrast map
 
-<!-- END INTERVIEW REFERENCE PLAN -->
+| Item | Shared reasoning | Distinct check |
+|---|---|---|
+| CASE-19-01 | Model selection needs a task-true baseline. | Repository/time split and authorised-context contract. |
+| CASE-19-02 | Context behaviour requires position-aware evidence. | Separate missing evidence from position, truncation, and retrieval errors. |
+| PLAN-2026-IR007 | Serving choice changes task latency. | Measure prefill, decode, admission, cache headroom, and target equivalence. |
+| PLAN-2026-IR009 | Quality/cost claims require a complete budget. | Include held-out general quality, restart, and reproducibility gates. |
+
+## 5. Questions and future-case backlog
+
+1. Define units for token, request, sequence, cache byte, prefill time, and decode time before comparing alternatives.
+2. Test a no-retrieval, authorised-retrieval, and abstain baseline before attributing code-task quality to a model.
+3. Make effective context length a task-specific measured curve rather than a nominal context-window claim.
+4. Reject scaling extrapolations outside their fitted data, compute, and objective regime.
+5. Treat speculative decoding as a correctness-preserving algorithm only if its acceptance and target-equivalence contracts are tested.
+
+## 6. Review and retirement log
+
+| Item | State | Required action |
+|---|---|---|
+| CASE-19-01 | Planned | Author canonical case with independent task, security, quality, cost, and latency evidence. |
+| CASE-19-02 | Planned | Author canonical case with a checked position/retrieval diagnostic trace. |
+| PLAN-2026-IR007/009 | Planning only | Preserve source-reference limits and do not transfer assumed reference workload figures. |
+| Collection | Draft | Reconcile catalog links, claim ledgers, and review state after each manuscript. |
+
+## 7. Pre-publish checks
+
+- [ ] Each canonical case has all 15 ordered sections and a final Section 15 card.
+- [ ] The decision owner, baseline, data cut-off, model/tokenizer/configuration versions, and authority boundaries are explicit.
+- [ ] Numerical memory, throughput, or budget examples are recomputed with units and invalidating boundaries.
+- [ ] Each case includes 12–18 substantive answered interview questions and failure recovery paths.
+- [ ] Catalog links target only real canonical manuscripts; shared decision families are linked, not duplicated.

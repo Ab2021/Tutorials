@@ -1,37 +1,47 @@
-# Module 04 Cheat Sheets â€” System Design, Distributed Systems and Cloud
+# Cheat Sheets — 04 System Design Distributed Systems And Cloud
 
-## Authoring standard
+## 1. Overview
+This collection supplies reusable foundations and decision checks. Listed documents are drafts; illustrative examples do not establish operational outcomes.
 
-Every authored sheet must follow the [course authoring and numerical standards](../../../00_AUTHORING_AND_NUMERICAL_STANDARDS.md) and the linked cheat-sheet master: all 12 sections, derivations/invariants, checked numerical examples, at least four diagnostic failures, 10–15 answered interview questions, and the final Quick Reference Card. This collection has one unreviewed course-topic draft; remaining planned sheets and the final Common Issues artifact (at least 25 complete issues) remain unfinished. A card alone is not a completed sheet.
+## 2. Topic ladder
+| Level | File | Testable outcome | Prerequisites | Key skill | Status |
+|---|---|---|---|---|---|
+| 1 | [01 System Design Interview Flow ](01_System_Design_Interview_Flow.md) | Apply the stated invariant or formula | Collection prerequisites | See file | draft |
 
-## Planned cheat sheets
+## 3. Quick topic lookup
+Use the catalog above to select a real sheet by the decision or diagnostic it names. Do not treat a missing topic as covered by a nearby title.
 
-| # | Reference | Coverage | Status |
-|---:|---|---|---|
-| 1 | [System design interview flow](01_System_Design_Interview_Flow.md) | Requirements, contracts, sizing, failure recovery and validation. | Draft; unreviewed. |
-| 2 | capacity formulas | Concise patterns, decision rules, assumptions, and common traps. | planned |
-| 3 | distributed-systems trade-offs | Concise patterns, decision rules, assumptions, and common traps. | planned |
+## 4. Reading paths — three options
+**Beginner:** read the first available foundation sheet, then its worked example. **Practitioner:** read all listed sheets in order and reproduce the stated calculation or trace. **Advanced:** read all sheets, inspect failures, and test a changed constraint. No forward file is a mandatory prerequisite unless its manuscript says so.
 
-## Suggested file naming
+## 5. Prerequisite skills
+Basic algebra, units, timestamp semantics, and the module's stated prerequisites are assumed. A reader must distinguish an illustrative calculation from observed evidence.
 
-Use **01_reference-slug.md**, then **02_reference-slug.md**. Keep one concern per file so references remain scannable.
+## 6. What this collection does NOT cover
+It does not certify a deployment, replace primary-source verification, or supply missing source bodies. Planned topics stay planned until a real manuscript exists.
 
-<!-- BEGIN INTERVIEW REFERENCE PLAN -->
+## 7. Master symbol glossary
+| Symbol / term | Meaning | Units | Type | Valid range | First use |
+|---|---|---|---|---|---|
+| λ | arrival or input rate | items/s | scalar | nonnegative | file-specific |
+| μ | service or processing rate | items/s | scalar | nonnegative | file-specific |
+| B | backlog | items | scalar | nonnegative | file-specific |
 
-## Reference-informed additions to develop
+## 8. Quick Reference Card directory
+| File | Card anchor | Core rule | Critical assumption |
+|---|---|---|---|
+| [01 System Design Interview Flow ](01_System_Design_Interview_Flow.md) | Section 12 | Inspect the file-specific card | Read its validity condition |
 
-These are proposed writing briefs informed by interview examples. The examples are reference material only; no completed case, measured result or finished cheat sheet is implied. [Planning catalog, source limits and authoring gates](../../../00_REFERENCE_INFORMED_CASE_PLAN.md).
+## 9. Common Issues locator
+No final Common Issues artifact has been authored in this collection. Required issue count and complete diagnostics remain OPEN.
 
-| Related brief | Proposed cheat-sheet scope | Checks / counterexamples to include | Reference only | Status |
+## 10. Empirical sources, versions and collection maintenance
+| Item | Evidence status | Reviewed | Limitation | Trigger |
 |---|---|---|---|---|
-| PLAN-2026-IR018 | CH and A* assumptions; rolling-window semantics; clock skew; positional postings; BM25 statistics | Reference Dijkstra comparisons, admissible-heuristic checks, concurrent window simulations and brute-force phrase/ranking oracles. Boundary: Seven overlapping teaching units; source measurements are not independently verified and should not be added together. | [REF-IR018](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_01.md) | planned; not written |
-| PLAN-2026-IR019 | Coherent traffic snapshots; CH compatibility; fallback Dijkstra; map matching; route versus ETA objectives | Base-graph shortest-path oracle, closure and turn-restriction replays, ETA error and routing tail latency. Boundary: The OCR filename and ordinal ranges disagree; arbitrary traffic overlays do not preserve ordinary CH correctness. | [REF-IR019](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_02.md) | planned; not written |
-| PLAN-2026-IR020 | Routing production behavior; coordinated rolling counters; distributed positional inverted indexes | Coherent-snapshot queries, concurrent admission accounting, shard failure tests and search-reference comparisons. Boundary: Three units continue earlier routing, admission and search topics; this is not a new independent evidence dataset. | [REF-IR020](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/CASE_STUDIES_03.md) | planned; not written |
-| PLAN-2026-IR022 | Token-bucket invariants; atomic refill and debit; leased budgets; expiry; failure policy | Aggregate-admission histories, refill boundaries, coordinator outages, lease races and rejected-request latency. Boundary: Periodic usage reporting alone is not coordinated allocation; token buckets and exact rolling windows have different contracts. | [REF-IR022](../../../../INTERVIEW_CASES/DSA/Algo_Design_Problems/Rate_Limiting/distributed_token_buckets.md) | planned; not written |
-| PLAN-2026-IR033 | Single-flight scope; jitter; fill admission; consistent hashing; old/new ring epochs; version fences and tombstones | Cold-fleet and skewed-key load replays, database concurrency, invalidation lag and stale-fill/delete races. Boundary: Local single-flight is not fleet-wide coordination; expected key movement is not the same as request miss share. | [REF-IR033](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Cache_Resilience/cold_cache_and_ring_migration.md) | planned; not written |
-| PLAN-2026-IR034 | Profile caching; safe typeahead publication; ranked score updates; Bloom-filter crawler admission | Failure replays and reference histories; freshness, exact versus approximate results and false-positive consequences. Boundary: Four teaching units overlap focused examples; Bloom false positives and stale ranks need product-specific tolerance. | [REF-IR034](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/INTERVIEW_SYSTEM_DESIGN_CASES.md) | planned; not written |
-| PLAN-2026-IR035 | Score buckets; Fenwick count summaries; deterministic ties; deduplicated events; cross-shard moves; closing watermarks | Reference sorted snapshots, duplicate/late events, negative scores, bucket crossings and exact final-rank replay. Boundary: A sum of stale counters is not an exact settlement snapshot; tie semantics and late-event policy must be specified. | [REF-IR035](../../../../INTERVIEW_CASES/DSA/Sys_Des_DSA/Leaderboards/score_bucket_rank_consistency.md) | planned; not written |
+| Existing sheets | mixed illustrative / derived | not independently reviewed | source bodies may be unavailable | source, workload, or dependency change |
 
-Each future cheat sheet needs its own explanation, preconditions, formulas or algorithms where relevant, failure signals and checked examples. Do not copy the interview narrative or its scenario figures into a reference sheet.
-
-<!-- END INTERVIEW REFERENCE PLAN -->
+## 11. Collection acceptance checklist
+- [x] Links above target real files.
+- [ ] Every planned topic has a canonical substantive manuscript.
+- [ ] Final Common Issues file has complete distinct issues.
+- [ ] Source verification and publication review are complete.

@@ -1,75 +1,51 @@
-# Module 01 Cheat Sheets — Program Orientation and AI Landscape
+# Cheat Sheets — 01 Program Orientation And Ai Landscape
 
 ## 1. Overview
-
-These draft sheets teach decision framing, capability/deployment classification, and evidence-led technology review. They do not reconstruct unavailable source containers `GLCC`, `learn`, `raw`, or `speechtotxt` listed in [`directory.txt`](../../../../Templates/directory.txt). Every empirical candidate claim needs current primary evidence.
+This collection supplies reusable foundations and decision checks. Listed documents are drafts; illustrative examples do not establish operational outcomes.
 
 ## 2. Topic ladder
-
-| Level | File | Outcome | Prerequisite | Status |
-|---|---|---|---|---|
-| Foundation | [01 AI Use-Case Charter](01_AI_Use_Case_Charter.md) | define decision, baseline, risk and gate | none | draft; complete manuscript, unreviewed |
-| Foundation | [02 AI Market Map](02_AI_Market_Map.md) | choose capability/control category | 01 | draft; expansion required |
-| Core | [03 Technology Due Diligence](03_Technology_Due_Diligence.md) | turn claims into acceptance tests | 01–02 | draft; expansion required |
-| Final | Common Issues | diagnose recurring framing/claim failures | all sheets | not authored |
+| Level | File | Testable outcome | Prerequisites | Key skill | Status |
+|---|---|---|---|---|---|
+| 1 | [01 AI Use Case Charter ](01_AI_Use_Case_Charter.md) | Apply the stated invariant or formula | Collection prerequisites | See file | draft |
+| 2 | [02 AI Market Map ](02_AI_Market_Map.md) | Apply the stated invariant or formula | Collection prerequisites | See file | draft |
+| 3 | [03 Technology Due Diligence ](03_Technology_Due_Diligence.md) | Apply the stated invariant or formula | Collection prerequisites | See file | draft |
 
 ## 3. Quick topic lookup
-
-| Question | File / section | Use condition | Failure warning |
-|---|---|---|---|
-| What problem exists before model choice? | 01 §2–4 | new proposal | solution-first framing |
-| Which deployment is credible? | 02 §2, §7 | comparing modes | treating model label as control design |
-| What proves a vendor claim? | 03 §3–5 | procurement/pilot | averaging a hard constraint away |
+Use the catalog above to select a real sheet by the decision or diagnostic it names. Do not treat a missing topic as covered by a nearby title.
 
 ## 4. Reading paths — three options
-
-- **Beginner:** 01 → 02; frame a decision, then classify the smallest credible option.
-- **Practitioner:** 01 → 02 → 03; write a charter and acceptance protocol.
-- **Advanced:** 01 → 02 → 03 → module case; challenge assumptions, capacity and evidence expiry.
+**Beginner:** read the first available foundation sheet, then its worked example. **Practitioner:** read all listed sheets in order and reproduce the stated calculation or trace. **Advanced:** read all sheets, inspect failures, and test a changed constraint. No forward file is a mandatory prerequisite unless its manuscript says so.
 
 ## 5. Prerequisite skills
+Basic algebra, units, timestamp semantics, and the module's stated prerequisites are assumed. A reader must distinguish an illustrative calculation from observed evidence.
 
-Readers need basic percentage arithmetic, ability to name a workflow owner, and a distinction between constructed examples and measurements. No prior ML implementation is required.
-
-## 6. Exclusions and handoffs
-
-This collection does not certify security, legal compliance, vendor performance, or source-container contents. Hand off model implementation to Module 02 and capacity/reliability design to Module 04.
+## 6. What this collection does NOT cover
+It does not certify a deployment, replace primary-source verification, or supply missing source bodies. Planned topics stay planned until a real manuscript exists.
 
 ## 7. Master symbol glossary
-
-| Symbol | Meaning | Units/type | Valid range | First use |
-|---|---|---|---|---|
-| `N` | eligible units/window | count | nonnegative | 02 §4 |
-| `q` | routed-to-review fraction | fraction | [0,1] | 02 §4 |
-| `r` | review capacity/window | count | nonnegative | 02 §4 |
-| `V` | estimated incremental value | currency/window | assumption-dependent | 02 §4 |
-| `TCO` | total cost of ownership | currency/window | declared inclusions | 03 §4 |
+| Symbol / term | Meaning | Units | Type | Valid range | First use |
+|---|---|---|---|---|---|
+| λ | arrival or input rate | items/s | scalar | nonnegative | file-specific |
+| μ | service or processing rate | items/s | scalar | nonnegative | file-specific |
+| B | backlog | items | scalar | nonnegative | file-specific |
 
 ## 8. Quick Reference Card directory
-
-| File | Card | Core rule | Critical assumption |
+| File | Card anchor | Core rule | Critical assumption |
 |---|---|---|---|
-| 01 | [§12](01_AI_Use_Case_Charter.md#12-quick-reference-card) | charter before model choice | baseline is observable |
-| 02 | [§12](02_AI_Market_Map.md#12-quick-reference-card) | `q*N <= r` | stable-rate sizing approximation |
-| 03 | [§12](03_Technology_Due_Diligence.md#12-quick-reference-card) | hard gates precede scores | candidate scope is known |
+| [01 AI Use Case Charter ](01_AI_Use_Case_Charter.md) | Section 12 | Inspect the file-specific card | Read its validity condition |
+| [02 AI Market Map ](02_AI_Market_Map.md) | Section 12 | Inspect the file-specific card | Read its validity condition |
+| [03 Technology Due Diligence ](03_Technology_Due_Diligence.md) | Section 12 | Inspect the file-specific card | Read its validity condition |
 
 ## 9. Common Issues locator
+No final Common Issues artifact has been authored in this collection. Required issue count and complete diagnostics remain OPEN.
 
-No Common Issues artifact exists yet. The course contract requires a final twelve-section troubleshooting artifact with at least 25 complete distinct issues; it is not represented by a placeholder link.
+## 10. Empirical sources, versions and collection maintenance
+| Item | Evidence status | Reviewed | Limitation | Trigger |
+|---|---|---|---|---|
+| Existing sheets | mixed illustrative / derived | not independently reviewed | source bodies may be unavailable | source, workload, or dependency change |
 
-## 10. Sources, versions and maintenance
-
-| Source | Claim supported | Reviewed | Limitation / trigger |
-|---|---|---|---|
-| [`directory.txt`](../../../../Templates/directory.txt) lines 1–13 | visible inventory and unavailable bodies | 2026-11-09 | names do not establish content |
-| NIST AI RMF / SP 800-53 / SP 800-161r1 | cited method vocabulary | 2026-11-09 | recheck version and candidate applicability |
-
-All files are draft, unreviewed teaching content. Arithmetic is hand-derived; no system or vendor test has been executed.
-
-## 11. Acceptance checklist
-
-- [x] Three linked draft sheets with twelve ordered sections and final cards
-- [x] Prerequisite order, glossary, reading paths, and source boundary
-- [ ] Each sheet reaches the course’s 1,000-substantive-line requirement
-- [ ] Final 25-issue Common Issues artifact
-- [ ] Independent link, arithmetic, source, and editorial review
+## 11. Collection acceptance checklist
+- [x] Links above target real files.
+- [ ] Every planned topic has a canonical substantive manuscript.
+- [ ] Final Common Issues file has complete distinct issues.
+- [ ] Source verification and publication review are complete.
