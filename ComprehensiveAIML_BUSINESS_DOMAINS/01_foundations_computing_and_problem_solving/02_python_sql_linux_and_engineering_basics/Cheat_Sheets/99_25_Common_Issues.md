@@ -163,6 +163,90 @@ Takeaway: classify first, probe with a number, contain without destroying eviden
 
 **Index selectivity.** The share of rows a predicate keeps. A join key with 4.2 % NULLs and 1.30 children per parent has an effective selectivity that neither statistic states alone, which is why CI-30 and CI-31 are tested as a pair rather than separately.
 
+
+### 3.1 Ownership boundaries that prevent category errors
+
+**Request identity is not payload identity.** A request identifier names one transport envelope, while a content digest names the bytes carried by that envelope. A retry may retain the operation id while gaining a new request id; a redelivery may retain both. Storing only the digest cannot prove whether two equal payloads were intentional repeats, and storing only the request id cannot prove whether a transformed payload stayed within its contract.
+
+**Schema compatibility is directional.** A producer adding an optional field can be backward compatible with an older consumer, yet the same change is not forward compatible if a newer consumer makes that field required. The probe is a two-column matrix: old consumer against new payload, then new consumer against old payload. Calling either result simply "compatible" hides the direction that decides rollout order.
+
+**A default is executable policy.** In Python, `dict.get("limit", 100)` silently chooses admission behaviour when the field is absent. In SQL, `COALESCE(limit, 100)` can make an explicit NULL indistinguishable from absence. The correction is to decide whether absent and NULL have the same meaning, validate that decision at the API boundary, and record which branch supplied the value.
+
+**A retry-safe read is not a retry-safe write.** Repeating `GET /items/42` should not change item 42, whereas repeating `POST /payments` may create another effect unless an operation key binds both attempts. A gateway cannot infer this distinction from HTTP method alone when an endpoint overloads a safe-looking action. The data contract must declare effect identity, duplicate response semantics, and retention duration for the key.
+
+**Time has at least three meanings in a pipeline.** Event time answers when the source observed the fact; ingestion time answers when the platform accepted it; processing time answers when a job transformed it. A late event should be assigned to a business day by event time but diagnosed for freshness by ingestion time. Using one column for both creates a report that is neither historically correct nor operationally useful.
+
+**A queue acknowledgement is not durable completion.** An acknowledgement can mean "received", "persisted", or "effect committed" depending on the system. If a worker acknowledges before its database transaction commits, a crash after the acknowledgement loses work even though queue depth decreases. The discriminating check is a deliberate process stop between acknowledgement and commit, followed by a reconciliation of source offset to durable effect.
+
+**A process exit code is an observation, not a diagnosis.** Exit code 137 commonly accompanies a forced termination, but it does not alone distinguish an out-of-memory kill, an external kill signal, or a runtime wrapper. The next probe is the cgroup memory event counter, the container state, and the supervisor log from the same timestamp. Restarting first erases the evidence needed to choose among those causes.
+
+**A file descriptor is a shared capacity unit.** A Python HTTP client, an open log file, a pipe, and a socket all consume descriptors even though only one appears in application metrics. A rising `EMFILE` error with stable CPU is therefore a capacity defect, not a networking diagnosis. Count descriptors by process and compare the count with the effective limit before increasing connection concurrency.
+
+**A SQL predicate has both a logical and a physical contract.** `WHERE lower(email) = lower(?)` may match the intended rows but bypass an index built on `email`, changing a millisecond lookup into a scan. The logical test proves correctness; an explain plan or observed rows read proves cost. Remediation is a normalized stored key or a matching functional index, not an undocumented reliance on collation.
+
+**A cache hit says nothing about freshness.** A cache can return a byte-for-byte valid representation that is stale for the decision being made. The required fields are generated-at time, source version, and expiry policy; a hit-rate metric omits all three. A first probe compares the response's version to the authoritative record for one affected key, then containment can bypass only the stale namespace.
+
+**Resource ownership must survive cancellation.** A coroutine that acquires a lock, file, or transaction before an `await` must release or roll back it in a `finally` path. Catching `Exception` does not cover every cancellation behaviour across Python versions and can make cleanup conditional on the wrong class hierarchy. The replay injects cancellation at each await boundary and asserts lock count, open descriptors, and transaction state return to baseline.
+
+**A shell pipeline reports the last command unless configured otherwise.** `producer | consumer` can exit zero when the producer failed but the consumer consumed no input and returned success. In shell environments that support it, enable pipeline failure propagation; otherwise capture and inspect each status explicitly. The diagnosis is a missing output with a green job, separated from an empty-but-valid input by recording byte counts at each stage.
+
+**Signal scope differs from process scope.** Sending SIGTERM to a parent process does not guarantee its children receive or act on it. A shell wrapper may wait for a child, ignore the signal, or exit while leaving the child orphaned. The correction is an exec-form entrypoint or a supervisor that forwards signals, reaps children, and exposes a bounded drain state.
+
+**A parser's success is not validation.** JSON decoding proves that bytes conform to JSON grammar; it does not prove a monetary amount has a supported currency, a timestamp has a timezone, or an identifier belongs to the caller. A robust API separates syntactic parsing, schema validation, and domain validation into distinct reason codes. This separation makes a spike in malformed data distinguishable from a valid request rejected by business policy.
+
+**Database transaction isolation is part of an API contract.** Two workers can both read "no row for key K" and then both insert unless a uniqueness constraint or serializable transaction makes that observation exclusive. Application-level pre-checks are advisory because the gap between read and write is schedule-dependent. The remediation is a durable constraint plus an explicit duplicate outcome that callers can replay safely.
+
+**A Unicode character count is not a byte limit.** A body containing non-ASCII text can satisfy a character limit while exceeding a transport limit measured in UTF-8 bytes. A contract should name the encoding and impose byte limits after encoding, not before. The boundary test includes an ASCII payload and a same-length multibyte payload so that a character-based check cannot falsely pass.
+
+**Observability labels are inputs with cardinality budgets.** A label such as `endpoint` has a small, enumerable set; a label such as request id creates a series for each operation. The latter can exhaust the metrics backend while leaving the application healthy, which makes the monitoring failure look like an application blind spot. Keep high-cardinality identifiers in logs or exemplars and enforce an allowlist for metric labels.
+
+**A partial response needs an explicit validity state.** Returning HTTP 200 with ten of twelve requested items may be correct only if the response marks the missing keys and reason codes. Treating the response as a full success makes downstream SQL counts silently fall. The correction is either all-or-nothing semantics or a per-item result contract, followed by a replay that removes one dependency and checks the caller's aggregation.
+
+**A migration must declare its read and write eras.** During a column rename, producers, consumers, backfills, and indexes do not move simultaneously. The safe sequence defines which version writes which fields, how old records are read, and the condition for removing the old field. A dual-write without a comparison job merely creates two sources of truth; compare them before cutover and record the mismatch rate.
+
+**A test double has a narrower failure surface than production.** An in-memory repository may never expose transaction contention, a fake clock may skip timezone transitions, and a mock HTTP client may not enforce connection limits. Passing unit tests therefore confirms local logic, not the operational contract. Add a small integration replay for each property the double cannot represent, with inputs chosen at the production boundary.
+
+**A permission failure can be identity drift rather than missing access.** A Linux process may lose access because its effective user, supplementary groups, mount ownership, or security label changed during deployment. Checking only a symbolic role is insufficient when the kernel makes the final decision. Capture numeric uid, gid, mount mode, and the failing path together; then remediate the actual mismatch rather than broadly widening permissions.
+
+**A data deletion request is a lineage problem.** Removing a row from the primary table does not remove derived aggregates, search indexes, object copies, or retry queues containing the same identifier. The contract needs an identifier map and a bounded propagation window for each store. Verification samples every registered downstream location after the deadline instead of treating a successful primary delete as proof of completion.
+
+**A rate limit needs a scope key.** "100 requests per minute" is ambiguous until it says per API key, user, IP, tenant, endpoint, or process. A global limiter can let one noisy tenant deny service to others; a per-process limiter can multiply the effective allowance across replicas. The discriminating check is to issue equal traffic through two scope values and observe whether their counters interfere.
+
+**A remediation should change one observable invariant.** "Improve reliability" cannot be replayed, while "at most one committed effect exists per operation key" can. Before changing code, write the invariant, the probe that reads it, and the boundary input that previously violated it. This avoids fixes that merely alter timing enough to hide the symptom during a quiet replay.
+
+
+**A Python exception boundary should preserve cause and classification.** Converting every exception to one `RuntimeError` hides whether a validation failure, timeout, or permission denial occurred. Chain the original exception, attach a stable public reason code, and keep sensitive internals out of the response. The replay checks both the caller-visible code and the operator-visible causal record.
+
+**Mutable input must be copied or owned deliberately.** Passing a list or dictionary to a background task and modifying it afterwards makes task behaviour depend on scheduling. A shallow copy is insufficient when nested values can mutate. Either transfer ownership, use immutable values, or make a documented deep copy at the handoff boundary.
+
+**A SQL update count is not an identity proof.** Updating one row may be expected, but zero rows can mean an absent key, a stale version, or a filter mismatch. Updating two rows proves a uniqueness assumption failed. Include the expected count in the transaction contract and treat deviations as named outcomes rather than success with an unusual metric.
+
+**An API error message is not a machine contract.** Human prose may change for clarity, localization, or security without a versioned promise. Clients should branch on stable status and reason-code fields, then display a separately owned message. Contract tests should accept text evolution while rejecting removal or redefinition of machine fields.
+
+**Log order is not event order across processes.** Clock skew, buffering, and asynchronous shipping can reorder lines that describe one operation. Correlate by operation id and record an event timestamp with timezone plus a monotonic duration for local sequencing. A diagnosis that relies on visual log order alone can invent a causal chain that never occurred.
+
+**A subprocess inherits more than its command string.** Its working directory, environment, file descriptors, signal disposition, and resource limits can alter behaviour. A command that succeeds interactively may fail under a service manager because one inherited input differs. Capture the minimal execution environment in a reproducer rather than adding delays or retries.
+
+**File replacement is atomic only within a filesystem boundary.** Renaming a completed temporary file over a target is normally atomic on one filesystem, while copying across volumes exposes partial content. Put staging and target in the same directory when readers must never observe a half-written artifact. The verification polls readers during replacement and asserts they see either old bytes or new bytes, never a prefix.
+
+**A checksum proves byte identity, not semantic validity.** Two malformed files with the same bytes share a checksum, and two semantically equivalent serializations can differ in bytes. Use a checksum to detect transfer corruption, then validate schema and domain constraints separately. This prevents a successful hash comparison from being mistaken for an accepted data contract.
+
+
+**A deadline must be monotonic once received.** Wall clocks can jump because of synchronization or virtualization. Compute remaining budget from a monotonic clock and convert to a wall timestamp only for logging. A clock-jump replay proves that an operation still expires after the intended elapsed duration.
+
+**A content type names decoding, not trust.** Declaring `application/json` tells a receiver how to parse bytes; it does not prove the payload meets schema, authorization, or size requirements. Apply media-type validation before decoding and domain validation after decoding. Each rejection should identify the stage that refused the input.
+
+**A SQL view can hide a changing base contract.** A view may preserve column names while altering join logic, filters, or freshness behind them. Consumers need a versioned semantic contract and a comparison query for any material change. Treat view definition changes as data-interface changes, not harmless refactoring.
+
+**A Linux namespace hides host context by design.** A process can observe a container-local PID, mount table, and network interface that differ from host diagnostics. Collect context from both the workload and its supervisor before comparing counts. This separates a real resource mismatch from a namespace-relative number.
+
+**A dependency timeout should leave a reason trace.** A generic timeout cannot distinguish DNS delay, connection acquisition, TLS negotiation, first byte, or response read. Time each phase and emit the phase that spent the budget. The correction then targets the binding stage instead of extending every timeout.
+
+
+**A health check must test the dependency that gates service.** A process can answer an HTTP health endpoint while its required database credentials have expired. Readiness should test only dependencies needed for the next request and expose its failing reason. Liveness remains narrower so a temporary dependency outage does not restart healthy workers.
+
+**A serializer boundary needs a round-trip oracle.** Encode then decode representative values, including nulls, large integers, offsets, and Unicode, and compare the declared semantic values. Byte equality is unnecessary when a canonical form is not promised. The test catches type loss before incompatible records reach storage.
+
 Takeaway: define the eight operational terms — symptom, mechanism, competing cause, check, containment, correction, replay, reason code — before using them, because a team that conflates symptom and mechanism will spend the incident arguing about definitions.
 
 ## 4. Core Formulas with Full Derivation
@@ -924,6 +1008,86 @@ Each result below is stated with its condition and the sheet that owns its deriv
 **R-13 — Amdahl-style ceiling for permit-bound work.** With serial fraction `s`, speedup from `k`-fold concurrency is bounded by `1/(s + (1-s)/k)`. At `s = 0.1` and `k = 8` the ceiling is `1/(0.1 + 0.1125) = 4.7`, not 8 — which is why "eight permits" never yields eight-fold speedup on real work.
 
 **R-14 — Cache saving identity.** With stable prefix share `h` priced at rate `pc` and the rest at `p`, per-call cost is `h*cached_rate + (1-h)*p` for input plus output. At `h = 0.90`, `cached_rate = 0.30/M` and `p = 3.00/M`, input cost falls from 0.066 to 0.01254 — a 68.5 % total saving once output is included, not the 90 % that `h` suggests.
+
+
+### 10.1 Cross-layer results for diagnosis and remediation
+
+**Result A — Python cancellation is a state transition, not a timeout value.** A timeout should move an operation from pending to cancelled, then to settled after cleanup. If a task remains runnable after the caller returns, the timeout measured only the caller's patience. The operational invariant is that the supervised task set returns to its baseline size after the deadline plus a bounded cleanup interval.
+
+**Result B — `finally` is the ownership boundary for asynchronous resources.** A lock acquired before an await must be released even when a timeout, cancellation, or exception interrupts the normal path. A context manager is preferable because it makes acquisition and release lexically paired. The counterexample is cleanup after the await: cancellation can occur before that line is reached, leaving a permit permanently unavailable.
+
+**Result C — an API deadline composes by subtraction.** If a client deadline is 1,000 ms and 180 ms has elapsed before calling a dependency, the dependency receives at most 820 ms, less its own cleanup reserve. Giving every hop an independent 1,000 ms timeout permits total elapsed time to exceed the caller's promise. The probe logs remaining deadline at each hop rather than only configured timeout values.
+
+**Result D — retry eligibility depends on effect semantics.** A transient connection reset before the server reads the request may be retryable; a reset after a non-idempotent effect is ambiguous. The safe action is not a generic retry but an operation-status lookup keyed by the idempotency key. The boundary case is an unknown result, which must be represented separately from both success and failure.
+
+**Result E — HTTP status and application outcome are separate layers.** A 200 status proves that an HTTP exchange succeeded, not that a domain operation succeeded. A response schema with `status`, `error_code`, and item-level outcomes makes the domain result explicit. Contract tests must include a transport-success/domain-failure body and a transport-failure/no-body result because clients need different remediation for each.
+
+**Result F — pagination requires a total order.** A cursor containing only `created_at` skips or duplicates rows when several records share that timestamp. A cursor containing `(created_at, id)` establishes a deterministic tie-breaker, provided both fields are immutable for pagination. The boundary replay inserts two rows at the same timestamp between pages and asserts each appears exactly once.
+
+**Result G — SQL joins should declare their expected cardinality.** A one-to-many join followed by an aggregate is correct only when the measure belongs at the child grain or when the parent measure is pre-aggregated. A one-to-one expectation deserves a uniqueness test on both sides, not a comment. The explainable invariant is `COUNT(*) = COUNT(DISTINCT parent_id)` when no fanout is intended.
+
+**Result H — SQL NULL handling is a policy choice.** `COALESCE(a.key, 'unknown') = COALESCE(b.key, 'unknown')` changes unknown equality into equality and can manufacture matches. A left join preserves unmatched rows without claiming their keys are equal. The correct form follows the business question: measure missingness, match known identifiers, or assign a designated fallback entity, but do not let syntax decide silently.
+
+**Result I — window functions require an ordering contract.** `ORDER BY event_time` is insufficient for a running result when event times tie. `ROWS` defines physical progression after a deterministic ordering, while `RANGE` defines peer-group progression. Add a stable tie-breaker and state the frame so reviewers can decide whether simultaneous events should be seen together.
+
+**Result J — SQL parameterization protects values, not identifiers.** Bound parameters safely represent a value such as an email address; they cannot generally stand in for a table name or sort direction. Dynamic identifiers need an allowlist mapped to fixed SQL fragments. Concatenating a supposedly sanitized identifier is a separate input-validation problem, not a reason to abandon value parameters.
+
+**Result K — an index is useful only for the access pattern.** A composite index on `(tenant_id, created_at)` serves a query constrained by tenant and ranged by time, but generally does not serve a query ranged only by time as efficiently. The test is an actual plan with representative selectivity, not index existence. Remediation may be a different index, a partition strategy, or a changed query shape, each with its own write cost.
+
+**Result L — Linux memory limits account for more than Python heap objects.** Resident memory includes interpreter state, native libraries, allocator arenas, buffers, and page cache charged to the cgroup. A heap profiler can therefore look healthy while the cgroup approaches its limit. Compare process RSS, cgroup current usage, and memory events before calling the gap a leak.
+
+**Result M — swap, OOM, and throttling leave different signatures.** CPU throttling raises `nr_throttled` while usage may plateau at the quota; memory pressure raises cgroup memory events and can precede an OOM kill; swap activity raises latency without necessarily killing the process. These are different containment decisions. Raising CPU for an OOM pattern changes cost without releasing retained objects.
+
+**Result N — disk-full errors are frequently inode exhaustion.** A volume can report free bytes while refusing new files because its inode table is exhausted by many small files. `df -h` and `df -i` answer different questions and must be collected together. The remedy for inode pressure is retention or file aggregation, not merely a larger byte quota.
+
+**Result O — shell word splitting changes API arguments.** An unquoted variable containing spaces, wildcard characters, or an empty value can become multiple arguments, matched paths, or no argument. This is an input-contract failure at the shell boundary. Use arrays or quoted expansions, and replay with whitespace, an asterisk, and an empty string rather than only ordinary identifiers.
+
+**Result P — container image layers encode invalidation dependencies.** Dependency installation should depend on the lockfile, not every source file. Copying the full source tree before installation converts any code edit into a dependency cache miss. The remediation is a layer order that exposes the smallest stable input first, followed by a warm-cache build that proves the expected reuse.
+
+**Result Q — PID 1 needs both signal and child-reaping behaviour.** A workload acting as PID 1 must handle termination and collect exited children to prevent zombies. Adding a shell wrapper can solve neither unless it forwards signals and waits correctly. The verification starts a child, terminates the container, and checks both a bounded drain log and absence of unreaped processes.
+
+**Result R — configuration is an input artifact.** Environment variables, mounted files, command arguments, feature flags, and image labels jointly determine behaviour. Comparing source commits alone cannot explain a runtime difference. Record a redacted configuration digest and the image digest with each replay so that the input space is stable enough to compare.
+
+**Result S — data-contract versions need explicit rejection rules.** A consumer that ignores unknown fields can tolerate an additive producer change, but it must reject a changed field type or semantic unit. For example, accepting `timeout=5` without knowing whether it is seconds or milliseconds is not forward compatibility. Version negotiation or typed fields make unsupported meaning fail loudly instead of executing incorrectly.
+
+**Result T — monetary amounts need integer minor units or a stated decimal rule.** Binary floating point can represent neither many decimal fractions nor every division exactly, so accumulation can create reconciliation differences. Store an amount with currency and scale, perform arithmetic in integer minor units or a decimal type, and round only at the declared boundary. A replay includes values whose third decimal place tests the chosen rounding mode.
+
+**Result U — timestamps need a timezone and a precision contract.** A bare string such as `2026-11-11 01:30:00` is ambiguous in a timezone with a repeated clock hour. Store or transmit an offset-aware instant, then derive local reporting periods deliberately. A daylight-saving boundary test distinguishes conversion correctness from a query that merely happens to work on ordinary dates.
+
+**Result V — CSV is a serialization format, not a schema.** A comma-delimited line does not say whether an empty field is NULL, an empty string, zero, or a missing column. It also does not preserve type, timezone, or delimiter escaping without an external agreement. Validate column count, encoding, header version, and field semantics before importing; otherwise malformed input becomes plausible SQL data.
+
+**Result W — a dead-letter queue is a delayed decision, not a fix.** Moving a message after repeated failure prevents it from consuming the hot path, but it does not establish whether the message is malformed, the dependency is unavailable, or the handler is non-idempotent. Store failure reason, attempt history, and original payload reference with the entry. Re-drive only after classifying the mechanism and proving duplicate protection.
+
+**Result X — rate-limit retries must respect shared scope.** Five replicas each respecting a local limit of 20 requests/s can send 100 requests/s if the provider limit is tenant-wide. A local semaphore protects one process, not a distributed contract. The remediation is a shared limiter, a partitioned quota allocation, or a deliberately lower per-replica limit with its arithmetic documented.
+
+**Result Y — a remediation needs rollback criteria.** A circuit breaker, stricter validator, or reduced concurrency can contain harm while rejecting valid work. State the metric that permits rollback, the maximum duration of containment, and the preserved evidence. Without those conditions a temporary guard becomes permanent policy because nobody knows whether its collateral cost is still justified.
+
+**Result Z — replay inputs must include causally relevant metadata.** Replaying a payload without headers, feature flags, auth scope, locale, schema version, and time context can prove only that a different request works. Capture a privacy-reviewed minimal envelope that preserves the branch conditions. The replay oracle should compare output, side effects, reason code, and resource cleanup, not merely an HTTP status.
+
+
+**Result AA — Python generators defer failures until consumption.** Constructing a generator can succeed while the first iteration raises because file access, parsing, or network work is lazy. A test that only creates the generator verifies no useful work. Consume enough elements to cross the intended boundary and close the generator so cleanup behaviour is also exercised.
+
+**Result AB — SQL `ORDER BY` is required for reproducible limit selection.** `LIMIT 100` without an order selects an implementation-dependent subset even when it appears stable in one environment. A downstream cache can then preserve arbitrary rows as if they were the first hundred. Add a total order and test with a changed execution plan or insertion order.
+
+**Result AC — API content negotiation must reject unsupported representations.** Returning a default format when a client requested an unsupported version can make a parser accept wrong semantics accidentally. Negotiate media type and version explicitly, then return a clear unsupported-representation response. The boundary replay requests a known incompatible version and asserts no domain action occurs.
+
+**Result AD — Linux permissions are evaluated at open time, not at intent time.** A deployment can prepare a path correctly and still fail after a later rotation changes owner or mode. The useful probe is an open attempt by the running identity at the failing instant. Periodic checks should use that identity, not an administrator shell with broader access.
+
+**Result AE — diagnosis should conserve the original artifact.** Sanitizing, reformatting, or retrying a bad payload before storing its fingerprint may remove the distinguishing feature. Record a safe digest, relevant headers, validation path, and reason code before containment transforms it. Privacy rules can limit retention without requiring evidence destruction.
+
+**Result AF — a fix is complete only when its invariant is observable.** Moving code without adding a counter, assertion, or replay oracle leaves the same defect discoverable only by a future symptom. Choose the lightest observable invariant that would have falsified the old behaviour. This turns remediation from a historical claim into a maintained property.
+
+
+**Result AG — a Python lock protects only code that acquires that same lock.** A thread, process, or second replica bypasses an in-memory lock entirely. Use a durable uniqueness constraint or distributed coordination when the invariant spans those boundaries. A two-process replay demonstrates whether the chosen guard has the required scope.
+
+**Result AH — an API's pagination token is opaque to clients but not arbitrary to servers.** The server must bind the token to query filters, ordering, and expiry so that reuse under changed filters cannot return an incoherent page. Reject mismatched tokens with a named reason. The replay changes one filter between pages and asserts a rejection rather than silent mixing.
+
+**Result AI — remediation metrics require a stable denominator.** Counting errors after a stricter admission gate can fall merely because fewer requests reach the measured path. Report rejected requests, admitted requests, and successful effects together. This distinguishes a real defect reduction from moving the denominator upstream.
+
+
+**Result AJ — a filesystem watcher can coalesce events.** Saving a file may produce several low-level changes or one combined notification depending on the platform. Treat notifications as hints to rescan the authoritative state, not as a complete edit log. The replay performs rapid replacements and verifies the final digest is observed.
+
+**Result AK — error budgets describe allowed failure over a window.** They do not make any individual failure acceptable or define a root cause. Pair the budget with request population, window, and excluded traffic. A remediation is judged by whether it changes the measured failure mode without merely excluding the affected requests.
 
 Takeaway: fourteen results cover the whole catalog, and each one is a comparison instrument with a named condition — cite the ID, substitute the numbers, and check the condition before believing the answer.
 

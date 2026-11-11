@@ -1164,6 +1164,9 @@ A biomedical validation plan is an owned state machine and evidence contract bef
 
 Related local theory includes Clinical Decision Support Evidence and Handoff, Biomedical Signal Pipeline and Validation, and Human Factors Alert Design and Recovery. These links support method vocabulary only; they are not evidence of this illustrative intervention.
 
+### Interview pack
+
+
 ### Interview 1: Why is this not a diagnostic case?
 
 **Answer:** The output is an offline validation score or routing disposition, with no authorized care action. A diagnostic claim needs an intended-use definition, evidence, governance, and validation not present here.

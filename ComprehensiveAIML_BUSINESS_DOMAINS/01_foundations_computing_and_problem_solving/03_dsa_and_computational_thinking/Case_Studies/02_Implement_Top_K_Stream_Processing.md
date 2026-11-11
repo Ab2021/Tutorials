@@ -1,12 +1,12 @@
 ---
 case_id: "CASE-03-002"
 case_title: "Implement Top-K Stream Processing"
-case_version: "2.0"
+case_version: "3.0"
 created: "2026-11-10"
 last_reviewed: null
 status: "proposed"
 content_status: "draft"
-case_type: "analytical"
+case_type: "streaming-systems"
 domain: "Foundations and computing / streaming aggregation"
 primary_pattern: "bounded-stream-ranking"
 secondary_patterns: ["sketch-error-contract", "deterministic-tie-ordering"]
@@ -225,1078 +225,1089 @@ The two oracles differ in what they can refute. **O1** can refute a published co
 
 **Reproducibility statement.** Given `Model-M1`, the configuration hash and the comparator, the full pipeline is a pure function of the seed. That is a property of the construction, and it is what allows Section 9's checks to be *designed* rather than merely described. It is not a claim that a production pipeline is pure: production adds arrival order, retries and clock skew, and each of those appears as a failure mechanism in Section 12.
 
+
+
+**Operational evidence boundary.** The state described here is a proposed design, not a claim that any named platform has run it.
+
+**Decision inputs retained at close.** The closer receives a watermark, a membership policy version, a shard manifest, and each shard's signed candidate payload.
+
+**Decision inputs deliberately absent.** The closer does not query future events, mutable catalogue labels, or a later configuration revision.
+
+**Reason-code vocabulary.** `READY` means all gates passed; `GAP_UNRESOLVED` means intervals overlap; `SHARD_MISSING` means no complete manifest exists.
+
+**Audit question one.** Can an auditor recompute the candidate order from the retained candidate payloads and comparator version?
+
+**Audit question two.** Can an auditor identify whether a late event was excluded, corrected, or included before the immutable close?
+
+**Audit question three.** Can an auditor show that a duplicate delivery did not create a second increment?
+
+**Selection ledger conclusion.** Exact maps are the reference when cardinality fits; Space-Saving is the candidate generator when bounded state is necessary; Count-Min is a companion estimator rather than a standalone top-K extractor.
+
+**Method boundary.** A sketch bound certifies an estimate under its stated algorithmic assumptions; it does not certify that business consumers should act when rank gaps are smaller than the uncertainty.
+
+**Reproducibility boundary.** Stable hashes and integer comparators make replay deterministic only if the same accepted-event set is reconstructed.
+
+**Security boundary.** Snapshot payloads need integrity protection in a real deployment; this illustrative case does not specify an authentication protocol.
+
+**Closing takeaway for Section 5.** The data contract, selection ledger, and retained evidence define what may be asserted at a publication tick.
 ## 6. Analysis Walkthrough
 
-The following derived quantities use ILLUSTRATIVE inputs only; they are design arithmetic rather than measurements.
+All numerical inputs in this section are ILLUSTRATIVE teaching inputs. Each result is a design check, not an observed capacity or accuracy result.
+
+**Notation before calculation.** Let `N` be accepted events per 300-second window in events.
+
+Let `lambda` be mean input rate in events per second.
+
+Let `K` be publication depth in keys, with `K=20` for this case.
+
+Let `S` be the number of key-owned shards, with `S=12`.
+
+Let `epsilon` be a dimensionless additive-error fraction for a Count-Min estimate.
+
+Let `delta` be the probability bound parameter used when choosing Count-Min depth.
+
+Let `w` be sketch width in counters per row, and `d` be sketch depth in rows.
+
+Let `L` be allowed lateness in seconds, and let `T_p` be processing time.
+
+Let `T_e` be event time, the timestamp used for window membership.
+
+The term “estimate” below always means an upper-biased Count-Min estimate unless a lower bound is explicitly named.
+
+The term “candidate” means a key retained by a candidate generator, not a key known to be globally top-K.
 
 ```text
 FORMULA [TK-01]: N = lambda * W
-WHERE: N [events]; lambda [events/s]; W [s].
-CONSTRAINT: constant mean arrival rate over the window; no sampling or loss.
-NUMERICAL EXAMPLE: lambda=9,600 events/s; W=300 s; N=9,600*300=2,880,000 events.
-INTERPRETATION: this is event volume, not distinct-key cardinality.
+WHERE: N [events/window]; lambda [events/s]; W [s/window].
+CONSTRAINT: ILLUSTRATIVE constant mean rate; accepted events only; no sampling.
+NUMERICAL EXAMPLE: lambda=9,600 events/s; W=300 s;
+                   N=9,600*300=2,880,000 events/window.
+INTERPRETATION: volume sets update work and sketch error scale, not the number of distinct keys.
 ```
 
-Independent check: 9,600 events/s multiplied by 5 minutes multiplied by 60 s/min equals 2,880,000 events.
+Dimension check: events/s multiplied by seconds produces events.
+
+Independent arithmetic check: five minutes contains `5*60=300` seconds, and `9,600*300=2,880,000`.
+
+Limit case: when `lambda=0`, the formula yields zero events and there is no meaningful rank boundary to certify.
 
 ```text
-FORMULA [TK-02]: E = ceil(N / m)
-WHERE: E [events/cell] is an additive sketch scale; m [cells] is retained capacity.
-CONSTRAINT: this simplified scale is illustrative; a real sketch needs its documented bound and confidence.
-NUMERICAL EXAMPLE: N=2,880,000; m=24,000; E=ceil(120)=120 events.
-INTERPRETATION: a 120-event one-sided uncertainty cannot settle a gap smaller than 240 events.
+FORMULA [TK-02]: w = ceil(e / epsilon); d = ceil(ln(1/delta));
+                  B = w * d * 8
+WHERE: w [counters/row]; d [rows]; B [bytes]; e=2.7182818;
+       epsilon dimensionless; delta dimensionless; each counter is 8 bytes.
+CONSTRAINT: ILLUSTRATIVE Count-Min sizing with independent hash rows;
+            it bounds point-query overestimate, not candidate enumeration.
+NUMERICAL EXAMPLE: epsilon=0.00004; delta=0.01;
+                   w=ceil(2.7182818/0.00004)=ceil(67,957.045)=67,958;
+                   d=ceil(ln(100))=ceil(4.60517)=5;
+                   B=67,958*5*8=2,718,320 bytes=2.592 MiB.
+INTERPRETATION: the counter array fits well inside 64 MiB, but a separate candidate generator remains required.
 ```
 
-Boundary: if collision behavior violates the chosen sketch's assumptions, this scale is not an error certificate.
+Dimension check: counters times rows times bytes per counter produces bytes.
+
+Independent conversion: `2,718,320 / 1,048,576 = 2.592` MiB to three decimals.
+
+Boundary: correlated hash rows or adversarial keys can invalidate the claimed probability behavior; a hash-family review is then required.
 
 ```text
-FORMULA [TK-03]: G = f(20) - f(21)
-WHERE: G [events] is the boundary gap; f(r) [events] is the exact count at rank r.
-CONSTRAINT: ranks use the same total comparator and the same closed window.
-NUMERICAL EXAMPLE: f(20)=1,842; f(21)=1,511; G=1,842-1,511=331 events.
-INTERPRETATION: two-sided uncertainty below 331 events is required to prove this ordering.
+FORMULA [TK-03]: E = epsilon * N; certify if 2E < G
+WHERE: E [events] is one-key additive uncertainty; G [events] is
+       f(K)-f(K+1), the exact boundary gap for the target window.
+CONSTRAINT: ILLUSTRATIVE conservative two-estimate comparison; both point
+            estimates may overestimate by at most E; candidate coverage holds.
+NUMERICAL EXAMPLE: epsilon=0.00004; N=2,880,000;
+                   E=0.00004*2,880,000=115.2 events;
+                   G=331 events; 2E=230.4 events < 331 events.
+INTERPRETATION: the constructed rank-20 boundary has 100.6 events of conservative separation margin.
 ```
 
-Sensitivity: if the gap falls to 180 events while the uncertainty remains 120 events on each side, 240 exceeds 180 and the boundary is unresolved.
+Independent check: `331-230.4=100.6` events.
+
+Sensitivity: if `G=180`, then `230.4>180`; the design must hold or mark provisional rather than assert rank 20.
+
+Counterexample: this comparison cannot certify a list if the true 21st key never reaches the candidate generator.
 
 ```text
-FORMULA [TK-04]: M = S * K * b
-WHERE: M [bytes]; S [shards]; K [candidates/shard]; b [bytes/candidate].
-CONSTRAINT: payload-only sizing; heaps, object headers, and dedup state are excluded.
-NUMERICAL EXAMPLE: S=12; K=80; b=48 bytes; M=12*80*48=46,080 bytes.
-INTERPRETATION: candidate transport is small, but it is not the whole memory budget.
+FORMULA [TK-04]: C = S * H; M_c = C * b
+WHERE: C [candidate records]; S [shards]; H [candidates/shard];
+       b [bytes/candidate record]; M_c [bytes].
+CONSTRAINT: ILLUSTRATIVE fixed-width serialized records; heap and network headers excluded.
+NUMERICAL EXAMPLE: S=12; H=80; b=48 bytes;
+                   C=12*80=960 records;
+                   M_c=960*48=46,080 bytes=45 KiB.
+INTERPRETATION: candidate transport is small, so retaining more candidates is usually cheaper than reopening a window.
 ```
 
-Independent check: 960 candidates times 48 bytes per candidate equals 46,080 bytes, approximately 45 KiB.
+Independent conversion: `46,080 / 1,024 = 45` KiB exactly.
 
-**Walkthrough control: window membership.** Assign an event only when its event time is inside the half-open interval; processing arrival is not membership.
-Invariant: Each accepted event has exactly one window_id.
-Diagnostic: inspect event_time, watermark, and assigned window_id before accepting the snapshot.
-Decision consequence: window membership changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise window membership beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for window membership with the window identifier and configuration hash.
-Recovery: when window membership is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate window membership against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: window membership is a ranking-contract concern, not evidence of an observed production result.
+Limit case: if keys are split across shards by event rather than key, `H=K` can miss a globally frequent key whose partial counts never dominate a shard.
 
-**Walkthrough control: late-event policy.** Route an event arriving after close to a correction ledger rather than reopening retained state invisibly.
-Invariant: A closed snapshot remains immutable.
-Diagnostic: inspect late event count and correction-ledger key before accepting the snapshot.
-Decision consequence: late-event policy changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise late-event policy beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for late-event policy with the window identifier and configuration hash.
-Recovery: when late-event policy is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate late-event policy against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: late-event policy is a ranking-contract concern, not evidence of an observed production result.
+```text
+FORMULA [TK-05]: R = W + L; B_bucket = R * S * q
+WHERE: R [s] is mutable retention horizon; W [s] window duration;
+       L [s] allowed lateness; S [shards]; q [bytes/shard-second bucket].
+CONSTRAINT: one-second event-time buckets; no overlapping-window duplication;
+            bucket payload q includes counters already selected for retention.
+NUMERICAL EXAMPLE: W=300 s; L=90 s; S=12; q=6,144 bytes;
+                   R=300+90=390 s;
+                   B_bucket=390*12*6,144=28,753,920 bytes=27.421875 MiB.
+INTERPRETATION: retaining late-data correction buckets consumes material state even before sketch and heap overhead.
+```
 
-**Walkthrough control: watermark advance.** Close only after the watermark crosses the end boundary plus the stated lateness allowance.
-Invariant: Watermarks advance monotonically.
-Diagnostic: inspect watermark sequence and allowed lateness before accepting the snapshot.
-Decision consequence: watermark advance changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise watermark advance beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for watermark advance with the window identifier and configuration hash.
-Recovery: when watermark advance is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate watermark advance against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: watermark advance is a ranking-contract concern, not evidence of an observed production result.
+Independent check: `390*12=4,680` shard-seconds, then `4,680*6,144=28,753,920` bytes.
 
-**Walkthrough control: deduplication scope.** Deduplicate event_id within the window before incrementing a counter, including replayed collector batches.
-Invariant: One logical event contributes at most one count.
-Diagnostic: inspect event_id cardinality versus accepted-event total before accepting the snapshot.
-Decision consequence: deduplication scope changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise deduplication scope beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for deduplication scope with the window identifier and configuration hash.
-Recovery: when deduplication scope is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate deduplication scope against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: deduplication scope is a ranking-contract concern, not evidence of an observed production result.
+Boundary: a late-data policy with unbounded `L` has unbounded retained mutable history and cannot meet a fixed memory contract.
 
-**Walkthrough control: stable key extraction.** Normalize term_id before hashing so equivalent encodings do not become separate candidates.
-Invariant: The extractor is pure and version-pinned.
-Diagnostic: inspect extractor version and normalization rejects before accepting the snapshot.
-Decision consequence: stable key extraction changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise stable key extraction beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for stable key extraction with the window identifier and configuration hash.
-Recovery: when stable key extraction is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate stable key extraction against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: stable key extraction is a ranking-contract concern, not evidence of an observed production result.
+```text
+FORMULA [TK-06]: M_total = B + B_bucket + M_c + M_meta
+WHERE: M_total [bytes]; B sketch bytes; B_bucket bucket bytes;
+       M_c candidate bytes; M_meta metadata and serialization reserve [bytes].
+CONSTRAINT: components are resident simultaneously at close; no allocator overhead beyond M_meta.
+NUMERICAL EXAMPLE: B=2,718,320; B_bucket=28,753,920;
+                   M_c=46,080; M_meta=8,388,608;
+                   M_total=39,906,928 bytes=38.058 MiB < 64 MiB.
+INTERPRETATION: the illustrative plan leaves 25.942 MiB of headroom, not 64 MiB of free memory.
+```
 
-**Walkthrough control: shard routing.** Route every occurrence of a key through the same stable hash during a window.
-Invariant: A key has one shard owner per window.
-Diagnostic: inspect key-to-shard test-vector result before accepting the snapshot.
-Decision consequence: shard routing changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise shard routing beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for shard routing with the window identifier and configuration hash.
-Recovery: when shard routing is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate shard routing against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: shard routing is a ranking-contract concern, not evidence of an observed production result.
+Independent check: the byte sum is `2,718,320+28,753,920+46,080+8,388,608=39,906,928`.
 
-**Walkthrough control: candidate completeness.** Keep enough shard candidates to ensure a globally winning key can reach the merger.
-Invariant: No candidate is discarded solely because another shard is quiet.
-Diagnostic: inspect per-shard candidate cutoff and omitted-count bound before accepting the snapshot.
-Decision consequence: candidate completeness changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise candidate completeness beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for candidate completeness with the window identifier and configuration hash.
-Recovery: when candidate completeness is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate candidate completeness against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: candidate completeness is a ranking-contract concern, not evidence of an observed production result.
+Sensitivity: doubling `L` from 90 to 180 seconds adds another `90*12*6,144=6,635,520` bytes, reducing headroom to 19.614 MiB.
 
-**Walkthrough control: heap admission.** Replace the heap minimum only when the incoming pair wins under count-descending then key-ascending order.
-Invariant: The heap root is the worst retained candidate.
-Diagnostic: inspect heap root before and after admission before accepting the snapshot.
-Decision consequence: heap admission changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise heap admission beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for heap admission with the window identifier and configuration hash.
-Recovery: when heap admission is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate heap admission against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: heap admission is a ranking-contract concern, not evidence of an observed production result.
+**Worked event-time trace.** Consider window `W17=[10:00:00,10:05:00)` in event time.
 
-**Walkthrough control: tie handling.** Use the unsigned term_id as a deterministic secondary order at every sort and merge boundary.
-Invariant: Equal counts produce a unique byte ordering.
-Diagnostic: inspect serialized ordered key sequence before accepting the snapshot.
-Decision consequence: tie handling changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise tie handling beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for tie handling with the window identifier and configuration hash.
-Recovery: when tie handling is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate tie handling against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: tie handling is a ranking-contract concern, not evidence of an observed production result.
+At processing time 10:05:02, event `a` has event time 10:04:58 and is accepted because the watermark is 10:04:55.
 
-**Walkthrough control: sketch interpretation.** Treat a sketch estimate as an estimate with a stated additive error, not as an exact count.
-Invariant: The error parameter is carried into publication logic.
-Diagnostic: inspect depth, width, and bound value before accepting the snapshot.
-Decision consequence: sketch interpretation changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise sketch interpretation beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for sketch interpretation with the window identifier and configuration hash.
-Recovery: when sketch interpretation is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate sketch interpretation against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: sketch interpretation is a ranking-contract concern, not evidence of an observed production result.
+At processing time 10:05:15, the watermark reaches 10:05:00, but the configured lateness interval keeps correction buckets mutable until 10:06:30.
 
-**Walkthrough control: rank-gap gate.** Compare the lower-versus-upper possibility at ranks 20 and 21 before authorising automation.
-Invariant: An unresolved boundary cannot drive the trending slot.
-Diagnostic: inspect rank-20 and rank-21 intervals before accepting the snapshot.
-Decision consequence: rank-gap gate changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise rank-gap gate beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for rank-gap gate with the window identifier and configuration hash.
-Recovery: when rank-gap gate is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate rank-gap gate against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: rank-gap gate is a ranking-contract concern, not evidence of an observed production result.
+At processing time 10:05:35, event `b` has event time 10:04:59 and is accepted into `W17` because it arrives within the 90-second allowance.
 
-**Walkthrough control: merge strategy.** Merge sorted shard lists with a global heap instead of repeatedly sorting their concatenation.
-Invariant: The merger consumes a deterministic candidate multiset.
-Diagnostic: inspect candidate count and merge comparator version before accepting the snapshot.
-Decision consequence: merge strategy changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise merge strategy beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for merge strategy with the window identifier and configuration hash.
-Recovery: when merge strategy is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate merge strategy against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: merge strategy is a ranking-contract concern, not evidence of an observed production result.
+At processing time 10:06:31, event `c` has the same event time and is late beyond the stated allowance.
 
-**Walkthrough control: state release.** Release mutable window state only after the immutable decision record is committed.
-Invariant: Recovery never depends on reclaimed counters.
-Diagnostic: inspect commit acknowledgement before release before accepting the snapshot.
-Decision consequence: state release changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise state release beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for state release with the window identifier and configuration hash.
-Recovery: when state release is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate state release against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: state release is a ranking-contract concern, not evidence of an observed production result.
+Event `c` is appended to a correction ledger with `window_id=W17`; it does not silently mutate the snapshot already published for W17.
 
-**Walkthrough control: snapshot idempotency.** Key snapshot writes by window_id and configuration hash, then reject conflicting payloads.
-Invariant: A retried close cannot create two authorities.
-Diagnostic: inspect idempotency key and payload digest before accepting the snapshot.
-Decision consequence: snapshot idempotency changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise snapshot idempotency beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for snapshot idempotency with the window identifier and configuration hash.
-Recovery: when snapshot idempotency is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate snapshot idempotency against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: snapshot idempotency is a ranking-contract concern, not evidence of an observed production result.
+If policy permits a correction, a new record references the original snapshot and has a distinct correction sequence.
 
-**Walkthrough control: clock separation.** Store event-time close and processing-time publication separately.
-Invariant: Latency is never mistaken for window membership.
-Diagnostic: inspect close timestamp and commit timestamp before accepting the snapshot.
-Decision consequence: clock separation changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise clock separation beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for clock separation with the window identifier and configuration hash.
-Recovery: when clock separation is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate clock separation against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: clock separation is a ranking-contract concern, not evidence of an observed production result.
+If policy forbids correction, the event is recorded as excluded-late so that downstream users can distinguish omission from loss.
 
-**Walkthrough control: capacity headroom.** Reserve memory for heap metadata, dedup state, and serialization rather than budgeting only counters.
-Invariant: The 64 MiB cap applies to resident state.
-Diagnostic: inspect high-water bytes by component before accepting the snapshot.
-Decision consequence: capacity headroom changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise capacity headroom beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for capacity headroom with the window identifier and configuration hash.
-Recovery: when capacity headroom is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate capacity headroom against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: capacity headroom is a ranking-contract concern, not evidence of an observed production result.
+The close decision uses event-time membership, while close latency uses processing time; neither timestamp substitutes for the other.
+
+**Worked partition trace.** Suppose stable hash assigns keys `p`, `q`, and `r` to shards 2, 7, and 2 respectively.
+
+All occurrences of `p` in W17 must go to shard 2, including retry deliveries.
+
+A retry of an already accepted producer sequence is recognized before the sketch update, so it creates zero additional count.
+
+Shards emit candidate records keyed by `(window_id, shard_id, configuration_hash)`.
+
+The closer rejects a manifest with 11 records when configuration expects 12 shards.
+
+The closer merges only records bearing the same window and configuration hash; mixing versions is a failed precondition, not a tie.
+
+The global comparator is descending estimated count, then ascending unsigned `term_id`.
+
+This comparator is used for heap eviction, shard list sort, merge, and serialized snapshot order.
+
+**Heap versus sketch selection.** An exact map plus a min-heap is correct when every distinct key fits in memory.
+
+Its map retains count for every observed key, while its heap limits the output-selection cost to `O(log K)` per candidate update.
+
+The heap does not reduce the map's cardinality cost because the map still needs each key's exact count.
+
+A Space-Saving summary keeps a fixed number of counters and emits candidates directly, but its counts include replacement error.
+
+A Count-Min sketch uses fixed counters and yields point estimates, but it cannot enumerate high-frequency keys without another structure.
+
+A hybrid can use Space-Saving for candidates and Count-Min for a conservative query bound, provided their distinct error meanings remain visible.
+
+The design in this case chooses a bounded candidate summary plus a point-estimate sketch only after proving both the candidate and rank-bound contracts.
+
+An exact-map fallback is selected whenever the observed cardinality and memory estimate fit inside the 64 MiB ceiling with reserve.
+
+**Candidate completeness rule.** A shard-local top-20 is not generally sufficient for a global top-20 when a key can be represented on multiple shards.
+
+Key-based partitioning avoids that failure because each key has exactly one owner during the window.
+
+Under key-based partitioning, retaining each shard's local top-K is sufficient for global top-K because a globally top-K key must be in its owning shard's top-K.
+
+This sufficiency statement fails during re-sharding if the same logical key can exist under two owners.
+
+The configuration hash therefore includes partition count, hash function identifier, and re-shard epoch.
+
+**Idempotency rule.** Input idempotency and output idempotency solve different duplicate paths.
+
+Input idempotency rejects a previously accepted source sequence before state mutation.
+
+Output idempotency makes repeated snapshot commits of identical `(window_id, configuration_hash)` return the same authority record.
+
+A conflicting payload under an existing output key is corruption evidence and must be rejected rather than “last write wins.”
+
+A producer sequence is only safe for input idempotency when the producer identifier and sequence are stable across its own restarts.
+
+If that premise cannot be met, the system needs an event identifier with a bounded retention method and must re-budget memory.
 
 ## 7. The Finding
 
-The proposed finding is conditional: an exact or bounded-error top-20 may be published only when its candidate set is complete, all shards attest, the uncertainty intervals do not overlap at the twentieth boundary, and the deterministic digest is reproducible. These conditions have not been executed on a production stream.
+**Proposed finding.** Publish an automated top-20 only when the window manifest is complete, partition ownership is stable, candidate coverage is satisfied, duplicate rejection is healthy, and the rank-20 margin exceeds the configured uncertainty bound.
 
-**Finding condition: window membership.** Assign an event only when its event time is inside the half-open interval; processing arrival is not membership.
-Invariant: Each accepted event has exactly one window_id.
-Diagnostic: inspect event_time, watermark, and assigned window_id before accepting the snapshot.
-Decision consequence: window membership changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise window membership beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for window membership with the window identifier and configuration hash.
-Recovery: when window membership is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate window membership against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: window membership is a ranking-contract concern, not evidence of an observed production result.
+The selected default is a bounded candidate summary plus a Count-Min point-estimation path, with an exact-map mode available when distinct-key memory fits.
 
-**Finding condition: late-event policy.** Route an event arriving after close to a correction ledger rather than reopening retained state invisibly.
-Invariant: A closed snapshot remains immutable.
-Diagnostic: inspect late event count and correction-ledger key before accepting the snapshot.
-Decision consequence: late-event policy changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise late-event policy beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for late-event policy with the window identifier and configuration hash.
-Recovery: when late-event policy is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate late-event policy against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: late-event policy is a ranking-contract concern, not evidence of an observed production result.
+This is a conditional design decision, not a statement that the configuration has been executed on a production workload.
 
-**Finding condition: watermark advance.** Close only after the watermark crosses the end boundary plus the stated lateness allowance.
-Invariant: Watermarks advance monotonically.
-Diagnostic: inspect watermark sequence and allowed lateness before accepting the snapshot.
-Decision consequence: watermark advance changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise watermark advance beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for watermark advance with the window identifier and configuration hash.
-Recovery: when watermark advance is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate watermark advance against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: watermark advance is a ranking-contract concern, not evidence of an observed production result.
+For the illustrative 9,600 events/s workload, a 67,958-by-5 counter array consumes 2.592 MiB and provides a 115.2-event per-key error scale.
 
-**Finding condition: deduplication scope.** Deduplicate event_id within the window before incrementing a counter, including replayed collector batches.
-Invariant: One logical event contributes at most one count.
-Diagnostic: inspect event_id cardinality versus accepted-event total before accepting the snapshot.
-Decision consequence: deduplication scope changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise deduplication scope beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for deduplication scope with the window identifier and configuration hash.
-Recovery: when deduplication scope is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate deduplication scope against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: deduplication scope is a ranking-contract concern, not evidence of an observed production result.
+With a constructed 331-event boundary gap, the conservative two-estimate margin is positive by 100.6 events.
 
-**Finding condition: stable key extraction.** Normalize term_id before hashing so equivalent encodings do not become separate candidates.
-Invariant: The extractor is pure and version-pinned.
-Diagnostic: inspect extractor version and normalization rejects before accepting the snapshot.
-Decision consequence: stable key extraction changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise stable key extraction beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for stable key extraction with the window identifier and configuration hash.
-Recovery: when stable key extraction is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate stable key extraction against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: stable key extraction is a ranking-contract concern, not evidence of an observed production result.
+That arithmetic supports a publication gate; it does not prove the assumed gap will occur on future windows.
 
-**Finding condition: shard routing.** Route every occurrence of a key through the same stable hash during a window.
-Invariant: A key has one shard owner per window.
-Diagnostic: inspect key-to-shard test-vector result before accepting the snapshot.
-Decision consequence: shard routing changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise shard routing beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for shard routing with the window identifier and configuration hash.
-Recovery: when shard routing is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate shard routing against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: shard routing is a ranking-contract concern, not evidence of an observed production result.
+The 64 MiB budget is met in the stated accounting model at 38.058 MiB, leaving 25.942 MiB before unmodelled allocator behavior.
 
-**Finding condition: candidate completeness.** Keep enough shard candidates to ensure a globally winning key can reach the merger.
-Invariant: No candidate is discarded solely because another shard is quiet.
-Diagnostic: inspect per-shard candidate cutoff and omitted-count bound before accepting the snapshot.
-Decision consequence: candidate completeness changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise candidate completeness beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for candidate completeness with the window identifier and configuration hash.
-Recovery: when candidate completeness is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate candidate completeness against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: candidate completeness is a ranking-contract concern, not evidence of an observed production result.
+The operational conclusion is to measure actual high-water state and hold publication on a budget breach rather than infer safety from this paper budget.
 
-**Finding condition: heap admission.** Replace the heap minimum only when the incoming pair wins under count-descending then key-ascending order.
-Invariant: The heap root is the worst retained candidate.
-Diagnostic: inspect heap root before and after admission before accepting the snapshot.
-Decision consequence: heap admission changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise heap admission beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for heap admission with the window identifier and configuration hash.
-Recovery: when heap admission is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate heap admission against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: heap admission is a ranking-contract concern, not evidence of an observed production result.
+**Decision table.**
+
+| Gate | Evidence at close | Action when true | Action when false |
+|---|---|---|---|
+| Manifest | 12 matching shard attestations | Continue merge | Hold previous snapshot |
+| Ownership | Single re-shard epoch and stable hash | Continue merge | Hold and drain boundary window |
+| Dedup | Duplicate ratio at or below configured bound | Continue merge | Hold and investigate source replay |
+| Candidate coverage | Candidate generator has its documented guarantee | Continue merge | Provisional only for humans |
+| Rank margin | `2E < G` at K/K+1 | Permit automation | Provisional or hold |
+| Memory | Resident high-water below 64 MiB | Retain until close | Shed mode or hold |
+| Commit | Snapshot key absent or byte-identical | Publish once | Reject conflicting payload |
+
+A provisional snapshot is useful only when its interface visibly carries `provisional=true`, its reason code, and the event-time window.
+
+Automation reads only snapshots with `automation_eligible=true`; it must not infer eligibility from a nonempty list.
+
+A held snapshot retains its original event-time end and publication timestamp, so users see staleness rather than a disguised new observation.
+
+The finding deliberately declines to promise exact rank positions below the certified boundary.
+
+If the business needs exact order through rank 500, the error budget must be re-derived at that depth or the system must use an exact approach.
 
 ## 8. System/Solution Design
 
-**Input-to-output architecture.** Collector validation → event-time/dedup gate → stable partition router → per-shard counters and candidate heap → close barrier → global merge → error and completeness gate → immutable snapshot store → dashboard plus automation fence. The arrow denotes data dependency, not a claim that a deployed service exists.
+**Input-to-output path.** Ingress validation → event-time assignment → source-sequence deduplication → stable key partitioning → per-shard summary update → watermark close barrier → manifest validation → candidate merge → rank and capacity gates → immutable snapshot commit → dashboard and automation consumers.
 
-**Design component: input envelope.** Validate event_id, event_time, term_id, and schema version at ingress.
-Invariant: Invalid events never mutate ranking state.
-Diagnostic: inspect rejection reason counters before accepting the snapshot.
-Decision consequence: input envelope changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise input envelope beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for input envelope with the window identifier and configuration hash.
-Recovery: when input envelope is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate input envelope against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: input envelope is a ranking-contract concern, not evidence of an observed production result.
+Each arrow represents a data dependency in the proposed design, not a claim about a deployed product.
 
-**Design component: event-time bucketing.** Place accepted events into one-second event-time buckets to make expiry explicit.
-Invariant: Bucket expiration is deterministic.
-Diagnostic: inspect bucket index versus watermark before accepting the snapshot.
-Decision consequence: event-time bucketing changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise event-time bucketing beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for event-time bucketing with the window identifier and configuration hash.
-Recovery: when event-time bucketing is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate event-time bucketing against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: event-time bucketing is a ranking-contract concern, not evidence of an observed production result.
+**Ingress validation.** Require an event identifier or stable producer-sequence pair, event time, key, schema version, and tenant scope before counting.
 
-**Design component: dedup store.** Use a bounded identifier store whose retention matches the allowed lateness, not the full history.
-Invariant: Duplicate detection covers the correction horizon.
-Diagnostic: inspect dedup eviction age before accepting the snapshot.
-Decision consequence: dedup store changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise dedup store beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for dedup store with the window identifier and configuration hash.
-Recovery: when dedup store is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate dedup store against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: dedup store is a ranking-contract concern, not evidence of an observed production result.
+Malformed keys are quarantined with a reason code because mapping them to a common placeholder would create an artificial heavy hitter.
 
-**Design component: counter engine.** Use exact counters for retained candidates and sketches only where their error contract is recorded.
-Invariant: Counter type is declared per field.
-Diagnostic: inspect counter implementation tag before accepting the snapshot.
-Decision consequence: counter engine changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise counter engine beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for counter engine with the window identifier and configuration hash.
-Recovery: when counter engine is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate counter engine against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: counter engine is a ranking-contract concern, not evidence of an observed production result.
+Event time outside configured clock-skew bounds is recorded separately from late arrival because a bad clock and normal network delay require different correction.
 
-**Design component: per-shard heap.** Maintain a bounded heap with the same comparator used at publication.
-Invariant: Local ordering is compatible with global ordering.
-Diagnostic: inspect comparator hash before accepting the snapshot.
-Decision consequence: per-shard heap changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise per-shard heap beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for per-shard heap with the window identifier and configuration hash.
-Recovery: when per-shard heap is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate per-shard heap against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: per-shard heap is a ranking-contract concern, not evidence of an observed production result.
+The validator must not consult future catalogue state when normalizing a key, or replay determinism is lost.
 
-**Design component: candidate transport.** Transmit key, estimate, lower bound, upper bound, and shard provenance together.
-Invariant: The merger receives uncertainty with each candidate.
-Diagnostic: inspect candidate schema checksum before accepting the snapshot.
-Decision consequence: candidate transport changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise candidate transport beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for candidate transport with the window identifier and configuration hash.
-Recovery: when candidate transport is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate candidate transport against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: candidate transport is a ranking-contract concern, not evidence of an observed production result.
+**Window manager.** Store events in one-second event-time buckets for the stated 300-second trailing window.
 
-**Design component: global merger.** Deduplicate candidates by key before ranking because one key may appear in recovery records.
-Invariant: Each key has one merged representation.
-Diagnostic: inspect merge duplicate counter before accepting the snapshot.
-Decision consequence: global merger changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise global merger beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for global merger with the window identifier and configuration hash.
-Recovery: when global merger is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate global merger against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: global merger is a ranking-contract concern, not evidence of an observed production result.
+Advance the watermark monotonically from observed source progress under a documented policy.
 
-**Design component: decision gate.** Apply schema, shard-completeness, error-gap, and idempotency gates in a fixed order.
-Invariant: A failed earlier gate cannot be hidden by a later pass.
-Diagnostic: inspect ordered reason-code trace before accepting the snapshot.
-Decision consequence: decision gate changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise decision gate beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for decision gate with the window identifier and configuration hash.
-Recovery: when decision gate is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate decision gate against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: decision gate is a ranking-contract concern, not evidence of an observed production result.
+Keep buckets mutable through `L=90` seconds after their nominal end so an eligible late event can alter the not-yet-final result.
 
-**Design component: snapshot serializer.** Encode counts as integers and identifiers canonically; never serialize heap iteration order.
-Invariant: Equal state yields identical bytes.
-Diagnostic: inspect digest across replays before accepting the snapshot.
-Decision consequence: snapshot serializer changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise snapshot serializer beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for snapshot serializer with the window identifier and configuration hash.
-Recovery: when snapshot serializer is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate snapshot serializer against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: snapshot serializer is a ranking-contract concern, not evidence of an observed production result.
+Seal a bucket after the lateness allowance, then retain only correction metadata required by policy.
 
-**Design component: publication channel.** Publish an immutable snapshot reference, not mutable ranking state.
-Invariant: Consumers can retrieve the audited object.
-Diagnostic: inspect reference resolution success before accepting the snapshot.
-Decision consequence: publication channel changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise publication channel beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for publication channel with the window identifier and configuration hash.
-Recovery: when publication channel is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate publication channel against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: publication channel is a ranking-contract concern, not evidence of an observed production result.
+A watermark regression is rejected and paged because reopening already-closed state makes previous snapshots ambiguous.
 
-**Design component: automation fence.** Allow the dashboard to show provisional data while blocking the automated trending action.
-Invariant: Human visibility is separated from automated commitment.
-Diagnostic: inspect fence status in consumer request before accepting the snapshot.
-Decision consequence: automation fence changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise automation fence beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for automation fence with the window identifier and configuration hash.
-Recovery: when automation fence is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate automation fence against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: automation fence is a ranking-contract concern, not evidence of an observed production result.
+**Partitioner.** Compute `shard_id=stable_hash(term_id, hash_version) mod S` at ingestion.
 
-**Design component: correction stream.** Emit late-event corrections as a new version with linkage to the affected closed window.
-Invariant: Corrections never overwrite the original authority.
-Diagnostic: inspect supersedes reference before accepting the snapshot.
-Decision consequence: correction stream changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise correction stream beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for correction stream with the window identifier and configuration hash.
-Recovery: when correction stream is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate correction stream against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: correction stream is a ranking-contract concern, not evidence of an observed production result.
+Persist `hash_version`, `S`, and re-shard epoch with every shard manifest.
 
-**Design component: configuration registry.** Version shard count, comparator, lateness, K, and error tolerance as one reviewed bundle.
-Invariant: A snapshot names exactly one contract.
-Diagnostic: inspect configuration digest before accepting the snapshot.
-Decision consequence: configuration registry changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise configuration registry beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for configuration registry with the window identifier and configuration hash.
-Recovery: when configuration registry is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate configuration registry against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: configuration registry is a ranking-contract concern, not evidence of an observed production result.
+Do not change any of these values within a window; route a planned change through a clean boundary plus a drain interval.
 
-**Design component: recovery checkpoint.** Persist enough state to resume a window or abandon it deterministically after a crash.
-Invariant: Recovery chooses replay or hold explicitly.
-Diagnostic: inspect checkpoint age and completeness before accepting the snapshot.
-Decision consequence: recovery checkpoint changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise recovery checkpoint beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for recovery checkpoint with the window identifier and configuration hash.
-Recovery: when recovery checkpoint is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate recovery checkpoint against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: recovery checkpoint is a ranking-contract concern, not evidence of an observed production result.
+Key ownership is chosen over round-robin event routing because global key counts then have a single source of truth.
 
-**Design component: backpressure boundary.** Throttle ingress before state exhaustion rather than letting allocation failure decide the policy.
-Invariant: Overload produces an observable admission decision.
-Diagnostic: inspect queue depth and rejection rate before accepting the snapshot.
-Decision consequence: backpressure boundary changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise backpressure boundary beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for backpressure boundary with the window identifier and configuration hash.
-Recovery: when backpressure boundary is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate backpressure boundary against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: backpressure boundary is a ranking-contract concern, not evidence of an observed production result.
+Hot keys remain a load-skew risk under key ownership, so the design observes per-shard update rate and does not hide the trade-off.
 
-**Design component: partition migration.** Start a new epoch for shard-count changes and prevent an epoch from spanning a window.
-Invariant: No key is counted under two hash domains.
-Diagnostic: inspect epoch id at window close before accepting the snapshot.
-Decision consequence: partition migration changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise partition migration beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for partition migration with the window identifier and configuration hash.
-Recovery: when partition migration is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate partition migration against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: partition migration is a ranking-contract concern, not evidence of an observed production result.
+**Per-shard state.** Maintain candidate-summary state, optional Count-Min counters, source progress, and a bounded diagnostic sample.
 
-**Design component: retention policy.** Retain snapshot provenance longer than raw mutable state so audits remain possible.
-Invariant: Auditing does not require resurrecting a heap.
-Diagnostic: inspect retention class and expiry job before accepting the snapshot.
-Decision consequence: retention policy changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise retention policy beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for retention policy with the window identifier and configuration hash.
-Recovery: when retention policy is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate retention policy against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: retention policy is a ranking-contract concern, not evidence of an observed production result.
+The candidate summary is responsible for enumeration; the point-estimate sketch is responsible for a stated bound on queried candidates.
+
+The heap used to serialize candidates stores the same total comparator as the merge.
+
+Store counters as unsigned 64-bit quantities or fail before overflow; silently wrapping reverses order.
+
+Record state high-water bytes by component rather than reporting one process-resident number with unknown attribution.
+
+**Close barrier.** At close, each shard writes an immutable candidate payload with count estimate, error metadata, total accepted events, watermark, and digest.
+
+The manifest is complete only when it has exactly one payload for every expected `(window_id, shard_id, configuration_hash)`.
+
+A duplicate payload with the same digest is a harmless retry; a duplicate with a different digest is a correctness incident.
+
+The closer never infers a missing shard's zero contribution, because a missing shard can contain the winning key.
+
+**Merge.** Deserialize each sorted shard list using the pinned comparator.
+
+Push the first candidate from each list into a global heap ordered by count descending and key ascending.
+
+Pop one candidate, emit it if it is not already emitted, then push the next record from that shard list.
+
+Continue until K unique key records are emitted or the candidate lists are exhausted.
+
+Uniqueness should be trivial under strict key ownership; retaining the check makes an accidental double-owner detectable rather than silent.
+
+**Rank gate.** Compare a lower confidence quantity for rank K with an upper confidence quantity for rank K+1 under the actual summary's documented semantics.
+
+Do not substitute the last emitted candidate's estimated count for a proof that no omitted key can exceed it.
+
+Persist the two compared values, the bound version, and the decision threshold alongside the action.
+
+A failed rank gate permits dashboard visibility only if the UI labels uncertainty and the automation fence stays closed.
+
+**Snapshot commit.** Use `(window_id, configuration_hash, correction_sequence)` as the durable authority key.
+
+The first accepted payload becomes immutable for that key.
+
+A retry with byte-identical payload returns the same record identifier.
+
+A retry with a different digest raises an integrity alert and cannot overwrite the authority record.
+
+Store event-time bounds, processing-time commit time, shard manifest digest, candidate digest, comparator version, decision, and reason code.
+
+**Consumer contract.** Dashboard clients display the window end, action, estimated counts, and provisional or held condition.
+
+Automation clients require `automation_eligible=true` and reject any missing eligibility field.
+
+Consumer cache TTL must not be treated as the event-time window; it only controls display freshness.
+
+A downstream recommender that needs per-tenant ranks cannot reuse this global aggregate without a separate state budget and privacy review.
+
+**Recovery path.** On process restart, reload the latest durable bucket checkpoint and source progress before accepting more input.
+
+Replay only source sequences greater than the durable progress marker; this avoids reapplying acknowledged updates.
+
+If source progress is unavailable, switch the affected window to hold rather than claim exactly-once behavior.
+
+Rebuild a lost candidate summary from retained bucket data only when the recovery deadline still permits a validated close.
+
+If reconstruction exceeds the 2,000 ms close deadline, publish the explicitly stale previous snapshot and emit a recovery reason code.
+
+**Operational readiness.** Configuration changes require a dry-run manifest check, capacity recalculation, comparator compatibility review, and an explicit effective window.
+
+An on-call runbook needs separate actions for missing shard, late-data surge, memory pressure, digest conflict, and rank-gate failure.
+
+A dashboard label alone is not a runbook action; each alert must identify whether data can be replayed and whether automation is fenced.
+
+The minimum recovery drill is a forced shard restart during an open window followed by digest comparison against an independent replay.
 
 ## 9. Evaluation & Validation
 
-Evaluation is a proposed protocol, not an executed experiment. The numerator, denominator, population, window, comparator, guardrails, uncertainty, and status are specified so a later operator cannot turn a convenient sample into a success claim.
+No production evaluation has been executed; the following is a proposed validation plan using constructed streams and an independent exact oracle.
 
-**Validation contract: rank-set agreement.** Compute the numerator as keys shared with the exact oracle top-20 and denominator as 20.
-Invariant: The population is closed windows selected before replay.
-Diagnostic: inspect set overlap and oracle version before accepting the snapshot.
-Decision consequence: rank-set agreement changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise rank-set agreement beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for rank-set agreement with the window identifier and configuration hash.
-Recovery: when rank-set agreement is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate rank-set agreement against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: rank-set agreement is a ranking-contract concern, not evidence of an observed production result.
+**Primary correctness metric.** Exact top-K set recall has numerator “keys present in both the published K-set and oracle K-set.”
 
-**Validation contract: weighted position error.** Weight a position difference by 1/rank so rank-one disagreement is more visible than rank-twenty disagreement.
-Invariant: The comparator baseline is the exact replay.
-Diagnostic: inspect per-rank displacement vector before accepting the snapshot.
-Decision consequence: weighted position error changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise weighted position error beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for weighted position error with the window identifier and configuration hash.
-Recovery: when weighted position error is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate weighted position error against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: weighted position error is a ranking-contract concern, not evidence of an observed production result.
+Its denominator is K oracle keys for the same event-time window and comparator version.
 
-**Validation contract: publication eligibility.** Measure eligible ticks divided by all scheduled ticks, excluding none after collection begins.
-Invariant: A hold is a denominator event, not missing data.
-Diagnostic: inspect scheduled tick count and decision code before accepting the snapshot.
-Decision consequence: publication eligibility changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise publication eligibility beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for publication eligibility with the window identifier and configuration hash.
-Recovery: when publication eligibility is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate publication eligibility against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: publication eligibility is a ranking-contract concern, not evidence of an observed production result.
+Its population is all completed constructed windows after the configured watermark, not only windows that passed publication gates.
 
-**Validation contract: staleness guardrail.** Measure wall-clock age of the last accepted snapshot at consumer read time.
-Invariant: Two consecutive holds trigger an alert.
-Diagnostic: inspect snapshot age and hold streak before accepting the snapshot.
-Decision consequence: staleness guardrail changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise staleness guardrail beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for staleness guardrail with the window identifier and configuration hash.
-Recovery: when staleness guardrail is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate staleness guardrail against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: staleness guardrail is a ranking-contract concern, not evidence of an observed production result.
+Its window is one 300-second event-time interval evaluated at each 60-second publication cadence.
 
-**Validation contract: duplicate guardrail.** Measure rejected duplicate event_ids divided by received event_ids in each window.
-Invariant: The threshold is a policy setting, not an accuracy score.
-Diagnostic: inspect duplicate numerator and total arrivals before accepting the snapshot.
-Decision consequence: duplicate guardrail changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise duplicate guardrail beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for duplicate guardrail with the window identifier and configuration hash.
-Recovery: when duplicate guardrail is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate duplicate guardrail against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: duplicate guardrail is a ranking-contract concern, not evidence of an observed production result.
+Its comparator is an exact per-key replay with independently implemented merge and comparator code.
 
-**Validation contract: late-data guardrail.** Measure events arriving after the watermark divided by all valid arrivals.
-Invariant: Late rate is reported separately from invalid-schema rate.
-Diagnostic: inspect lateness histogram before accepting the snapshot.
-Decision consequence: late-data guardrail changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise late-data guardrail beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for late-data guardrail with the window identifier and configuration hash.
-Recovery: when late-data guardrail is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate late-data guardrail against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: late-data guardrail is a ranking-contract concern, not evidence of an observed production result.
+The guardrail is zero false `automation_eligible` snapshots when the oracle shows an incorrect top-K membership.
 
-**Validation contract: memory guardrail.** Compare peak resident bytes with 64 MiB including allocator and serialization headroom.
-Invariant: A mean memory reading cannot certify a cap.
-Diagnostic: inspect per-component high-water marks before accepting the snapshot.
-Decision consequence: memory guardrail changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise memory guardrail beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for memory guardrail with the window identifier and configuration hash.
-Recovery: when memory guardrail is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate memory guardrail against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: memory guardrail is a ranking-contract concern, not evidence of an observed production result.
+The uncertainty statement is that finite generated scenarios cannot bound unrepresented production distributions.
 
-**Validation contract: deadline guardrail.** Measure close-to-commit elapsed milliseconds against 2,000 ms at every tick.
-Invariant: Processing time does not alter event-time membership.
-Diagnostic: inspect close and commit timestamps before accepting the snapshot.
-Decision consequence: deadline guardrail changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise deadline guardrail beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for deadline guardrail with the window identifier and configuration hash.
-Recovery: when deadline guardrail is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate deadline guardrail against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: deadline guardrail is a ranking-contract concern, not evidence of an observed production result.
+Status: not executed.
 
-**Validation contract: determinism check.** Replay identical retained state in independent processes and compare bytes, not just displayed rows.
-Invariant: The sample includes tied counts and empty shards.
-Diagnostic: inspect snapshot digest pair before accepting the snapshot.
-Decision consequence: determinism check changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise determinism check beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for determinism check with the window identifier and configuration hash.
-Recovery: when determinism check is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate determinism check against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: determinism check is a ranking-contract concern, not evidence of an observed production result.
+**Order metric.** Boundary-order accuracy has numerator “windows where oracle rank 20 precedes oracle rank 21 in the same order emitted.”
 
-**Validation contract: partition check.** Compare the configured shard set with the set contributing to a close.
-Invariant: A missing shard invalidates the output.
-Diagnostic: inspect expected and observed shard ids before accepting the snapshot.
-Decision consequence: partition check changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise partition check beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for partition check with the window identifier and configuration hash.
-Recovery: when partition check is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate partition check against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: partition check is a ranking-contract concern, not evidence of an observed production result.
+Its denominator is windows whose oracle ranks 20 and 21 have unequal counts after deterministic tie-breaking.
 
-**Validation contract: uncertainty status.** Report whether each metric is illustrative, executed, or not-executed.
-Invariant: No constructed oracle result is represented as a live outcome.
-Diagnostic: inspect evidence label before accepting the snapshot.
-Decision consequence: uncertainty status changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise uncertainty status beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for uncertainty status with the window identifier and configuration hash.
-Recovery: when uncertainty status is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate uncertainty status against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: uncertainty status is a ranking-contract concern, not evidence of an observed production result.
+Its population excludes empty windows because no twentieth rank exists there.
 
-**Validation contract: sensitivity sweep.** Vary skew, K, window length, lateness, and cardinality one at a time in a constructed analysis.
-Invariant: A decision boundary is recorded with its assumptions.
-Diagnostic: inspect parameter grid and crossing point before accepting the snapshot.
-Decision consequence: sensitivity sweep changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise sensitivity sweep beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for sensitivity sweep with the window identifier and configuration hash.
-Recovery: when sensitivity sweep is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate sensitivity sweep against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: sensitivity sweep is a ranking-contract concern, not evidence of an observed production result.
+Its comparator uses event-time membership and the same key normalization as the candidate path, while the merge implementation remains independent.
 
+The guardrail is that a tie resolved by key order is not counted as an estimator success; it is tested as determinism.
+
+Status: not executed.
+
+**Freshness metric.** On-time snapshot fraction has numerator “eligible snapshots committed within 2,000 ms of watermark close.”
+
+Its denominator is all windows with complete input manifests during the test run.
+
+Its population includes held and provisional decisions so latency is not flattered by excluding failures.
+
+The comparator is the 2,000 ms service objective measured from close-barrier observation to durable commit acknowledgement.
+
+The guardrail is no missing-manifest window may be counted as on-time by committing an empty list.
+
+Status: not executed.
+
+**Resource metric.** State headroom has numerator `64 MiB - observed component-attributed high-water bytes`.
+
+Its denominator is one process/window state image, and its unit is MiB rather than a percentage that obscures absolute risk.
+
+The population includes the highest-rate and highest-cardinality constructed scenarios separately because they stress different allocations.
+
+The comparator is the 64 MiB hard budget stated in this case.
+
+The guardrail is allocation accounting must include checkpoint serialization and dedup state, not merely sketch counters.
+
+Status: not executed.
+
+**Determinism test.** Feed an identical generated event multiset through two process instances with permuted arrival order allowed by the same watermark schedule.
+
+Compare the serialized snapshot digest, candidate order, action, and reason code.
+
+A difference caused only by processing-time metadata is excluded from the digest comparison and separately reported.
+
+A difference in key order at equal counts is a comparator defect even when the set metric is perfect.
+
+Status: proposed, not executed.
+
+**Late-data test.** Generate an event at each offset from `-1` second through `L+1` seconds around the watermark allowance.
+
+Verify that accepted late events affect the mutable window, while excluded late events are recorded in the correction path.
+
+Verify that a correction record cannot overwrite the original authority key.
+
+The comparator is a hand-calculated event-time ledger for the small trace.
+
+Status: proposed, not executed.
+
+**Failure injection test.** Omit one shard payload at close and assert that no automation-eligible snapshot is committed.
+
+Inject a byte-different duplicate payload for the same manifest identity and assert that commit fails closed.
+
+Restart a shard after its checkpoint but before close and compare recovery output to the exact oracle.
+
+Drive one shard above its memory allocation and assert that the capacity reason code takes precedence over a rank-gate pass.
+
+Status: proposed, not executed.
+
+**Acceptance threshold.** The design is acceptable for pilot implementation only if every false automation-eligible result is zero across the declared test matrix, digest determinism holds, and observed state stays within budget with stated reserve.
+
+This is a pre-deployment criterion, not a claimed result.
 ## 10. Action Taken
 
-No operational deployment was performed for this illustrative case. The recommended action is to adopt the following decision record only after the named test evidence exists.
+**Proposed action, not completed deployment.** Implement the design in an isolated test harness before connecting it to dashboard or automation consumers.
 
-**Operational action: change approval.** Require a reviewed configuration digest before changing K, error tolerance, or shard count.
-Invariant: Unreviewed configuration cannot publish.
-Diagnostic: inspect approval reference before accepting the snapshot.
-Decision consequence: change approval changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise change approval beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for change approval with the window identifier and configuration hash.
-Recovery: when change approval is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate change approval against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: change approval is a ranking-contract concern, not evidence of an observed production result.
+First, freeze the ranking contract: window interval, allowed lateness, key normalization, deterministic comparator, publication actions, and authority key.
 
-**Operational action: pre-close checklist.** Check watermark, shard membership, memory headroom, and comparator version before merge.
-Invariant: Close gates are evaluated from durable inputs.
-Diagnostic: inspect pre-close checklist record before accepting the snapshot.
-Decision consequence: pre-close checklist changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise pre-close checklist beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for pre-close checklist with the window identifier and configuration hash.
-Recovery: when pre-close checklist is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate pre-close checklist against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: pre-close checklist is a ranking-contract concern, not evidence of an observed production result.
+Second, implement the exact oracle independently from the bounded-state pipeline.
 
-**Operational action: hold behavior.** Republish the last accepted snapshot with its original timestamp and a current hold reason.
-Invariant: A hold never masquerades as fresh data.
-Diagnostic: inspect stale marker and reason code before accepting the snapshot.
-Decision consequence: hold behavior changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise hold behavior beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for hold behavior with the window identifier and configuration hash.
-Recovery: when hold behavior is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate hold behavior against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: hold behavior is a ranking-contract concern, not evidence of an observed production result.
+Third, generate constructed workloads covering concentrated keys, nearly uniform keys, ties, duplicates, late events, shard loss, and recovery.
 
-**Operational action: provisional behavior.** Expose the candidate to humans with uncertainty while the automation fence remains closed.
-Invariant: Provisional output cannot trigger ranking-dependent action.
-Diagnostic: inspect consumer fence decision before accepting the snapshot.
-Decision consequence: provisional behavior changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise provisional behavior beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for provisional behavior with the window identifier and configuration hash.
-Recovery: when provisional behavior is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate provisional behavior against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: provisional behavior is a ranking-contract concern, not evidence of an observed production result.
+Fourth, make the candidate generator and point-estimator selectable by configuration with versioned semantics rather than silently changing algorithm under the same snapshot identity.
 
-**Operational action: replay escalation.** Use the exact oracle only as an asynchronous adjudication path after a disputed close.
-Invariant: Replay does not retroactively alter the original record.
-Diagnostic: inspect replay request and result linkage before accepting the snapshot.
-Decision consequence: replay escalation changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise replay escalation beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for replay escalation with the window identifier and configuration hash.
-Recovery: when replay escalation is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate replay escalation against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: replay escalation is a ranking-contract concern, not evidence of an observed production result.
+Fifth, implement the close barrier and manifest validation before optimizing the merge, because a fast merge of incomplete state is still wrong.
 
-**Operational action: on-call handoff.** Page after two holds, a missing shard, or idempotency conflict with snapshot evidence attached.
-Invariant: Pages name a mechanism, not a vague accuracy alarm.
-Diagnostic: inspect page reason and evidence reference before accepting the snapshot.
-Decision consequence: on-call handoff changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise on-call handoff beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for on-call handoff with the window identifier and configuration hash.
-Recovery: when on-call handoff is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate on-call handoff against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: on-call handoff is a ranking-contract concern, not evidence of an observed production result.
+Sixth, attach component-level memory accounting to every candidate design and reject a configuration that budgets only its sketch array.
 
-**Operational action: runbook ownership.** Assign the platform lead authority for contract changes and on-call authority for recovery execution.
-Invariant: No operator invents an error tolerance during an incident.
-Diagnostic: inspect owner and escalation timestamp before accepting the snapshot.
-Decision consequence: runbook ownership changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise runbook ownership beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for runbook ownership with the window identifier and configuration hash.
-Recovery: when runbook ownership is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate runbook ownership against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: runbook ownership is a ranking-contract concern, not evidence of an observed production result.
+Seventh, create the automation fence so a provisional or held snapshot cannot be consumed as a normal ranking.
 
-**Operational action: retrospective record.** Classify each failure as data, state, partition, comparator, or capacity before remediation.
-Invariant: Corrective work targets a discriminated cause.
-Diagnostic: inspect incident classification before accepting the snapshot.
-Decision consequence: retrospective record changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise retrospective record beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for retrospective record with the window identifier and configuration hash.
-Recovery: when retrospective record is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate retrospective record against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: retrospective record is a ranking-contract concern, not evidence of an observed production result.
+Eighth, run the proposed validation matrix and record results as measured only after execution.
+
+Ninth, require a change review for `K`, window length, lateness, shard count, key hash, candidate capacity, counter width, or rank-margin policy.
+
+The action does not include automatic correction of late data because correction semantics require consumer agreement about whether historical ranks may change.
+
+The action does not include per-tenant rankings because that changes cardinality, privacy, and capacity assumptions rather than being a simple filter.
+
+**Implementation sequence and exit evidence.**
+
+| Step | Deliverable | Exit evidence | Decision if it fails |
+|---|---|---|---|
+| 1 | Comparator library | Equal-count key test vectors serialize identically | Stop before state implementation |
+| 2 | Exact oracle | Small hand ledger matches replay output | Repair oracle independently |
+| 3 | Event-time buckets | Boundary events follow half-open interval | Fix membership logic |
+| 4 | Dedup gate | Replayed source sequence adds zero count | Hold input acceptance |
+| 5 | Key partitioner | Every test key has one owner per epoch | Reject re-shard plan |
+| 6 | Candidate summary | Candidate guarantee documented and tested | Use exact-map mode |
+| 7 | Close barrier | Missing shard blocks eligible commit | Fix manifest handling |
+| 8 | Rank gate | Overlapping interval blocks automation | Tune only through reviewed config |
+| 9 | Snapshot store | Byte-identical retry is idempotent | Fix authority-key semantics |
+| 10 | Recovery drill | Restart digest equals oracle digest | Block pilot |
+
+**Rollout constraints.** A shadow run may compute snapshots but cannot alter the trending slot.
+
+A pilot may expose an automation-eligible flag only after the exact oracle has completed for the corresponding constructed workload.
+
+A consumer migration must use the explicit eligibility field and cannot use count magnitude as a proxy for confidence.
+
+A rollback is configuration-driven: fence automation, retain prior published snapshot, preserve the failing manifest and checkpoint, then replay offline.
+
+A rollback does not delete the failed record because the record is needed to explain the decision and improve the test matrix.
 
 ## 11. Outcome & Results
 
-**Result status: not-measured.** No company stream, live snapshot, latency distribution, cost invoice, or accuracy result was supplied or collected. The numerical examples are ILLUSTRATIVE derivations and demonstrate only the arithmetic under their stated assumptions.
+**Outcome status: not measured.** No implementation, pilot, production traffic, latency measurement, memory measurement, accuracy result, or business impact is claimed in this case.
 
-**Outcome interpretation: change approval.** Require a reviewed configuration digest before changing K, error tolerance, or shard count.
-Invariant: Unreviewed configuration cannot publish.
-Diagnostic: inspect approval reference before accepting the snapshot.
-Decision consequence: change approval changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise change approval beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for change approval with the window identifier and configuration hash.
-Recovery: when change approval is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate change approval against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: change approval is a ranking-contract concern, not evidence of an observed production result.
+The completed outcome of this manuscript is a proposed decision contract and a testable design specification.
 
-**Outcome interpretation: pre-close checklist.** Check watermark, shard membership, memory headroom, and comparator version before merge.
-Invariant: Close gates are evaluated from durable inputs.
-Diagnostic: inspect pre-close checklist record before accepting the snapshot.
-Decision consequence: pre-close checklist changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise pre-close checklist beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for pre-close checklist with the window identifier and configuration hash.
-Recovery: when pre-close checklist is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate pre-close checklist against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: pre-close checklist is a ranking-contract concern, not evidence of an observed production result.
+The design predicts that bounded summary state can meet the illustrative 64 MiB budget while preserving a visible rank-confidence gate.
 
-**Outcome interpretation: hold behavior.** Republish the last accepted snapshot with its original timestamp and a current hold reason.
-Invariant: A hold never masquerades as fresh data.
-Diagnostic: inspect stale marker and reason code before accepting the snapshot.
-Decision consequence: hold behavior changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise hold behavior beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for hold behavior with the window identifier and configuration hash.
-Recovery: when hold behavior is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate hold behavior against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: hold behavior is a ranking-contract concern, not evidence of an observed production result.
+That prediction depends on the constructed traffic rate, cardinality behavior, late-data retention model, and hash assumptions.
 
-**Outcome interpretation: provisional behavior.** Expose the candidate to humans with uncertainty while the automation fence remains closed.
-Invariant: Provisional output cannot trigger ranking-dependent action.
-Diagnostic: inspect consumer fence decision before accepting the snapshot.
-Decision consequence: provisional behavior changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise provisional behavior beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for provisional behavior with the window identifier and configuration hash.
-Recovery: when provisional behavior is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate provisional behavior against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: provisional behavior is a ranking-contract concern, not evidence of an observed production result.
+The design does not predict that a real workload will have a 331-event rank-20 gap.
 
-**Outcome interpretation: replay escalation.** Use the exact oracle only as an asynchronous adjudication path after a disputed close.
-Invariant: Replay does not retroactively alter the original record.
-Diagnostic: inspect replay request and result linkage before accepting the snapshot.
-Decision consequence: replay escalation changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise replay escalation beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for replay escalation with the window identifier and configuration hash.
-Recovery: when replay escalation is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate replay escalation against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: replay escalation is a ranking-contract concern, not evidence of an observed production result.
+The design does not predict that all production duplicate paths have stable source sequences.
 
-**Outcome interpretation: on-call handoff.** Page after two holds, a missing shard, or idempotency conflict with snapshot evidence attached.
-Invariant: Pages name a mechanism, not a vague accuracy alarm.
-Diagnostic: inspect page reason and evidence reference before accepting the snapshot.
-Decision consequence: on-call handoff changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise on-call handoff beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for on-call handoff with the window identifier and configuration hash.
-Recovery: when on-call handoff is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate on-call handoff against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: on-call handoff is a ranking-contract concern, not evidence of an observed production result.
+The design does not predict that a Count-Min parameterization alone can enumerate the correct keys.
 
-**Outcome interpretation: runbook ownership.** Assign the platform lead authority for contract changes and on-call authority for recovery execution.
-Invariant: No operator invents an error tolerance during an incident.
-Diagnostic: inspect owner and escalation timestamp before accepting the snapshot.
-Decision consequence: runbook ownership changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise runbook ownership beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for runbook ownership with the window identifier and configuration hash.
-Recovery: when runbook ownership is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate runbook ownership against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: runbook ownership is a ranking-contract concern, not evidence of an observed production result.
+**Result record to populate only after execution.**
 
-**Outcome interpretation: retrospective record.** Classify each failure as data, state, partition, comparator, or capacity before remediation.
-Invariant: Corrective work targets a discriminated cause.
-Diagnostic: inspect incident classification before accepting the snapshot.
-Decision consequence: retrospective record changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise retrospective record beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for retrospective record with the window identifier and configuration hash.
-Recovery: when retrospective record is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate retrospective record against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: retrospective record is a ranking-contract concern, not evidence of an observed production result.
+| Result field | Required future observation | Current value |
+|---|---|---|
+| Top-20 membership errors | Oracle mismatch count and window identifiers | not-measured |
+| Incorrect eligible publishes | Count, severity, and cause | not-measured |
+| Commit freshness | Close-to-commit latency distribution | not-measured |
+| State high-water | Per-component byte distribution | not-measured |
+| Late-event handling | Accepted, corrected, and excluded counts | not-measured |
+| Duplicate handling | Duplicate attempts and rejected increments | not-measured |
+| Recovery fidelity | Digest comparison after forced restart | not-measured |
+| Consumer behavior | Eligibility-fence acceptance evidence | not-measured |
+
+**Interpretation discipline.** A passing constructed test proves only the tested invariant under generated inputs.
+
+A successful shadow run would establish observability and replay behavior for that environment, not business benefit.
+
+A production measurement would need an explicit observation window, population, comparator, missing-data treatment, and uncertainty statement.
+
+A dashboard click-through change would not establish ranking correctness because user behavior has additional causes.
+
+A lower memory reading would not establish safety unless it includes the close-time peak and recovery overlap.
+
+A zero duplicate count would not establish idempotency unless duplicate injection was attempted.
+
+The honest next conclusion is therefore “ready for specified validation,” not “successful stream-processing implementation.”
 
 ## 12. Failure Modes & What Went Wrong
 
-The following are considered mechanisms and diagnostic controls, not reports of failures in a real system.
+The mechanisms below are considered failure scenarios, not observed incidents.
 
-**Failure mechanism: duplicate delivery.** At-least-once transport repeats a valid event after a retry.
-Invariant: The duplicate-id rate rises while schema rejects remain flat.
-Diagnostic: inspect dedup before increment and compare batch identifiers. before accepting the snapshot.
-Decision consequence: duplicate delivery changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise duplicate delivery beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for duplicate delivery with the window identifier and configuration hash.
-Recovery: when duplicate delivery is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate duplicate delivery against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: duplicate delivery is a ranking-contract concern, not evidence of an observed production result.
+### F-01: Event-time and processing-time were conflated
 
-**Failure mechanism: late arrival.** An event arrives after the watermark although its event time belongs to the closed window.
-Invariant: Lateness histogram has a tail beyond allowance.
-Diagnostic: inspect write a correction version; do not mutate the old snapshot. before accepting the snapshot.
-Decision consequence: late arrival changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise late arrival beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for late arrival with the window identifier and configuration hash.
-Recovery: when late arrival is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate late arrival against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: late arrival is a ranking-contract concern, not evidence of an observed production result.
+**Symptom.** A snapshot includes an event that arrived before close but belongs to the next event-time window.
 
-**Failure mechanism: watermark regression.** A source emits an earlier watermark after recovery.
-Invariant: The monotonicity assertion fails before window assignment.
-Diagnostic: inspect reject the regression and investigate source epoch. before accepting the snapshot.
-Decision consequence: watermark regression changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise watermark regression beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for watermark regression with the window identifier and configuration hash.
-Recovery: when watermark regression is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate watermark regression against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: watermark regression is a ranking-contract concern, not evidence of an observed production result.
+**Competing causes.** The window assignment may use processing time, the event clock may be wrong, or the watermark may be advanced prematurely.
 
-**Failure mechanism: missing shard.** One shard fails close or its state is unavailable.
-Invariant: Observed shard ids differ from configured ids.
-Diagnostic: inspect hold; never merge eleven shards as if twelve contributed. before accepting the snapshot.
-Decision consequence: missing shard changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise missing shard beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for missing shard with the window identifier and configuration hash.
-Recovery: when missing shard is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate missing shard against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: missing shard is a ranking-contract concern, not evidence of an observed production result.
+**Discriminating check.** Inspect the event timestamp, processing timestamp, assigned `window_id`, watermark history, and configured interval for the same event.
 
-**Failure mechanism: split ownership.** Two workers process the same partition during a lease race.
-Invariant: Two writer identities report overlapping sequence ranges.
-Diagnostic: inspect fence writers with epoch tokens and replay safely. before accepting the snapshot.
-Decision consequence: split ownership changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise split ownership beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for split ownership with the window identifier and configuration hash.
-Recovery: when split ownership is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate split ownership against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: split ownership is a ranking-contract concern, not evidence of an observed production result.
+**Correction.** Recompute membership from immutable event time and use the correction path if the prior snapshot was already committed.
 
-**Failure mechanism: hash drift.** A changed hash library or seed routes a key to another shard after restart.
-Invariant: Fixed test vectors disagree with current routing.
-Diagnostic: inspect freeze publication for straddling windows and start a new epoch. before accepting the snapshot.
-Decision consequence: hash drift changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise hash drift beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for hash drift with the window identifier and configuration hash.
-Recovery: when hash drift is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate hash drift against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: hash drift is a ranking-contract concern, not evidence of an observed production result.
+**Prevention.** Keep event-time bounds and processing-time commit time as distinct serialized fields.
 
-**Failure mechanism: comparator drift.** One component uses lexical identifiers while another uses unsigned numeric order.
-Invariant: Replay rows match counts but serialized order differs.
-Diagnostic: inspect pin a shared comparator specification and digest. before accepting the snapshot.
-Decision consequence: comparator drift changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise comparator drift beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for comparator drift with the window identifier and configuration hash.
-Recovery: when comparator drift is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate comparator drift against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: comparator drift is a ranking-contract concern, not evidence of an observed production result.
+**Verification.** Boundary tests at exactly start, exactly end, one millisecond before end, and one millisecond after end match the half-open contract.
 
-**Failure mechanism: heap eviction error.** The heap admits an item using the wrong less-than direction.
-Invariant: The root improves when a worse item arrives.
-Diagnostic: inspect assert heap invariant after each mutation in test builds. before accepting the snapshot.
-Decision consequence: heap eviction error changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise heap eviction error beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for heap eviction error with the window identifier and configuration hash.
-Recovery: when heap eviction error is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate heap eviction error against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: heap eviction error is a ranking-contract concern, not evidence of an observed production result.
+### F-02: Late data reopened a published window invisibly
 
-**Failure mechanism: candidate truncation.** A shard retains too few candidates for a global winner to reach merge.
-Invariant: Exact oracle finds a winner absent from every shard list.
-Diagnostic: inspect raise local retention or use a proven candidate bound. before accepting the snapshot.
-Decision consequence: candidate truncation changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise candidate truncation beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for candidate truncation with the window identifier and configuration hash.
-Recovery: when candidate truncation is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate candidate truncation against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: candidate truncation is a ranking-contract concern, not evidence of an observed production result.
+**Symptom.** Two consumers retrieve different counts for what appears to be the same window identifier.
 
-**Failure mechanism: sketch collision.** Colliding keys inflate an estimate enough to cross a rank boundary.
-Invariant: Estimate interval overlaps its neighbor despite point-order.
-Diagnostic: inspect hold or provisional when intervals overlap. before accepting the snapshot.
-Decision consequence: sketch collision changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise sketch collision beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for sketch collision with the window identifier and configuration hash.
-Recovery: when sketch collision is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate sketch collision against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: sketch collision is a ranking-contract concern, not evidence of an observed production result.
+**Competing causes.** Mutable state was reused after commit, a correction overwrote the authority record, or cache invalidation served mixed versions.
 
-**Failure mechanism: counter overflow.** A narrow counter wraps during an unexpectedly long accumulation.
-Invariant: Count becomes negative or decreases without expiry.
-Diagnostic: inspect use checked 64-bit arithmetic and reset by epoch. before accepting the snapshot.
-Decision consequence: counter overflow changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise counter overflow beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for counter overflow with the window identifier and configuration hash.
-Recovery: when counter overflow is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate counter overflow against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: counter overflow is a ranking-contract concern, not evidence of an observed production result.
+**Discriminating check.** Compare snapshot keys, correction sequence, payload digests, and commit chronology.
 
-**Failure mechanism: dedup expiry.** Identifier state is evicted before a delayed retry arrives.
-Invariant: Duplicate spikes correlate with dedup eviction age.
-Diagnostic: inspect retain identifiers through the lateness and retry horizon. before accepting the snapshot.
-Decision consequence: dedup expiry changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise dedup expiry beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for dedup expiry with the window identifier and configuration hash.
-Recovery: when dedup expiry is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate dedup expiry against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: dedup expiry is a ranking-contract concern, not evidence of an observed production result.
+**Correction.** Restore the original immutable snapshot and emit an explicit correction record with a new sequence.
+
+**Prevention.** Enforce append-only authority records and prevent consumers from selecting “latest” without correction semantics.
+
+**Verification.** A late-event injection produces either no mutation or a separately addressable correction, never an overwritten original.
+
+### F-03: A retry inflated one key's count
+
+**Symptom.** One term rises sharply after collector recovery while total traffic does not show a commensurate increase.
+
+**Competing causes.** Source sequence was reset, the dedup horizon expired, or two writers owned the same partition.
+
+**Discriminating check.** Compare producer sequence ranges, dedup rejects, shard lease history, and event identifiers around recovery.
+
+**Correction.** Fence the duplicate writer, restore source progress, and replay the affected interval from an authoritative log if available.
+
+**Prevention.** Make source progress durable before acknowledging the batch and test producer restart semantics.
+
+**Verification.** Replaying an acknowledged batch changes neither per-key counts nor snapshot digest.
+
+### F-04: Candidate enumeration missed a true heavy hitter
+
+**Symptom.** A Count-Min query estimates a key as large when queried offline, but the key never appears in the published candidate list.
+
+**Competing causes.** Count-Min was used without enumeration, candidate capacity was too small, or ownership split the key across shards.
+
+**Discriminating check.** Compare oracle heavy hitters to per-shard retained candidates and inspect ownership by re-shard epoch.
+
+**Correction.** Use a candidate-producing summary, increase retained capacity based on a documented bound, or switch to exact maps.
+
+**Prevention.** Treat candidate coverage as a separate gate from point-query error.
+
+**Verification.** Oracle top-K membership recall remains one across the declared adversarial candidate test set.
+
+### F-05: A hash or shard change split key ownership
+
+**Symptom.** The same normalized key occurs in two shard payloads for one window.
+
+**Competing causes.** Hash-version rollout was non-atomic, shard count changed mid-window, or normalizers differed by process.
+
+**Discriminating check.** Inspect configuration hashes, hash test vectors, shard manifests, and normalization versions.
+
+**Correction.** Hold the straddling window, drain old ownership, and begin a new window under one explicit epoch.
+
+**Prevention.** Apply partition changes only at a declared clean boundary with compatibility tests.
+
+**Verification.** Every key in a replay maps to exactly one owner for each accepted window.
+
+### F-06: Equal counts emitted in nondeterministic order
+
+**Symptom.** Replays have the same K-set and counts but different serialized ordering.
+
+**Competing causes.** Heap comparator omits key order, map iteration leaks into output, or signed and unsigned key comparisons differ.
+
+**Discriminating check.** Feed equal counts with high-bit key identifiers through every sort and merge boundary.
+
+**Correction.** Adopt one count-descending, unsigned-key-ascending comparator and version it.
+
+**Prevention.** Test byte digests, not just unordered set equality.
+
+**Verification.** Two independent process runs emit identical ordered bytes for the same retained state.
+
+### F-07: Sketch error was interpreted as an exact confidence interval
+
+**Symptom.** The system publishes a rank because estimated counts differ, even though their possible errors overlap.
+
+**Competing causes.** The gate ignores error, one-sided overestimate was treated as symmetric, or the bound was sized for a different N.
+
+**Discriminating check.** Recompute E from actual accepted event total and compare documented upper and lower quantities at K and K+1.
+
+**Correction.** Apply the correct estimator-specific gate and mark the list provisional when the order remains unresolved.
+
+**Prevention.** Persist algorithm type, parameters, and bound derivation with every snapshot.
+
+**Verification.** Synthetic near-tie cases never set `automation_eligible=true` when the conservative intervals overlap.
+
+### F-08: Memory budget excluded recovery and metadata
+
+**Symptom.** Steady-state counters fit, but close or restart causes resident memory to exceed 64 MiB.
+
+**Competing causes.** Serialization buffers were omitted, dedup state grew, allocator overhead rose, or late buckets overlapped during recovery.
+
+**Discriminating check.** Attribute high-water bytes by counter array, buckets, heap, manifests, dedup, serialization, and recovery copies.
+
+**Correction.** Reduce retention or window size, increase capacity with approval, or choose a more compact representation.
+
+**Prevention.** Budget peak concurrent components rather than a steady-state algorithm object.
+
+**Verification.** Fault-injected restart and close tests stay below the ceiling with a recorded reserve.
+
+### F-09: A missing shard was treated as zero traffic
+
+**Symptom.** A list publishes on time but lacks terms that the oracle finds in the absent shard's range.
+
+**Competing causes.** Timeout fallback inserted zeros, manifest cardinality was not checked, or a stale payload was accepted under a new configuration.
+
+**Discriminating check.** Validate expected shard identifiers, window identifier, and configuration hash before merge.
+
+**Correction.** Hold the snapshot and preserve available payloads for replay; do not invent missing counts.
+
+**Prevention.** Make complete-manifest validation a hard prerequisite for eligibility.
+
+**Verification.** Deliberately removing one payload produces a hold reason and no eligible commit.
+
+### F-10: Output retries created conflicting authorities
+
+**Symptom.** Two snapshot records share a window label but contain different candidate digests.
+
+**Competing causes.** The authority key omitted configuration, retry writer recomputed with changed state, or storage allowed upsert overwrite.
+
+**Discriminating check.** Query by `(window_id, configuration_hash, correction_sequence)` and compare stored payload digests.
+
+**Correction.** Reject the second payload, fence its writer, and investigate the state divergence before any correction.
+
+**Prevention.** Use create-if-absent semantics with digest comparison on retry.
+
+**Verification.** A duplicate commit is idempotent only when serialized bytes match exactly.
+
 ## 13. Transferable Lesson
 
-**Transferable lesson: rank gaps govern feasibility.** A fixed memory structure is safe only relative to the depth-specific separation it must resolve.
-Invariant: Error bounds must be compared to a decision boundary.
-Diagnostic: inspect rank-gap calculation before accepting the snapshot.
-Decision consequence: rank gaps govern feasibility changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise rank gaps govern feasibility beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for rank gaps govern feasibility with the window identifier and configuration hash.
-Recovery: when rank gaps govern feasibility is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate rank gaps govern feasibility against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: rank gaps govern feasibility is a ranking-contract concern, not evidence of an observed production result.
+Top-K streaming is not solved by naming a heap or a sketch; it is solved by stating which state is complete enough to authorize an action.
 
-**Transferable lesson: enumeration is separate.** A frequency estimator does not necessarily identify which keys deserve estimation.
-Invariant: Candidate generation has its own correctness contract.
-Diagnostic: inspect candidate recall evidence before accepting the snapshot.
-Decision consequence: enumeration is separate changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise enumeration is separate beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for enumeration is separate with the window identifier and configuration hash.
-Recovery: when enumeration is separate is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate enumeration is separate against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: enumeration is separate is a ranking-contract concern, not evidence of an observed production result.
+The first transferable lesson is to separate enumeration from estimation.
 
-**Transferable lesson: idempotency is semantic.** Retry safety requires a stable decision identity, not merely a network retry counter.
-Invariant: A snapshot is an authority record.
-Diagnostic: inspect window-plus-config key before accepting the snapshot.
-Decision consequence: idempotency is semantic changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise idempotency is semantic beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for idempotency is semantic with the window identifier and configuration hash.
-Recovery: when idempotency is semantic is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate idempotency is semantic against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: idempotency is semantic is a ranking-contract concern, not evidence of an observed production result.
+A structure that estimates a named key may still be unable to discover the names worth estimating.
 
-**Transferable lesson: time has two axes.** Event time chooses membership while processing time chooses operational latency.
-Invariant: Never use one timestamp as both.
-Diagnostic: inspect dual timestamp fields before accepting the snapshot.
-Decision consequence: time has two axes changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise time has two axes beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for time has two axes with the window identifier and configuration hash.
-Recovery: when time has two axes is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate time has two axes against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: time has two axes is a ranking-contract concern, not evidence of an observed production result.
+The second lesson is to compare approximation error with the business boundary, not with a visually impressive global error percentage.
 
-**Transferable lesson: capacity is compositional.** Heaps, deduplication, metadata, checkpoints, and serialization compete with counters for memory.
-Invariant: Budget the total resident state.
-Diagnostic: inspect component high-water table before accepting the snapshot.
-Decision consequence: capacity is compositional changes the publication action rather than merely a dashboard annotation.
-Boundary: do not generalise capacity is compositional beyond the declared event-time window and configured comparator.
-Audit record: retain the relevant value for capacity is compositional with the window identifier and configuration hash.
-Recovery: when capacity is compositional is violated, preserve the previous accepted snapshot and emit an explicit reason code.
-Cost note: evaluate capacity is compositional against the 64 MiB state ceiling and the 2,000 ms close deadline.
-Transfer: capacity is compositional is a ranking-contract concern, not evidence of an observed production result.
+A small error can still reverse an actionable tie, while a larger error can be harmless far above the cutoff.
+
+The third lesson is to partition by the invariant needed for correctness.
+
+Key ownership makes local candidate sufficiency easier to prove; event routing may spread load but introduces aggregation obligations.
+
+The fourth lesson is to keep event time, processing time, and correction version distinct.
+
+Temporal ambiguity becomes a data-contract failure long before it becomes a performance problem.
+
+The fifth lesson is that idempotency has an input side and an output side.
+
+Rejecting duplicate input does not prevent duplicate authorities, and idempotent output does not undo double-counted state.
+
+The sixth lesson is to design the hold path as carefully as the success path.
+
+A hold with visible staleness and retained evidence is safer than an apparently fresh unsupported ranking.
+
+The seventh lesson is to reserve capacity for recovery, serialization, and late-data retention, not only the nominal algorithm.
+
+The eighth lesson is to treat deterministic tie ordering as correctness rather than presentation.
+
+Stable output makes auditing, caching, retry comparison, and interview reasoning tractable.
+
+These lessons transfer to rate limiting, fraud counters, alert ranking, online feature aggregates, and any windowed decision with a small published frontier.
+
+**Practical transfer checks.**
+
+Before adopting a top-K summary, name the action that changes when rank K and rank K+1 exchange places.
+
+If no action changes, a less frequent batch report may be simpler and more honest.
+
+If the action changes at rank one, evaluate a stronger margin near rank one rather than averaging errors across the list.
+
+If different consumers require different K values, compute the deepest required boundary rather than assuming a shallow proof transfers downward.
+
+A thresholded alert can reuse the same gate logic by comparing a lower count bound to the action threshold.
+
+A quota system can reuse source-progress idempotency but must also define whether retries consume quota.
+
+A fraud leaderboard can reuse deterministic order but needs a stronger correction policy because an appeal may depend on historical rank.
+
+A monitoring leaderboard can tolerate provisional display more readily when automation is not coupled to the rank.
+
+A recommender candidate list may value recall above rank order, so its validation metric should not copy this case's exact-boundary gate blindly.
+
+A billing use case normally requires exactness or a separately approved reconciliation path because approximate overcount has financial meaning.
+
+For any consumer, encode the selected action in the snapshot rather than asking consumers to reconstruct it from raw metrics.
+
+A reason code must be stable enough for alert grouping; free-text explanations are useful supplements, not a machine contract.
+
+Window identifiers should include unambiguous event-time bounds, not only a sequence number that needs external context.
+
+Configuration identity should cover every setting capable of changing emitted bytes or the correctness proof.
+
+Algorithm migration should write a new configuration identity even if the list happens to be identical for one window.
+
+A comparator change is a semantic migration because it can change which tied key receives a scarce position.
+
+Capacity planning should distinguish per-shard state from coordinator state because increasing shard count moves pressure between them.
+
+Increasing shards can lower update load while increasing manifest size, candidate transport, and coordination failure surface.
+
+Increasing K increases heap and candidate output cost, but its dominant effect may instead be the smaller gap deeper in the distribution.
+
+Increasing allowed lateness improves event-time completeness only if the source watermark itself remains trustworthy.
+
+Increasing a sketch width lowers its error scale but cannot repair omitted candidates or incorrect membership.
+
+Increasing sketch depth changes a confidence parameter and consumes memory, but does not shrink an additive bound determined by width.
+
+An exact fallback should have an explicit trigger based on observed cardinality and a measured map-overhead model.
+
+A fallback that activates after memory exhaustion is a failure path, not a capacity strategy.
+
+The oracle should avoid sharing the production parser whenever possible, otherwise the same normalization defect may agree with itself.
+
+An independent oracle still needs the same written business contract for membership and ties; independence does not mean ambiguity.
+
+Generated workloads should include rank ties because production-like skew generators can accidentally hide comparator errors.
+
+Generated workloads should include collision pressure because benign random keys do not test a hash selection boundary.
+
+Generated workloads should include source restart because simple duplicate records do not test lost-progress behavior.
+
+A chaos test that kills a shard without checking consumer fencing proves availability behavior, not correctness behavior.
+
+A retained manifest lets investigators distinguish computation failure from input incompleteness after the fact.
+
+A retained candidate list is insufficient for forensic replay if it lacks the summary parameters that gave those candidates meaning.
+
+A retained configuration hash is insufficient if its underlying configuration document is not archived or resolvable.
+
+A dashboard should show estimated counts as estimates; hiding approximation behind integer formatting turns a technical caveat into misinformation.
+
+A dashboard should show staleness in event-time terms because processing-time freshness can hide an old underlying window.
+
+An automation client should reject unknown decision statuses so a future status cannot become an accidental publish.
+
+A correction client should key cache entries by correction sequence as well as window identifier when revisions are supported.
+
+A stalled watermark can produce apparently low traffic because events remain buffered; observe watermark age separately from input rate.
+
+A fast watermark can produce superficially fresh snapshots by excluding slow sources; observe source participation separately from close latency.
+
+A memory alarm should carry the component attribution, because counter-array growth and late-bucket growth imply different remedies.
+
+A rank-margin alarm should carry the competing keys and bounds, because a generic “low confidence” alert is not actionable.
+
+A digest-conflict alarm should preserve both payloads under restricted access for comparison rather than logging only a hash mismatch.
+
+The safest degraded state is usually stale-but-labelled data, not a newly computed incomplete ranking.
+
+A stale snapshot policy needs a maximum age, after which absence is safer than continued display.
+
+A hold decision is an output with consumers, observability, and service-level expectations; it is not an exception to product design.
+
+The final transfer test is whether an engineer can explain, for a single snapshot, why every included event counted once and why no excluded uncertainty drove automation.
+
 ## 14. Connections & Cross-References
 
-This case connects bounded heaps to streaming state, deterministic comparators to reproducible systems, and error intervals to decision policy. It does not establish a cross-case production dependency.
+**Related method: exact top-K with a map and min-heap.** Use it when observed distinct cardinality plus overhead fits the state budget and exactness is required.
+
+**Related method: Space-Saving heavy hitters.** Use it when candidate enumeration must remain bounded and replacement error can be carried into publication logic.
+
+**Related method: Count-Min sketch.** Use it for point-frequency estimates with bounded one-sided error, never as the only answer to “which keys are top?”
+
+**Related method: reservoir sampling.** It can estimate distributional properties but is not a direct replacement for exact heavy-hitter membership guarantees.
+
+**Connection to rate limiting.** Both rate limiting and top-K need a time-bucket contract, bounded state, and a safe response when state evidence is incomplete.
+
+**Open question: adversarial keys.** A public or user-controlled key space may require stronger hash hardening and an adversarial collision evaluation.
+
+**Open question: correction policy.** Consumers must decide whether a later corrected rank may trigger reversal of a prior editorial action.
+
+**Open question: multi-region aggregation.** Region-level top-K lists cannot generally be merged into global top-K without retaining enough candidate coverage from every region.
 
 ### Interview pack
 
-**Question 1: Why is a count-min sketch alone insufficient for top-K publication?**
-Answer: It estimates supplied keys but does not enumerate candidate keys.
-Reasoning: Separate candidate discovery from frequency estimation.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 1, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Claim that querying every catalogue key is free.
-Scoring: 2 points for naming enumeration and error.
-Answer support: question 1 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+#### Q1. A 300-second window receives 12,000 accepted events/s. How many events enter the window?
 
-**Question 2: Compute window event volume for 18,000 events/s over 300 s.**
-Answer: 5,400,000 events because 18,000 times 300 equals 5,400,000.
-Reasoning: State why this is not cardinality.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 2, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Answering 54,000,000 by adding a zero.
-Scoring: 2 points for units and arithmetic.
-Answer support: question 2 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Answer.** `12,000*300=3,600,000` events.
 
-**Question 3: A rank-20 count is 1,842 and rank-21 count is 1,511; what is the gap?**
-Answer: 331 events because subtraction uses the same closed window.
-Reasoning: Explain why a 400-event combined uncertainty fails.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 3, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Comparing either count to zero instead.
-Scoring: 2 points for subtraction and contract.
-Answer support: question 3 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Reasoning.** Rate in events/s multiplied by duration in seconds yields events; this is volume, not distinct keys.
 
-**Question 4: A shard is absent at close. Should the merger publish eleven-shard output?**
-Answer: No; it must hold because candidate completeness is unknown.
-Reasoning: Describe the alert evidence.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 4, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Treating zero output as a valid shard result.
-Scoring: 2 points for the hold decision.
-Answer support: question 4 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Follow-up.** Explain why 3.6 million events does not imply 3.6 million map entries.
 
-**Question 5: A duplicate retry has the same event_id but later processing time. What key controls counting?**
-Answer: event_id within the event-time window controls the logical event.
-Reasoning: Discuss dedup retention horizon.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 5, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Using processing time to make it distinct.
-Scoring: 2 points for separating time axes.
-Answer support: question 5 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Acceptable alternatives.** Converting five minutes to 300 seconds before multiplication is equivalent.
 
-**Question 6: When may a provisional ranking be shown?**
-Answer: When humans may inspect uncertainty but automated action remains fenced.
-Reasoning: Name the required consumer signal.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 6, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Allowing the trending slot to consume it.
-Scoring: 2 points for the automation boundary.
-Answer support: question 6 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Red flag.** Reporting 60,000 events by multiplying by five without converting minutes to seconds.
 
-**Question 7: Compare 12 shards times 80 candidates times 48 bytes.**
-Answer: 46,080 bytes, or about 45 KiB payload-only.
-Reasoning: List excluded overhead.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 7, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Calling it the complete 64 MiB budget.
-Scoring: 2 points for multiplication and limitation.
-Answer support: question 7 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Scoring.** 2 points: one for units and formula, one for correct arithmetic.
 
-**Question 8: How does a comparator bug appear if counts are correct?**
-Answer: Replays can contain the same keys and counts but different serialized order.
-Reasoning: Propose a byte-digest test.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 8, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Checking only set overlap.
-Scoring: 2 points for a discriminating test.
-Answer support: question 8 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Answer support.** Formula TK-01 and its dimension check.
 
-**Question 9: What happens when combined uncertainty is 240 events and the boundary gap is 180 events?**
-Answer: The boundary is unresolved, so hold or provisional applies.
-Reasoning: State the action fence.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 9, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Publishing because the point estimates differ.
-Scoring: 2 points for interval reasoning.
-Answer support: question 9 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+#### Q2. With `epsilon=0.00004` and `N=2,880,000`, what is the additive error scale?
 
-**Question 10: Why version the shard count with the snapshot?**
-Answer: A hash domain change changes key ownership and replay meaning.
-Reasoning: Explain epoch separation.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 10, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Updating the count in place mid-window.
-Scoring: 2 points for partition reasoning.
-Answer support: question 10 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Answer.** `E=0.00004*2,880,000=115.2` events.
 
-**Question 11: Choose an audit key for a snapshot retry.**
-Answer: Use window_id plus configuration hash and reject a conflicting payload.
-Reasoning: Explain why a random request id fails.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 11, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Using only processing timestamp.
-Scoring: 2 points for idempotency.
-Answer support: question 11 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Reasoning.** Count-Min's illustrative additive scale grows with total accepted events.
 
-**Question 12: A late event belongs to a closed window. What is the correct correction model?**
-Answer: Emit a linked correction version rather than mutate the closed authority.
-Reasoning: Discuss consumer visibility.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 12, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Silently incrementing old heap state.
-Scoring: 2 points for immutability.
-Answer support: question 12 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Follow-up.** State why a 115.2-event scale does not itself prove a rank ordering.
 
-**Question 13: Which metric catches a backlog of held snapshots?**
-Answer: Consumer-visible snapshot age and consecutive hold count.
-Reasoning: Set a page threshold.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 13, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Using top-K set agreement alone.
-Scoring: 2 points for operational relevance.
-Answer support: question 13 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Acceptable alternatives.** Saying 116 events after conservative upward rounding is acceptable if the gate uses that rounded value consistently.
 
-**Question 14: How does flatter traffic change the design?**
-Answer: It shrinks adjacent rank gaps and can invalidate an approximate error budget.
-Reasoning: Choose exact counting or a stricter hold policy.
-Follow-up: state the changed constraint and its decision effect.
-Acceptable alternative: for question 14, a method with an explicit candidate and uncertainty contract earns credit.
-Red flag: Assuming skew is fixed because it was configured.
-Scoring: 2 points for sensitivity.
-Answer support: question 14 is grounded in the relevant invariant and ILLUSTRATIVE derivation in Sections 6–12.
+**Red flag.** Dividing N by epsilon or treating epsilon as 0.04.
+
+**Scoring.** 2 points: calculation and interpretation.
+
+**Answer support.** Formula TK-03.
+
+#### Q3. The rank-20/rank-21 gap is 180 events under the preceding error scale. May automation publish?
+
+**Answer.** No; the conservative comparison uses `2E=230.4`, which exceeds 180.
+
+**Reasoning.** Two estimates can have uncertainty in the ordering comparison, so the gap must exceed the selected combined bound.
+
+**Follow-up.** Name a safe action: hold or human-visible provisional with automation fenced.
+
+**Acceptable alternatives.** An estimator-specific interval test is acceptable if it is derived from the actual summary semantics.
+
+**Red flag.** Publishing because 180 is greater than one 115.2-event error scale.
+
+**Scoring.** 3 points: calculate, compare, and choose a safe action.
+
+**Answer support.** Formula TK-03 sensitivity.
+
+#### Q4. Why cannot a Count-Min sketch alone answer “which twenty keys are largest?”
+
+**Answer.** It estimates a count for a key supplied to it but does not enumerate the keys that deserve querying.
+
+**Reasoning.** Candidate discovery and point estimation are separate algorithmic obligations.
+
+**Follow-up.** Select a companion: a bounded heavy-hitter summary or an exact candidate map.
+
+**Acceptable alternatives.** A full external candidate catalogue scan is valid only if its cost and completeness are explicitly budgeted.
+
+**Red flag.** Saying the sketch stores all keys because it has counters.
+
+**Scoring.** 2 points: enumeration distinction and viable companion.
+
+**Answer support.** Section 5c method comparison.
+
+#### Q5. A key appears in two shard payloads for one window. Diagnose the highest-priority issue.
+
+**Answer.** Treat it as a partition-ownership violation until proven otherwise.
+
+**Reasoning.** Stable key ownership should give exactly one source of truth per key per window.
+
+**Follow-up.** Inspect re-shard epoch, hash version, and normalization version before merging.
+
+**Acceptable alternatives.** A deliberately replicated design is acceptable only if it carries an explicit aggregation rule.
+
+**Red flag.** Deduplicating by choosing the larger count without investigating the split.
+
+**Scoring.** 3 points: identify invariant, checks, and safe response.
+
+**Answer support.** F-05 and the partition trace.
+
+#### Q6. Why is a shard-local top-20 sufficient under strict key partitioning?
+
+**Answer.** A globally top-20 key has one owning shard; if it were below that shard's local top-20, twenty local keys would outrank it and it could not be globally top-20.
+
+**Reasoning.** The proof depends on one owner and the same total comparator locally and globally.
+
+**Follow-up.** State when the proof fails: a key split across shards or inconsistent comparator.
+
+**Acceptable alternatives.** Retaining more than 20 candidates is safe but may be needed for other uncertainty reasons.
+
+**Red flag.** Claiming local top-20 is sufficient when events for one key are round-robin routed.
+
+**Scoring.** 3 points: proof idea, assumptions, failure boundary.
+
+**Answer support.** Candidate completeness rule.
+
+#### Q7. Calculate candidate payload bytes for 16 shards, 100 candidates per shard, and 48 bytes per record.
+
+**Answer.** `16*100*48=76,800` bytes, or 75 KiB.
+
+**Reasoning.** There are 1,600 records, each with a fixed serialized size.
+
+**Follow-up.** Identify one excluded cost: heap object overhead or serialization buffers.
+
+**Acceptable alternatives.** Reporting 76.8 kB decimal is acceptable when explicitly labelled decimal rather than KiB.
+
+**Red flag.** Calling this the complete memory budget.
+
+**Scoring.** 2 points: correct product and a stated exclusion.
+
+**Answer support.** Formula TK-04.
+
+#### Q8. A retry carries the same source sequence after a process restart. What must happen before state update?
+
+**Answer.** The dedup gate must recognize the sequence as acknowledged and reject the increment.
+
+**Reasoning.** Input idempotency must precede sketch and heap mutation; output idempotency cannot undo double counting.
+
+**Follow-up.** What if sequence identity resets? Fence the source or use a stable event identifier with re-budgeted retention.
+
+**Acceptable alternatives.** Transactional source offsets are valid when they prove the same monotonic ownership property.
+
+**Red flag.** Counting it and relying on a later snapshot retry key.
+
+**Scoring.** 3 points: ordering, distinction, recovery answer.
+
+**Answer support.** Idempotency rule and F-03.
+
+#### Q9. A late event arrives 91 seconds after the window's allowed close, where `L=90` seconds. Which timestamp determines its treatment?
+
+**Answer.** Event time determines membership, while the watermark and configured 90-second allowance determine whether its state may still mutate.
+
+**Reasoning.** Processing arrival alone cannot assign event-time membership.
+
+**Follow-up.** Give the safe disposition: append correction metadata or exclude-late according to declared policy.
+
+**Acceptable alternatives.** A revised snapshot is acceptable only with a new correction sequence and explicit consumer semantics.
+
+**Red flag.** Reopening the original immutable snapshot without a correction identity.
+
+**Scoring.** 3 points: clock distinction, policy, immutable authority.
+
+**Answer support.** Worked event-time trace and F-02.
+
+#### Q10. A manifest has eleven of twelve expected shards, but the available eleven agree on their top-20. Should it publish?
+
+**Answer.** No; hold because the missing shard can contain a globally winning key.
+
+**Reasoning.** Agreement among present shards is not evidence that absent state is zero.
+
+**Follow-up.** State what to retain: available payloads, expected manifest, timeout evidence, and reason code.
+
+**Acceptable alternatives.** A separately authorized degraded mode may show a clearly incomplete human-only view, not automation eligibility.
+
+**Red flag.** Filling the missing shard with zero counts to meet the deadline.
+
+**Scoring.** 2 points: fail-closed choice and rationale.
+
+**Answer support.** Manifest gate and F-09.
+
+#### Q11. Which action handles a byte-identical retry of an already committed snapshot?
+
+**Answer.** Return the existing authority record for the same `(window_id, configuration_hash, correction_sequence)` key.
+
+**Reasoning.** The retry does not create a new decision when its serialized evidence is identical.
+
+**Follow-up.** Explain the different-digest case: reject and investigate rather than overwrite.
+
+**Acceptable alternatives.** Content-addressed storage is acceptable if it preserves the same authority semantics.
+
+**Red flag.** Last-write-wins upsert.
+
+**Scoring.** 2 points: idempotent key and conflict handling.
+
+**Answer support.** Snapshot commit design and F-10.
+
+#### Q12. The workload becomes nearly uniform and the rank-20 gap shrinks. What design choice should be revisited first?
+
+**Answer.** Re-derive the error-versus-gap gate and consider exact counting or a larger summary before changing heap code.
+
+**Reasoning.** Rank separability, not raw event throughput, determines whether the approximation is decision-safe.
+
+**Follow-up.** Name a measured input needed for that review: observed boundary-gap distribution by window.
+
+**Acceptable alternatives.** Reducing K is acceptable only if the business requirement permits a shallower publication.
+
+**Red flag.** Assuming the original sketch width remains safe because memory has not changed.
+
+**Scoring.** 3 points: identify binding constraint, evidence, and a valid response.
+
+**Answer support.** Finding and Formula TK-03.
+
+
+**Connection to selection algorithms.** Batch quickselect finds a cutoff efficiently but still assumes all candidate counts are materialized for its input.
+
+**Connection to distributed snapshots.** The close barrier resembles a consistency boundary: the system must name exactly which shard states contributed to one decision.
+
+**Connection to approximate query processing.** Error bounds are useful only when their confidence and direction match the action that consumes them.
+
+**Connection to observability.** A digest is not an explanation by itself; paired dimensions, versions, and reason codes turn it into diagnostic evidence.
+
+**Reading sequence.** Learn exact map-plus-heap invariants before applying bounded summaries, because the exact path provides the oracle for approximation failures.
+
+**Interview assessment note.** A strong answer names assumptions before selecting an algorithm and treats a failed precondition as a different action, not as a smaller score.
+
+**Boundary of this case.** It does not specify tenant isolation, privacy policy, cryptographic hashing, transport encryption, or storage retention guarantees.
+
+**Review prompt.** Revisit every derived number when changing the traffic model, because accuracy and capacity scale through different variables.
+
+**Evidence prompt.** Label generated replay outcomes as simulated and production observations as observed; neither label should be inherited from an algorithm name.
+
+**Final cross-reference takeaway.** The reusable asset is the gate sequence: establish membership, completeness, uncertainty, capacity, and authority before publication.
 
 ## 15. Quick Reference Card
 
-| Field | Decision-ready statement |
+| Field | Quick reference |
 |---|---|
-| Decision grain | One closed 300-second event-time snapshot. |
-| Owner | Streaming platform lead. |
-| Output | Ordered top-20 keys, counts, bounds, provenance, and action. |
-| Comparator | Count descending; unsigned key ascending. |
-| Publish gate | Complete shards, valid state, resolved rank-20 boundary, idempotent write. |
-| Hold gate | Missing shard, unresolved uncertainty, state conflict, or contract breach. |
-| Provisional gate | Human display allowed while automation fence stays closed. |
-| Evidence | ILLUSTRATIVE inputs; not-measured operational outcome. |
-| Review trigger | Changes to cardinality, lateness, K, partitioning, or error tolerance. |
-| Recovery | Preserve prior accepted snapshot and record reason code. |
-
+| Decision | Publish, hold, or human-visible provisional top-20 snapshot at a 60-second tick. |
+| Owner | Streaming platform lead owns ranking contract and exception policy. |
+| Input grain | One accepted event keyed by normalized `term_id`, event time, and stable source identity. |
+| Output grain | One immutable event-time window snapshot with ordered keys, estimates, action, and evidence digest. |
+| Window | Trailing 300-second half-open event-time interval with 90-second allowed lateness in this illustrative design. |
+| Comparator | Count descending; unsigned `term_id` ascending for every tie. |
+| Candidate rule | Enumeration is separate from point estimation; retain a candidate-producing summary or exact map. |
+| Partition rule | One stable key owner per window; reject mixed hash versions or re-shard epochs. |
+| Input idempotency | Reject acknowledged producer sequence before state mutation. |
+| Output idempotency | Reuse the existing record only for byte-identical snapshot retry under the authority key. |
+| Approximation gate | For the illustrative conservative check, require `2*epsilon*N < f(K)-f(K+1)` plus candidate coverage. |
+| Illustrative sizing | `N=2,880,000`, `epsilon=0.00004`, `E=115.2`, `G=331`, so `2E=230.4<G`. |
+| Sketch sizing | `w=67,958`, `d=5`, 64-bit counters: 2,718,320 bytes or 2.592 MiB. |
+| Candidate transport | 12 shards × 80 candidates × 48 bytes = 46,080 bytes or 45 KiB. |
+| Late-data retention | 300-second window plus 90-second allowance retains 390 seconds of mutable bucket horizon. |
+| Total illustrative state | 39,906,928 bytes or 38.058 MiB, leaving 25.942 MiB under a 64 MiB cap before unmodelled overhead. |
+| Publish gate | Complete manifest, stable ownership, healthy dedup, candidate coverage, margin pass, memory pass, idempotent commit. |
+| Hold trigger | Missing shard, conflicting payload, capacity breach, unresolved rank boundary, or unavailable recovery evidence. |
+| Provisional meaning | Human-visible uncertainty only; `automation_eligible=false` remains mandatory. |
+| Observability | Record watermark, accepted total, late count, duplicate rejects, manifest, rank margin, component memory, digest, reason code. |
+| Recovery | Restore checkpoint and source progress; replay only unacknowledged input; hold if fidelity or deadline cannot be proven. |
+| Evidence | ILLUSTRATIVE design arithmetic; no company deployment or measured result is claimed. |
+| Stage | Proposed validation design; not executed. |
+| Review trigger | Change K, window, lateness, cardinality, input rate, shard ownership, hash, candidate capacity, memory cap, or rank policy. |

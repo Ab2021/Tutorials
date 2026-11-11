@@ -73,7 +73,7 @@ stays on the authorization question: who may cause which side effect, on what ev
 ## 3. The Business Question
 
 Given one request, one retrieved evidence set, and one proposed write, which of the following do we choose,
-and what does each choice cost per day at the observed volume?
+and what does each choice cost per day at the ILLUSTRATIVE volume?
 
 - **Auto-execute** when the write is inside a pre-approved action envelope and the effect digest recomputes.
 - **Digest review** when a human must compare the plan diff against the request and the cited policy clause.
@@ -94,7 +94,7 @@ All values ILLUSTRATIVE, chosen to be internally consistent and round enough to 
 |---|---|---|---|
 | Daily requests | 4,300 | requests/day | sets the injection base rate |
 | Ticket updates proposed | 2,072 | proposals/day | 48.2% of requests produce a write |
-| Injected-text prevalence | 1.8% | of requests | from a 120-ticket annotation sample, 8 positives |
+| Injected-text prevalence | 1.8% | of requests | constructed input for the teaching loss chain |
 | Injection reaches retrieved context | 62% | conditional | retrieval top-k includes the poisoned chunk |
 | Injection yields an action proposal | 18% | conditional | agent acts on the embedded instruction |
 | Reviewer loaded cost | 92,000 | USD/year | salary plus overhead |
@@ -114,8 +114,8 @@ Constraints that bound the design space:
   must not produce a second write; the key is bound to the approved digest.
 - **Three of 46 tools have no digest encoder.** Their 124 daily proposals cannot be digest-reviewed and
   must take the full-review path at a longer service time. This is a capacity fact, not a policy choice.
-- **The quarantine layer may not be tuned on the same data used to report its recall.** Recall is measured
-  on an audited sample drawn after deployment.
+- **The quarantine layer may not be tuned on the same data used to report its recall.** In an implementation,
+  recall would be estimated on an audited sample drawn after deployment.
 
 ## 5. Data, Tools & Method
 
@@ -173,8 +173,8 @@ and the staffing model are all fitted or sized on features that exist before the
   calibrated score. Recall 0.91 at a 4% false-quarantine rate (ILLUSTRATIVE).
 - **Queue model.** Erlang C with class-dependent service times, used for capacity and latency, not for
   headcount arithmetic alone - the two disagree once utilization passes about 0.8.
-- **Statistics.** Wilson score intervals for the injection prevalence, Cohen's kappa for reviewer agreement,
-  and a two-proportion sample-size formula for audit sizing.
+- **Statistics.** Sensitivity analysis for constructed injection prevalence, Cohen's kappa for reviewer
+  agreement, and a two-proportion sample-size formula for audit sizing.
 
 ### 5c Method Summary
 
@@ -191,14 +191,13 @@ and the staffing model are all fitted or sized on features that exist before the
 
 ### 5d Provenance, Quality, Exclusions, Leakage
 
-**Provenance.** Injection prevalence comes from a 120-ticket hand annotation with 8 positives, giving
-5.56% with a Wilson 95% interval of 3.42% to 12.61%. That interval is wide enough that the prevalence
-must be treated as a parameter, not a fact, and every conclusion below is re-stated at the lower bound.
+**Provenance.** The 1.8% injection prevalence is a constructed input, not an annotation result. The
+lower-prevalence sensitivity later uses 1.11%, which is 0.615 of the base value; it is a scenario rather
+than a confidence interval. The case therefore treats prevalence as a parameter, not an observed fact.
 
-**Quality.** Service times are lognormal-ish in reality; the model uses means and then checks the queue
-implication with a squared-coefficient-of-variation correction. The measured service-time distribution
-here has mean 41.2 s, variance 674.2 s^2, hence SCV 0.397, so the Erlang C wait is an overestimate and is
-corrected downward by (1+SCV)/2 = 0.6985.
+**Quality.** Service times are constructed ILLUSTRATIVE inputs. The scenario uses mean 41.2 s and variance
+674.2 s^2, hence SCV `674.2 / 41.2^2 = 0.397`; the Erlang C wait is adjusted by
+`(1 + SCV) / 2 = 0.6985` to show the effect of non-exponential service.
 
 **Exclusions.** Freeze windows and retired tools, as stated. Also excluded: proposals that never reached
 the router because the agent refused at generation time. That exclusion biases the harmful-proposal rate
@@ -271,7 +270,7 @@ NUMERICAL EXAMPLE
   total                                         = 16,308.24 USD/day
   annualised at 255 days                        = 4,158,601 USD/year
 INTERPRETATION
-  Class C is 11.5% of harmful proposals but 65.7% of the loss.
+  Class C is 40.0% of harmful proposals but 65.7% of the loss.
   Class D is 5.0% of harmful proposals and 24.9% of the loss.
   Classes A and B together are 9.4% of loss - the gate cannot be justified on them.
 ```
@@ -288,7 +287,7 @@ WHERE
   t_c   = mean service seconds for one review in c     (seconds)
   H_shift = productive hours per reviewer-day = 7.8
 CONSTRAINT
-  t_c measured on the review task only; no context switching, no queue time.
+  t_c represents the review task only; no context switching or queue time is included.
 NUMERICAL EXAMPLE
   full review of all proposals:
     1180*22 + 660*55 + 208*95 + 24*140 = 85,380 seconds
@@ -300,7 +299,7 @@ NUMERICAL EXAMPLE
     72,332 / 3600 = 20.092 hours
     20.092 / 7.8  = 2.576 FTE  -> ceil = 3 reviewers
 INTERPRETATION
-  The digest path saves 4.3 seconds per review on average but 13,048 seconds a day
+  The digest path saves 6.3 seconds per review on average but 13,048 seconds a day
   in total, and it saves a whole head because 2.576 ceilings to 3 while 3.041
   ceilings to 4. The staffing step, not the seconds, is the real saving.
 ```
@@ -324,7 +323,7 @@ WHERE
   value_c = avoided loss per dollar of review, dimensionless
   ell*_c  = break-even loss severity for class c              (USD/event)
 CONSTRAINT
-  value_c > 1 means the gate pays; q_c must be measured at proposal grain.
+  value_c > 1 means the gate pays; q_c must be defined at proposal grain.
 NUMERICAL EXAMPLE
   class A: q = 8.6378*0.30/1180 = 0.002196, m = 0.90, rho = 0.09
            avoided = 0.002196*60*0.90*0.91 = 0.1079 USD/proposal
@@ -416,9 +415,9 @@ the story", and it is why the digest, not the window, is the load-bearing contro
 
 **Block 7 - where to put the quarantine operating point.**
 
-The classifier has a threshold, and moving it trades recall against false quarantine. Five measured
-operating points on the launch sample (ILLUSTRATIVE) give the frontier below. The question is not "maximise
-recall"; it is "minimise total cost, given what else is in the stack".
+The classifier has a threshold, and moving it trades recall against false quarantine. Five constructed
+ILLUSTRATIVE operating points give the frontier below. The question is not "maximise recall"; it is
+"minimise total cost, given what else is in the stack".
 
 ```text
 FORMULA
@@ -552,12 +551,12 @@ instruction-shaped passage is held. Held proposals are re-derived on sanitized e
 re-derivation fails. The layer costs 285.17 USD/day: 172 false quarantines x 90 s of rework at the reviewer
 rate (198.89 USD) plus 22,000 USD/year of platform amortized over 255 days (86.27 USD).
 
-**Component 5 - audit sampler.** Two independent audits run continuously. One estimates quarantine recall on
-a sample of held proposals, because recall is the number the whole design rests on. The other estimates
-reviewer agreement on a sample of approvals, because a reviewer who always approves is a rubber stamp with
-a salary. Agreement is measured with Cohen's kappa, not raw agreement: 204 of 240 sampled decisions agreed,
-marginal totals were 180/240 and 172/240, so expected agreement is 0.6083 and kappa is 0.617 with a standard
-error of 0.0588, giving a 95% interval of 0.502 to 0.733 - substantial, not excellent, and honest about it.
+**Component 5 - audit sampler.** Two independent audits would run continuously. One would estimate
+quarantine recall on held proposals, because recall is the number the whole design rests on. The other would
+estimate reviewer agreement on approvals, because a reviewer who always approves is a rubber stamp with a
+salary. In an ILLUSTRATIVE 240-decision agreement exercise, 204 decisions agree; marginal totals of 180/240
+and 172/240 yield expected agreement 0.6083 and kappa 0.617, with standard error 0.0588 and a 95% interval
+of 0.502 to 0.733. This illustrates a substantial but not excellent agreement result, not a measurement.
 
 **Component 6 - idempotent sink.** Each approved digest carries one idempotency key minted before approval.
 A retry after a timeout re-sends the same key, so the sink collapses duplicates. The key is scoped to the
@@ -581,14 +580,14 @@ digest, so a re-proposal after a failed execution gets a fresh key and cannot be
 - Denominator: executions in the window. Population: all executions, including auto-executed ones, because
   an auto-executed action with no approval record is a defect of the same family.
 - Window: 30 consecutive days, reported weekly with a rolling 7-day view for early warning.
-- Comparator: the pre-gate baseline of writes executed from agent proposals with no digest binding, which
-  is the only honest counterfactual. That baseline is measured, not assumed: 0.4% of proposals showed a
-  silent mismatch in the pre-gate replay, which is why the binding exists.
+- Comparator: an ILLUSTRATIVE pre-gate counterfactual in which agent proposals have no digest binding.
+  The constructed scenario uses a 0.4% silent-mismatch rate to motivate testing the binding mechanism.
 - Guardrails: (i) p95 gate latency under 90 s; (ii) reviewer queue utilisation under 0.80; (iii) quarantine
-  false-positive rate under 6%; (iv) approved-without-diff-view rate under 1%, measured by surface telemetry.
-- Uncertainty: the defect rate is a rare event, so it is reported with an exact one-sided upper bound when
-  zero defects are observed. Zero in 2,072 executions gives an upper bound of 1 - 0.05^(1/2072) = 0.144%,
-  which is a statement about the bound, not about safety.
+  false-positive rate under 6%; (iv) approved-without-diff-view rate under 1%, to be computed from surface
+  telemetry if the design is executed.
+- Uncertainty: the defect rate is rare, so an implementation would report an exact one-sided upper bound
+  when zero defects are observed. With zero in 2,072 executions, the illustrative bound is
+  `1 - 0.05^(1/2072) = 0.144%`; that would describe the bound, not safety.
 - Status: **not executed.** No measurement exists; every number in this case is ILLUSTRATIVE arithmetic.
 
 **Secondary metric - avoided loss per review dollar, by class.** Computed weekly from the ledger in Block 4.
@@ -660,11 +659,11 @@ is 3.95 dollars saved per dollar of residual given up, which is why it wins.
 if they were mis-bound, falling to 1,069 USD under binding. Closing the digest gap on three tools is
 therefore worth more than any further review-rule tuning, and is the top backlog item.
 
-**Sensitivity - prevalence.** At the Wilson lower bound of 3.42% instead of 5.56%, the unmitigated loss
-scales by 0.615, from 16,308.24 to 10,029, and P6's total falls to about 1,024 with residual loss nearly
-unchanged in relative terms. Breakeven for quarantine is a prevalence of 0.035% and for the full gate
-0.186%, so both survive the lower bound by 15 times and 18 times respectively. The conclusion is robust
-to the prevalence uncertainty in the direction the sample allows.
+**Sensitivity - prevalence.** At a lower ILLUSTRATIVE prevalence of 1.11% instead of 1.8%, unmitigated
+loss scales by `1.11 / 1.8 = 0.615`, from 16,308.24 to 10,029 USD/day, and P6's total falls to about
+1,024 USD/day with residual loss nearly unchanged in relative terms. Breakeven for quarantine is a
+prevalence of 0.035% and for the full gate 0.186%, so both remain above the lower scenario. The conclusion
+is directionally robust across this constructed sensitivity range, not a sample-based confidence claim.
 
 **Sensitivity - a missed adversarial path.** Suppose quarantine is effective on text channels but blind to
 indirect instructions arriving through tool outputs, and class D harm is entirely of that kind. Class-D
@@ -939,6 +938,133 @@ decision?**
 - Follow-up: What breaks if catch probability depends on the queue state?
 - Red flag: "gate everything above class B."
 - Scoring: 0 class-based rule; 1 ratio without the queue caveat; 2 ratio plus the capacity interaction.
+
+### Authority, escalation, and recovery drill
+
+**Authority is a state machine, not a job title.** The requester owns the business intent, the policy
+engine owns route selection, the reviewer owns a bounded approve-or-decline decision, and the executor owns
+only a byte-identical write. None may substitute for another. In particular, an on-call engineer may restore
+availability but cannot turn a declined approval into an approved one; recovery authority is deliberately
+narrower than change authority.
+
+| State | Permitted actor | Transition evidence | Forbidden shortcut |
+|---|---|---|---|
+| Proposed | agent service | signed intent record and policy version | direct sink call |
+| Quarantined | sanitization worker | detector score and retrieved chunk IDs | reviewer approval of raw instructions |
+| Awaiting review | assigned reviewer | canonical diff, digest, record version | approval by ticket title alone |
+| Approved | executor | approval ID, digest equality, unexpired window | payload regeneration |
+| Declined | requester or agent | decline reason code | reuse of the approval ID |
+| Expired | policy engine | clock exceeds validity window | delayed execution |
+| Executed | sink | idempotency receipt and new record version | a second side effect on retry |
+
+The authority tuple is `(principal, action_id, digest_sha256, policy_version, expires_at, record_version)`.
+The executor validates every member. A valid reviewer signature over the wrong policy version is rejected,
+and a valid policy result over a changed record version is rejected. This is stricter than role-based access
+control because it answers not only *who* signed but also *what exact transition* that signature can cause.
+
+**ILLUSTRATIVE escalation clock.** A class-C proposal may wait 15 minutes before reassignment; class D may
+wait 5 minutes. Reassignment changes the reviewer, never the required artifact. At 15 minutes, C becomes
+`expired`, not `auto-approved`; the system creates a fresh proposal using the current record version. This
+avoids converting an availability alert into an authorization bypass.
+
+The following worked recovery trace distinguishes a safe retry from a compensating action:
+
+```text
+PRECONDITION
+  approval_id = A-91, digest = d1, idempotency_key = k1, record_version = v17
+TRACE
+  1. executor submits (d1, k1) to the sink; network reply times out.
+  2. executor queries the receipt ledger by k1.
+  3a. receipt exists with d1: mark Executed; do not submit again.
+  3b. receipt absent and record remains v17: resubmit exactly (d1, k1).
+  3c. receipt absent and record is v18: mark Stale; require a new proposal.
+INVARIANT
+  k1 can produce at most one sink effect, and no path changes d1 after approval.
+FAILURE BOUNDARY
+  A downstream sink that cannot store or query k1 cannot provide exactly-once behaviour;
+  its route must be full review plus a reconciled compensating workflow, not optimistic retry.
+```
+
+A compensating action is not a retry. If the approved update incorrectly changed a ticket owner from Elena to
+Ravi, the correction `owner=Elena` is a new write with a new digest, a new policy evaluation, and normally a
+new approval. Treating it as rollback under the old approval would let any later operator smuggle a change
+through the old authorization.
+
+**ILLUSTRATIVE recovery objective.** Suppose the receipt ledger is unavailable for 12 minutes while 36
+approved proposals arrive at 3 proposals/minute. The executor pauses rather than guessing whether a timeout
+committed. When the ledger returns, it resolves all 36 keys. With a 20-second median receipt lookup, the
+reconciliation work is `36 x 20 = 720` seconds, or 12 reviewer-equivalent minutes; the business delay is
+accepted because the alternative is 36 opportunities for duplicate or stale effects. This is a constructed
+capacity calculation, not an observed outage.
+
+The recovery runbook has four stop conditions. First, any approval/digest mismatch stops the individual
+execution and writes an immutable mismatch event. Second, two mismatches for the same tool in 30 minutes
+freeze that tool's route because the canonicalizer may be inconsistent. Third, receipt-ledger unavailability
+past the maximum approval window expires queued approvals. Fourth, a policy-signature verification failure
+freezes every affected policy version, since selectively bypassing one failed verification destroys the audit
+boundary.
+
+**Audit chain.** Each transition appends an event containing `event_id`, event time, processing time,
+actor class, action ID, prior state, new state, digest, policy version, record version, and correlation ID.
+The log is append-only from the application perspective; access to query it is separated from access to
+execute actions. A reviewer may inspect the audit chain but cannot rewrite it, while an auditor may sample
+executed actions without gaining sink credentials.
+
+The audit question is temporal: can an investigator reconstruct what was known *before* approval and what
+was verified *at* execution? Storing only the final ticket is insufficient because it loses the retrieved
+chunk IDs, the original version, and the route decision. Storing only the model transcript is insufficient
+because it cannot prove the bytes sent to the sink. The minimal evidentiary join is `action_id -> approval_id
+-> digest -> idempotency_key -> sink receipt`.
+
+**ILLUSTRATIVE audit sampling calculation.** If an investigator samples 80 executed class-C actions from a
+week of 208 and finds zero missing joins, the simple one-sided 95% upper bound on a missing-join rate within
+that sampled population is `1 - 0.05^(1/80) = 3.68%`. That is far too wide to certify an exact-binding
+control. The operational response is not to declare success; it is to run a complete join check over all 208
+executions and reserve sampling for semantic review of whether the cited policy actually applied.
+
+A complete join check should return four disjoint counts: executed with valid bound approval, executed with
+permitted auto-execution evidence, rejected before sink submission, and impossible states. The fourth count
+must be zero. Examples include an execution after expiration, a receipt with no action ID, or an approval
+linked to two distinct digests. A dashboard that sums the first three but omits impossible states reports
+throughput, not control integrity.
+
+**Escalation failure modes.** A reviewer can be unavailable, a policy clause can conflict, a requested action
+can exceed the registered envelope, or the sink can make the state ambiguous. These have different owners:
+availability goes to the queue manager, policy conflict to the policy owner, envelope expansion to the
+business authority, and ambiguous sink state to the recovery operator. Sending all four to the on-call
+reviewer encourages authority drift because the reviewer can see the customer urgency but may not alter
+policy or infer a missing receipt.
+
+An emergency route remains an approval gate. It requires two named emergency approvers, a shorter maximum
+validity window, a mandatory reason code, and post-event audit within one business day. It does not accept a
+single administrator's free-form note as a substitute for a digest. Emergency authority changes the quorum;
+it does not erase the object being authorized.
+
+**Decision test.** When asked to unblock a stuck action, apply this sequence: (1) can the prior effect be
+proved from the receipt ledger; (2) does the present record still match the approved version; (3) does the
+policy version still authorize the exact digest; (4) is the signer still within the required quorum; and
+(5) has the approval expired? A single `no` yields a new proposal or an explicit incident, never a manual
+sink call. The sequence is intentionally conservative: urgency can choose an emergency quorum, but cannot
+manufacture evidence that does not exist.
+
+This control-plane detail changes the economics in the main case. A 20-second receipt lookup is cheaper than
+a 55-second human re-review and avoids the much larger uncertainty cost of duplicate execution. Conversely,
+a permanent receipt ledger is part of the cost of claiming idempotency; omitting it would make the labour
+comparison artificially favourable. Any real deployment must price ledger retention, key management, audit
+storage, and emergency exercises alongside reviewer seconds. Those costs are unknown here and are therefore
+not folded into the ILLUSTRATIVE policy totals.
+
+**Practice prompt.** A class-D action is approved under policy version 18, the policy is revoked before
+execution, and the record is unchanged. What happens? The executor rejects it because the authoritative
+policy version is part of the approval tuple and revocation changes the authorization context. The action is
+then re-proposed under the current policy; it is not grandfathered merely because a reviewer acted earlier.
+This rule can delay a legitimate change, but it makes revocation meaningful.
+
+**Practice prompt.** A sink receipt appears for `k1` but carries a different digest `d2`. What happens? Treat
+it as a high-severity integrity incident: freeze the tool, preserve the receipt and canonical pre-image, and
+do not compensate automatically. The mismatch could be a sink serialization defect, a key collision, or a
+corrupted audit join. Each explanation requires different remediation, but all invalidate the assumption that
+an idempotency key identifies one approved effect.
 
 ## 15. Quick Reference Card
 

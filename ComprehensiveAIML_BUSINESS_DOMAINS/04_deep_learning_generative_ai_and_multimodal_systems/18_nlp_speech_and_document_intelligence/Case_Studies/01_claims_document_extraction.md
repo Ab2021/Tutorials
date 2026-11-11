@@ -126,6 +126,32 @@ BOUNDARY: if r or m rises, shortfall grows; capacity must not be inferred from a
 
 Sensitivity: at routed fraction 0.40, work is `1200 × 0.40 × 1.8 = 864 minutes = 14.4 hours`; two reviewers have 1.6 hours nominal headroom. At 0.50, work is 1,080 minutes = 18 hours; the shortfall is 2 hours. These differences change staffing feasibility, not correctness evidence.
 
+```text
+FORMULA [CDX-02]: expected_accepted_errors = N * a * e
+WHERE: N = eligible fields/day; a = accepted share [0,1]; e = independently estimated
+       error rate among accepted fields [0,1]; result is expected erroneous accepted fields/day.
+CONSTRAINT: e must come from a claim/bundle-disjoint audit drawn from the accepted frame;
+            this expectation is not a guarantee for a single day or a new template.
+NUMERICAL EXAMPLE (ILLUSTRATIVE): 1,200 fields/day * 0.55 * 0.010 = 6.6 fields/day.
+INTERPRETATION: even a one-percent accepted-field error rate implies 6.6 candidates/day needing
+                discovery or correction at this volume; owner policy must decide whether that risk is acceptable.
+BOUNDARY: do not use this calculation when accepted candidates are not independently audited,
+          because selective labels can make e look smaller than the true accepted-field error rate.
+```
+
+```text
+FORMULA [CDX-03]: T_page = T_render + T_ocr + T_layout + T_policy
+WHERE: each T is elapsed seconds per page for canonical rendering, OCR, layout/candidate work,
+       and authorization/schema gating; T_page is machine latency, not reviewer wait time.
+CONSTRAINT: components are measured on the same source class and run serially; retries, uploads,
+            queueing, cache misses, and human routing are excluded unless measured separately.
+NUMERICAL EXAMPLE (ILLUSTRATIVE): 0.35 s + 0.80 s + 0.25 s + 0.10 s = 1.50 s/page.
+INTERPRETATION: a 2.0-second machine budget leaves 0.50 s for the stated path, but says nothing
+                about completion if the item is routed to a reviewer.
+BOUNDARY: parallel or batched stages cannot be summed this way; measure the critical path instead.
+```
+
+
 ## 7. The Finding
 
 For this illustrative design, evidence-linked extraction is suitable only as a proposed reviewer-assistance workflow, not an automatic claims process.
@@ -178,7 +204,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: OCR confidence by token and effective DPI.
 - Immediate recovery: route pages below validated scan-quality threshold.
 - Verification: compare reviewer field agreement after re-scan.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-01 — low-resolution fax: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-02 — handwritten adjustment
 - Symptom: an extraction or route decision is unreliable under handwritten adjustment.
@@ -186,7 +212,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: handwriting flag plus field-level confidence.
 - Immediate recovery: require reviewer transcription; do not infer a value.
 - Verification: audit accepted transcription against double entry.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-02 — handwritten adjustment: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-03 — rotated page
 - Symptom: an extraction or route decision is unreliable under rotated page.
@@ -194,7 +220,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: orientation score and text-line angle.
 - Immediate recovery: rotate then rerun layout detection.
 - Verification: verify anchors align to expected page coordinates.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-03 — rotated page: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-04 — mixed document bundle
 - Symptom: an extraction or route decision is unreliable under mixed document bundle.
@@ -202,7 +228,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: claim identifier conflict and page-sequence discontinuity.
 - Immediate recovery: split bundle for reviewer reconciliation.
 - Verification: verify every page has exactly one approved bundle owner.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-04 — mixed document bundle: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-05 — stale form version
 - Symptom: an extraction or route decision is unreliable under stale form version.
@@ -210,7 +236,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: template/version classifier and effective-date lookup.
 - Immediate recovery: abstain unless the schema version is approved.
 - Verification: compare schema hash to the source-record version.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-05 — stale form version: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-06 — missing policy number
 - Symptom: an extraction or route decision is unreliable under missing policy number.
@@ -218,7 +244,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: required-field completeness check.
 - Immediate recovery: route without entity linkage.
 - Verification: verify no downstream join was created.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-06 — missing policy number: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-07 — duplicate upload
 - Symptom: an extraction or route decision is unreliable under duplicate upload.
@@ -226,7 +252,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: perceptual hash and canonical page hash.
 - Immediate recovery: deduplicate before extraction.
 - Verification: verify one retained source lineage.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-07 — duplicate upload: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-08 — cropped signature region
 - Symptom: an extraction or route decision is unreliable under cropped signature region.
@@ -234,7 +260,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: page-boundary and required-region coverage check.
 - Immediate recovery: request complete capture.
 - Verification: verify region coverage against page dimensions.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-08 — cropped signature region: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-09 — table row drift
 - Symptom: an extraction or route decision is unreliable under table row drift.
@@ -242,7 +268,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: row/column consistency and amount-format check.
 - Immediate recovery: send table to structured review.
 - Verification: verify reconciled row totals.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-09 — table row drift: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-10 — currency ambiguity
 - Symptom: an extraction or route decision is unreliable under currency ambiguity.
@@ -250,7 +276,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: currency source and amount-pattern conflict.
 - Immediate recovery: hold monetary field for reviewer.
 - Verification: verify currency against authoritative document context.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-10 — currency ambiguity: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-11 — date ambiguity
 - Symptom: an extraction or route decision is unreliable under date ambiguity.
@@ -258,7 +284,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: locale evidence and impossible-date test.
 - Immediate recovery: retain raw string and route.
 - Verification: verify normalized date with source image.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-11 — date ambiguity: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-12 — negated clause
 - Symptom: an extraction or route decision is unreliable under negated clause.
@@ -266,7 +292,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: evidence span includes sentence and qualifier.
 - Immediate recovery: require reviewer confirmation.
 - Verification: verify span entails displayed status.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-12 — negated clause: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-13 — cross-page continuation
 - Symptom: an extraction or route decision is unreliable under cross-page continuation.
@@ -274,7 +300,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: continuation markers and page adjacency.
 - Immediate recovery: assemble only with bundle-level evidence.
 - Verification: verify both page references remain attached.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-13 — cross-page continuation: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-14 — stamp obscures text
 - Symptom: an extraction or route decision is unreliable under stamp obscures text.
@@ -282,7 +308,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: occlusion detector and image-layer check.
 - Immediate recovery: abstain rather than hallucinate characters.
 - Verification: verify reviewer can see an unoccluded source.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-14 — stamp obscures text: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-15 — non-English rider
 - Symptom: an extraction or route decision is unreliable under non-English rider.
@@ -290,7 +316,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: language identification confidence and script coverage.
 - Immediate recovery: route to qualified-language reviewer.
 - Verification: verify reviewed translation preserves field meaning.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-15 — non-English rider: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-16 — barcode mismatch
 - Symptom: an extraction or route decision is unreliable under barcode mismatch.
@@ -298,7 +324,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: decode result versus OCR comparison.
 - Immediate recovery: treat as conflict, not automatic correction.
 - Verification: verify source-system identifier before release.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-16 — barcode mismatch: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-17 — template lookalike
 - Symptom: an extraction or route decision is unreliable under template lookalike.
@@ -306,7 +332,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: issuer/logo/template evidence disagreement.
 - Immediate recovery: use unknown-template route.
 - Verification: verify template approval against controlled registry.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-17 — template lookalike: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-18 — late corrected page
 - Symptom: an extraction or route decision is unreliable under late corrected page.
@@ -314,7 +340,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: version timestamp and page fingerprint change.
 - Immediate recovery: invalidate affected fields and re-review.
 - Verification: verify superseded values are not exported.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-18 — late corrected page: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-19 — encrypted attachment
 - Symptom: an extraction or route decision is unreliable under encrypted attachment.
@@ -322,7 +348,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: decryption/access state.
 - Immediate recovery: route to authorized intake process.
 - Verification: verify no placeholder extraction entered the record.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-19 — encrypted attachment: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-20 — redaction overlap
 - Symptom: an extraction or route decision is unreliable under redaction overlap.
@@ -330,7 +356,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: redaction geometry intersects field region.
 - Immediate recovery: record unavailable rather than reconstruct.
 - Verification: verify redaction policy and reviewer disposition.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-20 — redaction overlap: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-21 — long narrative note
 - Symptom: an extraction or route decision is unreliable under long narrative note.
@@ -338,7 +364,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: evidence-span absence and low entailment score.
 - Immediate recovery: do not populate structured field.
 - Verification: verify reviewer identifies explicit source span.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-21 — long narrative note: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-22 — multi-claim packet
 - Symptom: an extraction or route decision is unreliable under multi-claim packet.
@@ -346,7 +372,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: entity clustering conflict.
 - Immediate recovery: split into separate work items.
 - Verification: verify each output has isolated provenance.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-22 — multi-claim packet: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-23 — scan shadow
 - Symptom: an extraction or route decision is unreliable under scan shadow.
@@ -354,7 +380,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: illumination/contrast diagnostic.
 - Immediate recovery: reprocess image then compare candidates.
 - Verification: verify stable result across approved preprocessing.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-23 — scan shadow: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-24 — checkbox ambiguity
 - Symptom: an extraction or route decision is unreliable under checkbox ambiguity.
@@ -362,7 +388,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: mark coverage and neighboring-box check.
 - Immediate recovery: route binary decision to reviewer.
 - Verification: verify image crop and reviewer rationale.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-24 — checkbox ambiguity: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-25 — footer leakage
 - Symptom: an extraction or route decision is unreliable under footer leakage.
@@ -370,7 +396,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: region role classifier and coordinate policy.
 - Immediate recovery: exclude footer region from field candidate set.
 - Verification: verify no forbidden region is cited.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-25 — footer leakage: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-26 — header carryover
 - Symptom: an extraction or route decision is unreliable under header carryover.
@@ -378,7 +404,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: repetition across pages and coordinate role.
 - Immediate recovery: prefer designated entity field only.
 - Verification: verify field provenance is not a header.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-26 — header carryover: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-27 — PDF text-layer conflict
 - Symptom: an extraction or route decision is unreliable under PDF text-layer conflict.
@@ -386,7 +412,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: text-layer/rendered-token comparison.
 - Immediate recovery: preserve conflict and route.
 - Verification: verify reviewer selects authoritative rendition.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-27 — PDF text-layer conflict: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-28 — blank page insertion
 - Symptom: an extraction or route decision is unreliable under blank page insertion.
@@ -394,7 +420,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: blank-page detector and source index reconciliation.
 - Immediate recovery: retain page identity independent of ordinal.
 - Verification: verify page-to-source mapping.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-28 — blank page insertion: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-29 — quality threshold gaming
 - Symptom: an extraction or route decision is unreliable under quality threshold gaming.
@@ -402,7 +428,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: coverage by template and scan-quality slice.
 - Immediate recovery: monitor selective coverage; retain review sample.
 - Verification: verify calibration on routed and accepted populations.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-29 — quality threshold gaming: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-30 — review queue overload
 - Symptom: an extraction or route decision is unreliable under review queue overload.
@@ -410,7 +436,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: arrival/service rates and queue age.
 - Immediate recovery: throttle intake or add authorized capacity.
 - Verification: verify queue age and error rate recover.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-30 — review queue overload: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-31 — reviewer override loop
 - Symptom: an extraction or route decision is unreliable under reviewer override loop.
@@ -418,7 +444,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: override reason codes and repeat count.
 - Immediate recovery: finalize reviewer authority and create issue record.
 - Verification: verify loop stops with one final disposition.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-31 — reviewer override loop: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-32 — schema deployment mismatch
 - Symptom: an extraction or route decision is unreliable under schema deployment mismatch.
@@ -426,7 +452,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: contract-version validation.
 - Immediate recovery: block export and roll back mapping.
 - Verification: verify producer/consumer versions match.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-32 — schema deployment mismatch: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-33 — downstream coercion
 - Symptom: an extraction or route decision is unreliable under downstream coercion.
@@ -434,7 +460,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: typed parse audit and precision comparison.
 - Immediate recovery: store raw value and reject lossy coercion.
 - Verification: verify exported amount matches approved value.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-33 — downstream coercion: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-34 — access-scope leak
 - Symptom: an extraction or route decision is unreliable under access-scope leak.
@@ -442,7 +468,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: authorization decision and page-to-claim binding.
 - Immediate recovery: revoke session and investigate exposure.
 - Verification: verify negative authorization tests.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-34 — access-scope leak: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-35 — audit-log gap
 - Symptom: an extraction or route decision is unreliable under audit-log gap.
@@ -450,7 +476,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: required lineage fields absent.
 - Immediate recovery: block release until lineage is complete.
 - Verification: verify immutable audit record.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-35 — audit-log gap: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-36 — reviewer fatigue
 - Symptom: an extraction or route decision is unreliable under reviewer fatigue.
@@ -458,7 +484,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: error rate by bundle length and reviewer workload.
 - Immediate recovery: split work and sample second review.
 - Verification: verify agreement returns to control range.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-36 — reviewer fatigue: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-37 — rare template drift
 - Symptom: an extraction or route decision is unreliable under rare template drift.
@@ -466,7 +492,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: unknown-template rate and novelty embedding distance.
 - Immediate recovery: abstain and create controlled onboarding set.
 - Verification: verify approval before automatic route.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-37 — rare template drift: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-38 — label leakage
 - Symptom: an extraction or route decision is unreliable under label leakage.
@@ -474,7 +500,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: availability timestamp exceeds extraction cut-off.
 - Immediate recovery: remove field and rerun split.
 - Verification: verify point-in-time feature manifest.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-38 — label leakage: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### FM-39 — selective-label bias
 - Symptom: an extraction or route decision is unreliable under selective-label bias.
@@ -482,7 +508,7 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 - Discriminating diagnostic: route propensity and sampled accepted audits.
 - Immediate recovery: sample accepted outputs for independent review.
 - Verification: verify metrics report reviewed and all-released populations separately.
-- Boundary: retain the source/version and route reason; do not silently substitute a plausible value.
+- Custody rule for FM-39 — selective-label bias: preserve the raw page, version hash, and route code together so a reviewer can trace why no value was released.
 
 ### Field-decision analysis 01: low-resolution fax
 **Decision grain:** `low-resolution fax` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -490,10 +516,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use OCR confidence by token and effective DPI; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** route pages below validated scan-quality threshold; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** compare reviewer field agreement after re-scan; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For low-resolution fax, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for low-resolution fax invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `low-resolution fax` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For low-resolution fax, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 02: handwritten adjustment
 **Decision grain:** `handwritten adjustment` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -501,10 +527,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use handwriting flag plus field-level confidence; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** require reviewer transcription; do not infer a value; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** audit accepted transcription against double entry; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For handwritten adjustment, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for handwritten adjustment invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `handwritten adjustment` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For handwritten adjustment, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 03: rotated page
 **Decision grain:** `rotated page` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -512,10 +538,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use orientation score and text-line angle; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** rotate then rerun layout detection; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify anchors align to expected page coordinates; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For rotated page, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for rotated page invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `rotated page` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For rotated page, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 04: mixed document bundle
 **Decision grain:** `mixed document bundle` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -523,10 +549,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use claim identifier conflict and page-sequence discontinuity; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** split bundle for reviewer reconciliation; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify every page has exactly one approved bundle owner; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For mixed document bundle, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for mixed document bundle invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `mixed document bundle` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For mixed document bundle, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 05: stale form version
 **Decision grain:** `stale form version` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -534,10 +560,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use template/version classifier and effective-date lookup; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** abstain unless the schema version is approved; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** compare schema hash to the source-record version; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For stale form version, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for stale form version invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `stale form version` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For stale form version, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 06: missing policy number
 **Decision grain:** `missing policy number` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -545,10 +571,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use required-field completeness check; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** route without entity linkage; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify no downstream join was created; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For missing policy number, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for missing policy number invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `missing policy number` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For missing policy number, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 07: duplicate upload
 **Decision grain:** `duplicate upload` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -556,10 +582,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use perceptual hash and canonical page hash; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** deduplicate before extraction; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify one retained source lineage; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For duplicate upload, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for duplicate upload invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `duplicate upload` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For duplicate upload, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 08: cropped signature region
 **Decision grain:** `cropped signature region` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -567,10 +593,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use page-boundary and required-region coverage check; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** request complete capture; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify region coverage against page dimensions; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For cropped signature region, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for cropped signature region invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `cropped signature region` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For cropped signature region, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 09: table row drift
 **Decision grain:** `table row drift` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -578,10 +604,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use row/column consistency and amount-format check; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** send table to structured review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify reconciled row totals; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For table row drift, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for table row drift invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `table row drift` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For table row drift, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 10: currency ambiguity
 **Decision grain:** `currency ambiguity` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -589,10 +615,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use currency source and amount-pattern conflict; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** hold monetary field for reviewer; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify currency against authoritative document context; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For currency ambiguity, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for currency ambiguity invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `currency ambiguity` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For currency ambiguity, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 11: date ambiguity
 **Decision grain:** `date ambiguity` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -600,10 +626,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use locale evidence and impossible-date test; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** retain raw string and route; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify normalized date with source image; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For date ambiguity, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for date ambiguity invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `date ambiguity` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For date ambiguity, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 12: negated clause
 **Decision grain:** `negated clause` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -611,10 +637,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use evidence span includes sentence and qualifier; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** require reviewer confirmation; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify span entails displayed status; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For negated clause, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for negated clause invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `negated clause` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For negated clause, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 13: cross-page continuation
 **Decision grain:** `cross-page continuation` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -622,10 +648,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use continuation markers and page adjacency; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** assemble only with bundle-level evidence; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify both page references remain attached; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For cross-page continuation, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for cross-page continuation invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `cross-page continuation` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For cross-page continuation, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 14: stamp obscures text
 **Decision grain:** `stamp obscures text` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -633,10 +659,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use occlusion detector and image-layer check; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** abstain rather than hallucinate characters; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify reviewer can see an unoccluded source; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For stamp obscures text, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for stamp obscures text invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `stamp obscures text` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For stamp obscures text, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 15: non-English rider
 **Decision grain:** `non-English rider` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -644,10 +670,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use language identification confidence and script coverage; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** route to qualified-language reviewer; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify reviewed translation preserves field meaning; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For non-English rider, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for non-English rider invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `non-English rider` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For non-English rider, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 16: barcode mismatch
 **Decision grain:** `barcode mismatch` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -655,10 +681,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use decode result versus OCR comparison; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** treat as conflict, not automatic correction; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify source-system identifier before release; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For barcode mismatch, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for barcode mismatch invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `barcode mismatch` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For barcode mismatch, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 17: template lookalike
 **Decision grain:** `template lookalike` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -666,10 +692,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use issuer/logo/template evidence disagreement; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** use unknown-template route; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify template approval against controlled registry; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For template lookalike, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for template lookalike invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `template lookalike` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For template lookalike, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 18: late corrected page
 **Decision grain:** `late corrected page` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -677,10 +703,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use version timestamp and page fingerprint change; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** invalidate affected fields and re-review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify superseded values are not exported; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For late corrected page, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for late corrected page invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `late corrected page` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For late corrected page, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 19: encrypted attachment
 **Decision grain:** `encrypted attachment` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -688,10 +714,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use decryption/access state; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** route to authorized intake process; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify no placeholder extraction entered the record; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For encrypted attachment, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for encrypted attachment invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `encrypted attachment` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For encrypted attachment, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 20: redaction overlap
 **Decision grain:** `redaction overlap` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -699,10 +725,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use redaction geometry intersects field region; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** record unavailable rather than reconstruct; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify redaction policy and reviewer disposition; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For redaction overlap, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for redaction overlap invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `redaction overlap` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For redaction overlap, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 21: long narrative note
 **Decision grain:** `long narrative note` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -710,10 +736,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use evidence-span absence and low entailment score; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** do not populate structured field; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify reviewer identifies explicit source span; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For long narrative note, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for long narrative note invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `long narrative note` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For long narrative note, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 22: multi-claim packet
 **Decision grain:** `multi-claim packet` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -721,10 +747,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use entity clustering conflict; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** split into separate work items; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify each output has isolated provenance; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For multi-claim packet, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for multi-claim packet invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `multi-claim packet` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For multi-claim packet, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 23: scan shadow
 **Decision grain:** `scan shadow` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -732,10 +758,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use illumination/contrast diagnostic; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** reprocess image then compare candidates; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify stable result across approved preprocessing; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For scan shadow, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for scan shadow invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `scan shadow` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For scan shadow, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 24: checkbox ambiguity
 **Decision grain:** `checkbox ambiguity` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -743,10 +769,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use mark coverage and neighboring-box check; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** route binary decision to reviewer; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify image crop and reviewer rationale; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For checkbox ambiguity, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for checkbox ambiguity invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `checkbox ambiguity` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For checkbox ambiguity, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 25: footer leakage
 **Decision grain:** `footer leakage` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -754,10 +780,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use region role classifier and coordinate policy; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** exclude footer region from field candidate set; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify no forbidden region is cited; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For footer leakage, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for footer leakage invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `footer leakage` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For footer leakage, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 26: header carryover
 **Decision grain:** `header carryover` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -765,10 +791,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use repetition across pages and coordinate role; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** prefer designated entity field only; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify field provenance is not a header; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For header carryover, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for header carryover invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `header carryover` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For header carryover, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 27: PDF text-layer conflict
 **Decision grain:** `PDF text-layer conflict` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -776,10 +802,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use text-layer/rendered-token comparison; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** preserve conflict and route; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify reviewer selects authoritative rendition; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For PDF text-layer conflict, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for PDF text-layer conflict invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `PDF text-layer conflict` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For PDF text-layer conflict, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 28: blank page insertion
 **Decision grain:** `blank page insertion` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -787,10 +813,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use blank-page detector and source index reconciliation; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** retain page identity independent of ordinal; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify page-to-source mapping; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For blank page insertion, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for blank page insertion invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `blank page insertion` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For blank page insertion, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 29: quality threshold gaming
 **Decision grain:** `quality threshold gaming` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -798,10 +824,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use coverage by template and scan-quality slice; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** monitor selective coverage; retain review sample; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify calibration on routed and accepted populations; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For quality threshold gaming, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for quality threshold gaming invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `quality threshold gaming` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For quality threshold gaming, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 30: review queue overload
 **Decision grain:** `review queue overload` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -809,10 +835,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use arrival/service rates and queue age; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** throttle intake or add authorized capacity; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify queue age and error rate recover; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For review queue overload, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for review queue overload invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `review queue overload` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For review queue overload, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 31: reviewer override loop
 **Decision grain:** `reviewer override loop` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -820,10 +846,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use override reason codes and repeat count; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** finalize reviewer authority and create issue record; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify loop stops with one final disposition; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For reviewer override loop, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for reviewer override loop invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `reviewer override loop` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For reviewer override loop, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 32: schema deployment mismatch
 **Decision grain:** `schema deployment mismatch` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -831,10 +857,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use contract-version validation; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** block export and roll back mapping; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify producer/consumer versions match; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For schema deployment mismatch, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for schema deployment mismatch invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `schema deployment mismatch` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For schema deployment mismatch, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 33: downstream coercion
 **Decision grain:** `downstream coercion` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -842,10 +868,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use typed parse audit and precision comparison; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** store raw value and reject lossy coercion; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify exported amount matches approved value; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For downstream coercion, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for downstream coercion invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `downstream coercion` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For downstream coercion, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 34: access-scope leak
 **Decision grain:** `access-scope leak` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -853,10 +879,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use authorization decision and page-to-claim binding; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** revoke session and investigate exposure; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify negative authorization tests; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For access-scope leak, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for access-scope leak invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `access-scope leak` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For access-scope leak, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 35: audit-log gap
 **Decision grain:** `audit-log gap` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -864,10 +890,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use required lineage fields absent; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** block release until lineage is complete; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify immutable audit record; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For audit-log gap, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for audit-log gap invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `audit-log gap` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For audit-log gap, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 36: reviewer fatigue
 **Decision grain:** `reviewer fatigue` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -875,10 +901,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use error rate by bundle length and reviewer workload; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** split work and sample second review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify agreement returns to control range; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For reviewer fatigue, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for reviewer fatigue invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `reviewer fatigue` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For reviewer fatigue, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 37: rare template drift
 **Decision grain:** `rare template drift` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -886,10 +912,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use unknown-template rate and novelty embedding distance; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** abstain and create controlled onboarding set; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify approval before automatic route; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For rare template drift, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for rare template drift invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `rare template drift` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For rare template drift, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 38: label leakage
 **Decision grain:** `label leakage` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -897,10 +923,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use availability timestamp exceeds extraction cut-off; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** remove field and rerun split; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify point-in-time feature manifest; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For label leakage, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for label leakage invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `label leakage` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For label leakage, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ### Field-decision analysis 39: selective-label bias
 **Decision grain:** `selective-label bias` is evaluated for one schema field, one page hash, and one document version; a bundle-level score cannot authorize a field-level export.
@@ -908,10 +934,10 @@ A pilot outcome may only be reported with a locked protocol, independent gold, s
 **Evidence test:** use route propensity and sampled accepted audits; this test changes the decision only when its source and configuration version are recorded with the candidate.
 **Routing consequence:** sample accepted outputs for independent review; routing is a work item with a reason code, not a missing value that downstream code may coerce.
 **Acceptance boundary:** verify metrics report reviewed and all-released populations separately; otherwise retain the raw candidate and mark the field unavailable rather than normalizing uncertainty away.
-**Economic consequence:** this failure consumes reviewer minutes and may delay a bundle, so measure its rate by template and scan channel before changing a global threshold.
-**Version consequence:** if the page or schema changes after a candidate is produced, invalidate its export eligibility and compare the new page hash rather than copying the prior disposition.
+**Economic consequence:** For selective-label bias, record reviewer minutes and source-request rate by template and intake channel before altering a portfolio-wide threshold.
+**Version consequence:** A changed page or schema for selective-label bias invalidates this candidate; compare fresh page and schema hashes before a new disposition.
 **Counterexample:** a high OCR score does not resolve `selective-label bias` when required page-region, claim-binding, or access evidence is absent.
-**Recovery evidence:** the final record must distinguish source request, reviewer correction, reviewer rejection, and accepted-with-evidence; those states have different denominators in quality reporting.
+**Recovery evidence:** For selective-label bias, retain whether resolution was a source request, correction, rejection, or evidence acceptance so its quality denominator is reconstructible.
 
 ## 13. Transferable Lesson
 
@@ -928,7 +954,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 ### Interview pack
 #### Q1. Why is field accuracy not sufficient?
 **Answer:** A correct string can still be from the wrong page, wrong claim, wrong form version, or unauthorized context. The release unit is an evidence-linked field decision, so evaluation must include provenance, schema validity, routing, and reviewer correction burden.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q1 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** Ask for the denominator: all documents, only reviewed documents, or only fields emitted?
 **Acceptable alternatives:** Use a field metric only as one component of a declared decision metric.
 **Red flags:** Claims that a high F1 alone permits automation.
@@ -937,7 +963,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q2. What is the safe baseline?
 **Answer:** The baseline is authorized human extraction from the rendered source with existing intake controls. It is slower but defines the correctness, authority, and audit comparator; OCR-only is not an operational baseline.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q2 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What baseline cost and queue data must be measured before a pilot?
 **Acceptable alternatives:** A rules-assisted human workflow is acceptable if it is the actual current process.
 **Red flags:** Calling manual review a failure without measuring its service level.
@@ -946,7 +972,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q3. How do you avoid leakage?
 **Answer:** Freeze the document and metadata at intake time, split by claim/bundle and time, and exclude later adjudication notes, payment outcomes, and reviewer corrections from prediction-time inputs. Fit template or normalization choices within the training partition.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q3 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** How would you detect a duplicate crossing the split?
 **Acceptable alternatives:** Use a held-out issuer or time period when that matches the release question.
 **Red flags:** Randomly splitting pages from the same bundle.
@@ -955,7 +981,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q4. When should the system abstain?
 **Answer:** It abstains when required evidence is missing, authority is absent, schema/template version is unknown, candidates conflict, or a validated risk/coverage policy routes the item. Abstention is a controlled output, not an empty field.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q4 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What disposition and evidence must an abstention retain?
 **Acceptable alternatives:** Escalate to an authorized reviewer or request a better source image.
 **Red flags:** Treating low confidence as permission to guess.
@@ -964,7 +990,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q5. How is calibration used?
 **Answer:** Calibration estimates the observed error rate among outputs with similar scores on a declared independent population. It can set a routing policy with capacity constraints, but it does not establish validity on a new template or grant authority.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q5 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What happens if scan-quality mix shifts?
 **Acceptable alternatives:** Use conformal/risk controls only after checking their assumptions and coverage.
 **Red flags:** Applying one global threshold across all issuers without slice evidence.
@@ -973,7 +999,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q6. Why keep the raw value?
 **Answer:** Raw evidence preserves what the document actually expressed. Normalization is a separately versioned transformation, allowing a reviewer to see whether a locale, currency, or date rule changed the downstream value.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q6 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** Which value should be displayed in an audit?
 **Acceptable alternatives:** Store raw image coordinates, raw string, normalized value, rule version, and reviewer disposition.
 **Red flags:** Overwriting raw text with normalized data.
@@ -982,7 +1008,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q7. How do you evaluate a routing threshold?
 **Answer:** For each threshold, calculate accepted coverage, accepted error against independent gold, routed volume, reviewer capacity, and the error cost of accepted mistakes. Choose only among policies that satisfy hard safety/authority constraints.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q7 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What if the reviewer queue cannot absorb the routed volume?
 **Acceptable alternatives:** Throttle, defer automation, or add capacity only with an authorized operational plan.
 **Red flags:** Optimizing accepted accuracy after dropping hard examples.
@@ -991,7 +1017,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q8. What is the unit of split?
 **Answer:** The bundle/claim entity, not a page or field, because pages share template, claimant, identifiers, and narrative context. Time cut-offs prevent future correction patterns from leaking backwards.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q8 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** When could issuer-level holdout be needed?
 **Acceptable alternatives:** Use issuer/template holdout to test onboarding robustness.
 **Red flags:** Splitting one bundle across train and test.
@@ -1000,7 +1026,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q9. How do OCR and extraction errors differ?
 **Answer:** OCR is a transcription-stage error; extraction is selection and normalization from text/layout. A correct OCR token can be assigned to the wrong schema field, and a poor OCR token can sometimes be corrected by visible evidence only through reviewer action.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q9 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** Which diagnostic isolates the stage?
 **Acceptable alternatives:** Compare rendered crop, OCR tokens, candidate span, schema rule, and final output.
 **Red flags:** Blaming the language model for a rasterization failure.
@@ -1009,7 +1035,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q10. What makes a citation useful?
 **Answer:** It identifies source document version, page, bounding region, raw text, extraction run, and any human correction. A page number alone is insufficient when pages are duplicated, replaced, or bundled.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q10 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** How do citations behave after a correction page arrives?
 **Acceptable alternatives:** Invalidate or version all affected citations and preserve the prior audit record.
 **Red flags:** Citing a retrieved summary rather than the rendered source.
@@ -1018,7 +1044,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q11. How do you estimate review cost?
 **Answer:** Use released volume, accepted/routed fractions, average staffed reviewer minutes, loaded cost, rework, and exception handling. Keep proposed values illustrative until observed time-study evidence exists.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q11 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What cost is often omitted?
 **Acceptable alternatives:** Queue delay, quality sampling, onboarding, rework, and failed exports.
 **Red flags:** Pricing only model calls.
@@ -1027,7 +1053,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q12. What would change if false acceptance is much costlier?
 **Answer:** Tighten hard evidence gates, raise the evidence/risk requirement, expand reviewer routing, and re-evaluate whether capacity can sustain the policy. Do not simply report a higher accuracy target.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q12 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What if routing capacity is fixed?
 **Acceptable alternatives:** Reduce scope to fields whose evidence can be validated or defer automation.
 **Red flags:** Lowering the threshold to protect throughput.
@@ -1036,7 +1062,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q13. How should a new template be introduced?
 **Answer:** Classify it as unknown, collect authorized examples, define the schema and evidence rules, validate by independent bundle/time splits, then explicitly approve any automatic route. Until then, route to review.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q13 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** Which success claim is forbidden during onboarding?
 **Acceptable alternatives:** Do not claim aggregate performance transfers from a similar template.
 **Red flags:** Auto-enrolling a visually similar form.
@@ -1045,7 +1071,7 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q14. Why is a model confidence score not an authority signal?
 **Answer:** Confidence is an internal or calibrated statistical quantity under a defined population; authority comes from business policy and an authorized human/process. A highly confident extraction can still be forbidden to release.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q14 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** Give a concrete hard gate.
 **Acceptable alternatives:** Require claim binding and permission checks before display even at high confidence.
 **Red flags:** Equating probability with permission.
@@ -1054,12 +1080,187 @@ Related reusable material: Module 18 NLP task contracts and document intelligenc
 
 #### Q15. How do you validate a migration?
 **Answer:** Replay a frozen source set through old and new pipelines, reconcile page counts, hashes, fields, citations, permissions, deletions, and downstream schema behaviour; investigate differences rather than averaging them away.
-**Reasoning:** The decision must preserve source lineage, authority, and an independently evaluable denominator before it optimizes speed.
+**Reasoning:** This response to Q15 must tie the proposed action to an observable source record, authorized actor, and declared evaluation population.
 **Follow-up:** What is the rollback unit?
 **Acceptable alternatives:** Version source snapshot, parser, OCR, extractor, schema mapping, and index/output contract together.
 **Red flags:** Comparing only aggregate extraction accuracy.
 **Scoring:** 3 for reconciliation dimensions; 2 for replay; 1 for A/B label.
 **Answer support:** Sections 5e, 9.
+
+### Interview case drills
+These drills use ILLUSTRATIVE facts only; they test decisions and arithmetic, not measured performance.
+
+#### Drill 01 — capacity check
+**Prompt:** 900 eligible fields arrive; 38% route; each routed field needs 2.0 staffed minutes; two reviewers each provide 6.5 productive hours.
+**Worked answer:** Routed work = 900 × 0.38 × 2.0 = 684 minutes = 11.4 hours.
+**Interpretation:** Capacity = 2 × 6.5 = 13.0 hours, leaving 1.6 nominal hours.
+**Decision:** Mean capacity is feasible, but arrival variation still needs a queue-age check.
+**Audit trace:** Keep the arrival window, productive-hours definition, route reason, and handling-time sample.
+**Red flag:** Do not call nominal headroom a service-level guarantee.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this capacity check scenario.
+
+#### Drill 02 — evidence gate
+**Prompt:** A candidate has OCR score 0.99 but its page hash is absent from the intake ledger.
+**Worked answer:** Route or block export because source identity is a hard gate.
+**Interpretation:** The score can rank a candidate but cannot establish custody of the cited evidence.
+**Decision:** Create an audit event for missing lineage and request intake reconciliation.
+**Audit trace:** Keep the candidate span, raw OCR output, attempted page identifier, and gate result.
+**Red flag:** Never fabricate a hash from a displayed filename.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this evidence gate scenario.
+
+#### Drill 03 — date normalization
+**Prompt:** The source crop says 03/04/2026 and the template has no declared locale.
+**Worked answer:** Retain the raw string and route the normalization decision.
+**Interpretation:** Both 3 April and 4 March are plausible, so an ISO date would be unsupported.
+**Decision:** Ask an authorized reviewer to select a meaning using document context.
+**Audit trace:** Keep crop coordinates, locale lookup result, raw string, and reviewer rationale.
+**Red flag:** An impossible-date rule cannot resolve two valid interpretations.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this date normalization scenario.
+
+#### Drill 04 — text-layer conflict
+**Prompt:** Rendered pixels show 8,500 while the PDF text layer says 8,900 in the same box.
+**Worked answer:** Preserve both representations and route a visible-source comparison.
+**Interpretation:** A hidden text layer is diagnostic evidence but is not automatically authoritative.
+**Decision:** Prohibit export until an approved reviewer chooses the source representation.
+**Audit trace:** Keep render hash, text-layer hash, crop, and conflict detector version.
+**Red flag:** Averaging values creates a third unsupported value.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this text-layer conflict scenario.
+
+#### Drill 05 — accepted-risk arithmetic
+**Prompt:** An audit estimates accepted-field error e = 0.004 for 2,000 eligible fields/day at 70% acceptance.
+**Worked answer:** Expected accepted errors = 2,000 × 0.70 × 0.004 = 5.6 fields/day.
+**Interpretation:** This is an expectation over comparable audited traffic, not a promised daily count.
+**Decision:** Compare 5.6 expected fields/day with the approved error budget and remediation plan.
+**Audit trace:** Keep audit sampling frame, confidence interval, acceptance policy version, and strata.
+**Red flag:** Do not multiply by routed share; the quantity concerns accepted fields.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this accepted-risk arithmetic scenario.
+
+#### Drill 06 — unknown template
+**Prompt:** A page resembles an approved form but the template classifier produces two close candidates.
+**Worked answer:** Use the unknown-template route until schema ownership approves an exact version.
+**Interpretation:** Visual similarity cannot prove that labels, required regions, or semantics match.
+**Decision:** Create a controlled onboarding sample rather than borrowing a nearby mapping.
+**Audit trace:** Keep classifier alternatives, page hash, issuer cues, and registry lookup result.
+**Red flag:** Do not accept solely because fields happen to parse.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this unknown template scenario.
+
+#### Drill 07 — access denial
+**Prompt:** The extractor can read a page but the requesting reviewer lacks page access scope.
+**Worked answer:** Return REJECT_ACCESS without showing text, crop, or candidate value.
+**Interpretation:** Backend availability does not broaden a reviewer authorization.
+**Decision:** Log the denial with policy version and notify access workflow rather than extraction.
+**Audit trace:** Keep subject, action, resource, policy decision, and timestamp.
+**Red flag:** A blurred crop can still disclose sensitive content.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this access denial scenario.
+
+#### Drill 08 — latency budget
+**Prompt:** A serial path measures 0.40 s rendering, 0.75 s OCR, 0.30 s layout, and 0.15 s policy gating.
+**Worked answer:** Machine latency = 0.40 + 0.75 + 0.30 + 0.15 = 1.60 seconds/page.
+**Interpretation:** Against a 2.00-second illustrative target, remaining machine slack is 0.40 seconds/page.
+**Decision:** Investigate the slowest stage before claiming end-to-end SLA compliance.
+**Audit trace:** Keep percentile distribution, source class, cache state, and retry count.
+**Red flag:** Reviewer waiting time is not part of this machine total.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this latency budget scenario.
+
+#### Drill 09 — duplicate upload
+**Prompt:** Two files have different names but equal canonical page hashes and identical intake binding.
+**Worked answer:** Retain one source lineage and link the duplicate intake event to it.
+**Interpretation:** Filename differences do not establish a second document or review task.
+**Decision:** Deduplicate before queue creation while preserving both upload audit records.
+**Audit trace:** Keep hash algorithm, both intake IDs, binding token, and deduplication action.
+**Red flag:** Do not delete the second event if it has independent timestamp implications.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this duplicate upload scenario.
+
+#### Drill 10 — reviewer overload
+**Prompt:** Routed demand is 1,100 fields/day at 1.5 minutes each; three reviewers provide 5.5 productive hours/day.
+**Worked answer:** Demand = 1,100 × 1.5 = 1,650 minutes = 27.5 hours.
+**Interpretation:** Supply = 3 × 5.5 = 16.5 hours, producing an 11.0-hour mean shortfall.
+**Decision:** Keep safety gates intact and throttle scope, add capacity, or remain manual.
+**Audit trace:** Keep route-rate change, handling-time distribution, queue age, and deferral reason.
+**Red flag:** Lowering the routing threshold to erase the queue raises acceptance risk.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this reviewer overload scenario.
+
+#### Drill 11 — redacted field
+**Prompt:** A required identifier lies under an intentional redaction rectangle.
+**Worked answer:** Mark the field unavailable; do not reconstruct it from neighboring documents.
+**Interpretation:** The redaction is both a content boundary and a potential access-policy boundary.
+**Decision:** Route only if an authorized process may request an unredacted source.
+**Audit trace:** Keep redaction geometry, source version, policy decision, and unavailable reason.
+**Red flag:** A language-model inference from context is not evidence.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this redacted field scenario.
+
+#### Drill 12 — schema rollout
+**Prompt:** The extractor emits schema version 3 while the downstream consumer accepts only version 2.
+**Worked answer:** Block export and reconcile the version contract before any field is released.
+**Interpretation:** A well-extracted value can be misinterpreted when the receiving field has changed meaning.
+**Decision:** Roll back mapping or deploy a compatible consumer after contract validation.
+**Audit trace:** Keep producer version, consumer version, field mapping, and blocked payload hash.
+**Red flag:** Renaming a key does not prove semantic compatibility.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this schema rollout scenario.
+
+#### Drill 13 — audit sample
+**Prompt:** From 500 accepted fields selected by random audit, reviewers find 3 wrong values.
+**Worked answer:** Illustrative point estimate = 3 / 500 = 0.006 = 0.6% accepted-field error.
+**Interpretation:** The estimate describes the sampled acceptance frame; uncertainty and slices still matter.
+**Decision:** Compare the result with a predeclared risk limit before relaxing any route policy.
+**Audit trace:** Keep inclusion probabilities, dispositions, policy version, and sampling dates.
+**Red flag:** Do not merge these labels with routed-only corrections.
+**Scoring:** Full credit states the calculation or gate, its unit or authority boundary, and the retained evidence for this audit sample scenario.
+
+
+#### Drill 14 — page rotation
+**Prompt:** A page enters at 90 degrees and the orientation score is split between two rotations.
+**Worked answer:** Do not trust a single automatic rotation; rerun permitted orientations and compare required anchor geometry.
+**Interpretation:** Release remains blocked until the schema region is stable on a canonical rendered page.
+**Decision:** Preserve the explicit route reason and prevent export until the relevant gate for page rotation succeeds.
+**Audit trace:** Store source and schema versions, page coordinates, actor, event time, and the rerun or review disposition for this page rotation decision.
+**Red flag:** Treating an apparently plausible value as evidence without resolving the stated page rotation condition.
+**Scoring:** Full credit identifies the causal mechanism, a discriminating check, and a recovery action for page rotation.
+
+#### Drill 15 — handwritten amendment
+**Prompt:** A printed amount is crossed out and a handwritten value sits beside it.
+**Worked answer:** Route to a reviewer because detecting ink is not authority to choose which value governs.
+**Interpretation:** Record both visible spans, their coordinates, and the reviewer explanation for the selected value.
+**Decision:** Preserve the explicit route reason and prevent export until the relevant gate for handwritten amendment succeeds.
+**Audit trace:** Store source and schema versions, page coordinates, actor, event time, and the rerun or review disposition for this handwritten amendment decision.
+**Red flag:** Treating an apparently plausible value as evidence without resolving the stated handwritten amendment condition.
+**Scoring:** Full credit identifies the causal mechanism, a discriminating check, and a recovery action for handwritten amendment.
+
+#### Drill 16 — bundle binding
+**Prompt:** Three pages share an identifier but one page carries a different claimant name.
+**Worked answer:** Treat the bundle binding as conflicted, then split and reconcile before field extraction.
+**Interpretation:** A matching identifier is insufficient when another binding attribute contradicts ownership.
+**Decision:** Preserve the explicit route reason and prevent export until the relevant gate for bundle binding succeeds.
+**Audit trace:** Store source and schema versions, page coordinates, actor, event time, and the rerun or review disposition for this bundle binding decision.
+**Red flag:** Treating an apparently plausible value as evidence without resolving the stated bundle binding condition.
+**Scoring:** Full credit identifies the causal mechanism, a discriminating check, and a recovery action for bundle binding.
+
+#### Drill 17 — scan shadow
+**Prompt:** A dark edge shadow changes an OCR token from 1 to 7 in a monetary region.
+**Worked answer:** Compare approved preprocessing variants against the original crop and route if they disagree.
+**Interpretation:** The original image remains the audit reference even when preprocessing improves readability.
+**Decision:** Preserve the explicit route reason and prevent export until the relevant gate for scan shadow succeeds.
+**Audit trace:** Store source and schema versions, page coordinates, actor, event time, and the rerun or review disposition for this scan shadow decision.
+**Red flag:** Treating an apparently plausible value as evidence without resolving the stated scan shadow condition.
+**Scoring:** Full credit identifies the causal mechanism, a discriminating check, and a recovery action for scan shadow.
+
+#### Drill 18 — field coverage
+**Prompt:** A template requires claimant name, incident date, and document date, but one required region is absent.
+**Worked answer:** Emit a completeness failure rather than accepting the two visible fields as a complete record.
+**Interpretation:** Coverage must be evaluated against the declared schema requirement, not the easiest extracted fields.
+**Decision:** Preserve the explicit route reason and prevent export until the relevant gate for field coverage succeeds.
+**Audit trace:** Store source and schema versions, page coordinates, actor, event time, and the rerun or review disposition for this field coverage decision.
+**Red flag:** Treating an apparently plausible value as evidence without resolving the stated field coverage condition.
+**Scoring:** Full credit identifies the causal mechanism, a discriminating check, and a recovery action for field coverage.
+
+#### Drill 19 — corrected source
+**Prompt:** A replacement page arrives after a candidate was placed in the review queue.
+**Worked answer:** Invalidate the queued candidate by source version and make the reviewer reopen the new evidence.
+**Interpretation:** Never copy a prior disposition onto a changed page merely to preserve throughput.
+**Decision:** Preserve the explicit route reason and prevent export until the relevant gate for corrected source succeeds.
+**Audit trace:** Store source and schema versions, page coordinates, actor, event time, and the rerun or review disposition for this corrected source decision.
+**Red flag:** Treating an apparently plausible value as evidence without resolving the stated corrected source condition.
+**Scoring:** Full credit identifies the causal mechanism, a discriminating check, and a recovery action for corrected source.
 
 ## 15. Quick Reference Card
 

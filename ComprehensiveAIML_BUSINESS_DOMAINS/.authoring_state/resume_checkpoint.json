@@ -1,39 +1,42 @@
 {
-  "status": "blocked_on_requested_worker_model",
+  "status": "authoring_in_progress_sequential_terra",
   "required_model": "GPT 5.6 TERRA",
   "required_provider": "CODEX",
   "required_effort": "medium",
-  "observed_worker_model": "openai-codex/gpt-6.1-sol",
-  "observed_worker_effort": null,
-  "per_call_model_override": "disabled",
   "user_kept_exact_model_requirement": true,
-  "active_authoring_workers": 0,
+  "session_routing": {
+    "task.perCallModel": "on",
+    "task.enableEffort": true,
+    "persisted": false
+  },
+  "observed_worker_runtime": {
+    "model": "openai-codex/gpt-5.6-terra",
+    "effort": "medium",
+    "evidence": "successful workers explicitly reported this runtime"
+  },
+  "provider_failure": {
+    "code": "usage_limit_reached",
+    "model": "openai-codex/gpt-5.6-terra",
+    "action": "do not substitute another model; retry exact Terra medium when provider capacity returns"
+  },
+  "independently_lint_verified_targets": [
+    "01_foundations_computing_and_problem_solving/02_python_sql_linux_and_engineering_basics/Case_Studies/02_Design_Analytics_API.md",
+    "01_foundations_computing_and_problem_solving/03_dsa_and_computational_thinking/Case_Studies/02_Implement_Top_K_Stream_Processing.md",
+    "02_data_analytics_and_decision_science/06_data_modeling_databases_lakehouse_and_governance/Case_Studies/01_model_an_ecommerce_lakehouse.md",
+    "03_machine_learning_optimisation_and_intelligent_retrieval/11_supervised_ml_and_feature_engineering/Cheat_Sheets/04_Feature_Engineering_Patterns.md",
+    "03_machine_learning_optimisation_and_intelligent_retrieval/13_optimization_operations_research_and_simulation/Cheat_Sheets/01_optimisation_formulation.md",
+    "04_deep_learning_generative_ai_and_multimodal_systems/17_deep_learning_computer_vision_and_representation_learning/Cheat_Sheets/03_Vision_Transformers.md",
+    "08_business_domains_and_decision_intelligence/42_healthcare_life_sciences_and_biomedical_ai/Case_Studies/01_clinical_documentation_assistant.md",
+    "08_business_domains_and_decision_intelligence/43_financial_services_fraud_risk_and_fintech/Case_Studies/01_real_time_payments_fraud.md",
+    "09_trust_security_governance_and_product_leadership/Cheat_Sheets/99_30_Common_Issues.md",
+    "10_architecture_practice_and_portfolio_capstones/55_incident_response_failure_modes_and_technical_leadership/Case_Studies/01_hot_partition_consumer_lag_incident.md"
+  ],
   "recovery_manifest": ".authoring_state/recovery/resume-5093568a/manifest.json",
   "recovered_parts": 174,
   "recovered_lines": 41747,
-  "promoted_parts": 0,
-  "final_verification": {
-    "tools_compileall": "passed",
-    "markdown_files_checked": 882,
-    "broken_file_links": 0,
-    "rejected_candidate_preserves_target": "passed",
-    "real_manuscript_assembly": "passed",
-    "999_line_rejection": "passed",
-    "distinct_issue_identifiers": "passed",
-    "summary_mode_read_only": "passed",
-    "readiness_aggregate_no_double_count": "passed",
-    "bopis_link_repair_lint": "passed"
-  },
-  "queue_tasks_by_kind": {
-    "repair": 259,
-    "unit_index": 109,
-    "create_ci": 109,
-    "create_case": 366
-  },
-  "coverage_report": "COVERAGE_STATUS.md",
   "acceptance_floor": {
     "physical_lines": 1000,
     "distinct_body_lines": 680
   },
-  "warning": "Queue describes current catalog and existing-file gaps, not proof of complete source-crosswalk coverage. Common Issues are included in sheet counts. Do not infer publication from lint."
+  "warning": "Queue describes catalog and existing-file gaps, not proof of complete source-crosswalk coverage. Lint is necessary but not sufficient for publication."
 }

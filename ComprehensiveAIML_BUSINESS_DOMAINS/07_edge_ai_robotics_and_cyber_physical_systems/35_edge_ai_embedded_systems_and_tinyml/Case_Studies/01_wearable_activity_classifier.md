@@ -985,6 +985,228 @@ These are proposed acceptance records, not claims that a device run occurred. Ea
 
 **Decision identity.** The product owner may retain a baseline or defer the feature when any required evidence record is absent or contradictory.
 
+### Design assurance scenarios
+
+**Scenario A01 — Sensor-rate drift.**
+**Stimulus.** The timer trace reports 48 completed tri-axial frames per second rather than the manifest rate of 50 frames/s.
+**Calculation.** A 128-frame window then spans `128 / 48 = 2.6667 s`, not the declared 2.56 s.
+**Diagnostic.** Compare successive capture timestamps against the declared 20 ms period before assembling a tensor.
+**Decision.** Mark that configuration ineligible because the trained receptive field and runtime meaning have both changed.
+**Recovery.** Restore the rate or create a separately versioned collection, preprocessing, and model evaluation path.
+**Evidence.** Retain the timer configuration, capture trace, and model-manifest rate in one review record.
+**Boundary.** A stable 48 Hz stream is not repaired by relabeling it as 50 Hz; the duration mismatch persists.
+**Owner.** The embedded lead owns the clock trace, while the data lead decides whether a new model study is warranted.
+**Review.** Repeat this check after oscillator, power-mode, sensor ODR, or timer-driver changes.
+
+**Scenario A02 — Single-frame discontinuity.**
+**Stimulus.** Sequence number 802 is followed by 804 after an otherwise normal DMA completion.
+**Calculation.** The missing sequence represents one absent 20 ms frame at the declared 50 frames/s cadence.
+**Diagnostic.** Compare expected and observed sequence increments before copying either block into rolling history.
+**Decision.** Reject all windows containing the gap rather than duplicating frame 802 or compressing time.
+**Recovery.** Resume eligibility only after 128 newly consecutive frames, which takes 2.56 s at the stated rate.
+**Evidence.** Record the first absent sequence, epoch, source block, and recovery-complete sequence.
+**Boundary.** A low acceleration value is an observation; an absent acceleration value is an integrity failure.
+**Owner.** Firmware owns gap detection, and product copy must expose `UNAVAILABLE` instead of an old label.
+**Review.** Inject one lost frame at each block boundary and confirm no early recovery result is rendered.
+
+**Scenario A03 — Timestamp-jitter interpretation.**
+**Stimulus.** A capture interval of 29 ms appears where the nominal interval is 20 ms.
+**Calculation.** The interval exceeds the nominal cadence by `29 - 20 = 9 ms`, or 45% of one sample period.
+**Diagnostic.** Evaluate timestamps and sequence count together, because a delayed interrupt can differ from delayed sampling.
+**Decision.** Do not assume a sensor fault until the timestamp-origin convention identifies the delayed event.
+**Recovery.** If capture-time gaps exceed the predeclared jitter allowance, invalidate the rolling window and restart accumulation.
+**Evidence.** Preserve sensor time, DMA-completion time, ISR-entry time, and the conversion rule used by the age calculation.
+**Boundary.** Using ISR time as capture time can hide bus delay, making an old observation appear fresh.
+**Owner.** The embedded lead documents the timebase; the evaluator verifies that all traces use the same convention.
+**Review.** Re-run the fault trace after changing bus speed, interrupt priority, or timestamp width.
+
+**Scenario A04 — Full-scale clipping.**
+**Stimulus.** One axis reports 127 INT8 values after preprocessing for 14 of the 128 samples in a candidate window.
+**Calculation.** The axis clipping fraction is `14 / 128 = 0.109375`, or 10.9375% of that axis's values.
+**Diagnostic.** Compare raw-count range, configured sensor range, scale manifest, and saturation counters by axis.
+**Decision.** Treat the window as quality-ineligible until the predeclared clipping policy says otherwise.
+**Recovery.** Investigate range selection or placement; never reinterpret the clipped plateau as a distinctive activity feature.
+**Evidence.** Retain the raw-range metadata and saturation count without claiming that a particular class caused it.
+**Boundary.** Increasing a model score threshold does not restore information already lost to saturation.
+**Owner.** The embedded lead owns range configuration, and the data lead owns calibration-provenance review.
+**Review.** Slice clipping by participant, class, placement, and collection session before selecting any revised range.
+
+**Scenario A05 — Orientation contract break.**
+**Stimulus.** A board revision swaps the physical X and Y accelerometer routes while the tensor manifest still states X/Y/Z.
+**Calculation.** The tensor remains shaped `[128,3]`, so shape validation alone cannot detect the semantic permutation.
+**Diagnostic.** Run a golden vector whose expected channels differ, then compare every INT8 tensor position to the reference.
+**Decision.** Reject the artifact-device pairing when channel identity, handedness, or gravity orientation differs.
+**Recovery.** Update the declared acquisition transform and regenerate training-to-target parity evidence before enabling inference.
+**Evidence.** Bind board revision, placement drawing, channel mapping, model hash, and golden-vector checksum.
+**Boundary.** A model that returns a plausible label after an axis swap has not demonstrated semantic correctness.
+**Owner.** Hardware and firmware jointly own the mapping; a model owner cannot infer it from aggregate accuracy.
+**Review.** Recheck on every sensor SKU, board spin, orientation convention, and preprocessing release.
+
+**Scenario A06 — Feature extraction drift.**
+**Stimulus.** Offline training subtracts a training-set channel center, but firmware accidentally subtracts a center recomputed from the current window.
+**Calculation.** The deployed feature becomes input-dependent even when the raw 128-frame sequence equals the training sequence.
+**Diagnostic.** Compare intermediate scaled arrays before and after centering for a fixed golden vector.
+**Decision.** Block release because runtime normalization now uses information unavailable to the declared training transformation.
+**Recovery.** Restore the immutable training-derived center or train and validate a separately specified adaptive algorithm.
+**Evidence.** Store center values, units, source partition, arithmetic order, and rounding semantics in the manifest.
+**Boundary.** Per-window centering may be useful in another design, but it is not interchangeable with this model contract.
+**Owner.** The data lead specifies the transform; firmware proves byte-level implementation parity.
+**Review.** Add negative-valued and near-zero inputs to the parity suite to expose integer-division differences.
+
+**Scenario A07 — Rounding-tie mismatch.**
+**Stimulus.** A scaled channel value is `x=0.35 g` with `s=0.02 g/count` and zero point `z=0`.
+**Calculation.** The unrounded quotient is `0.35 / 0.02 = 17.5`, so nearest-even and away-from-zero rules need explicit comparison.
+**Diagnostic.** Nearest-even yields 18; dequantization gives `18 * 0.02 = 0.36 g`, an error of `-0.01 g`.
+**Decision.** Do not accept a firmware result merely because its final class matches the float model on this one vector.
+**Recovery.** Pin a rounding rule and validate both tensor bytes and score tolerances across tie values of both signs.
+**Evidence.** Include the language/compiler conversion path and all tie-case expected bytes in the test artifact.
+**Boundary.** The half-step error bound applies before saturation; it says nothing about clipped values.
+**Owner.** The converter and firmware owners jointly approve the quantization arithmetic definition.
+**Review.** Repeat after compiler upgrades, DSP-library changes, or replacement of integer arithmetic helpers.
+
+**Scenario A08 — Input-order mismatch.**
+**Stimulus.** The model expects oldest-to-newest frames, but a rolling buffer is copied from newest-to-oldest after a wrap.
+**Calculation.** The input still contains 384 INT8 values, yet temporal order is reversed without a length or allocation error.
+**Diagnostic.** Use a monotonic ramp vector where the expected first and last tensor rows are observably different.
+**Decision.** Refuse the release when sequence order in the assembled tensor does not match the training specification.
+**Recovery.** Correct the wrap-copy indices and rebuild the vector suite rather than reversing output labels post hoc.
+**Evidence.** Retain q-start, q-end, buffer offsets, tensor checksum, and the row-order declaration.
+**Boundary.** A stationary vector may pass this test while concealing reversal, so it is insufficient as the only parity vector.
+**Owner.** Firmware owns ring traversal; the model manifest states temporal and axis ordering.
+**Review.** Test windows that cross every ring boundary and every DMA block ownership transition.
+
+**Scenario A09 — Flash-budget reconciliation.**
+**Stimulus.** A candidate build reports 18 KiB model parameters, 46 KiB runtime/program code, and 4 KiB immutable constants.
+**Calculation.** The stated total is `18 + 46 + 4 = 68 KiB`; against 128 KiB, nominal remaining flash is 60 KiB.
+**Diagnostic.** Reconcile linker sections, alignment, duplicate model blobs, debug options, and bootloader reservation against this ledger.
+**Decision.** Treat 60 KiB as planning headroom, not permission to add unreviewed logging or a second artifact.
+**Recovery.** Remove unnecessary code or select a smaller supported model if the actual map exceeds the approved boundary.
+**Evidence.** Archive the map file, build flags, artifact hash, and flash-region definition with the reviewed build.
+**Boundary.** KiB accounting is invalid if one input is decimal kB or if the usable partition excludes bootloader space.
+**Owner.** The embedded lead owns map interpretation; product owns any feature trade-off imposed by the result.
+**Review.** Repeat for compiler flags, runtime operators, model conversion, localization, and update-storage changes.
+
+**Scenario A10 — Arena peak overrun.**
+**Stimulus.** A target allocator trace reports a 23 KiB inference peak while the design assumption reserved 22 KiB.
+**Calculation.** The overrun is `23 KiB - 22 KiB = 1 KiB`, or 1024 bytes when KiB denotes 1024 bytes.
+**Diagnostic.** Confirm that the trace exercised the selected operator path and did not omit error handling or initialization allocations.
+**Decision.** Reject the configuration; a one-KiB miss is a hard static-memory constraint, not a rounding nuisance.
+**Recovery.** Resize the arena within the complete SRAM ledger or change the model/runtime design and measure again.
+**Evidence.** Retain allocator peak, tensor-arena address range, model hash, runtime version, and workload vector identity.
+**Boundary.** Borrowing the general reserve without updating stack and DMA analysis hides rather than resolves the collision.
+**Owner.** The embedded lead approves arena size only after target evidence, not desktop allocation behavior.
+**Review.** Measure peak under every supported model package and each runtime/compiler configuration.
+
+**Scenario A11 — Stack-margin erosion.**
+**Stimulus.** The inference task's measured high-water use is 5,900 bytes against a 6,144-byte allocated stack.
+**Calculation.** The remaining local margin is `6,144 - 5,900 = 244 bytes`, before any new error-path depth is introduced.
+**Diagnostic.** Separate task stack usage from ISR stack use and collect maxima during normal, radio, logging, and fault paths.
+**Decision.** Do not describe 244 bytes as sufficient without a stated required margin and representative stress evidence.
+**Recovery.** Reduce call depth, allocate a bounded larger stack, or remove nonessential work from the task.
+**Evidence.** Record watermark method, compiler settings, optimization level, interrupt nesting, and scenario duration.
+**Boundary.** A map file reserves stack storage but cannot prove that a rare recursive or formatting path never reaches it.
+**Owner.** Firmware owns stack measurement; reviewers challenge unmeasured paths rather than accepting nominal allocation.
+**Review.** Repeat after logging, diagnostics, RTOS priority, compiler, or error-reporting changes.
+
+**Scenario A12 — Freshness despite correct inference.**
+**Stimulus.** The nominal local response is 70 ms, but a blocked UI adds 1,300 ms before the result is rendered.
+**Calculation.** Age becomes `70 + 1,300 = 1,370 ms`, exceeding the 1,350 ms limit by 20 ms.
+**Diagnostic.** Timestamp at UI use and compare `t_use - t_end`; do not substitute inference-completion time for UI-use time.
+**Decision.** Render `UNAVAILABLE` even if the score was computed correctly and the source buffer remained intact.
+**Recovery.** Expire the result, record the late reason, and remove the source of UI blocking before another eligibility attempt.
+**Evidence.** Retain render-attempt traces including expired attempts so availability cannot be inflated by omission.
+**Boundary.** Meeting the 1-second hop period does not guarantee freshness when a lower-priority UI waits longer.
+**Owner.** UI scheduling and firmware timing owners share responsibility for this externally visible contract.
+**Review.** Inject radio, logging, and display contention while preserving the actual capture-time timestamp.
+
+**Scenario A13 — Sensing-charge accounting.**
+**Stimulus.** The illustrative sensing state draws 0.50 mA continuously through one 60-second accounting interval.
+**Calculation.** Its charge term is `0.50 mA * 60 s = 30 mA·s` during that interval.
+**Diagnostic.** Confirm that sensing current is measured or explicitly assumed separately from the processor sleep state.
+**Decision.** Keep the 30 mA·s term distinct so a change in sensor ODR can be attributed rather than hidden in an average.
+**Recovery.** Replace this constructed term with synchronized measured current and occupancy before making a battery statement.
+**Evidence.** Preserve instrument bandwidth, regulator path, temperature, battery condition, and state-marker timestamps.
+**Boundary.** A 0.50 mA steady-state assumption excludes startup spikes and does not predict aged-cell capacity.
+**Owner.** Power measurement ownership belongs to the embedded team, while product controls any external runtime claim.
+**Review.** Recompute after rate, range, bus traffic, power mode, or sensor hardware changes.
+
+**Scenario A14 — Inference-duty accounting.**
+**Stimulus.** The local model runs for 24 ms once per second at an illustrative 6.0 mA active current.
+**Calculation.** Over 60 seconds it is active for `24 ms * 60 = 1,440 ms = 1.44 s`, contributing `6.0 * 1.44 = 8.64 mA·s`.
+**Diagnostic.** Separate measured execution occupancy from wake overhead, cache effects, and other work sharing the same power state.
+**Decision.** Use the term only as an illustrative component of the stated average-current model.
+**Recovery.** If target timing grows, remeasure both duration and current instead of scaling a desktop benchmark.
+**Evidence.** Bind current trace segments to model hash, clock frequency, compiler build, and representative input workload.
+**Boundary.** The charge calculation assumes constant active current; dynamic voltage or burst behavior invalidates that simplification.
+**Owner.** The embedded lead maintains the state definitions and their instrumentation markers.
+**Review.** Repeat for quantization changes, operator selection, clock policy, and runtime-library updates.
+
+**Scenario A15 — Radio back-pressure isolation.**
+**Stimulus.** Four summary records are queued and a fifth arrives while the optional-radio queue capacity is four.
+**Calculation.** The fifth record has no free queue slot; capacity `4 - 4 = 0` is an admission result, not a latency estimate.
+**Diagnostic.** Trace whether the enqueue path touches DMA blocks, rolling-window storage, inference tensors, or UI publication.
+**Decision.** Drop the summary under its bounded policy and keep local classification work schedulable.
+**Recovery.** Increment a summary-drop counter and transmit no raw frames as a substitute for the omitted summary.
+**Evidence.** Record queue depth, enqueue time, retry count, transaction duration, and the field schema for every retained summary.
+**Boundary.** Enlarging the radio queue can consume SRAM and still cannot justify delaying a freshness-critical local result.
+**Owner.** Telemetry owns its queue contract; it cannot borrow acquisition ownership to improve delivery statistics.
+**Review.** Induce network loss and repeated retries while checking that display-age and block-release invariants remain true.
+
+**Scenario A16 — Availability denominator.**
+**Stimulus.** An illustrative evaluation offers 300 labeled candidate windows, of which 240 are eligible and 216 produce fresh outputs.
+**Calculation.** Fresh availability among eligible windows is `216 / 240 = 0.90`, while fresh coverage over all candidates is `216 / 300 = 0.72`.
+**Diagnostic.** Report both denominators with the exclusion reasons instead of calling either figure unqualified accuracy.
+**Decision.** Do not accept a model comparison unless threshold and model use the same candidate and eligibility definitions.
+**Recovery.** Investigate whether exclusions arise from labels, quality, timing, or implementation before changing a classifier threshold.
+**Evidence.** Retain candidate IDs, eligibility flags, freshness status, reason codes, and split assignment for each denominator.
+**Boundary.** A high conditional availability can coexist with poor overall coverage when many candidate windows are rejected.
+**Owner.** The evaluation owner defines denominators before final-test access; firmware supplies auditable reason codes.
+**Review.** Slice availability by participant, session, class, placement, and induced-fault condition.
+
+**Scenario A17 — Macro-recall interpretation.**
+**Stimulus.** Illustrative class recalls on identical eligible held-out windows are 0.90 for STILL, 0.80 for WALK, 0.60 for STAIRS, and 0.70 for OTHER.
+**Calculation.** Macro recall is `(0.90 + 0.80 + 0.60 + 0.70) / 4 = 0.75`.
+**Diagnostic.** Inspect each class denominator because a macro mean gives equal class weight regardless of recording duration.
+**Decision.** Report the 0.75 as illustrative only and expose the 0.60 STAIRS slice rather than hiding it in a pooled score.
+**Recovery.** Review labels, placement, training coverage, and error examples before proposing any class-specific remediation.
+**Evidence.** Store per-class confusion counts, participant identifiers, eligibility flags, and the frozen final-test manifest.
+**Boundary.** Macro recall is undefined for a missing held-out class unless the predeclared handling rule addresses that denominator.
+**Owner.** The data lead owns metric specification; product decides whether the weakest class meets the descriptive feature purpose.
+**Review.** Use participant-level intervals or resampling only with an explicitly stated uncertainty method and scope.
+
+**Scenario A18 — Margin is not probability.**
+**Stimulus.** A model emits scores `[0.40, 0.36, 0.14, 0.10]` after an INT8 runtime invocation.
+**Calculation.** The top-two score margin is `0.40 - 0.36 = 0.04`; against an illustrative margin rule of 0.08, it is insufficient.
+**Diagnostic.** Verify class order and score representation before interpreting a margin, because raw logits and calibrated probabilities differ.
+**Decision.** Produce `UNAVAILABLE` with a low-margin reason if that rule was selected on validation participants before final test.
+**Recovery.** Preserve the rejected result for aggregate reason accounting but never display the previous accepted class in its place.
+**Evidence.** Version the margin threshold, validation source, score type, class mapping, and artifact hash together.
+**Boundary.** A large margin can still be wrong under distribution shift, so it is not a safety guarantee.
+**Owner.** The model policy owner chooses the gate; UI and firmware owners ensure its abstention semantics are honored.
+**Review.** Compare margin distributions across classes and placement conditions without using final-test results to retune the gate.
+
+**Scenario A19 — Epoch reset recovery.**
+**Stimulus.** A watchdog reset occurs after 73 valid frames have accumulated for the current rolling window.
+**Calculation.** The prior 73 frames are fewer than the required 128, and even a full prior window would belong to the old epoch.
+**Diagnostic.** Confirm that sequence comparisons, timestamps, and UI result records include an epoch identifier.
+**Decision.** Discard partial history and suppress prior labels immediately when the epoch changes.
+**Recovery.** Require 128 consecutive valid frames in the new epoch before a new candidate window can become eligible.
+**Evidence.** Retain reset cause, old and new epoch values, first new sequence, and first post-reset accepted result.
+**Boundary.** Continuing a modulo sequence counter across reset can make unrelated samples look contiguous.
+**Owner.** Firmware owns reset behavior; product must accept that a short unavailable interval is safer than false continuity.
+**Review.** Induce watchdog, power-cycle, clock-reset, and counter-wrap events in the target trace suite.
+
+**Scenario A20 — Safety-purpose escalation.**
+**Stimulus.** A stakeholder asks the descriptive activity feature to trigger a fall alert when unusual motion is observed.
+**Calculation.** No arithmetic conversion turns the four display labels into a validated detector for an event with false-negative consequences.
+**Diagnostic.** Compare intended action, escalation recipient, response deadline, hazard severity, and required evidence against the current contract.
+**Decision.** Reject the request as out of scope and create a separate safety decision definition before collecting or reusing evidence.
+**Recovery.** Retain local activity feedback only; do not silently add alerts, emergency copy, or automated communications.
+**Evidence.** Document the request, hazard-analysis owner, validation population, and decision to defer within the relevant governance record.
+**Boundary.** Showing `UNAVAILABLE` is a safe degraded behavior for this descriptive feature, not a complete safety-control strategy.
+**Owner.** The product decision owner escalates to safety, clinical, and regulatory review where applicable.
+**Review.** Reopen the case only when purpose, action path, labels, evidence plan, and operating constraints are all explicitly redefined.
+
 ## 15. Quick Reference Card
 
 | Field | Card |
