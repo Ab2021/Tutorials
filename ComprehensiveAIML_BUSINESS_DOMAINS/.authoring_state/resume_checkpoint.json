@@ -1,0 +1,39 @@
+{
+  "status": "blocked_on_requested_worker_model",
+  "required_model": "GPT 5.6 TERRA",
+  "required_provider": "CODEX",
+  "required_effort": "medium",
+  "observed_worker_model": "openai-codex/gpt-6.1-sol",
+  "observed_worker_effort": null,
+  "per_call_model_override": "disabled",
+  "user_kept_exact_model_requirement": true,
+  "active_authoring_workers": 0,
+  "recovery_manifest": ".authoring_state/recovery/resume-5093568a/manifest.json",
+  "recovered_parts": 174,
+  "recovered_lines": 41747,
+  "promoted_parts": 0,
+  "final_verification": {
+    "tools_compileall": "passed",
+    "markdown_files_checked": 882,
+    "broken_file_links": 0,
+    "rejected_candidate_preserves_target": "passed",
+    "real_manuscript_assembly": "passed",
+    "999_line_rejection": "passed",
+    "distinct_issue_identifiers": "passed",
+    "summary_mode_read_only": "passed",
+    "readiness_aggregate_no_double_count": "passed",
+    "bopis_link_repair_lint": "passed"
+  },
+  "queue_tasks_by_kind": {
+    "repair": 259,
+    "unit_index": 109,
+    "create_ci": 109,
+    "create_case": 366
+  },
+  "coverage_report": "COVERAGE_STATUS.md",
+  "acceptance_floor": {
+    "physical_lines": 1000,
+    "distinct_body_lines": 680
+  },
+  "warning": "Queue describes current catalog and existing-file gaps, not proof of complete source-crosswalk coverage. Common Issues are included in sheet counts. Do not infer publication from lint."
+}

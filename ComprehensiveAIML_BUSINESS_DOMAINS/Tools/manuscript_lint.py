@@ -18,7 +18,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-MIN_PHYSICAL_LINES = 950
+MIN_PHYSICAL_LINES = 1000
 MIN_DISTINCT_PROSE = 680
 MAX_LONG_LINE_REPEAT = 2
 MAX_DUP_LONG_RATIO = 0.15
@@ -149,7 +149,7 @@ def lint(path: Path) -> dict:
         if len(base) != 12:
             problems.append("expected exactly 12 numbered H2 sections")
         if "Common_Issues" in path.name:
-            issues = len(re.findall(r"(?m)^\|\s*(?:`)?CI-\d+", text))
+            issues = len(set(re.findall(r"(?m)^\|\s*`?(CI-\d+)\b", text)))
             if issues < 25:
                 problems.append(f"Common Issues entries found {issues}, need >=25 (IDs starting CI-)")
     elif kind == "index":
@@ -159,8 +159,8 @@ def lint(path: Path) -> dict:
     if kind in ("case", "sheet"):
         if len(lines) < MIN_PHYSICAL_LINES:
             problems.append(f"physical lines {len(lines)} < {MIN_PHYSICAL_LINES}")
-        if len(prose) < MIN_DISTINCT_PROSE:
-            problems.append(f"distinct prose lines {len(prose)} < {MIN_DISTINCT_PROSE}")
+        if len(set(prose)) < MIN_DISTINCT_PROSE:
+            problems.append(f"distinct prose lines {len(set(prose))} < {MIN_DISTINCT_PROSE}")
         if dup_groups:
             worst = sorted(dup_groups.items(), key=lambda kv: -kv[1])[:3]
             problems.append(
@@ -184,7 +184,7 @@ def lint(path: Path) -> dict:
         "file": str(path),
         "kind": kind,
         "lines": len(lines),
-        "distinct_prose": len(prose),
+        "distinct_prose": len(set(prose)),
         "dup_ratio": round(dup_ratio, 4),
         "long_repeat_groups": len(dup_groups),
         "ok": not problems,

@@ -15,8 +15,8 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-04-02-01 | [BOPIS Promise Accuracy](./01_BOPIS_Promise_Accuracy.md) | Omnichannel Customer, Loyalty and Fulfilment | predictive-ml | decision record in the linked case | evaluation-mismatch | human-in-the-loop, distribution-shift | illustrative | proposed | null | draft (lint open) |
-| CASE-04-02-02 | [Loyalty Next Best Action](./02_Loyalty_Next_Best_Action.md) | Omnichannel Customer, Loyalty and Fulfilment | predictive-ml | decision record in the linked case | evaluation-mismatch | human-in-the-loop, distribution-shift | illustrative | proposed | null | draft (lint open) |
+| CASE-04-02-01 | [BOPIS Promise Accuracy](./01_BOPIS_Promise_Accuracy.md) | Omnichannel Customer, Loyalty and Fulfilment | predictive-ml | decision record in the linked case | evaluation-mismatch | censoring-in-labels, human-in-the-loop | illustrative | proposed | null | authored |
+| CASE-04-02-02 | [Loyalty Next Best Action](./02_Loyalty_Next_Best_Action.md) | Omnichannel Customer, Loyalty and Fulfilment | predictive-ml | decision record in the linked case | evaluation-mismatch | human-in-the-loop, distribution-shift | illustrative | proposed | null | authored |
 | CASE-04-02-03 | [Returns Risk Intervention](./03_Returns_Risk_Intervention.md) | Omnichannel Customer, Loyalty and Fulfilment | predictive-ml | decision record in the linked case | evaluation-mismatch | human-in-the-loop, distribution-shift | illustrative | proposed | null | draft (lint open) |
 | CASE-04-02-04 | [Cross Channel Attribution](./04_Cross_Channel_Attribution.md) | Omnichannel Customer, Loyalty and Fulfilment | analytical | decision record in the linked case | evaluation-mismatch | human-in-the-loop, distribution-shift | illustrative | proposed | null | draft (lint open) |
 | CASE-04-02-05 | [Omnichannel Fulfilment Allocation](./05_Omnichannel_Fulfilment_Allocation.md) | Omnichannel Customer, Loyalty and Fulfilment | analytical | decision record in the linked case | evaluation-mismatch | human-in-the-loop, distribution-shift | illustrative | proposed | null | draft (lint open) |
@@ -34,7 +34,7 @@
 
 ## 4. Similarity / contrast map
 
-This collection holds 6 authored case(s) and 0 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+This collection holds 6 case file(s), 2 passing structural lint, and 0 planned commitment(s). Cases require independent review of point-in-time decision logging and explicit baselines; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 

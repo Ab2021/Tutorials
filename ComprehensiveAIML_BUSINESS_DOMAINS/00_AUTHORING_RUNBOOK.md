@@ -11,9 +11,11 @@ A teaching unit is `<module>/<submodule>` and owns two collections:
 - `Cheat_Sheets/` — reference cards, 12 numbered sections each, plus one final
   `NN_25_Common_Issues.md`
 
-A unit is **complete** when, for every case and sheet file, `Tools/manuscript_lint.py` exits 0,
-and a Common Issues artifact exists with at least 25 `CI-` entries. An index is complete when it
-has its required section count (7 for cases, 11 for sheets) and every link resolves.
+A unit is **structurally ready** only when all promised cases and sheets exist and pass lint,
+at least three topic sheets and one passing Common Issues artifact exist, topic-map commitments
+are no longer planned, and collection indexes have their exact required section counts (7 and 11).
+Structural readiness is not publication: arithmetic, source review, links, and coverage of every
+source-crosswalk commitment still require independent verification.
 
 ## Acceptance gate
 
@@ -26,13 +28,13 @@ It enforces, in order of how often each fires:
 | Check | Threshold | Why |
 |---|---|---|
 | Heading contract | exact numbered H2 set, in order | template conformance |
-| Physical length | ≥ 950 lines | depth floor |
-| Distinct prose | ≥ 680 non-blank lines | depth floor |
+| Physical length | ≥ 1,000 lines | authoritative course depth floor |
+| Distinct prose | ≥ 680 unique non-blank body lines | structural depth floor; not semantic review |
 | Long-line repeat | any ≥70-char line at most twice | **the anti-padding rule** |
 | Duplicate ratio | < 0.15 | catches mechanical inflation |
 | Placeholders | none | no `TODO`/`TBD` |
-| Case derivations | ≥3 `FORMULA`/`CONSTRAINT`/`NUMERICAL EXAMPLE` blocks | checked arithmetic |
-| Common Issues | ≥25 `CI-` entries | real troubleshooting |
+| Case derivations | ≥3 `FORMULA`/`CONSTRAINT`/`NUMERICAL EXAMPLE` blocks | derivation markers present; arithmetic still requires review |
+| Common Issues | ≥25 distinct `CI-` row identifiers | issue inventory floor; diagnostic quality still requires review |
 
 The repeat and duplicate-ratio checks are what reject the previous pass's 1,015-line files that
 repeated one sentence hundreds of times. Length alone was never the acceptance criterion.
@@ -40,8 +42,8 @@ repeated one sentence hundreds of times. Length alone was never the acceptance c
 ## Pipeline
 
 ```text
-Tools/build_queue.py      scan disk -> queue.jsonl + per-task briefs (887 tasks)
-Tools/plan_batches.py     one manuscript per batch, no file owned twice (887 batches)
+Tools/build_queue.py      scan disk -> queue.jsonl + per-task briefs
+Tools/plan_batches.py     one manuscript per batch, no file owned twice
 Tools/dispatch_next.py    claim N batches, print self-contained prompts
 Tools/run_batch.py        shared prompt text + --verify (re-lints everything)
 Tools/gen_indexes.py      deterministic 7/11-section collection indexes
@@ -56,6 +58,10 @@ the real files, so an index can never link a file that does not exist.
 ## Resume after an interruption
 
 State lives in `.authoring_state/` (protected; see contract section 10).
+
+Do not rebuild queues or clear claims while workers are active. Historical batch IDs were reused,
+so old OS-temp draft directories must be matched by manuscript title and content, never batch ID
+alone. Preserve unmatched parts; they are not completed artifacts.
 
 ```bash
 python Tools/build_queue.py      # recompute gaps from disk
@@ -74,8 +80,8 @@ deleting manuscripts is not.
 - One batch owns one manuscript file. Batches never share a path (verified at planning time).
 - Workers may not touch root indexes, `00_*` files, `Templates/`, `Tools/`, or any other subtree.
 - Indexes are generated centrally, after manuscripts land, from what actually exists.
-- Workers build a manuscript in memory and write it in one call, so an interrupted run cannot leave
-  a truncated file.
+- Workers stage parts outside the repository. `Tools/assemble.py` checks the staged candidate
+  before atomically installing it; failed candidates do not replace existing manuscripts.
 
 ## Known evidence discipline
 
@@ -122,5 +128,17 @@ Independently brute-forced and confirmed correct (no change needed):
 
 - Unit `INDEX.md` topic maps are generated, never authored per topic; they assert coverage only.
 - `AUTHORING_PROGRESS.md` rows are worker self-reports; the coverage report is the authority.
-- Provider quota can terminate a whole wave at once (HTTP 429). The pipeline is resumable from
-  disk; nothing is lost because every manuscript is written atomically.
+- Provider quota can terminate a whole wave at once (HTTP 429). Save staged parts before rebuilding
+  queue state; atomic writes alone do not preserve unfinished parts or prove content completeness.
+
+## Current model-routing prerequisite
+
+The user retained the exact GPT 5.6 TERRA from CODEX, medium-effort requirement after being offered
+the available Codex model. The launcher rejects per-call model overrides (`task.perCallModel: off`);
+the two inspected workers reported `openai-codex/gpt-6.1-sol`, with effort not exposed. Do not
+substitute that model or Ollama. Configure the requested worker model and effort before authoring
+resumes, then verify the runtime identity before dispatching manuscripts.
+
+Resume safeguards exercised: rejected candidates preserve the old target; a complete existing
+manuscript assembles and passes lint; 999-line candidates fail; summary mode leaves queue and brief
+files unchanged. Coverage counts are structural checks, not publication certification.

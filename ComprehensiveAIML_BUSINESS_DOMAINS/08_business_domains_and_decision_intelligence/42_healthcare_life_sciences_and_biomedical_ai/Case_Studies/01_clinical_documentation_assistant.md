@@ -1713,7 +1713,7 @@ The third portability test is to include abstentions and corrections in the work
 | Can reviewers reliably label omissions and attribution errors? | No local rubric calibration exists. | Double-review calibration and adjudication exercise. | Before quality-rate claim. | Quality lead. |
 | What source retention and access scheme is permissible? | Local policy and source body are OPEN. | Authoritative local governance review. | Before implementation. | Security/privacy owner. |
 
-### 14c. Intense interview pack — questions with checked answers
+### Interview pack
 
 #### Q-01 / framing / decision boundary
 

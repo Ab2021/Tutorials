@@ -8,6 +8,7 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| foundation | ECG Sampling and Aliasing | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -50,7 +51,7 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [ECG Sampling and Aliasing](./01_ecg_sampling_and_aliasing.md) | 1 | DERIVED | draft (lint open) |
+| 1 | [ECG Sampling and Aliasing](./01_ecg_sampling_and_aliasing.md) | foundation | DERIVED | authored |
 | 2 | [Sensor Time Synchronization and Calibration](./02_Sensor_Time_Sync_and_Calibration.md) | 2 | DERIVED | draft (lint open) |
 
 ## 9. Common Issues locator
@@ -71,5 +72,5 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

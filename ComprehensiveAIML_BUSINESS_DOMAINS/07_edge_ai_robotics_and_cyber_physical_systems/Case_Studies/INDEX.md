@@ -15,7 +15,7 @@
 
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
-| CASE-07-12-01 | [Robot near-miss incident response: containment and resume at a blind-corner cluster](./12_Robot_Near_Miss_Incident_Response.md) | Part 07 â€” Edge AI, Robotics and Cyber-Physical Systems | incident | decision record in the linked case | containment ladder under a rare-event evidence gate | kinematic, safety, envelope, stratified, rate, attribution | illustrative | proposed | null | authored |
+| CASE-07-12-01 | [Robot near-miss incident response: containment and resume at a blind-corner cluster](./12_Robot_Near_Miss_Incident_Response.md) | Part 07 â€” Edge AI, Robotics and Cyber-Physical Systems | incident | decision record in the linked case | containment ladder under a rare-event evidence gate | kinematic, safety, envelope, stratified, rate, attribution | illustrative | proposed | null | draft (lint open) |
 | CASE-2026-0713 | [Fleet rollout readiness review for an autonomous mobile robot software release](./Fleet_rollout_readiness_review.md) | Part 07 â€” Edge AI, Robotics and Cyber-Physical Systems | analytical | decision record in the linked case | release evidence gate | freshness, gate, bounded, authority | illustrative | proposed | null | draft (lint open) |
 | CASE-P07-012 | [Validating a learned navigation policy before field trial](./Validate_a_navigation_policy_before_field_trial.md) | Part 07 â€” Edge AI, Robotics and Cyber-Physical Systems | hybrid | decision record in the linked case | transfer validation ladder | scenario, coverage, controlled, recovery | illustrative | draft | null | authored |
 | PLAN-P07-01 | Wearable activity classifier | Part 07 â€” Edge AI, Robotics and Cyber-Physical Systems | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
@@ -45,7 +45,7 @@
 
 ## 4. Similarity / contrast map
 
-This collection holds 3 authored case(s) and 14 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+This collection holds 3 case file(s), 1 passing structural lint, and 14 planned commitment(s). Cases require independent review of point-in-time decision logging and explicit baselines; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 

@@ -8,6 +8,7 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| core | Product A/B Testing and Experiments | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -49,7 +50,7 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Product A/B Testing and Experiments](./08_AB_Testing_Product_Experiments.md) | 3 | DERIVED | draft (lint open) |
+| 1 | [Product A/B Testing and Experiments](./08_AB_Testing_Product_Experiments.md) | core | DERIVED | authored |
 
 ## 9. Common Issues locator
 
@@ -69,5 +70,5 @@ This collection carries 1 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

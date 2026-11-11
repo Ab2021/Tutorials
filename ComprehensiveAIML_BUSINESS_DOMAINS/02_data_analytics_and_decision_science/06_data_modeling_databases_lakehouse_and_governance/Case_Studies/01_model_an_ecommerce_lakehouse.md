@@ -1250,6 +1250,72 @@ Related local foundations: [Data Contract Checklist](../Cheat_Sheets/01_Data_Con
 
 **Scoring:** 2: bounded; 1: asks latency; 0: promises universal 360.
 
+### 14.2 Design-review evidence prompts
+
+The following review prompts make the proposed design falsifiable before any migration. Each prompt asks for a named artifact, observation, or decision record rather than an assurance that the platform is “governed.”
+
+#### Snapshot and accounting review
+
+- Ask the Controller to name the exact business calendar revision that maps each event-time instant to its close date.
+- Compare the immutable manifest count with the producer's expected partition count before labeling any close complete.
+- Require an exception record to show both the withheld signed amount and the keys responsible for that amount.
+- Sample a finance query that omits `snapshot_id`; the serving layer should reject it or make the result explicitly provisional.
+- Recompute one aggregate from effect rows after reversing their presentation sort order; monetary addition must remain decimal-safe and order-independent.
+- Trace a positive capture through receipt, canonical event, effect row, settlement comparison, and published aggregate without relying on a dashboard label.
+- Confirm that an authorization, a capture, a refund, and a chargeback have separate admissibility predicates rather than a shared “payment” flag.
+- Inspect the close gate when settlement arrives late but source events are complete; the status must distinguish settlement incompleteness from ingestion incompleteness.
+- Test an empty business date and confirm that zero revenue is distinguishable from a missing date partition.
+- Reconcile aggregate currency totals only inside one declared currency and tax basis; cross-currency sums require a separately versioned conversion rule.
+- Record the policy decision for a settlement correction received after certification, including who can declare its restatement scope.
+- Reject a proposed close query if it uses mutable `current` dimension attributes without an as-of dimension version.
+
+#### Slowly changing dimension and conformance review
+
+- Model product category as a type-2 interval when historical merchandising needs the category known at sale time.
+- Close the old product interval at the new version's effective instant; overlapping intervals for one product key are a data-quality breach.
+- Preserve the natural product identifier alongside the surrogate dimension key so a replay can rebuild a dimension assignment.
+- Treat a late category correction as a separate knowledge-time revision instead of rewriting an already published finance snapshot invisibly.
+- Require every fact-to-dimension lookup to declare whether it uses event time, knowledge time, or current-state time.
+- Verify that one order line joins to exactly one admissible product version for its chosen temporal rule.
+- Quarantine a product update whose effective interval ends before it begins; timestamp parsing alone cannot establish temporal validity.
+- Use a conformed channel dimension only after web and mobile labels map through a controlled taxonomy version.
+- Keep customer identity bridges outside the generic customer dimension because a merge can be many-to-one at one time and disallowed for another purpose.
+- Require consent eligibility to have a start, end or open interval, policy version, and decision purpose before activation publication.
+- Test a boundary instant where a consent withdrawal and campaign extraction share a timestamp; the governing clock and inclusivity rule must be explicit.
+- Prevent an unknown dimension member from silently inheriting the most recent known attribute; route it to an auditable “unknown” member instead.
+
+#### Ingestion, replay, and release review
+
+- Store the byte receipt identifier separately from the business event identity because a retried delivery can have new transport metadata.
+- Pin canonicalization revision during a replay so a later parser improvement does not alter the historical deduplication decision accidentally.
+- Compare hashes only after documented normalization of field order, decimal representation, and permitted null defaults.
+- Route same-key and changed-hash messages to a conflict ledger with both payload references; choosing the last arrival discards forensic evidence.
+- Checkpoint progress is operational metadata, not proof that all business effects were accepted or reconciled.
+- Make dead-letter re-entry create a new processing attempt linked to the original receipt rather than replacing the original failure reason.
+- Require a backfill request to state the input manifest range, transform revision, business rationale, and expected snapshot impact.
+- Exercise a partial partition replay and show that untouched partitions retain their prior snapshot lineage.
+- Block a breaking contract release until named downstream consumers acknowledge the changed unit, key, or delete meaning.
+- Dual-publish only long enough to compare concrete contract versions; a permanent dual path creates two unresolvable sources of truth.
+- Make release status machine-readable so a dashboard cannot convert `withheld` into an empty but apparently valid chart.
+- Retain raw malformed bytes only inside the restricted zone and attach a reason code that supports safe producer repair.
+
+#### Cost, performance, and recovery review
+
+- Measure file-count growth separately from payload bytes because small-file metadata and planning cost can dominate a low-volume workload.
+- Include temporary compaction overlap in capacity planning; a table can require old and new files concurrently during rewrite.
+- Separate storage retention cost from query scan cost because a cheap retained byte can still be expensive to scan repeatedly.
+- Use observed percentile arrival rates, not only the daily mean, when setting stream capacity and watermark delay.
+- Account for retry amplification in recovery estimates because one poison message can consume multiple processing attempts.
+- Test partition skew using a high-volume product or promotion key; equal average rates do not guarantee equal worker load.
+- Define a maximum replay scope before incident response so an operator does not recompute unrelated certified periods.
+- Verify that a rollback restores both table metadata and the policy version that authorized the prior serving projection.
+- Treat compaction completion as a physical-maintenance event; it must not create a new business close or alter accounting semantics.
+- Estimate on-call effort from proposed alerts, exception queues, and ownership handoffs rather than assuming automation removes review work.
+- Compare the bounded lakehouse proposal with batch-plus-audit using the same retention period, recovery objective, and governance obligations.
+- Stop a recovery drill if the replay output cannot be compared to a declared key-and-amount oracle; faster unverified replay is not a success.
+
+These prompts are proposed acceptance evidence, not assertions that any retailer has passed them. A design review should retain unanswered prompts as explicit adoption blockers or as approved, scoped exceptions.
+
 ## 15. Quick Reference Card
 
 | Field | Card |

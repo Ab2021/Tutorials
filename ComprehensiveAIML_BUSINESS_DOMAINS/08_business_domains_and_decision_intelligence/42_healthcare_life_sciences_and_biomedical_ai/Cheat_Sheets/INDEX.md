@@ -52,7 +52,7 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Clinical Decision Support: Evidence, Decision-Time Data, and Clinician Handoff](./01_Clinical_Decision_Support_Evidence_and_Handoff.md) | 1 | DERIVED | authored |
-| 2 | [Biomedical Signal Pipeline and Validation](./02_Biomedical_Signal_Pipeline_and_Validation.md) | 1 | DERIVED | authored |
+| 2 | [Biomedical Signal Pipeline and Validation](./02_Biomedical_Signal_Pipeline_and_Validation.md) | 1 | DERIVED | draft (lint open) |
 | 3 | [Human Factors: Alert Design, Review, and Recovery](./03_Human_Factors_Alert_Design_and_Recovery.md) | 2 | DERIVED | authored |
 
 ## 9. Common Issues locator
@@ -73,5 +73,5 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

@@ -8,14 +8,14 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
-| core | 1. File Header | Build from prerequisites to production judgement |
+| advanced | Feature Store Design: Time, Consistency, and Operations | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
 | If you need to… | Read |
 |---|---|
 | work on ml system problem framing: from a request to a testable decision contract | [ML System Problem Framing: From a Request to a Testable Decision Contract](./01_ML_System_Problem_Framing.md) |
-| work on 1. file header | [1. File Header](./03_Feature_Store_Design.md) |
+| work on feature store design: time, consistency, and operations | [Feature Store Design: Time, Consistency, and Operations](./03_Feature_Store_Design.md) |
 
 ## 4. Reading paths
 
@@ -52,7 +52,7 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [ML System Problem Framing: From a Request to a Testable Decision Contract](./01_ML_System_Problem_Framing.md) | 1 | DERIVED | draft (lint open) |
-| 2 | [1. File Header](./03_Feature_Store_Design.md) | core | DERIVED | draft (lint open) |
+| 2 | [Feature Store Design: Time, Consistency, and Operations](./03_Feature_Store_Design.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 
@@ -72,5 +72,5 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

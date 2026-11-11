@@ -58,9 +58,9 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 |---|---|---|---|---|
 | 1 | [Anomaly Detection Triage](./01_Anomaly_Detection_Triage.md) | 2 | DERIVED | authored |
 | 2 | [Clustering and Embeddings](./02_Clustering_and_Embeddings.md) | core | ILLUSTRATIVE | draft (lint open) |
-| 3 | [Change-point detection](./03_Change_Point_Detection.md) | core | DERIVED | authored |
+| 3 | [Change-point detection](./03_Change_Point_Detection.md) | core | DERIVED | draft (lint open) |
 | 4 | [Segmentation Evaluation](./04_Segmentation_Evaluation.md) | core | DERIVED | draft (lint open) |
-| 5 | [Human Review Loops](./05_Human_Review_Loops.md) | core | DERIVED | authored |
+| 5 | [Human Review Loops](./05_Human_Review_Loops.md) | core | DERIVED | draft (lint open) |
 | 6 | [Common Issues: Anomaly Detection and Segmentation](./06_25_Common_Issues.md) | advanced | ILLUSTRATIVE | authored |
 
 ## 9. Common Issues locator
@@ -81,5 +81,5 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [x] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

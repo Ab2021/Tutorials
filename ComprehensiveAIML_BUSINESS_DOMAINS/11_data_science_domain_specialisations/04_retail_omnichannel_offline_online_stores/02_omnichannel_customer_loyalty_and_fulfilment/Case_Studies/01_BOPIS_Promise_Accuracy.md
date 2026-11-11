@@ -1601,11 +1601,11 @@ The case sits inside the omnichannel fulfilment unit and borrows three of its ch
 
 | Resource | What it supplies | Where this case uses it |
 |---|---|---|
-| [Fulfilment Promise Metrics](../../Cheat_Sheets/03_Fulfilment_Promise_Metrics.md) | the rate/utility/capacity triad and the denominator audit | D-02, D-03, D-04 and the §9 metric dictionary |
-| [Omnichannel Event Taxonomy](../../Cheat_Sheets/01_Omnichannel_Event_Taxonomy.md) | the seven event types and their clock domains | §5a timestamp table, F-06 replay failure |
-| [Customer Identity Controls](../../Cheat_Sheets/02_Customer_Identity_Controls.md) | identity keying and the split-basket problem | the duplicate-order exclusion in §5d |
-| [Returns Risk Intervention](../03_Returns_Risk_Intervention.md) | a sibling case where the label is also policy-conditioned | the transfer paragraph in §13 |
-| [Omnichannel Fulfilment Allocation](../05_Omnichannel_Fulfilment_Allocation.md) | the same capacity gate applied to ship-from-store | §8 resolver design, generalised |
+| [Fulfilment Promise Metrics](../Cheat_Sheets/03_Fulfilment_Promise_Metrics.md) | the rate/utility/capacity triad and the denominator audit | D-02, D-03, D-04 and the §9 metric dictionary |
+| [Omnichannel Event Taxonomy](../Cheat_Sheets/01_Omnichannel_Event_Taxonomy.md) | the seven event types and their clock domains | §5a timestamp table, F-06 replay failure |
+| [Customer Identity Controls](../Cheat_Sheets/02_Customer_Identity_Controls.md) | identity keying and the split-basket problem | the duplicate-order exclusion in §5d |
+| [Returns Risk Intervention](./03_Returns_Risk_Intervention.md) | a sibling case where the label is also policy-conditioned | the transfer paragraph in §13 |
+| [Omnichannel Fulfilment Allocation](./05_Omnichannel_Fulfilment_Allocation.md) | the same capacity gate applied to ship-from-store | §8 resolver design, generalised |
 
 Three connections are worth spelling out rather than tabulating.
 

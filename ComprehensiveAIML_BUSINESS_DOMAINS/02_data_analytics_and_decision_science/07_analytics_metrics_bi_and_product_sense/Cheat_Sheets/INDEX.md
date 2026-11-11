@@ -55,9 +55,9 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Metric Trees and North-Star Measures](./01_Metric_Trees_and_North_Stars.md) | 1 | DERIVED | authored |
+| 1 | [Metric Trees and North-Star Measures](./01_Metric_Trees_and_North_Stars.md) | 1 | DERIVED | draft (lint open) |
 | 2 | [Funnel, Cohort, and Retention Analysis](./02_Funnel_Cohort_and_Retention_Analysis.md) | 1 | DERIVED | authored |
-| 3 | [Dashboard Design and Operational Alerts](./03_Dashboard_Design_and_Operational_Alerts.md) | foundation | DERIVED | authored |
+| 3 | [Dashboard Design and Operational Alerts](./03_Dashboard_Design_and_Operational_Alerts.md) | foundation | DERIVED | draft (lint open) |
 | 4 | [Segmentation and Decision Use](./04_Segmentation_and_Decision_Use.md) | 2 | DERIVED | authored |
 | 5 | [Stakeholder Narratives and Decision Memos](./05_Stakeholder_Narratives_and_Decision_Memos.md) | 3 | DERIVED | authored |
 | 6 | [Analytics Common Issues: Diagnosing Metric-Contract Failures](./06_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
@@ -80,5 +80,5 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

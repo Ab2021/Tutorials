@@ -62,7 +62,7 @@ This collection carries 6 reference card(s) and 1 troubleshooting artifact(s) fo
 | 4 | [Docker and Containers](./04_Docker_and_Containers.md) | 2 | DERIVED | authored |
 | 5 | [SQL Analytics Patterns: Grain, Joins, Windows, and Metric Defence](./05_SQL_Analytics_Patterns.md) | 1 | DERIVED | authored |
 | 6 | [SQL Window Frames and Aggregate Semantics](./06_SQL_Window_Frames_and_Aggregate_Semantics.md) | core | DERIVED | authored |
-| 7 | [25 Common Issues — diagnostic catalog for async Python, HTTP/WebSocket I/O, LLM inference, containers, and SQL analytics](./99_25_Common_Issues.md) | core | ILLUSTRATIVE | authored |
+| 7 | [25 Common Issues — diagnostic catalog for async Python, HTTP/WebSocket I/O, LLM inference, containers, and SQL analytics](./99_25_Common_Issues.md) | core | ILLUSTRATIVE | draft (lint open) |
 
 ## 9. Common Issues locator
 
@@ -82,5 +82,5 @@ This collection carries 6 reference card(s) and 1 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

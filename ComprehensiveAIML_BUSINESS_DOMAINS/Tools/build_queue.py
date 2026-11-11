@@ -37,7 +37,7 @@ def units() -> list[Path]:
     out = []
     for p in sorted(ROOT.rglob("*")):
         if p.is_dir() and (p / "Case_Studies").is_dir() and (p / "Cheat_Sheets").is_dir():
-            if ".tmp_parts" in p.parts or "Tools" in p.parts:
+            if "Tools" in p.parts or any(part.startswith(".") for part in p.relative_to(ROOT).parts):
                 continue
             out.append(p)
     return out
@@ -100,8 +100,9 @@ def h2_count(idx: Path) -> int:
 
 
 def main() -> int:
-    BRIEFS.mkdir(parents=True, exist_ok=True)
     summary_only = "--summary" in sys.argv
+    if not summary_only:
+        BRIEFS.mkdir(parents=True, exist_ok=True)
     tasks: list[dict] = []
     paths_seen: set[str] = set()
     seq = 0
@@ -118,11 +119,12 @@ def main() -> int:
         if extra:
             rec.update(extra)
         tasks.append(rec)
-        (BRIEFS / f"{tid}.md").write_text(brief, encoding="utf-8")
+        if not summary_only:
+            (BRIEFS / f"{tid}.md").write_text(brief, encoding="utf-8")
 
     # ---- scan existing manuscripts -------------------------------------------------
     for p in sorted(ROOT.rglob("*.md")):
-        if ".tmp_parts" in p.parts or "Tools" in p.parts:
+        if "Tools" in p.parts or any(part.startswith(".") for part in p.relative_to(ROOT).parts):
             continue
         if p.name in ("INDEX.md", "AUTHORING_PROGRESS.md"):
             continue
@@ -184,8 +186,8 @@ and its role in the unit.
     for u in units():
         urel = str(u.relative_to(ROOT)).replace("\\", "/")
         cases_dir, sheets_dir = u / "Case_Studies", u / "Cheat_Sheets"
-        existing_cases = sorted(f.name for f in cases_dir.glob("*.md") if f.name != "INDEX.md")
-        existing_sheets = sorted(f.name for f in sheets_dir.glob("*.md") if f.name != "INDEX.md")
+        existing_cases = sorted(f.name for f in cases_dir.glob("*.md") if f.name != "INDEX.md" and not f.name.startswith("."))
+        existing_sheets = sorted(f.name for f in sheets_dir.glob("*.md") if f.name != "INDEX.md" and not f.name.startswith("."))
         has_ci = any(f.endswith("Common_Issues.md") for f in existing_sheets)
 
         nums = [int(m.group(1)) for f in existing_sheets for m in [re.match(r"(\d+)_", f)] if m]

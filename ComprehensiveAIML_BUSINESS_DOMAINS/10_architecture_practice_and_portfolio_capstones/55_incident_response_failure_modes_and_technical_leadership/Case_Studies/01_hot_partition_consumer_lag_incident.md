@@ -177,6 +177,50 @@ A competing hypothesis is slow sink writes: a hot partition might have normal in
 Compare partition ingress with processing throughput, sink latency, error rates, CPU and assignment churn before choosing a mitigation.
 No approach was actually tried first; all alternatives remain untested.
 
+The following workload calculations are **ILLUSTRATIVE** teaching arithmetic. They assume a fluid queue, constant rates, an initially empty partition unless stated otherwise, no loss, no retries, and a service rate that already includes durable sink work. They are capacity estimates, not latency guarantees or measurements.
+
+```text
+FORMULA [Q-01]: B = max(0, B0 + (lambda - mu) * t)
+WHERE: B [events] is backlog after t [s]; B0 [events] is initial backlog;
+       lambda [events/s] is accepted arrival rate; mu [events/s] is completed service rate.
+CONSTRAINT: Constant lambda and mu over the interval; this expression describes queued-event conservation, not event age or user impact.
+NUMERICAL EXAMPLE: ILLUSTRATIVE B0=0 events, lambda=1,400 events/s,
+                   mu=1,000 events/s, t=900 s.
+                   B=max(0,0+(1,400-1,000)*900)
+                    =400 events/s*900 s=360,000 events.
+INTERPRETATION: One hot partition accumulates 360,000 events in 15 minutes although other partitions may have spare capacity.
+```
+
+The unit check is events/s times seconds, giving events. If lambda is at most mu and B0 is zero, the maximum makes the computed queue zero; it does not say that an already queued event has been processed.
+
+```text
+FORMULA [Q-02]: T_drain = B0 / (mu_r - lambda_r)
+WHERE: T_drain [s] is time to clear a positive backlog; mu_r [events/s] is recovery service;
+       lambda_r [events/s] is recovery arrival rate.
+CONSTRAINT: mu_r > lambda_r; rates remain constant and no rebalance, retry amplification, or sink failure occurs.
+NUMERICAL EXAMPLE: ILLUSTRATIVE B0=360,000 events, mu_r=1,000 events/s,
+                   lambda_r=600 events/s.
+                   Spare rate=1,000-600=400 events/s.
+                   T_drain=360,000/400=900 s=15 min.
+INTERPRETATION: Throttling to 600 events/s only clears the illustrative backlog if the 400 events/s surplus is actually sustained.
+```
+
+At lambda_r=800 events/s, spare capacity is 200 events/s and the same arithmetic gives 360,000/200=1,800 s, or 30 minutes. At lambda_r=1,000 events/s, the denominator is zero; the backlog never drains under this model.
+
+```text
+FORMULA [Q-03]: S_payload = B * p
+WHERE: S_payload [bytes] is queued payload only; B [events] is event count;
+       p [bytes/event] is average serialized payload.
+CONSTRAINT: Excludes record headers, indexes, compression variation, replica copies, metadata and consumer memory.
+NUMERICAL EXAMPLE: ILLUSTRATIVE B=360,000 events and p=2 KiB/event=2,048 bytes/event.
+                   S_payload=360,000*2,048=737,280,000 bytes.
+                   737,280,000/1,048,576=703.125 MiB.
+INTERPRETATION: The result sizes payload storage, not broker disk allocation or a retention guarantee.
+```
+
+A material boundary is a heavy-tailed payload distribution: replacing the average with 2 KiB understates storage if a small number of records are much larger. Capacity planning must therefore inspect size percentiles and measured broker overhead.
+
+
 ## 7. The Finding
 
 For the hypothetical workload, preserve the existing ordering contract during containment and reduce hot-partition ingress below demonstrated service capacity; consider a new order-level key only after the ordering invariant and migration are proven.
@@ -549,6 +593,8 @@ The diagnostic distinguishes a competing mechanism from hot-key overload and nam
 - Decision risk: Quarantining all records during outage misclassifies healthy data.
 - Responsible role: Platform owner.
 
+### Diagnostic catalogue: dependency and runtime mechanisms
+
 **Diagnostic 026: Registry authorization.**
 - Symptom: Consumers receive permission errors fetching schemas.
 - Discriminating evidence: Check service identity and registry policy changes.
@@ -724,6 +770,8 @@ The diagnostic distinguishes a competing mechanism from hot-key overload and nam
 - Decision risk: Restart loops can postpone useful processing indefinitely.
 - Responsible role: Application owner.
 
+### Diagnostic catalogue: recovery and control-plane mechanisms
+
 **Diagnostic 051: Slow polling.**
 - Symptom: Long processing prevents timely group participation.
 - Discriminating evidence: Compare processing duration with configured poll and session limits.
@@ -898,6 +946,8 @@ The diagnostic distinguishes a competing mechanism from hot-key overload and nam
 - Proposed response: Escalate for source-of-truth backfill and disclose the gap.
 - Decision risk: Offset reset cannot recreate deleted records.
 - Responsible role: Platform owner.
+
+### Diagnostic catalogue: governance and capacity mechanisms
 
 **Diagnostic 076: Compacted source log.**
 - Symptom: Older transitions disappear before a full historical rebuild.
@@ -1080,6 +1130,8 @@ The diagnostic distinguishes a competing mechanism from hot-key overload and nam
 - Proposed response: Set separate indicators or priority classes where justified.
 - Decision risk: A single aggregate target can conceal harm to urgent orders.
 - Responsible role: Product owner.
+
+### Diagnostic catalogue: measurement, capacity, and governance mechanisms
 
 **Diagnostic 102: Clock-window contamination.**
 - Symptom: Replay records are counted as newly accepted events in the SLI.
@@ -1350,7 +1402,7 @@ A comparable completed incident case has not been established; a future comparis
 | Can upstream apply durable backpressure? | Source acceptance and buffer semantics are unspecified | Producer owner injects sustained overload and reconciles accepted IDs |
 | Can replay and rollback preserve effects? | No implementation or failure-injection record exists | Application owner runs crash and fenced-cutover tests |
 
-### 14c. Intense Interview Pack
+### Interview pack
 
 Use the shared rubric for every question: 0 incorrect, 1 partial, 2 correct with assumptions, 3 correct with a defended tradeoff.
 Prompts are candidate-facing; answers, alternatives, red flags and follow-ups are interviewer notes.

@@ -59,8 +59,8 @@ This collection carries 7 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Optimisation formulation and duality](./01_optimisation_formulation.md) | foundation | DERIVED | draft (lint open) |
-| 2 | [Solver Selection](./02_solver_selection.md) | core | DERIVED | authored |
-| 3 | [Simulation experiment plan](./03_simulation_experiment_plan.md) | core | DERIVED | authored |
+| 2 | [Solver Selection](./02_solver_selection.md) | core | DERIVED | draft (lint open) |
+| 3 | [Simulation experiment plan](./03_simulation_experiment_plan.md) | core | DERIVED | draft (lint open) |
 | 4 | [Network and Scheduling Models](./04_network_and_scheduling_models.md) | advanced | DERIVED | draft (lint open) |
 | 5 | [Integer programming](./05_integer_programming.md) | core | DERIVED | authored |
 | 6 | [Metaheuristics](./06_metaheuristics.md) | core | DERIVED | authored |
@@ -84,5 +84,5 @@ This collection carries 7 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

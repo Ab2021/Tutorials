@@ -75,7 +75,7 @@ This collection carries 8 reference card(s) and 0 troubleshooting artifact(s) fo
 | 2 | [Graph data-model patterns](./02_graph_data_model_patterns.md) | core | DERIVED | authored |
 | 3 | [Centrality and communities](./03_centrality_and_communities.md) | core | DERIVED | authored |
 | 4 | [GNN decision guide](./04_gnn_decision_guide.md) | core | DERIVED | draft (lint open) |
-| 5 | [Knowledge graphs and ontologies](./05_knowledge_graphs_and_ontologies.md) | core | DERIVED | authored |
+| 5 | [Knowledge graphs and ontologies](./05_knowledge_graphs_and_ontologies.md) | core | DERIVED | draft (lint open) |
 | 6 | [Graph evaluation](./06_graph_evaluation.md) | advanced | DERIVED | draft (lint open) |
 | 7 | [Bounded traversal and entity resolution](./07_bounded_traversal_and_entity_resolution.md) | advanced | DERIVED | authored |
 | 8 | [Common issues: graph ML](./09_25_common_issues.md) | advanced | DERIVED | draft (lint open) |
@@ -98,5 +98,5 @@ This collection carries 8 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

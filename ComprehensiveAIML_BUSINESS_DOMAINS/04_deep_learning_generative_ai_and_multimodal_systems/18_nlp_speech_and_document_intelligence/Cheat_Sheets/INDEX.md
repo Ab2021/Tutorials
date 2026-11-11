@@ -8,6 +8,7 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| advanced | Speech automatic transcription evaluation | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -51,7 +52,7 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [NLP Task Contracts: Classification, NER and Embeddings](./01_NLP_Task_Contracts_Classification_NER_Embeddings.md) | 1 | DERIVED | draft (lint open) |
-| 2 | [Speech automatic transcription evaluation](./03_asr-transcription-evaluation.md) | 3 | DERIVED | draft (lint open) |
+| 2 | [Speech automatic transcription evaluation](./03_asr-transcription-evaluation.md) | advanced | DERIVED | authored |
 
 ## 9. Common Issues locator
 
@@ -71,5 +72,5 @@ This collection carries 2 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

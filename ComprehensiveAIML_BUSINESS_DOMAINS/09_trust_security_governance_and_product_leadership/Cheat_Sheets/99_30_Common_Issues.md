@@ -21,7 +21,7 @@ source_index: "INDEX.md"
 
 **Purpose:** Diagnose a failed handoff between security, governance, product, economics and leadership rather than optimizing one team's metric in isolation.
 **Outcome:** Given a disputed release or investment decision, construct competing explanations, choose a discriminating check, contain safely and define a falsifiable correction.
-**Scope:** Thirty distinct cross-module issues, numbered P09-001 through P09-030, with complete diagnostic records in Section 8.
+**Scope:** Thirty distinct cross-module issues, numbered CI-001 through CI-030, with complete diagnostic records in Section 8.
 **Provenance:** Every issue is HYPOTHETICAL; none is represented as an observed company incident or a reproduced implementation failure.
 **Prerequisites:** Read the five [module homes](../INDEX.md#modules) in index order; know fractions, units, conditional decisions and basic access-control terminology.
 **Inventory:** Consulted [directory.txt](../../../Templates/directory.txt), especially execution/approval surfaces, security/governance, practical ML governance and visible safety-training titles.
@@ -388,39 +388,39 @@ Escalate irreversible effects to incident response and repair ownership, not mer
 
 | ID | Category | Symptom | Root-cause hypothesis | Diagnostic / expected signal | Fix | Provenance | Related home |
 |---|---|---|---|---|---|---|---|
-| [P09-001](#p09-001) | CONCEPT_CONFUSION | High score overrides prohibition | Hard constraint treated as weight | Inspect score inputs; prohibited option remains ranked | Filter before scoring | HYPOTHETICAL | Module 49/52 |
-| [P09-002](#p09-002) | VIOLATED_ASSUMPTION | Approved request changes effect | Approval binds text, not payload | Compare canonical payload digests | Bind exact action context | HYPOTHETICAL | Module 49/50 |
-| [P09-003](#p09-003) | VIOLATED_ASSUMPTION | Tenant sees wrong specialization | Cache identity omits tenant/base | Cross-tenant interleaving trace | Tenant-scoped release keys | HYPOTHETICAL | Module 49/51 |
-| [P09-004](#p09-004) | CONCEPT_CONFUSION | Safe response accompanies unsafe action | Text-only safety metric | Compare tool ledger to response label | Evaluate effects | HYPOTHETICAL | Module 49/50 |
-| [P09-005](#p09-005) | VIOLATED_ASSUMPTION | Wrong rule cited confidently | Eligibility metadata stale | Boundary-date replay | Date/jurisdiction eligibility | HYPOTHETICAL | Module 50/51 |
-| [P09-006](#p09-006) | VIOLATED_ASSUMPTION | Withdrawn data persists | Retention scope misses derivatives | Trace deletion lineage | Purpose-aware deletion workflow | HYPOTHETICAL | Module 49/50 |
-| [P09-007](#p09-007) | VIOLATED_ASSUMPTION | Audit cannot reconstruct decision | Mutable evidence references | Resolve historical manifest | Immutable bounded evidence | HYPOTHETICAL | Module 50/53 |
-| [P09-008](#p09-008) | NUMERICAL_EDGE | Success jumps after filtering | Outcome-dependent denominator | Rebuild eligible cohort | Freeze inclusion rules | HYPOTHETICAL | Module 50/51 |
-| [P09-009](#p09-009) | CONCEPT_CONFUSION | Safety gains destroy usefulness | Blanket refusal | Benign/prohibited confusion matrix | Joint safety/utility gates | HYPOTHETICAL | Module 49/51 |
-| [P09-010](#p09-010) | VIOLATED_ASSUMPTION | Confidence misleads new users | Calibration population changes | Reliability by language/task | Recalibrate or abstain | HYPOTHETICAL | Module 50/51 |
-| [P09-011](#p09-011) | SCALE_FAILURE | Review queue misses deadlines | Referrals exceed service | Case conservation and age | Intake/capacity redesign | HYPOTHETICAL | Module 51/52 |
-| [P09-012](#p09-012) | VIOLATED_ASSUMPTION | Human approval rarely catches errors | Reviewer lacks information or time | Blinded seeded-error review | Decision-support redesign | HYPOTHETICAL | Module 50/51 |
-| [P09-013](#p09-013) | VIOLATED_ASSUMPTION | Pilot benefit disappears at scale | Volunteer selection | Compare eligible pilot/nonpilot mix | Representative evaluation | HYPOTHETICAL | Module 51/53 |
-| [P09-014](#p09-014) | CONCEPT_CONFUSION | Local time falls, total work rises | Work exported downstream | End-to-end task timing | Include all affected labor | HYPOTHETICAL | Module 51/52 |
-| [P09-015](#p09-015) | CONCEPT_CONFUSION | Savings miss finance plan | Time valued as cash | Reconcile payroll and capacity | Separate capacity/cash value | HYPOTHETICAL | Module 52/53 |
-| [P09-016](#p09-016) | NUMERICAL_EDGE | Unit economics collapse | Attempts omitted from cost | Task-linked retry bills | Complete cost numerator | HYPOTHETICAL | Module 49/52 |
-| [P09-017](#p09-017) | VIOLATED_ASSUMPTION | Failover crosses residency boundary | Eligibility not reapplied | Fault replay with route audit | Constrained fallback set | HYPOTHETICAL | Module 49/52 |
-| [P09-018](#p09-018) | VIOLATED_ASSUMPTION | Vendor benchmark winner disappoints | Test/tuning contamination | Sealed task replay | Predeclared evaluation | HYPOTHETICAL | Module 50/52 |
-| [P09-019](#p09-019) | NUMERICAL_EDGE | Cheap contract becomes expensive | Commitment cliffs ignored | Volume sensitivity at tiers | Full contract model | HYPOTHETICAL | Module 52/53 |
-| [P09-020](#p09-020) | VIOLATED_ASSUMPTION | Multi-vendor plan fails together | Shared dependency | Dependency fault tree | Independent recovery evidence | HYPOTHETICAL | Module 49/52 |
-| [P09-021](#p09-021) | CONCEPT_CONFUSION | Portfolio value exceeds total opportunity | Duplicate benefit attribution | Trace shared task population | Reconcile benefit ownership | HYPOTHETICAL | Module 52/53 |
-| [P09-022](#p09-022) | SCALE_FAILURE | Central AI team blocks delivery | Unbounded dependency queue | Arrival/service by work class | Explicit platform contract | HYPOTHETICAL | Module 51/53 |
-| [P09-023](#p09-023) | VIOLATED_ASSUMPTION | Everyone approves, nobody repairs | Authority/resource gap | Incident tabletop | Assign repair authority | HYPOTHETICAL | Module 50/53 |
-| [P09-024](#p09-024) | CONCEPT_CONFUSION | Training complete, skills absent | Attendance substitutes for competence | Task-based assessment | Practice and capability evidence | HYPOTHETICAL | Module 51/53 |
-| [P09-025](#p09-025) | NUMERICAL_EDGE | Board trusts precise fragile ROI | Point estimates hide switching values | Recompute threshold ranges | Communicate decision sensitivity | HYPOTHETICAL | Module 52/53 |
-| [P09-026](#p09-026) | VIOLATED_ASSUMPTION | Rollback fails policy consistency | Mixed artifact versions | Replay old/new bundle pairs | Atomic compatibility manifest | HYPOTHETICAL | Module 49/50 |
-| [P09-027](#p09-027) | SCALE_FAILURE | Stop command leaves effects running | No in-flight reconciliation | Pending/committed effect trace | Stop plus compensate | HYPOTHETICAL | Module 49/53 |
-| [P09-028](#p09-028) | VIOLATED_ASSUMPTION | Few complaints hide growing harm | Reporting incentives suppress evidence | Independent anonymous sampling | Protected reporting channel | HYPOTHETICAL | Module 50/53 |
-| [P09-029](#p09-029) | VIOLATED_ASSUMPTION | Adoption hides excluded users | Access barriers remove denominator | Eligible-user accessibility study | Inclusive workflow alternatives | HYPOTHETICAL | Module 51/53 |
-| [P09-030](#p09-030) | SCALE_FAILURE | Retired product retains exposure | Exit omits data/credentials | Asset and grant reconciliation | End-to-end retirement | HYPOTHETICAL | Module 49/52/53 |
+| CI-001 | CONCEPT_CONFUSION | High score overrides prohibition | Hard constraint treated as weight | Inspect score inputs; prohibited option remains ranked | Filter before scoring | HYPOTHETICAL | Module 49/52 |
+| CI-002 | VIOLATED_ASSUMPTION | Approved request changes effect | Approval binds text, not payload | Compare canonical payload digests | Bind exact action context | HYPOTHETICAL | Module 49/50 |
+| CI-003 | VIOLATED_ASSUMPTION | Tenant sees wrong specialization | Cache identity omits tenant/base | Cross-tenant interleaving trace | Tenant-scoped release keys | HYPOTHETICAL | Module 49/51 |
+| CI-004 | CONCEPT_CONFUSION | Safe response accompanies unsafe action | Text-only safety metric | Compare tool ledger to response label | Evaluate effects | HYPOTHETICAL | Module 49/50 |
+| CI-005 | VIOLATED_ASSUMPTION | Wrong rule cited confidently | Eligibility metadata stale | Boundary-date replay | Date/jurisdiction eligibility | HYPOTHETICAL | Module 50/51 |
+| CI-006 | VIOLATED_ASSUMPTION | Withdrawn data persists | Retention scope misses derivatives | Trace deletion lineage | Purpose-aware deletion workflow | HYPOTHETICAL | Module 49/50 |
+| CI-007 | VIOLATED_ASSUMPTION | Audit cannot reconstruct decision | Mutable evidence references | Resolve historical manifest | Immutable bounded evidence | HYPOTHETICAL | Module 50/53 |
+| CI-008 | NUMERICAL_EDGE | Success jumps after filtering | Outcome-dependent denominator | Rebuild eligible cohort | Freeze inclusion rules | HYPOTHETICAL | Module 50/51 |
+| CI-009 | CONCEPT_CONFUSION | Safety gains destroy usefulness | Blanket refusal | Benign/prohibited confusion matrix | Joint safety/utility gates | HYPOTHETICAL | Module 49/51 |
+| CI-010 | VIOLATED_ASSUMPTION | Confidence misleads new users | Calibration population changes | Reliability by language/task | Recalibrate or abstain | HYPOTHETICAL | Module 50/51 |
+| CI-011 | SCALE_FAILURE | Review queue misses deadlines | Referrals exceed service | Case conservation and age | Intake/capacity redesign | HYPOTHETICAL | Module 51/52 |
+| CI-012 | VIOLATED_ASSUMPTION | Human approval rarely catches errors | Reviewer lacks information or time | Blinded seeded-error review | Decision-support redesign | HYPOTHETICAL | Module 50/51 |
+| CI-013 | VIOLATED_ASSUMPTION | Pilot benefit disappears at scale | Volunteer selection | Compare eligible pilot/nonpilot mix | Representative evaluation | HYPOTHETICAL | Module 51/53 |
+| CI-014 | CONCEPT_CONFUSION | Local time falls, total work rises | Work exported downstream | End-to-end task timing | Include all affected labor | HYPOTHETICAL | Module 51/52 |
+| CI-015 | CONCEPT_CONFUSION | Savings miss finance plan | Time valued as cash | Reconcile payroll and capacity | Separate capacity/cash value | HYPOTHETICAL | Module 52/53 |
+| CI-016 | NUMERICAL_EDGE | Unit economics collapse | Attempts omitted from cost | Task-linked retry bills | Complete cost numerator | HYPOTHETICAL | Module 49/52 |
+| CI-017 | VIOLATED_ASSUMPTION | Failover crosses residency boundary | Eligibility not reapplied | Fault replay with route audit | Constrained fallback set | HYPOTHETICAL | Module 49/52 |
+| CI-018 | VIOLATED_ASSUMPTION | Vendor benchmark winner disappoints | Test/tuning contamination | Sealed task replay | Predeclared evaluation | HYPOTHETICAL | Module 50/52 |
+| CI-019 | NUMERICAL_EDGE | Cheap contract becomes expensive | Commitment cliffs ignored | Volume sensitivity at tiers | Full contract model | HYPOTHETICAL | Module 52/53 |
+| CI-020 | VIOLATED_ASSUMPTION | Multi-vendor plan fails together | Shared dependency | Dependency fault tree | Independent recovery evidence | HYPOTHETICAL | Module 49/52 |
+| CI-021 | CONCEPT_CONFUSION | Portfolio value exceeds total opportunity | Duplicate benefit attribution | Trace shared task population | Reconcile benefit ownership | HYPOTHETICAL | Module 52/53 |
+| CI-022 | SCALE_FAILURE | Central AI team blocks delivery | Unbounded dependency queue | Arrival/service by work class | Explicit platform contract | HYPOTHETICAL | Module 51/53 |
+| CI-023 | VIOLATED_ASSUMPTION | Everyone approves, nobody repairs | Authority/resource gap | Incident tabletop | Assign repair authority | HYPOTHETICAL | Module 50/53 |
+| CI-024 | CONCEPT_CONFUSION | Training complete, skills absent | Attendance substitutes for competence | Task-based assessment | Practice and capability evidence | HYPOTHETICAL | Module 51/53 |
+| CI-025 | NUMERICAL_EDGE | Board trusts precise fragile ROI | Point estimates hide switching values | Recompute threshold ranges | Communicate decision sensitivity | HYPOTHETICAL | Module 52/53 |
+| CI-026 | VIOLATED_ASSUMPTION | Rollback fails policy consistency | Mixed artifact versions | Replay old/new bundle pairs | Atomic compatibility manifest | HYPOTHETICAL | Module 49/50 |
+| CI-027 | SCALE_FAILURE | Stop command leaves effects running | No in-flight reconciliation | Pending/committed effect trace | Stop plus compensate | HYPOTHETICAL | Module 49/53 |
+| CI-028 | VIOLATED_ASSUMPTION | Few complaints hide growing harm | Reporting incentives suppress evidence | Independent anonymous sampling | Protected reporting channel | HYPOTHETICAL | Module 50/53 |
+| CI-029 | VIOLATED_ASSUMPTION | Adoption hides excluded users | Access barriers remove denominator | Eligible-user accessibility study | Inclusive workflow alternatives | HYPOTHETICAL | Module 51/53 |
+| CI-030 | SCALE_FAILURE | Retired product retains exposure | Exit omits data/credentials | Asset and grant reconciliation | End-to-end retirement | HYPOTHETICAL | Module 49/52/53 |
 
-<a id="p09-001"></a>
-### P09-001 — A weighted score buys its way through a prohibition
+<a id="ci-001"></a>
+### CI-001 — A weighted score buys its way through a prohibition
 Category: CONCEPT_CONFUSION; subsystem: investment-to-authorization handoff.
 Provenance: HYPOTHETICAL; derived counterexample to replacing a hard predicate with a finite score penalty.
 Environment: Procurement ranks candidate model routes using quality, latency, cost and a security score.
@@ -449,8 +449,8 @@ Decision consequence: A positive projected return is not a permission grant.
 Related sheet: [Module 52 economics and procurement](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [NIST SSDF](https://csrc.nist.gov/pubs/sp/800/218/final) supports explicit security practices, not this scenario's rule.
 
-<a id="p09-002"></a>
-### P09-002 — The approved text and executed payload are different objects
+<a id="ci-002"></a>
+### CI-002 — The approved text and executed payload are different objects
 Category: VIOLATED_ASSUMPTION; subsystem: approval-to-effect binding.
 Provenance: HYPOTHETICAL; motivated by the visible approval-gate inventory and its exact-action learning outcome.
 Environment: An assistant drafts an export request and a human approves a rendered preview.
@@ -479,8 +479,8 @@ Decision consequence: An approval record proves little until its object and auth
 Related sheet: [Module 49 security and red teaming](../49_ai_security_privacy_safety_and_red_teaming/INDEX.md).
 Source support: [Approval focused brief](../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals), not inaccessible original code.
 
-<a id="p09-003"></a>
-### P09-003 — Tenant customization becomes a cross-tenant cache race
+<a id="ci-003"></a>
+### CI-003 — Tenant customization becomes a cross-tenant cache race
 Category: VIOLATED_ASSUMPTION; subsystem: product personalization-to-isolation handoff.
 Provenance: HYPOTHETICAL; the tenant-adapter interview brief is reference material, not deployment evidence.
 Environment: A serving layer loads specialized adapters for several tenant assistants.
@@ -509,8 +509,8 @@ Decision consequence: An adapter changes behavior, not authorization, and cannot
 Related sheet: [Module 49 security home](../49_ai_security_privacy_safety_and_red_teaming/INDEX.md).
 Source support: [Interview-reference plan](../../00_REFERENCE_INFORMED_CASE_PLAN.md) defines a supporting curriculum commitment only.
 
-<a id="p09-004"></a>
-### P09-004 — A polite refusal masks an already executed unsafe effect
+<a id="ci-004"></a>
+### CI-004 — A polite refusal masks an already executed unsafe effect
 Category: CONCEPT_CONFUSION; subsystem: safety-evaluation-to-action boundary.
 Provenance: HYPOTHETICAL; no actual unsafe effect was executed for this guide.
 Environment: A release suite scores the assistant's final text for refusal and helpfulness.
@@ -539,8 +539,8 @@ Decision consequence: Safe wording is neither necessary nor sufficient evidence 
 Related sheet: [Module 50 governance and audits](../50_responsible_ai_governance_compliance_and_audits/INDEX.md).
 Source support: [Safety focused brief](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety) explicitly separates empirical safety evidence.
 
-<a id="p09-005"></a>
-### P09-005 — A regulatory answer ranks an inapplicable version first
+<a id="ci-005"></a>
+### CI-005 — A regulatory answer ranks an inapplicable version first
 Category: VIOLATED_ASSUMPTION; subsystem: governance-content-to-product-answer eligibility.
 Provenance: HYPOTHETICAL architecture exercise; not legal advice or a current applicability determination.
 Environment: A retrieval assistant answers questions for different jurisdictions and historical question dates.
@@ -569,8 +569,8 @@ Decision consequence: Authentic citations can still be inapplicable and should n
 Related sheet: [Module 50 governance home](../50_responsible_ai_governance_compliance_and_audits/INDEX.md).
 Source support: [IR013 planning commitment](../../00_REFERENCE_INFORMED_CASE_PLAN.md) requires dated eligibility, not a legal conclusion.
 
-<a id="p09-006"></a>
-### P09-006 — Withdrawal removes a record but leaves its derived exposure
+<a id="ci-006"></a>
+### CI-006 — Withdrawal removes a record but leaves its derived exposure
 Category: VIOLATED_ASSUMPTION; subsystem: privacy-purpose-to-data-lifecycle handoff.
 Provenance: HYPOTHETICAL; obligations and exceptions require context-specific authoritative review.
 Environment: A product uses source records, document chunks, embeddings, caches and audit records.
@@ -599,8 +599,8 @@ Decision consequence: A privacy control is an end-to-end lifecycle mechanism, no
 Related sheet: [Module 49 privacy/security home](../49_ai_security_privacy_safety_and_red_teaming/INDEX.md).
 Source support: [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) is voluntary risk methodology, not an applicability ruling.
 
-<a id="p09-007"></a>
-### P09-007 — The audit link resolves, but the historical evidence has changed
+<a id="ci-007"></a>
+### CI-007 — The audit link resolves, but the historical evidence has changed
 Category: VIOLATED_ASSUMPTION; subsystem: evidence-to-governance decision traceability.
 Provenance: HYPOTHETICAL; no real audit deficiency is asserted.
 Environment: Release approvals link to dashboards, shared documents and model registry aliases.
@@ -629,8 +629,8 @@ Decision consequence: A working URL is not sufficient historical provenance.
 Related sheet: [Module 50 documentation/audits](../50_responsible_ai_governance_compliance_and_audits/INDEX.md).
 Source support: [NIST SSDF](https://csrc.nist.gov/pubs/sp/800/218/final) supplies secure-development vocabulary, not audit certification.
 
-<a id="p09-008"></a>
-### P09-008 — The success rate improves because failures leave the denominator
+<a id="ci-008"></a>
+### CI-008 — The success rate improves because failures leave the denominator
 Category: NUMERICAL_EDGE; subsystem: product-metric-to-governance reporting.
 Provenance: HYPOTHETICAL; numerical examples are constructed, not user-study results.
 Environment: A pilot reports useful completions divided by eligible tasks.
@@ -659,8 +659,8 @@ Decision consequence: A rate is inseparable from its numerator, denominator, eli
 Related sheet: [Module 51 adoption and UX](../51_ai_product_management_ux_and_human_ai_collaboration/INDEX.md).
 Source support: [Google SLO methodology](https://sre.google/workbook/implementing-slos/) distinguishes good events from total events and measurement coverage.
 
-<a id="p09-009"></a>
-### P09-009 — A safety improvement is actually blanket refusal
+<a id="ci-009"></a>
+### CI-009 — A safety improvement is actually blanket refusal
 Category: CONCEPT_CONFUSION; subsystem: safety-to-product utility tradeoff.
 Provenance: HYPOTHETICAL; aligned with the visible safety brief's separate benign and prohibited prompt sets.
 Environment: A team tunes a refusal policy and promotes the model with fewer unsafe completions.
@@ -689,8 +689,8 @@ Decision consequence: Safety and usefulness are separate outcomes, not interchan
 Related sheet: [Module 49 safety and alignment](../49_ai_security_privacy_safety_and_red_teaming/INDEX.md).
 Source support: [Safety focused brief](../../00_SOURCE_COVERAGE_CUDA_TRAINING.md#ft-safety) requires false-refusal and unsafe-compliance reasoning.
 
-<a id="p09-010"></a>
-### P09-010 — Confidence displays transfer poorly to a new population
+<a id="ci-010"></a>
+### CI-010 — Confidence displays transfer poorly to a new population
 Category: VIOLATED_ASSUMPTION; subsystem: calibration-to-human reliance.
 Provenance: HYPOTHETICAL; no particular model confidence API is assumed.
 Environment: A product presents a reliability cue calibrated on one language, task family and user group.
@@ -719,8 +719,8 @@ Decision consequence: A number that looks precise can increase misuse when its m
 Related sheet: [Module 51 calibration/transparency](../51_ai_product_management_ux_and_human_ai_collaboration/INDEX.md).
 Source support: [Human-AI interaction guidelines](https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/) support interaction design inquiry, not this model's calibration.
 
-<a id="p09-011"></a>
-### P09-011 — Mandatory review creates an unstable service
+<a id="ci-011"></a>
+### CI-011 — Mandatory review creates an unstable service
 Category: SCALE_FAILURE; subsystem: governance-control-to-human capacity.
 Provenance: HYPOTHETICAL; the queue arithmetic is derived from constructed constant rates.
 Environment: A release requires human review for a fraction of arriving tasks.
@@ -749,8 +749,8 @@ Decision consequence: Human-in-the-loop is an operational system, not a free saf
 Related sheet: [Module 51 review workflow](../51_ai_product_management_ux_and_human_ai_collaboration/INDEX.md).
 Source support: [Google SLO methodology](https://sre.google/workbook/implementing-slos/) supports user-facing measurement, not a universal review deadline.
 
-<a id="p09-012"></a>
-### P09-012 — Reviewers approve without an independent basis for judgment
+<a id="ci-012"></a>
+### CI-012 — Reviewers approve without an independent basis for judgment
 Category: VIOLATED_ASSUMPTION; subsystem: human-control-to-effective oversight.
 Provenance: HYPOTHETICAL; no claim about a real reviewer team's behavior is made.
 Environment: A system presents a fluent recommendation and asks a reviewer to approve it quickly.
@@ -779,8 +779,8 @@ Decision consequence: Human involvement is not equivalent to human control.
 Related sheet: [Module 51 human-AI collaboration](../51_ai_product_management_ux_and_human_ai_collaboration/INDEX.md).
 Source support: [Human-AI interaction guidelines](https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/) are a design reference, not proof of oversight quality.
 
-<a id="p09-013"></a>
-### P09-013 — Volunteer-pilot value does not survive representative deployment
+<a id="ci-013"></a>
+### CI-013 — Volunteer-pilot value does not survive representative deployment
 Category: VIOLATED_ASSUMPTION; subsystem: product-experiment-to-transformation inference.
 Provenance: HYPOTHETICAL; no causal benefit is reported.
 Environment: An enthusiastic volunteer group uses a copilot and reports better completion speed.
@@ -809,8 +809,8 @@ Decision consequence: A pilot is an evidence source with a population boundary, 
 Related sheet: [Module 53 transformation measurement](../53_communication_leadership_and_ai_transformation/INDEX.md).
 Source support: [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) supports contextual risk assessment, not this pilot's external validity.
 
-<a id="p09-014"></a>
-### P09-014 — The copilot saves one role's time by exporting work downstream
+<a id="ci-014"></a>
+### CI-014 — The copilot saves one role's time by exporting work downstream
 Category: CONCEPT_CONFUSION; subsystem: local-productivity-to-end-to-end value.
 Provenance: HYPOTHETICAL; no measured workflow saving is asserted.
 Environment: Analysts draft reports that are then checked by quality staff and acted on by an operations team.
@@ -839,8 +839,8 @@ Decision consequence: A local metric is not the same as system value.
 Related sheet: [Module 52 unit economics](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [Green Book appraisal](https://www.gov.uk/government/publications/the-green-book--2/the-green-book-2026) considers broad impacts and uncertainty in its own public-appraisal scope.
 
-<a id="p09-015"></a>
-### P09-015 — Released capacity is booked as cash that cannot be avoided
+<a id="ci-015"></a>
+### CI-015 — Released capacity is booked as cash that cannot be avoided
 Category: CONCEPT_CONFUSION; subsystem: economic-case-to-financial-plan handoff.
 Provenance: HYPOTHETICAL; illustrative labor values are not salary or market-price claims.
 Environment: A business case multiplies estimated minutes saved by a loaded hourly labor rate.
@@ -869,8 +869,8 @@ Decision consequence: Value categories answer different questions and must not b
 Related sheet: [Module 52 economics](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [Green Book appraisal](https://www.gov.uk/government/publications/the-green-book--2/the-green-book-2026) separates appraisal considerations; no company accounting rule is inferred.
 
-<a id="p09-016"></a>
-### P09-016 — Retries make low call prices an expensive task
+<a id="ci-016"></a>
+### CI-016 — Retries make low call prices an expensive task
 Category: NUMERICAL_EDGE; subsystem: agent-reliability-to-unit-economics.
 Provenance: HYPOTHETICAL; P09-COST provides the declared accounting identity.
 Environment: A multi-step assistant retries retrieval, generation or tools before a task completes.
@@ -899,8 +899,8 @@ Decision consequence: Cheap attempts can be expensive outcomes.
 Related sheet: [Module 52 model/cloud cost](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [IR002 planning commitment](../../00_REFERENCE_INFORMED_CASE_PLAN.md) requires bounded budgets and successful-task cost.
 
-<a id="p09-017"></a>
-### P09-017 — An outage fallback forgets the original eligibility constraints
+<a id="ci-017"></a>
+### CI-017 — An outage fallback forgets the original eligibility constraints
 Category: VIOLATED_ASSUMPTION; subsystem: resilience-to-procurement/security boundaries.
 Provenance: HYPOTHETICAL; no provider capability, region or availability guarantee is asserted.
 Environment: A routing service can switch between provider deployments when one is unavailable.
@@ -929,8 +929,8 @@ Decision consequence: Resilience is correct only if the recovered service still 
 Related sheet: [Module 52 constrained routing](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [IR002 reference plan](../../00_REFERENCE_INFORMED_CASE_PLAN.md) is a teaching brief, not service assurance.
 
-<a id="p09-018"></a>
-### P09-018 — A vendor wins the benchmark by seeing the test
+<a id="ci-018"></a>
+### CI-018 — A vendor wins the benchmark by seeing the test
 Category: VIOLATED_ASSUMPTION; subsystem: procurement-evidence-to-selection validity.
 Provenance: HYPOTHETICAL; no supplier misconduct is alleged.
 Environment: Vendors receive sample tasks and teams repeatedly tune prompts or settings against a shared benchmark.
@@ -959,8 +959,8 @@ Decision consequence: A benchmark is a measurement procedure, not a leaderboard 
 Related sheet: [Module 52 vendor evaluation](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [NIST SSDF](https://csrc.nist.gov/pubs/sp/800/218/final) supports supplier communication, not comparative model performance.
 
-<a id="p09-019"></a>
-### P09-019 — Commitment tiers reverse the apparent cheapest option
+<a id="ci-019"></a>
+### CI-019 — Commitment tiers reverse the apparent cheapest option
 Category: NUMERICAL_EDGE; subsystem: commercial-contract-to-economic comparison.
 Provenance: HYPOTHETICAL; no real rate card or current discount is quoted.
 Environment: One offer has low usage rates with a minimum commitment; another has higher variable rates and no minimum.
@@ -989,8 +989,8 @@ Decision consequence: Contract conditions are part of the formula, not small-pri
 Related sheet: [Module 52 AI TCO](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [Green Book appraisal](https://www.gov.uk/government/publications/the-green-book--2/the-green-book-2026) motivates sensitivity and switching-value analysis within its stated scope.
 
-<a id="p09-020"></a>
-### P09-020 — Multiple vendors share the failure domain
+<a id="ci-020"></a>
+### CI-020 — Multiple vendors share the failure domain
 Category: VIOLATED_ASSUMPTION; subsystem: vendor-diversification-to-recovery assurance.
 Provenance: HYPOTHETICAL; no vendor dependency architecture is asserted.
 Environment: A business case claims resilience because two providers are contracted.
@@ -1019,8 +1019,8 @@ Decision consequence: Supplier diversity is not equivalent to failure-domain div
 Related sheet: [Module 52 vendor management](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [Google SLO methodology](https://sre.google/workbook/implementing-slos/) explains user-visible dependency considerations, not these suppliers' resilience.
 
-<a id="p09-021"></a>
-### P09-021 — Several projects claim the same pool of saved work
+<a id="ci-021"></a>
+### CI-021 — Several projects claim the same pool of saved work
 Category: CONCEPT_CONFUSION; subsystem: use-case-economics-to-portfolio aggregation.
 Provenance: HYPOTHETICAL; no actual portfolio return is reported.
 Environment: Summarization, search and drafting projects each forecast savings on the same analyst workflow.
@@ -1049,8 +1049,8 @@ Decision consequence: Additive spreadsheets require additive quantities, not mer
 Related sheet: [Module 52 portfolio strategy](../52_ai_economics_strategy_procurement_and_vendor_management/INDEX.md).
 Source support: [Green Book policy hierarchy discussion](https://www.gov.uk/government/publications/the-green-book--2/the-green-book-2026) explains why component value need not be separately apportioned.
 
-<a id="p09-022"></a>
-### P09-022 — The central AI team becomes an unbounded dependency queue
+<a id="ci-022"></a>
+### CI-022 — The central AI team becomes an unbounded dependency queue
 Category: SCALE_FAILURE; subsystem: team-topology-to-product-delivery flow.
 Provenance: HYPOTHETICAL; organizational choices are conditional design recommendations.
 Environment: Every product team must ask a small central team for prompts, evaluation, data access and deployment changes.
@@ -1079,8 +1079,8 @@ Decision consequence: A team topology is a flow design with queues and interface
 Related sheet: [Module 53 team topology](../53_communication_leadership_and_ai_transformation/INDEX.md).
 Source support: [Google SLO methodology](https://sre.google/workbook/implementing-slos/) supports explicit service expectations, not a universal team structure.
 
-<a id="p09-023"></a>
-### P09-023 — Approval responsibility does not include repair authority
+<a id="ci-023"></a>
+### CI-023 — Approval responsibility does not include repair authority
 Category: VIOLATED_ASSUMPTION; subsystem: governance-accountability-to-incident execution.
 Provenance: HYPOTHETICAL; the failure is organizational mechanism analysis, not an incident report.
 Environment: A release has product, security, legal and executive approvals recorded in a responsibility matrix.
@@ -1109,8 +1109,8 @@ Decision consequence: Accountability without authority is a reporting label, not
 Related sheet: [Module 53 operating model](../53_communication_leadership_and_ai_transformation/INDEX.md).
 Source support: [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) is contextual risk-management guidance, not proof that any role is empowered.
 
-<a id="p09-024"></a>
-### P09-024 — Training attendance is mistaken for usable capability
+<a id="ci-024"></a>
+### CI-024 — Training attendance is mistaken for usable capability
 Category: CONCEPT_CONFUSION; subsystem: learning-program-to-transformation outcome.
 Provenance: HYPOTHETICAL; no real training program effectiveness is asserted.
 Environment: A transformation dashboard tracks workshop completion and issued certificates.
@@ -1139,8 +1139,8 @@ Decision consequence: Learning activity is an input; capability and business out
 Related sheet: [Module 53 learning and change](../53_communication_leadership_and_ai_transformation/INDEX.md).
 Source support: [Human-AI interaction research](https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/) motivates user-centered evaluation, not a training efficacy claim.
 
-<a id="p09-025"></a>
-### P09-025 — Precise ROI hides an assumption that reverses the decision
+<a id="ci-025"></a>
+### CI-025 — Precise ROI hides an assumption that reverses the decision
 Category: NUMERICAL_EDGE; subsystem: analytical-evidence-to-executive narrative.
 Provenance: HYPOTHETICAL; no investment recommendation for a real organization is made.
 Environment: A board paper reports a single return estimate to two decimal places.
@@ -1169,8 +1169,8 @@ Decision consequence: Precision of arithmetic is not certainty of inputs or vali
 Related sheet: [Module 53 executive communication](../53_communication_leadership_and_ai_transformation/INDEX.md).
 Source support: [Green Book appraisal](https://www.gov.uk/government/publications/the-green-book--2/the-green-book-2026) explicitly distinguishes uncertainty and switching-value analysis.
 
-<a id="p09-026"></a>
-### P09-026 — Model rollback leaves new tools, policies and evidence behind
+<a id="ci-026"></a>
+### CI-026 — Model rollback leaves new tools, policies and evidence behind
 Category: VIOLATED_ASSUMPTION; subsystem: release-bundle-to-recovery consistency.
 Provenance: HYPOTHETICAL; no particular deployment platform is assumed.
 Environment: A release changes model, prompt, tool schema, retrieval index and policy configuration.
@@ -1199,8 +1199,8 @@ Decision consequence: The deployment unit should match the unit of reasoning, ev
 Related sheet: [Module 50 release evidence](../50_responsible_ai_governance_compliance_and_audits/INDEX.md).
 Source support: [NIST SSDF](https://csrc.nist.gov/pubs/sp/800/218/final) supports integrating secure practices across the lifecycle, not this platform's atomicity.
 
-<a id="p09-027"></a>
-### P09-027 — The kill switch stops intake but not in-flight effects
+<a id="ci-027"></a>
+### CI-027 — The kill switch stops intake but not in-flight effects
 Category: SCALE_FAILURE; subsystem: stop-authority-to-effect-reconciliation.
 Provenance: HYPOTHETICAL; no harmful live action was used as a teaching test.
 Environment: An agent accepts tasks, queues tool work and commits external actions asynchronously.
@@ -1229,8 +1229,8 @@ Decision consequence: Stopping generation is not the same as stopping business e
 Related sheet: [Module 49 incident response](../49_ai_security_privacy_safety_and_red_teaming/INDEX.md).
 Source support: [Approval focused brief](../../00_SOURCE_COVERAGE_AGENTS.md#agent-trust-approvals) motivates explicit execution surfaces and blast radius.
 
-<a id="p09-028"></a>
-### P09-028 — Low complaint counts reflect silence rather than low harm
+<a id="ci-028"></a>
+### CI-028 — Low complaint counts reflect silence rather than low harm
 Category: VIOLATED_ASSUMPTION; subsystem: leadership-incentive-to-risk-evidence.
 Provenance: HYPOTHETICAL; no real organization's reporting culture is characterized.
 Environment: Teams are rewarded for adoption, launch speed and a low incident count.
@@ -1259,8 +1259,8 @@ Decision consequence: Absence of reports is not evidence of absence when detecti
 Related sheet: [Module 53 responsible adoption](../53_communication_leadership_and_ai_transformation/INDEX.md).
 Source support: [NIST AI RMF](https://www.nist.gov/itl/ai-risk-management-framework) provides voluntary contextual risk-management framing, not culture measurement.
 
-<a id="p09-029"></a>
-### P09-029 — Adoption rates exclude the people who cannot use the interface
+<a id="ci-029"></a>
+### CI-029 — Adoption rates exclude the people who cannot use the interface
 Category: VIOLATED_ASSUMPTION; subsystem: UX-access-to-transformation measurement.
 Provenance: HYPOTHETICAL; no accessibility audit or user result is claimed.
 Environment: A product reports active users divided by provisioned users as its adoption headline.
@@ -1289,8 +1289,8 @@ Decision consequence: Adoption among reachable users does not establish value fo
 Related sheet: [Module 51 human-AI UX](../51_ai_product_management_ux_and_human_ai_collaboration/INDEX.md).
 Source support: [Human-AI interaction guidelines](https://www.microsoft.com/en-us/research/publication/guidelines-for-human-ai-interaction/) support design inquiry, not accessibility certification.
 
-<a id="p09-030"></a>
-### P09-030 — Retirement ends the subscription but leaves authority and data alive
+<a id="ci-030"></a>
+### CI-030 — Retirement ends the subscription but leaves authority and data alive
 Category: SCALE_FAILURE; subsystem: procurement-exit-to-security/lifecycle closure.
 Provenance: HYPOTHETICAL; no actual vendor exit or data-return completion is reported.
 Environment: A product is retired after weak value, a replacement decision or contract expiry.
@@ -1427,7 +1427,7 @@ Acceptable alternative: A predeclared policy may authorize a safe subset transfo
 Follow-up: If an effect already committed, reapproval does not undo it; reconcile and repair through the authorized path.
 Red flag: Trusting the model's claim that the reviewer would have approved the changed action.
 Scoring: 0 assumes blanket authority; 1 notices change; 2 binds exact action; 3 includes time and committed-effect recovery.
-Answer support: P09-002 and Section 4 mechanism trace.
+Answer support: CI-002 and Section 4 mechanism trace.
 
 ### Q3 — Level 1: What does zero failures in a safety test establish?
 Prompt: A fixed suite of 100 independent trials has zero failures under a binary reliable label.
@@ -1439,7 +1439,7 @@ Acceptable alternative: State a clearly labeled approximation near 3/n only if i
 Follow-up: Clustered or adaptive attacks invalidate the simple independent-trial interpretation and require a different evidence argument.
 Red flag: Reporting population safety as 100% or presenting the endpoint as the true failure rate.
 Scoring: 0 claims zero risk; 1 finite-sample caution; 2 correct endpoint/conditions; 3 distinguishes adversarial coverage.
-Answer support: P09-ZERO and P09-004/P09-009.
+Answer support: P09-ZERO and CI-004/CI-009.
 
 ### Q4 — Level 2: Diagnose the overloaded review workflow.
 Prompt: An empty queue receives 90 cases/hour, completes 72 cases/hour and runs for eight hours at constant rates.
@@ -1451,7 +1451,7 @@ Acceptable alternative: An event-level simulation can handle variable arrivals i
 Follow-up: At service 96 and arrivals 90, the 144-case backlog needs 24 hours to drain under the new constant-rate assumptions.
 Red flag: Declaring the system stable because daily averages look acceptable while the stated rates imply accumulation.
 Scoring: 0 incorrect units; 1 correct growth; 2 full calculation; 3 recovery and tail-latency caveat.
-Answer support: Sections 4–6 and P09-011.
+Answer support: Sections 4–6 and CI-011.
 
 ### Q5 — Level 2: Why can a cheaper provider produce a more expensive outcome?
 Prompt: One route lowers per-attempt price but increases attempts and review work for the same useful tasks.
@@ -1463,7 +1463,7 @@ Acceptable alternative: For a short-run choice, show marginal economics separate
 Follow-up: Add a minimum commitment and evaluate low-volume scenarios before assuming variable-price savings are realizable.
 Red flag: Ranking solely by published token price or treating human review as free.
 Scoring: 0 call-price only; 1 mentions retries; 2 complete task ledger; 3 marginal/full boundary and contract sensitivity.
-Answer support: P09-016 and P09-019.
+Answer support: CI-016 and CI-019.
 
 ### Q6 — Level 2: Identify the hidden denominator change.
 Prompt: A dashboard's success rate rises after timed-out tasks are reclassified as ineligible at the end of the task.
@@ -1475,7 +1475,7 @@ Acceptable alternative: A genuine prospective scope change can be valid, but rat
 Follow-up: If the experiment randomized users, check whether exclusions also break the intended comparison or assignment balance.
 Red flag: Explaining the rise only as product quality improvement without examining inclusion logic.
 Scoring: 0 accepts headline; 1 suspects bias; 2 reconstructs cohort; 3 handles prospective scope and causal validity.
-Answer support: P09-008 and Section 3 definitions.
+Answer support: CI-008 and Section 3 definitions.
 
 ### Q7 — Level 3: Select a route when utility and authority disagree.
 Prompt: Route A has the best quality/cost score but fails a mandatory destination predicate; route B is eligible but more expensive.
@@ -1487,7 +1487,7 @@ Acceptable alternative: Seek an authorized prospective policy change if the busi
 Follow-up: If B fails, the fallback must reapply the original predicates and remaining budgets.
 Red flag: Increasing the security penalty until the preferred route happens to lose; another score can still override it.
 Scoring: 0 score override; 1 notices constraint; 2 filter/abstain; 3 authority and fallback semantics.
-Answer support: P09-001 and P09-017.
+Answer support: CI-001 and CI-017.
 
 ### Q8 — Level 3: Diagnose high approval with low error detection.
 Prompt: Reviewers approve almost everything, but the task population is believed to be mostly correct.
@@ -1499,7 +1499,7 @@ Acceptable alternative: Expert review of naturally occurring labeled cases can w
 Follow-up: If review is overloaded, reduce intake or redesign case preparation rather than adding another mandatory checkbox.
 Red flag: Blaming reviewers solely from approval percentage or treating human involvement as proof of control.
 Scoring: 0 single-cause blame; 1 multiple hypotheses; 2 discriminating safe check; 3 capacity, authority and measurement boundaries.
-Answer support: P09-011 and P09-012.
+Answer support: CI-011 and CI-012.
 
 ### Q9 — Level 3: Defend a pilot claim under a changed population.
 Prompt: Volunteers report faster work; leadership wants the same gain from every employee next month.
@@ -1511,7 +1511,7 @@ Acceptable alternative: A staged rollout with defensible assignment and guardrai
 Follow-up: If expansion is contractually committed already, disclose the evidence gap and revise the rollout envelope rather than inventing a benefit.
 Red flag: Multiplying a volunteer time-saving average by total headcount without a realization or transport argument.
 Scoring: 0 extrapolates directly; 1 notes bias; 2 representative design; 3 includes workflow cost and decision scope.
-Answer support: P09-013 through P09-015.
+Answer support: CI-013 through CI-015.
 
 ### Q10 — Level 3: Explain why rollback did not restore the old service.
 Prompt: Operators restored an old model alias, but failures persist after a release that also changed tools and retrieval.
@@ -1523,7 +1523,7 @@ Acceptable alternative: If rollback is unsafe after a migration, freeze effects 
 Follow-up: Reconcile in-flight effects before replay so recovery does not duplicate external actions.
 Red flag: Declaring recovery complete because the registry alias changed while runtime components remain unverified.
 Scoring: 0 model-only reasoning; 1 notices dependencies; 2 coherent-bundle recovery; 3 state/authority/effect reconciliation.
-Answer support: P09-026 and P09-027.
+Answer support: CI-026 and CI-027.
 
 ### Q11 — Level 3: Communicate a fragile investment recommendation.
 Prompt: A precise positive return estimate reverses when review cost rises 50% or useful completion falls.
@@ -1535,7 +1535,7 @@ Acceptable alternative: Defer investment when a cheap decisive measurement is av
 Follow-up: If a hard constraint fails, do not rescue the investment with a favorable economic scenario.
 Red flag: Hiding all uncertainty in an appendix while the headline says the benefit has been achieved.
 Scoring: 0 unconditional ROI; 1 broad caveat; 2 switching/decision structure; 3 evidence value and hard-boundary distinction.
-Answer support: P09-025 and Section 5 sensitivity.
+Answer support: CI-025 and Section 5 sensitivity.
 
 ### Q12 — Level 3: Verify retirement rather than subscription cancellation.
 Prompt: A license is cancelled, but scheduled integrations, service identities and derived data may remain.
@@ -1547,7 +1547,7 @@ Acceptable alternative: A documented retained archive can remain if required and
 Follow-up: If exit terms block deletion or migration, escalate to the commercial/legal owner and revise the timeline.
 Red flag: Reporting complete closure from a cancelled invoice while usable credentials and active jobs remain.
 Scoring: 0 billing-only; 1 names data; 2 end-to-end reconciliation; 3 handles retention, authority and continuity constraints.
-Answer support: P09-006, P09-023 and P09-030.
+Answer support: CI-006, CI-023 and CI-030.
 
 ### Runnable arithmetic inputs for integration review
 

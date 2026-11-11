@@ -8,6 +8,7 @@ This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | Level | Cards | Purpose |
 |---|---|---|
+| core | Omnichannel Event Taxonomy | Build from prerequisites to production judgement |
 
 ## 3. Quick lookup
 
@@ -52,7 +53,7 @@ This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Omnichannel Event Taxonomy](./01_Omnichannel_Event_Taxonomy.md) | 2 | DERIVED | draft (lint open) |
+| 1 | [Omnichannel Event Taxonomy](./01_Omnichannel_Event_Taxonomy.md) | core | DERIVED | draft (lint open) |
 | 2 | [Customer Identity Controls](./02_Customer_Identity_Controls.md) | 2 | DERIVED | draft (lint open) |
 | 3 | [Fulfilment Promise Metrics](./03_Fulfilment_Promise_Metrics.md) | 2 | DERIVED | draft (lint open) |
 | 4 | [25 Common Issues](./04_25_Common_Issues.md) | 3 | DERIVED | draft (lint open) |
@@ -75,5 +76,5 @@ This collection carries 3 reference card(s) and 1 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

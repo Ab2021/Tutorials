@@ -8,7 +8,7 @@
 
 Previous passes produced files of 1,015 physical lines by repeating one sentence up to 900 times (`Operational note 879: ...`). That is **rejected**. Acceptance is by *distinct* content, not physical length.
 
-- Distinct-content floor: **at least 680 distinct non-blank prose lines** and **≥950 physical lines** per case and per cheat sheet.
+- Distinct-content floor: **at least 680 distinct non-blank prose lines** and **≥1,000 physical lines** per case and per cheat sheet, as required by the authoritative course standards.
 - A long line (≥70 characters) MUST NOT appear more than **twice** in a file.
 - Duplicate long-line ratio MUST stay **below 0.15** (`1 - distinct_long_lines / total_long_lines`).
 - NEVER emit numbered filler ("Operational note N", "Check N", "Step N") as a way to grow length. If you cannot think of substantive content, write fewer sections' worth of *real* reasoning — then continue the topic in the next file, not filler.
@@ -195,11 +195,11 @@ Therefore:
      repository: `$env:TEMP\authoring\<batch>\part01.md`, `part02.md`, … Each part is whatever
      amount of finished prose fits comfortably in one response (roughly 250–450 lines). Every part
      must end at a section boundary, never mid-code-block.
-  2. Assemble once the parts are complete:
-     `Get-Content $env:TEMP\authoring\<batch>\part*.md | Set-Content <target>` (or the equivalent
-     concatenation), so the target file only ever appears whole.
-  3. Lint the target, then fix and reassemble until it exits 0. If a part is wrong, rewrite that part
-     file and reassemble — never patch the assembled target.
+  2. Assemble once the parts are complete with
+     `python Tools/assemble.py <unique-batch> <relative-target>`.
+     The helper lints a staged candidate before atomically replacing the target; rejection preserves
+     the previous manuscript. Never reuse a batch directory for a different target.
+  3. If lint rejects the candidate, fix the part files and reassemble; do not weaken the acceptance gate.
 - Do not create scratch files or directories in the repository itself.
 - Before reporting, re-run the lint on every file you touched and quote the real output.
 - An honest `failed` with the exact unmet requirement is a valid outcome and the task is re-queued.

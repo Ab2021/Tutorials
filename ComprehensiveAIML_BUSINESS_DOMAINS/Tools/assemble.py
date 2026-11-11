@@ -47,20 +47,22 @@ def assemble(batch: str, target: Path, lint: bool = True) -> int:
     body = "".join(chunks)
 
     target.parent.mkdir(parents=True, exist_ok=True)
-    staging = target.with_suffix(target.suffix + ".assembling")
-    staging.write_text(body, encoding="utf-8")
-    os.replace(staging, target)
+    with tempfile.TemporaryDirectory(prefix=".assemble-", dir=target.parent) as scratch:
+        staging = Path(scratch) / target.name
+        staging.write_text(body, encoding="utf-8")
+        if lint:
+            result = subprocess.run(
+                [sys.executable, str(TOOLS / "manuscript_lint.py"), str(staging)],
+                cwd=ROOT, text=True, encoding="utf-8", capture_output=True,
+            )
+            sys.stdout.write(result.stdout or "")
+            sys.stderr.write(result.stderr or "")
+            if result.returncode:
+                print(f"rejected candidate; target unchanged: {target}")
+                return result.returncode
+        os.replace(staging, target)
     print(f"assembled {len(files)} parts -> {target} ({total} lines)")
-
-    if not lint:
-        return 0
-    r = subprocess.run(
-        [sys.executable, str(TOOLS / "manuscript_lint.py"), str(target)],
-        cwd=ROOT, text=True, encoding="utf-8", capture_output=True,
-    )
-    sys.stdout.write(r.stdout or "")
-    sys.stderr.write(r.stderr or "")
-    return r.returncode
+    return 0
 
 
 def main() -> int:

@@ -16,7 +16,7 @@
 | Case ID | Case title / link | Domain | Case type | Decision | Primary pattern | Secondary patterns | Evidence | Stage | Last reviewed | Result / limitation |
 |---|---|---|---|---|---|---|---|---|---|---|
 | CASE-18-01 | [Claims document extraction with evidence-linked abstention](./01_claims_document_extraction.md) | Module 18 â€” NLP, Speech and Document Intelligence | hybrid | decision record in the linked case | human-in-the-loop | evaluation-mismatch, authorization-scope | not-measured | proposed | null | draft (lint open) |
-| CASE-18-02 | [Call-centre transcription quality for evidence-based objection reporting](./02_call_centre_transcription_quality.md) | Module 18 â€” NLP, Speech and Document Intelligence | hybrid | decision record in the linked case | evaluation-mismatch | human-in-the-loop, authorization-scope | not-measured | proposed | null | draft (lint open) |
+| CASE-18-02 | [Call-centre transcription quality for evidence-based objection reporting](./02_call_centre_transcription_quality.md) | Module 18 â€” NLP, Speech and Document Intelligence | hybrid | decision record in the linked case | evaluation-mismatch | human-in-the-loop, authorization-scope | not-measured | proposed | null | authored |
 | PLAN-2026-IR010 | Repository-aware completion / language adapter | Module 18 â€” NLP, Speech and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-2026-IR011 | VLM/OCR adjuster assistance | Module 18 â€” NLP, Speech and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
 | PLAN-2026-IR016 | Customer-objection aggregation | Module 18 â€” NLP, Speech and Document Intelligence | planned | to be framed | - | - | not-measured | proposed | null | planned; no file yet |
@@ -36,7 +36,7 @@
 
 ## 4. Similarity / contrast map
 
-This collection holds 2 authored case(s) and 6 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+This collection holds 2 case file(s), 1 passing structural lint, and 6 planned commitment(s). Cases require independent review of point-in-time decision logging and explicit baselines; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 

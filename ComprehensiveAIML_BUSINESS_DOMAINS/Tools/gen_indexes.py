@@ -86,7 +86,7 @@ def unit_title(unit: Path) -> str:
 
 def case_index(unit: Path) -> str:
     cdir = unit / "Case_Studies"
-    files = sorted(f for f in cdir.glob("*.md") if f.name != "INDEX.md")
+    files = sorted(f for f in cdir.glob("*.md") if f.name != "INDEX.md" and not f.name.startswith("."))
     entries = []
     for f in files:
         text = f.read_text(encoding="utf-8", errors="replace")
@@ -136,8 +136,10 @@ def case_index(unit: Path) -> str:
           "| human-in-the-loop | Review capacity or override changes the trade-off | High-impact, uncertain, or regulated work | Review is infeasible or demonstrably ineffective |",
           "| model-monitoring | Live signals diverge from the evaluation | Deployed model with usable feedback | No meaningful feedback signal exists |",
           "", "## 4. Similarity / contrast map", "",
-          f"This collection holds {len(entries)} authored case(s) and {len(planned)} planned commitment(s). "
-          "Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, "
+          f"This collection holds {len(entries)} case file(s), "
+          f"{sum(e['status'] == 'authored' for e in entries)} passing structural lint, "
+          f"and {len(planned)} planned commitment(s). "
+          "Cases require independent review of point-in-time decision logging and explicit baselines; they differ in decision grain, "
           "owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: "
           "cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.",
           "", "## 5. Questions / future-case backlog", ""]
@@ -166,7 +168,7 @@ def case_index(unit: Path) -> str:
 
 def sheet_index(unit: Path) -> str:
     sdir = unit / "Cheat_Sheets"
-    files = sorted(f for f in sdir.glob("*.md") if f.name != "INDEX.md")
+    files = sorted(f for f in sdir.glob("*.md") if f.name != "INDEX.md" and not f.name.startswith("."))
     entries = []
     for f in files:
         text = f.read_text(encoding="utf-8", errors="replace")
@@ -264,7 +266,7 @@ def sheet_index(unit: Path) -> str:
           "- [x] Every linked card exists on disk.",
           "- [x] Status column is measured by the lint, not asserted.",
           "- [x] Planned commitments remain listed without links.",
-          f"- [{'x' if ci else ' '}] A final Common Issues artifact exists with at least 25 distinct issues.",
+          f"- [{'x' if len(ci) == 1 and ci[0]['status'] == 'authored' else ' '}] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.",
           "- [ ] Independent technical review of each card.",
           ""]
     return "\n".join(L)
@@ -279,6 +281,7 @@ def main() -> int:
         p for p in sorted(ROOT.rglob("*"))
         if p.is_dir() and (p / "Case_Studies").is_dir() and (p / "Cheat_Sheets").is_dir()
         and not ({".authoring_state", ".tmp_parts", "Tools"} & set(p.parts))
+        and not any(part.startswith(".") for part in p.relative_to(ROOT).parts)
     ]
     if only:
         only = only.replace("\\", "/")

@@ -53,7 +53,7 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
-| 1 | [Agent Boundaries and Request Ownership](./01_agent_boundaries_and_request_ownership.md) | foundation | DERIVED | authored |
+| 1 | [Agent Boundaries and Request Ownership](./01_agent_boundaries_and_request_ownership.md) | foundation | DERIVED | draft (lint open) |
 | 2 | [Agent Sessions, State Ownership, Isolation and Run Lifecycle](./04_agent_sessions_state_isolation_and_lifecycle.md) | advanced | DERIVED | authored |
 | 3 | [Durable workflows and idempotent execution](./05_durable_workflows_and_idempotent_execution.md) | 3 | DERIVED and ILLUSTRATIVE; source contents unavailable | draft (lint open) |
 
@@ -75,5 +75,5 @@ This collection carries 3 reference card(s) and 0 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [ ] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

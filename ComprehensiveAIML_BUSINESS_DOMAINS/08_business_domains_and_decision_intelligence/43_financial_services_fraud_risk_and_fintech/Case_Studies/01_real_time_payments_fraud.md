@@ -436,6 +436,53 @@ central economic fact of instant-payment fraud, and it is why naive precision ta
 objective. The threshold is low because the loss is large relative to the friction, not because the
 model is good.
 
+### 6.2a Checked decision, capacity, and value derivations
+
+The following three derivations use only constructed inputs already declared in §4. They make the
+unit boundaries explicit so a policy reviewer can distinguish a probability threshold from a daily
+workload limit and a 30-day value estimate.
+
+```text
+FORMULA [F-01]: p* = C_FP / (C_FN + C_FP)
+WHERE: p* is the calibrated fraud-probability threshold [probability, 0 to 1];
+       C_FP is the cost of declining a legitimate payment [EUR/payment];
+       C_FN is the loss from approving a fraudulent payment [EUR/payment].
+CONSTRAINT: score calibration is valid for the decision population; costs apply to the
+            same payment and exclude effects not priced in the ledger.
+NUMERICAL EXAMPLE: C_FP=EUR 7.60 and C_FN=EUR 210.00;
+                   p*=7.60/(7.60+210.00)=7.60/217.60=0.034926=3.4926%.
+INTERPRETATION: a decline is cheaper than approval above 3.4926% only in the
+                unconstrained two-action comparison; C-02 can still forbid a decline.
+
+FORMULA [F-02]: q_max = R * H * u * 60 / h
+WHERE: q_max is feasible review completions [cases/day]; R is reviewers [people];
+       H is productive time [hours/person/day]; u is utilisation [fraction];
+       h is handling time [minutes/case].
+CONSTRAINT: arrivals are spread across the working day, each case consumes one reviewer,
+            and utilisation reserves time for breaks, escalations, and rework.
+NUMERICAL EXAMPLE: R=7, H=7.5, u=0.80, h=12;
+                   q_max=7*7.5*0.80*60/12=210 cases/day.
+INTERPRETATION: at 4,933 review-band attempts/day, a 200-case sample is
+                200/4,933=4.0543%, below the 210-case capacity.
+
+FORMULA [F-03]: Delta_N = Delta_V_fraud + Delta_S_review + Delta_S_friction
+                         - Delta_C_stepup - Delta_C_platform
+WHERE: Delta_N is incremental net benefit [EUR/30 days]; Delta_V_fraud is extra
+       prevented fraud value [EUR/30 days]; S terms are savings; C terms are new costs.
+CONSTRAINT: all components use the identical 30-day population, currency, and action
+            definitions; no component may be counted both as a saving and a cost.
+NUMERICAL EXAMPLE: Delta_N=800,100+84,600+249,398-21,700-12,000
+                   =1,100,398 EUR/30 days.
+INTERPRETATION: the sign convention exposes the policy comparison; it does not predict
+                realised profit, because every input is ILLUSTRATIVE.
+```
+
+Boundary and counterexample: if the score is rank-ordered but not calibrated, p-star cannot select a
+probability band; if arrivals are bursty above 210 cases/day for long enough, q_max does not
+guarantee queue SLA; and if a cost component belongs to a different cohort, Delta_N is invalid
+even when its arithmetic is exact. These are decision-model validity conditions, not edge cases to
+ignore.
+
 ### 6.3 Step 2 — show why the pure threshold is unacceptable
 
 From the constructed score distribution, the number of attempts at or above the economic threshold
@@ -1564,3 +1611,4 @@ friction as the larger lever and refuses to trade review quality silently.
 > Score to get a calibrated probability, derive the cut point from costs, then refuse to let that
 > cut point become a block — route each band to the least harmful action that still protects the
 > money, and prove the whole ledger inside a replay harness before a customer ever sees a decline.
+

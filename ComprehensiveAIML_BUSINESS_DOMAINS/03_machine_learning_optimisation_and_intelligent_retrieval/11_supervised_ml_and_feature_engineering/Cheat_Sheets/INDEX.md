@@ -57,7 +57,7 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 | # | Card | Level | Evidence | Status |
 |---|---|---|---|---|
 | 1 | [Model Validation and Error Analysis](./01_Model_Validation_and_Error_Analysis.md) | 2 | DERIVED | authored |
-| 2 | [Problem Formulation and Losses](./02_Problem_Formulation_and_Losses.md) | 1 | DERIVED | authored |
+| 2 | [Problem Formulation and Losses](./02_Problem_Formulation_and_Losses.md) | 1 | DERIVED | draft (lint open) |
 | 3 | [Linear trees and boosting](./03_Linear_Trees_and_Boosting.md) | core | DERIVED | draft (lint open) |
 | 4 | [Feature engineering patterns](./04_Feature_Engineering_Patterns.md) | 2 | DERIVED | draft (lint open) |
 | 5 | [Imbalance and Calibration](./05_Imbalance_and_Calibration.md) | core | DERIVED | draft (lint open) |
@@ -81,5 +81,5 @@ This collection carries 5 reference card(s) and 1 troubleshooting artifact(s) fo
 - [x] Every linked card exists on disk.
 - [x] Status column is measured by the lint, not asserted.
 - [x] Planned commitments remain listed without links.
-- [x] A final Common Issues artifact exists with at least 25 distinct issues.
+- [ ] Exactly one Common Issues artifact passes lint, including the distinct issue-ID check.
 - [ ] Independent technical review of each card.

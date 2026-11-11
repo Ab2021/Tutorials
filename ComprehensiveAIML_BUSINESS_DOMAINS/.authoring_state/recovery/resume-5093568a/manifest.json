@@ -1,0 +1,1677 @@
+{
+  "required_model": "GPT 5.6 TERRA",
+  "required_provider": "CODEX",
+  "required_effort": "medium",
+  "routing_blocker": "Per-call model disabled; inspected workers use openai-codex/gpt-6.1-sol, effort unexposed; user declined substitution",
+  "state_files_saved": [
+    "queue.jsonl",
+    "batches.json",
+    "claimed.json",
+    "state.json"
+  ],
+  "parts": [
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0002\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0002/part01.md",
+      "normalized_text_sha256": "52aff0540d2441db7fea3e38eab587e9d6fd7b5fb595f9c3616f59908e72363b",
+      "lines": 271,
+      "title": "Feature engineering patterns",
+      "exact_title_candidates": [
+        "03_machine_learning_optimisation_and_intelligent_retrieval/11_supervised_ml_and_feature_engineering/Cheat_Sheets/04_Feature_Engineering_Patterns.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0002\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0002/part02.md",
+      "normalized_text_sha256": "7554ae467dab5a8692bd7678dfb83cb16b85fe9b97291b811e338ea2be6f6206",
+      "lines": 232,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0002\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0002/part03.md",
+      "normalized_text_sha256": "f11973baaf18980e0b1e59db1635cffb9b316cadba51340fb825bfc83f6bef66",
+      "lines": 220,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0010\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0010/part01.md",
+      "normalized_text_sha256": "e5d0614ba42bfc7f5b90cab2f66edac54df105a7978a520d650b0a0a35879080",
+      "lines": 221,
+      "title": "Call-Centre Transcription Quality: Evidence Before Aggregation",
+      "exact_title_candidates": [
+        "04_deep_learning_generative_ai_and_multimodal_systems/18_nlp_speech_and_document_intelligence/Case_Studies/02_call_centre_transcription_quality.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0010\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0010/part02.md",
+      "normalized_text_sha256": "0238df723728d4659588a515f0a3e99030912a6224cf57b7354ad1b8dbeecc34",
+      "lines": 313,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0010\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0010/part03.md",
+      "normalized_text_sha256": "88a08f0565ff61b9f27f0686cb50492b93f6db9c4dc72fb0f96291e933a2b8c6",
+      "lines": 297,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0010\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0010/part04.md",
+      "normalized_text_sha256": "4692a1a99dbb7295b906db890ee8160c456ab4812c4daee442ff739588a250e6",
+      "lines": 284,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0010\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0010/part05.md",
+      "normalized_text_sha256": "af6038f13981163e8a8b3f1b02710cf11946ddc4a97f9b5c2787f40314e88b26",
+      "lines": 428,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0010\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0010/part06.md",
+      "normalized_text_sha256": "6867187ff3555200d9290bfb3a22b3320d00f5b8310aa42b1e4d23c6d0d6c959",
+      "lines": 436,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0012\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0012/part01.md",
+      "normalized_text_sha256": "5b7badb2923aebfe6b52dc96d6199536c2819d74ea6d55896b1d94998dc724f4",
+      "lines": 311,
+      "title": "Call-Centre Transcription Quality: Evidence Before Aggregation",
+      "exact_title_candidates": [
+        "04_deep_learning_generative_ai_and_multimodal_systems/18_nlp_speech_and_document_intelligence/Case_Studies/02_call_centre_transcription_quality.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0012\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0012/part02.md",
+      "normalized_text_sha256": "acf433acca3dd127ce719a39175382771f901348fcbac2e3209769541730f8ed",
+      "lines": 255,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0012\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0012/part03.md",
+      "normalized_text_sha256": "cea6c1e5231b3d52b5cf39fa01ce445c8e497c38c7d545e9c359d4adfff81efc",
+      "lines": 252,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0012\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0012/part04.md",
+      "normalized_text_sha256": "67e7c1b0d04792c6b209e94674ea9ffb99fc9b2cd6692d23a1c4f6587e8d086d",
+      "lines": 285,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0012\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0012/part05.md",
+      "normalized_text_sha256": "3da6fd8c439604b19ef6224dbdccd10a541ae49179e87382730690be1869184e",
+      "lines": 313,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0012\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0012/part06.md",
+      "normalized_text_sha256": "ea6279729d7a592be614513a7600a5c3b1be83ad44840df3b0d0d61f1656152d",
+      "lines": 42,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0017\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0017/part01.md",
+      "normalized_text_sha256": "276eefc939190d0ea177c89c4edad9e0ef6555148f6b818935e04227128b58b4",
+      "lines": 98,
+      "title": "Speech automatic transcription evaluation",
+      "exact_title_candidates": [
+        "04_deep_learning_generative_ai_and_multimodal_systems/18_nlp_speech_and_document_intelligence/Cheat_Sheets/03_asr-transcription-evaluation.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0017\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0017/part02.md",
+      "normalized_text_sha256": "eff90b3836fb7c92751072f7981d06d8f2e4f0467d205ccbf6555a16ae086d59",
+      "lines": 212,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0017\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0017/part03.md",
+      "normalized_text_sha256": "20b921bc263d7085acfbbb583c176cab0b4b492ad27d61d522cb25ddf289575c",
+      "lines": 292,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part01.md",
+      "normalized_text_sha256": "7c8a39fb8e3b74efa201bd5be18546d9446e5b497082576901ed83b17b142d84",
+      "lines": 127,
+      "title": "Speech automatic transcription evaluation",
+      "exact_title_candidates": [
+        "04_deep_learning_generative_ai_and_multimodal_systems/18_nlp_speech_and_document_intelligence/Cheat_Sheets/03_asr-transcription-evaluation.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part02.md",
+      "normalized_text_sha256": "c5d21180e5eac3aca6b72eb4ba5bddc68d9ad7f432b7aef44b6bbab2685771e7",
+      "lines": 100,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part03.md",
+      "normalized_text_sha256": "a014d35fbae03d1acf98e5968233db154a299adf6c6e268ae68dbd0a406d53dc",
+      "lines": 225,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part04.md",
+      "normalized_text_sha256": "ac66829fca241957547de8e32f8e735c78b8fb15c4f1b383104249b0bfaf263f",
+      "lines": 199,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part05.md",
+      "normalized_text_sha256": "64c074769632092bcb289bfbabfe75c96726a9cdfc276d4cd398815dc2309e1d",
+      "lines": 95,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part06.md",
+      "normalized_text_sha256": "6c248b71b46d0353e98214eee5fbfb7701ccb1a0e8c5e1f6a8c8216827676e60",
+      "lines": 329,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part07.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part07.md",
+      "normalized_text_sha256": "eaaffc53d972d0e31084a30c8a1ad2fafb0b22d7999d96c86591b1456b2d89e0",
+      "lines": 176,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part08.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part08.md",
+      "normalized_text_sha256": "2a5155cb7a3fd8f3a8a8a0ee30e0b715137351cd9363b9ba6821d6d8ac22fc3a",
+      "lines": 126,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0019\\part09.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0019/part09.md",
+      "normalized_text_sha256": "052ede123edfd77e7c7ec2762c5615602dade6bcf1b3ede1e66075b4a3aa19bc",
+      "lines": 22,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0023\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0023/part01.md",
+      "normalized_text_sha256": "1c8e34694ec946a2e7ab6bf9c6d9c88ac02abf3e99dc773e5d58f0be11ea4201",
+      "lines": 594,
+      "title": "Tool Schema and Side-Effect Boundaries",
+      "exact_title_candidates": [
+        "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0023\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0023/part02.md",
+      "normalized_text_sha256": "25d5137132df197800e43156bd3f445222e5b6ac6a513bcc03162e55fc57389f",
+      "lines": 306,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0023\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0023/part03.md",
+      "normalized_text_sha256": "6cb9361227686ed20e569afee52f7a9c84a05bb93ee95b2c3866ceb3cfaf6139",
+      "lines": 452,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0023\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0023/part04.md",
+      "normalized_text_sha256": "d34086d799e220fab2809fd788e03bef5e2d51d36bbfa05c89fe862b13d44c89",
+      "lines": 364,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0026\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0026/part01.md",
+      "normalized_text_sha256": "859d5db0ecfac2d7fb09160bb3e9278f94a4d2f570a90ddc17a5e1d927fe4f7d",
+      "lines": 309,
+      "title": "Tool Schema and Side-Effect Boundaries",
+      "exact_title_candidates": [
+        "06_llm_agents_knowledge_systems_and_ai_augmented_development/31_tools_mcp_protocols_and_enterprise_integrations/Cheat_Sheets/02_Tool_Schema_and_Side_Effect_Boundaries.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0026\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0026/part02.md",
+      "normalized_text_sha256": "4bed198eead25f42de8950fe63d9108499d054123c28af4cb79a7d98726d61ae",
+      "lines": 399,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0026\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0026/part03.md",
+      "normalized_text_sha256": "330dc885c18ab5e833a822cd67c7f91f4eb84bf0dc26525d434afb88e34af4f4",
+      "lines": 294,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0026\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0026/part04.md",
+      "normalized_text_sha256": "266a60dcbce73b72a804859c8f577a5e5c249787545e0262c847e08677c89519",
+      "lines": 376,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0026\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0026/part05.md",
+      "normalized_text_sha256": "13dbd707fdad80665180cd9dc9f89e70db5a8893741367271b32a82bfe187e0a",
+      "lines": 286,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0028\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0028/part01.md",
+      "normalized_text_sha256": "c2d68d80bc94483bd402f43416d75b5c0317e3ba8ee4374dae97b2b506920967",
+      "lines": 198,
+      "title": "ECG Sampling and Aliasing",
+      "exact_title_candidates": [
+        "07_edge_ai_robotics_and_cyber_physical_systems/37_sensor_fusion_iot_and_realtime_perception/Cheat_Sheets/01_ecg_sampling_and_aliasing.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0028\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0028/part02.md",
+      "normalized_text_sha256": "0cefc7e49aa81e84db761df5b7539b33a952890d211ab18acddd60cf15d9965e",
+      "lines": 141,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0028\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0028/part03.md",
+      "normalized_text_sha256": "3a88f37b9c785ddc9efcbca228e09076051a4199ae390a2492f308209ab8a351",
+      "lines": 267,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0028\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0028/part04.md",
+      "normalized_text_sha256": "9f03fcff1a7046b23daeda9b0ce26bee690e80da5e2db4fc2cf1121eb5dd9176",
+      "lines": 196,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0028\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0028/part05.md",
+      "normalized_text_sha256": "40cc90a1aa258e7bd553eb725c147a047df8c8b4dce781d632d54af4f6e261cb",
+      "lines": 188,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0028\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0028/part06.md",
+      "normalized_text_sha256": "cdc7cb801a1934410e2a75055863ab48dcd937ec1eeb88c3be7395f310b00873",
+      "lines": 90,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0031\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0031/part01.md",
+      "normalized_text_sha256": "237cf3ca9fbcbb6c1733807815e5e56f3ea1ad0d72071cb09911bcecc8fd72a1",
+      "lines": 139,
+      "title": "Financial Volatility Forecasting for a Risk Review",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/01_production_ml_case_library/10_time_series_forecasting/Case_Studies/04_Financial_Volatility_Forecasting.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0031\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0031/part02.md",
+      "normalized_text_sha256": "76aba6f1f3dd10007afd042451f39beb257ec818390c8f24fedfe5d5dc24c1b6",
+      "lines": 304,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0031\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0031/part03.md",
+      "normalized_text_sha256": "ff25860e7afdf742c8c3cab8e63a6055de867d4f8eab2107cb994155ba0c70dc",
+      "lines": 304,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0032\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0032/part01.md",
+      "normalized_text_sha256": "f0f587f7343f2597deb2a0879a5ccd9e12b8bffe232038821fb0fe66818e9593",
+      "lines": 104,
+      "title": "ECG Sampling and Aliasing",
+      "exact_title_candidates": [
+        "07_edge_ai_robotics_and_cyber_physical_systems/37_sensor_fusion_iot_and_realtime_perception/Cheat_Sheets/01_ecg_sampling_and_aliasing.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0032\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0032/part02.md",
+      "normalized_text_sha256": "b3fc8c1ea05491d8be4e60c6d0c7547c7b2fc6a6b4c5c7752728eccfd20df1d1",
+      "lines": 280,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0032\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0032/part03.md",
+      "normalized_text_sha256": "843fe664d2c18e971d7c296b03c39d1522de4979b9cca3199a4609a6d581d737",
+      "lines": 170,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0032\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0032/part04.md",
+      "normalized_text_sha256": "f29ed9b128c45fd47bb479e3a1ab51d5ca916aeddac6b18f3c3acba183c6a764",
+      "lines": 210,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0032\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0032/part05.md",
+      "normalized_text_sha256": "50835310da5ca3f053fd8db899a261a7fde90f1b0fafc1a0af3a3efa2702aaf0",
+      "lines": 210,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0032\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0032/part06.md",
+      "normalized_text_sha256": "44614d44111436c720b74bcbe9a97cb8a3e18a7093f330f8903688a72eac84d9",
+      "lines": 362,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\b0041\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/b0041/part01.md",
+      "normalized_text_sha256": "15cc8e71c278fba7e456ba14a3f6ba0e718bda4a4c386d666d2687c22eec5528",
+      "lines": 188,
+      "title": "Object Detection: Geometry, Matching, Evaluation and Operations",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/01_computer_vision_playbook/Cheat_Sheets/04_Object_Detection.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\b0041\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/b0041/part02.md",
+      "normalized_text_sha256": "ca563f3e1ae50d4732f50db523e65fad278443106bb214998f923469c009e539",
+      "lines": 313,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0048\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0048/part01.md",
+      "normalized_text_sha256": "4fe1eb7f767bc370c0104874ae81372975da9994f642cf61b839f92bc07db78c",
+      "lines": 316,
+      "title": "Fraud Evaluation, Calibration, and Capacity-Constrained Decisions",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0048\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0048/part02.md",
+      "normalized_text_sha256": "f1367f6c9cf53b188b19a39eb6ffec4031532d144c4b3486abb1d39836a2f39b",
+      "lines": 331,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0048\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0048/part03.md",
+      "normalized_text_sha256": "211e4f1bc465f1859853b60bfaaaf0c25ed960c00f42e60b673e9ed1302e211c",
+      "lines": 248,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0048\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0048/part04.md",
+      "normalized_text_sha256": "d223531c74836dbab19128f97c6b7f5f0a14c79210262d3368c59ed6861f70b2",
+      "lines": 364,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0048\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0048/part05.md",
+      "normalized_text_sha256": "685f7d4c1be06ecaa884580a3c748c64da986b8d7ceda6314773a738a0893dd7",
+      "lines": 447,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part01.md",
+      "normalized_text_sha256": "04bc672ef23fc270b2333b54ac92b7227d6b3d39541ba292e5ea9077a97f4ae5",
+      "lines": 269,
+      "title": "Fraud Evaluation, Calibration, and Capacity-Constrained Decisions",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/02_fraud_modelling_playbook/Cheat_Sheets/01_Fraud_Evaluation_Calibration_and_Capacity.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part02.md",
+      "normalized_text_sha256": "e174d37278bdba4270976509abf9671862ef508e995d36a7a3af536d1c8f7576",
+      "lines": 366,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part03.md",
+      "normalized_text_sha256": "6896226eba4d147b405d7b4c26d63b8e2fdc130d879d42ab58366b71c688011c",
+      "lines": 208,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part04.md",
+      "normalized_text_sha256": "7f6003ea9520df4a4536ff7d24622b96ba89707e7c2051eaa3b0e92e1e060d25",
+      "lines": 199,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part05.md",
+      "normalized_text_sha256": "35c7d9081cfa7b4b2b8c15f9c3bb352d21cbfbe8f55cccac1bddcbea10bf0ffc",
+      "lines": 320,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part06.md",
+      "normalized_text_sha256": "037090f1fdb8bf0278c35ad81e3bd8a479b4ccac1baa4067725f6f3a688379e6",
+      "lines": 114,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part07.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part07.md",
+      "normalized_text_sha256": "7e855c55bf63b047d54283e4949ea287bed6ab0f7e7763ad74889226d6792f73",
+      "lines": 171,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0055\\part08.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0055/part08.md",
+      "normalized_text_sha256": "b2cb2e7b07e63936658fdb01ccf27b2500d5e46123bcbdfc425fc6872fc36e36",
+      "lines": 14,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\b0062\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/b0062/part01.md",
+      "normalized_text_sha256": "41a2723be61b0377aef4e864d60df7538db8706ce21bcf129dd278e3755c66ac",
+      "lines": 179,
+      "title": "Product A/B Testing and Experiments",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/07_product_analytics_playbook/Cheat_Sheets/08_AB_Testing_Product_Experiments.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\b0062\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/b0062/part02.md",
+      "normalized_text_sha256": "0f0ee399cbcf09a692525e3dadb8b202a97d60854f2313b78385c7d4bf536d20",
+      "lines": 160,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\b0062\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/b0062/part03.md",
+      "normalized_text_sha256": "a3af91bd612fed0351dd6c9e4677981b66940f58466e2a039776b5517fb22534",
+      "lines": 150,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\b0062\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/b0062/part04.md",
+      "normalized_text_sha256": "74b4308ce40ef8bdf726a3e8bb4bf8b39b45b0a71f5f1653eee89b260cc57bd6",
+      "lines": 258,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part01.md",
+      "normalized_text_sha256": "1407605b650ccc85d0b1fbbf34555a4892eb9c8a61c6acd5dd4462c0e25826bd",
+      "lines": 141,
+      "title": "Causal Inference and A/B Experimentation for Marketing",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/04_marketing_analytics_playbook/Cheat_Sheets/21_Causal_Inference_Marketing.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part01b.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part01b.md",
+      "normalized_text_sha256": "9fab207f1fa235fb6428e4b058666123ff31f75e125f09a1ba43ae9f9228b673",
+      "lines": 27,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part02.md",
+      "normalized_text_sha256": "91401df3ec69eff109b0b54542463db10579d4054ea27051aa0cc9d1ff2586d9",
+      "lines": 181,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part02b.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part02b.md",
+      "normalized_text_sha256": "9391b23993b43fa67fc8ff2fe7aaf31aed7e6b8dd782ad3fdc8f469ea999c234",
+      "lines": 46,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part03.md",
+      "normalized_text_sha256": "72b516c09a074287bfafab1d2f97a7c30b628b3ba856bfbbb9a4a6bf402dc304",
+      "lines": 314,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part04.md",
+      "normalized_text_sha256": "41c3da1c172ec646b6521102ec8b89c957cb64e30be1b16050f9ef6d789b1e8b",
+      "lines": 230,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part05.md",
+      "normalized_text_sha256": "b9f114eccfeb24beeb73eec09fbea3dc670b1d0014f3fb8242b48ca3a0b0eb04",
+      "lines": 176,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part06.md",
+      "normalized_text_sha256": "98d91f6b8f63e435bab9da1d420be1fd5f48e0d65bc5351a1fdc7add1748ab78",
+      "lines": 65,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0063\\part07.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0063/part07.md",
+      "normalized_text_sha256": "0176823c325bc6ee0e74d87643cc850c3f874d31819cfbaa197fa6aab4f6edc7",
+      "lines": 22,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0069\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0069/part01.md",
+      "normalized_text_sha256": "7a15ece04ce27d9a53e25c406f6eb2618a1017cc48a17387980b385c7380bd1e",
+      "lines": 142,
+      "title": "Candidate Generation, Eligibility and Ranking",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0069\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0069/part02.md",
+      "normalized_text_sha256": "53e633335d1b2916e976bce0dd83a0d2784dbe704d6d1d968b230aa23d16bff7",
+      "lines": 105,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0069\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0069/part03.md",
+      "normalized_text_sha256": "fbb5dc8ac9bfc06dded267333c0f586e8cac74b568d7e6e6f0c859ea6e979a00",
+      "lines": 112,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0069\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0069/part04.md",
+      "normalized_text_sha256": "9142807dcf736952403f69f7bea8dccd9901b1542ac842296f918d9d68038520",
+      "lines": 102,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0069\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0069/part05.md",
+      "normalized_text_sha256": "a4ef2c66104001c63ea571c253f472b262932acdde438c9536f80a3f6fef473d",
+      "lines": 133,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0069\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0069/part06.md",
+      "normalized_text_sha256": "1165fe77ce756807f10189d440718f5fff9c79f9c88b187bdef2a048b8387834",
+      "lines": 95,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0071\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0071/part01.md",
+      "normalized_text_sha256": "1397008f1289f7d2c158f337362411602c2b1df0dc5b68338bf33be0cac65e2f",
+      "lines": 217,
+      "title": "Product A/B Testing and Experiments",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/07_product_analytics_playbook/Cheat_Sheets/08_AB_Testing_Product_Experiments.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0071\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0071/part02.md",
+      "normalized_text_sha256": "bd9bc6ca898b4be4ee3b8c42d96356dc0b2873ff70136f72af9a264faa1eccfd",
+      "lines": 275,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0071\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0071/part03.md",
+      "normalized_text_sha256": "be1e40d6a0d1665f648edc420bfaabe596d6977a666fadb7c11cb2b4e9fd58da",
+      "lines": 263,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0071\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0071/part04.md",
+      "normalized_text_sha256": "0626de31941d0dbb1a9262ad2124c4a30e54492b3e634667baf71a40f63f8e4e",
+      "lines": 306,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0071\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0071/part05.md",
+      "normalized_text_sha256": "adf5a4afab1089dd7d94b5fd92c6b0e4ed20ed739510624748f3f265b7fa7f94",
+      "lines": 391,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0078\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0078/part01.md",
+      "normalized_text_sha256": "af0b47d7196c3652bf218b0103adfec363381a93019c3646a148d7be9d9953ea",
+      "lines": 303,
+      "title": "Feature Store Design: Time, Consistency, and Operations",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/03_practical_ml_design_and_interviews/01_ml_system_design_production/Cheat_Sheets/03_Feature_Store_Design.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0078\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0078/part02.md",
+      "normalized_text_sha256": "839d32be5d6aa38b9f0a75deead1242772e9c989e3fefc3090a4868279d8a6fa",
+      "lines": 295,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0078\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0078/part03.md",
+      "normalized_text_sha256": "c06bba91708055e7b17fa52aa21a03c4a6e12cb1e8a012c8980a886ac18613ee",
+      "lines": 272,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0078\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0078/part04.md",
+      "normalized_text_sha256": "ad9b67ac8ece5c50287bef0d4c590ad115af6a5c532037faebad222e8299fd8d",
+      "lines": 387,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0078\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0078/part05.md",
+      "normalized_text_sha256": "10a255533a28025d8d9bdfd1c5a93f67ec9acf54d1f3eb417e49cb4a5ac1b952",
+      "lines": 283,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0078\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0078/part06.md",
+      "normalized_text_sha256": "5e8003c35b3fd9390512d5256ff03aa97dfbbc32df2478d1aa8265fb36617483",
+      "lines": 152,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0079\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0079/part01.md",
+      "normalized_text_sha256": "9400e0a700aeeb6ffff6a8321a522f2f13693118646a58217688ddadf4f28424",
+      "lines": 171,
+      "title": "Candidate Generation, Eligibility and Ranking",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/02_data_science_method_playbooks/08_recsys_playbook/Cheat_Sheets/01_Candidate_Generation_Eligibility_and_Ranking.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0079\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0079/part02.md",
+      "normalized_text_sha256": "589852f3c9583b7731da54f95e3689c53342bcd61f4bbd5f1482c2ff4cb6106c",
+      "lines": 287,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0079\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0079/part03.md",
+      "normalized_text_sha256": "0e768f115cd120dc48d77971a5e2ce933d554c99dadda529456df8e91d25a1e8",
+      "lines": 294,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0079\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0079/part04.md",
+      "normalized_text_sha256": "c96ed52b6bb714ac4c360321513096048e3963063998445c529b9660daaef0db",
+      "lines": 233,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0079\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0079/part05.md",
+      "normalized_text_sha256": "62565d6c897c163c68a7c29fd8a5a765b77d23067f784179975e652a759a0c98",
+      "lines": 234,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0079\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0079/part06.md",
+      "normalized_text_sha256": "cb50b5c2193b068f6292dd9b92527544237ba24d3b431849ee750e65c780feef",
+      "lines": 14,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0081\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0081/part01.md",
+      "normalized_text_sha256": "add4278215357f912e51a28169a79acab1b5b22bc539bd358414bbcd84e3a989",
+      "lines": 104,
+      "title": "Shelf Availability Prediction",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Case_Studies/01_Shelf_Availability_Prediction.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0081\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0081/part02.md",
+      "normalized_text_sha256": "85700737364f718e99df0e20de6e7b7faeca052af11f48117423493d5068d4e7",
+      "lines": 220,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0081\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0081/part03.md",
+      "normalized_text_sha256": "d1bf57d4c10bbe80810759e487d68e203a5198cfab950e738c1f765140090f40",
+      "lines": 142,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0082\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0082/part01.md",
+      "normalized_text_sha256": "2e7d69aa1624903a73d4cd44b8b0dbc057f801d4a0915b448b2bfe94bd7e68f3",
+      "lines": 234,
+      "title": "Triage a shifted delivery-risk model without confusing drift with harm",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/03_practical_ml_design_and_interviews/01_ml_system_design_production/Case_Studies/01_model_monitoring_drift_incident.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0082\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0082/part02.md",
+      "normalized_text_sha256": "b708dce3e1b8c563e350c7a2d770f7896bf93385d7c8c9ec0795dc36ccd280c4",
+      "lines": 256,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0082\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0082/part03.md",
+      "normalized_text_sha256": "10bd2af20b8e2aeb6aa2a131ef8ad80f060c028f8d6c8d9b169b7e184cb7d414",
+      "lines": 140,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0082\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0082/part04.md",
+      "normalized_text_sha256": "3620628ece67151f1d7bf6f91ea78c9c6eea056802cf0bafb0fdb8492c30057e",
+      "lines": 148,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0082\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0082/part05.md",
+      "normalized_text_sha256": "c1f8932d7bee23425d204dd18835e1356af4b9bfddf3a928429246d571ea77a8",
+      "lines": 107,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0082\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0082/part06.md",
+      "normalized_text_sha256": "41118e0327e6ad6262d70f976c22825993e4bb4fd9a541fe87641791ee69bde8",
+      "lines": 190,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0084\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0084/part01.md",
+      "normalized_text_sha256": "b5e52a84b2a1aff1114983d9cc8dde4d1150ec88a5a426a16f944105c9ea2458",
+      "lines": 343,
+      "title": "Planogram Compliance",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Case_Studies/04_Planogram_Compliance.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0084\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0084/part02.md",
+      "normalized_text_sha256": "9f8ba1d824c5ec7933d17092105526f5a3e3d0aaada0cf0ec99fe34f443d84c3",
+      "lines": 172,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0084\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0084/part03.md",
+      "normalized_text_sha256": "de1672e018ec37c824a8498149e89759d84a36a32e54dc0dba499764c42e4970",
+      "lines": 423,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0085\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0085/part01.md",
+      "normalized_text_sha256": "56515fb94dcd626cbe97737643aaa4dbace5eafce9184b55f475eb8a786883ff",
+      "lines": 355,
+      "title": "Store Experiment Governance",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Case_Studies/05_Store_Experiment_Governance.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0086\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0086/part01.md",
+      "normalized_text_sha256": "1a3c3dfec67d184bbd39e6ef00967525a5f30a26a694428f2b7e43190f3ac160",
+      "lines": 144,
+      "title": "Store KPI Tree",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Cheat_Sheets/01_Store_KPI_Tree.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0086\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0086/part02.md",
+      "normalized_text_sha256": "1bd0ebcf0160de197565f9db8cd6fcf0e5a64b2bf60465d8b342eb5b4edaeb1d",
+      "lines": 183,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0087\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0087/part01.md",
+      "normalized_text_sha256": "a001b59322df9c9382d87083b164e74b70ad5873d96153ff84196a090611dcea",
+      "lines": 155,
+      "title": "Shelf Availability Metric Card",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Cheat_Sheets/02_Shelf_Availability_Metric_Card.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0088\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0088/part01.md",
+      "normalized_text_sha256": "b015e0afd65475988e3822b96691182af49c4f7499fb3737e3ef383f12fe9fe7",
+      "lines": 158,
+      "title": "Field Test Checklist",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Cheat_Sheets/03_Field_Test_Checklist.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0088\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0088/part02.md",
+      "normalized_text_sha256": "821b999ec0541992d2b41daab3cc0efbaacac2e083e24608146a11f724e4d38d",
+      "lines": 154,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0088\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0088/part03.md",
+      "normalized_text_sha256": "6b333576310d0bff23a8fff0a54b9a5fb29cd746be8d5f57c103cfb9ad54d0f7",
+      "lines": 180,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0088\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0088/part04.md",
+      "normalized_text_sha256": "a9b1199f563c69e399b849e96026e4d0cca54bac360d3a2664b6388c6f6a0f3f",
+      "lines": 217,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0089\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0089/part01.md",
+      "normalized_text_sha256": "258d90d35e6fc9123386264eabf28ee900f6aa6a18ebcc860cc3fdf69a401f9c",
+      "lines": 372,
+      "title": "25 Common Issues",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Cheat_Sheets/04_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Cheat_Sheets/04_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/03_retail_pricing_promotion_and_media/Cheat_Sheets/04_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/01_content_catalogue_rights_and_lifecycle/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/02_audience_personalisation_and_engagement/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/03_advertising_live_events_and_playback_quality/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk/01_payments_aml_and_financial_crime/Cheat_Sheets/13_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk/02_credit_risk_markets_and_customer_finance/Cheat_Sheets/13_25_Common_Issues.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0089\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0089/part02.md",
+      "normalized_text_sha256": "605bfc5353be1041384d9a2fc6f6c34839035afc6850f3c5b73860ccb2817485",
+      "lines": 277,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0089\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0089/part03.md",
+      "normalized_text_sha256": "0a96994609df1e9d14039385b98b4ddc1067b9b66640f3cc9a5f5e815596671d",
+      "lines": 165,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0089\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0089/part04.md",
+      "normalized_text_sha256": "71dec7ed1c580c2294732dae8cae791251c8ad6bafba5784c1186f40db267610",
+      "lines": 287,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0089\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0089/part05.md",
+      "normalized_text_sha256": "7bf164d87713f9716795e7edb2bb9f3a4d8acae607beebeccb1714b86cfd69f7",
+      "lines": 358,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0090\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0090/part01.md",
+      "normalized_text_sha256": "ad84ffd8aa774bc33643d5aea073be14565e8ff3492e3514f08c1a5e41110ef5",
+      "lines": 271,
+      "title": "BOPIS Promise Accuracy",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Case_Studies/01_BOPIS_Promise_Accuracy.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0090\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0090/part02.md",
+      "normalized_text_sha256": "7360d1f40bcbe11d3fe56c3fde1a3fae78592c9c7abecaa270dd5c038d956108",
+      "lines": 469,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0090\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0090/part03.md",
+      "normalized_text_sha256": "0873f3990380af00533ff71f5509b362dd181e83050e81d49854c8a6447017e3",
+      "lines": 311,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0090\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0090/part04.md",
+      "normalized_text_sha256": "0b1db548de7ad00232a600c03248d8db25518821507f924ae41a1f3978f595e1",
+      "lines": 214,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0090\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0090/part05.md",
+      "normalized_text_sha256": "0f9b2cc7770f9204fd15245ba93d80ef73490c5c3092adeb4ed9912e162dabfd",
+      "lines": 332,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0090\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0090/part06.md",
+      "normalized_text_sha256": "0d36a3f50942794d921c6b7da90e05f69b81efeec45dbf792ce4558a67bebfda",
+      "lines": 257,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0091\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0091/part01.md",
+      "normalized_text_sha256": "d33b4de9d03faf1ccd6d0286a61250e666b11ab7f7d63138d0500ec0ce17ebf9",
+      "lines": 373,
+      "title": "Loyalty Next Best Action",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Case_Studies/02_Loyalty_Next_Best_Action.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0091\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0091/part02.md",
+      "normalized_text_sha256": "7447c471e4dd6e9bdc5289a1e3b548d1ff2296fe473be9bc7c958bbe9a9c5227",
+      "lines": 525,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0091\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0091/part03.md",
+      "normalized_text_sha256": "6a9853af3db07f3d7c082c3739769a809fb3a53c37541510c13e28d21f5b329a",
+      "lines": 392,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0091\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0091/part04.md",
+      "normalized_text_sha256": "1621b8f11b0435deb8a462b967600abc0439a6d9f8b45422c13a01e87cdd28c3",
+      "lines": 574,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0092\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0092/part01.md",
+      "normalized_text_sha256": "dc3f120ad17172cc463cf45eb79063bfdaf47d07804b2ec18c72872fad21e3f3",
+      "lines": 343,
+      "title": "Returns Risk Intervention",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Case_Studies/03_Returns_Risk_Intervention.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0092\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0092/part02.md",
+      "normalized_text_sha256": "5be46e29d3c771ee90f046dbe44ffba82610a27024880cb509fe9b7841226bd0",
+      "lines": 435,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0093\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0093/part01.md",
+      "normalized_text_sha256": "6ed67d0b3dc9a2632443546096bc3357fd88e2f5f831accf73b51b22cc088578",
+      "lines": 264,
+      "title": "Cross Channel Attribution",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Case_Studies/04_Cross_Channel_Attribution.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0093\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0093/part02.md",
+      "normalized_text_sha256": "86f04086d5011107f3357ad9d7d1300de2c8a4e52b948bfe153caf72217dd972",
+      "lines": 228,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0094\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0094/part01.md",
+      "normalized_text_sha256": "080a2a4e22c231eb1fa610fdae4bcfb8faaa3db476b0292ba34111e73b32498f",
+      "lines": 173,
+      "title": "Omnichannel Fulfilment Allocation",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Case_Studies/05_Omnichannel_Fulfilment_Allocation.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0094\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0094/part02.md",
+      "normalized_text_sha256": "5aa4ba533848e83fc39940d6c8ee12d9e067a5a7eab9f1a0d0061ca8ac6289b7",
+      "lines": 233,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0095\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0095/part01.md",
+      "normalized_text_sha256": "2e5169a4c46cedd4808cf859855d56047ef051f8bef98d6e3cf431bddfa216e1",
+      "lines": 231,
+      "title": "Authorized Policy Retrieval",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Case_Studies/06_Authorized_Policy_Retrieval.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0095\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0095/part02.md",
+      "normalized_text_sha256": "a7f85403d1ee04b068d87cc387d7be7272524a4aa756dcd44eaa51df03ebb3d5",
+      "lines": 236,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0095\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0095/part03.md",
+      "normalized_text_sha256": "dc53facbd63351e850f3057498f3d7f3554f20cb9a03b391f06b719d750d71b2",
+      "lines": 103,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0095\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0095/part04.md",
+      "normalized_text_sha256": "61b1ceb9b14dd8b3e1572d6717bc29424773b98585b6495f0d76594b10719e0e",
+      "lines": 221,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0095\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0095/part05.md",
+      "normalized_text_sha256": "eb24ff9fa0e65359534152cdf9fb3de1f8d60a1bef57b5993310fcc6b04a32cc",
+      "lines": 195,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0096\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0096/part01.md",
+      "normalized_text_sha256": "be91cc4a4a17366532326b97d0580b64b5162d63e127edf9da31118f41eb616d",
+      "lines": 104,
+      "title": "Omnichannel Event Taxonomy",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Cheat_Sheets/01_Omnichannel_Event_Taxonomy.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0096\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0096/part02.md",
+      "normalized_text_sha256": "4871f8ec6461a201064478274ad496871d025ce2d8376026920ddba33abaeab0",
+      "lines": 241,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0096\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0096/part03.md",
+      "normalized_text_sha256": "e218a2c248e0d3f913bb3c8c28bd182ce04ac88afb7fa49d0e361af395ba6f0b",
+      "lines": 232,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0096\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0096/part04.md",
+      "normalized_text_sha256": "f85ced36bcc03f1fc58fdcc974618738fae51110f291a3dac0426dffbe1892ca",
+      "lines": 109,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0096\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0096/part05.md",
+      "normalized_text_sha256": "667ab340892d7790b3efafe9838940d096bb09fec3e84f883cf1b7891d35e9f1",
+      "lines": 142,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0096\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0096/part06.md",
+      "normalized_text_sha256": "790666b412f26c94862e6a3727cba0767c7097f883df4ca2d07c6d0860da0334",
+      "lines": 188,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0097\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0097/part01.md",
+      "normalized_text_sha256": "a5ddb16eb2bdb89b53c0213954d25bd2439c83e3abfdc4314b3ba5d0394e3d60",
+      "lines": 249,
+      "title": "Customer Identity Controls",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Cheat_Sheets/02_Customer_Identity_Controls.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0097\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0097/part02.md",
+      "normalized_text_sha256": "aa25f45eaf7b470ca5ac953752a1dfc9396991ec59e2719b5b4ab8ef0fa9a6f4",
+      "lines": 381,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0097\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0097/part03.md",
+      "normalized_text_sha256": "d623028dc1d1dddbed06127c998424c3b836bf090111d472e3ece055204c7870",
+      "lines": 312,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0097\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0097/part04.md",
+      "normalized_text_sha256": "b6783f2c7772e3b7170483eadaeb3981788c7ae03a01be2bd995b30b1bee0bee",
+      "lines": 265,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0098\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0098/part01.md",
+      "normalized_text_sha256": "d36c625fa9107bf107033e5ee71fb2ce2b54401a05e38b433551580f5d5ae306",
+      "lines": 351,
+      "title": "Fulfilment Promise Metrics",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Cheat_Sheets/03_Fulfilment_Promise_Metrics.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0098\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0098/part02.md",
+      "normalized_text_sha256": "ac867dd7e25ef8d7fe177da88ad6e79dbbbef1775698be08a135f451c9544c80",
+      "lines": 463,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0098\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0098/part03.md",
+      "normalized_text_sha256": "0807a8b8f52831e69ff10d2247e487c19408517b827e355884983d786b939540",
+      "lines": 368,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0098\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0098/part04.md",
+      "normalized_text_sha256": "31d5d71b2f3714571a75cd4db43f27c9ff7847a9256de34ca295c709945c800f",
+      "lines": 329,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0099\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0099/part01.md",
+      "normalized_text_sha256": "e7e2e67b7559f43d977b099f6ab0b38fa59b66249d55c5264fefd72225ca3b33",
+      "lines": 287,
+      "title": "25 Common Issues",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/01_store_operations_and_merchandising/Cheat_Sheets/04_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/02_omnichannel_customer_loyalty_and_fulfilment/Cheat_Sheets/04_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/03_retail_pricing_promotion_and_media/Cheat_Sheets/04_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/01_content_catalogue_rights_and_lifecycle/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/02_audience_personalisation_and_engagement/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/08_streaming_media_and_digital_entertainment/03_advertising_live_events_and_playback_quality/Cheat_Sheets/99_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk/01_payments_aml_and_financial_crime/Cheat_Sheets/13_25_Common_Issues.md",
+        "11_data_science_domain_specialisations/11_financial_services_fraud_and_risk/02_credit_risk_markets_and_customer_finance/Cheat_Sheets/13_25_Common_Issues.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0099\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0099/part02.md",
+      "normalized_text_sha256": "0541e90c034a662e519b641049e45a1cc998b7160bd6ed756d19bdb8e0fb8a77",
+      "lines": 219,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0099\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0099/part03.md",
+      "normalized_text_sha256": "bd78d4d2599de7fb0fa728b8419a5c49af749e58d47b262b97ff9831ba5440e2",
+      "lines": 217,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0099\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0099/part04.md",
+      "normalized_text_sha256": "07c948525f5e091b2fb1cd9c0c12669f0c7e0635dc8a539ecfda7262b4a11f46",
+      "lines": 370,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0099\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0099/part05.md",
+      "normalized_text_sha256": "ef7d85283ef783adfced876b297433c7557b4363c1b63e2a3513915b9beedc72",
+      "lines": 240,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0099\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0099/part06.md",
+      "normalized_text_sha256": "e8f75125912fddb8133ed1a3ffda869df5e4c90d20f6212ea4bd4ecdbc4f8c3e",
+      "lines": 229,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0101\\part01.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0101/part01.md",
+      "normalized_text_sha256": "f69b2d7185060e212bd6f9fbb8f376f3bba5460e9240d8f5ae8a1a74c8a47450",
+      "lines": 179,
+      "title": "Promotion Uplift Measurement",
+      "exact_title_candidates": [
+        "11_data_science_domain_specialisations/04_retail_omnichannel_offline_online_stores/03_retail_pricing_promotion_and_media/Case_Studies/02_Promotion_Uplift_Measurement.md"
+      ],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0101\\part02.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0101/part02.md",
+      "normalized_text_sha256": "a037942909d93a078e6657fdfdbb02c0233c2fec7c116d9c24ae3d8897c8eee5",
+      "lines": 284,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0101\\part03.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0101/part03.md",
+      "normalized_text_sha256": "08f7550be1a0ffe12d56a3451fe9d5c0540d431058f09b28320a933c6f6518b6",
+      "lines": 176,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0101\\part04.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0101/part04.md",
+      "normalized_text_sha256": "19ee65457e238ec9fcdce43ec2571f7008efd44c509b81b4115d1c87b4b3a543",
+      "lines": 171,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0101\\part05.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0101/part05.md",
+      "normalized_text_sha256": "471b258bc1881087aff4696180b2dd7ce59ad7c3f7f36b247f1a2f9beaef263b",
+      "lines": 75,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    },
+    {
+      "source": "C:\\Users\\abhis\\AppData\\Local\\Temp\\authoring\\B0101\\part06.md",
+      "saved": ".authoring_state/recovery/resume-5093568a/staged-parts/B0101/part06.md",
+      "normalized_text_sha256": "d90b8c68365701f579631e82a5aeba5d78ae30c3cd2a9540c32ee3d5bfa7a64e",
+      "lines": 115,
+      "title": null,
+      "exact_title_candidates": [],
+      "status": "unreviewed staged part; not promoted"
+    }
+  ],
+  "part_count": 174,
+  "batch_directory_count": 38,
+  "staged_lines": 41747,
+  "promotion_count": 0,
+  "warning": "Historical batch identifiers were reused. Directory names are not proof of target ownership."
+}

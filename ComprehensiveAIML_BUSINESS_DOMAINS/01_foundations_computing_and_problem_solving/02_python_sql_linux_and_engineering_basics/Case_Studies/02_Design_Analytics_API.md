@@ -64,14 +64,14 @@ The reason the question is framed per triple rather than per endpoint is that th
 ### 3a The decision table that is the actual deliverable
 | Query shape | Rows scanned (illustrative) | Scan time at 1.2 GB/s | Scan cost at $5/TB | Decision | Documented reason |
 |---|---|---|---|---|---|
-| Rollup, 1 day, ≤2 dimensions | 40,000,000 | 0.80 s | $0.0010 | inline, cached | fits well inside the 340 ms scan share via cache |
-| Rollup, 7 days, ≤2 dimensions | 280,000,000 | 5.60 s | $0.0067 | async job, cached rollup preferred | 5.6 s exceeds the whole 800 ms budget |
-| Rollup, 30 days | 1,200,000,000 | 24.00 s | $0.0288 | async job | 30× the budget |
-| Rollup, 90 days | 3,600,000,000 | 72.00 s | $0.0864 | async job, requires approval for cost above a threshold | largest supported range |
-| Raw scan, ≤1 day, page ≤500 rows | 40,000,000 | 0.80 s | $0.0010 | inline with cursor | only when a selective filter is present |
+| Rollup, 1 day, ≤2 dimensions | 40,000,000 | 0.80 s | $0.0048 | inline only on cache hit | an uncached scan exceeds the 340 ms scan share |
+| Rollup, 7 days, ≤2 dimensions | 280,000,000 | 5.60 s | $0.0336 | async job, cached rollup preferred | 5.6 s exceeds the whole 800 ms budget |
+| Rollup, 30 days | 1,200,000,000 | 24.00 s | $0.1440 | async job | 30× the budget |
+| Rollup, 90 days | 3,600,000,000 | 72.00 s | $0.4320 | async job, requires approval for cost above a threshold | largest supported range |
+| Raw scan, ≤1 day, page ≤500 rows | 40,000,000 | 0.80 s | $0.0048 | inline with cursor | only when a selective filter is present |
 | Raw scan without a selective filter | 40,000,000+ | ≥0.80 s | ≥$0.0010 | refuse, typed error | unbounded result set and unbounded egress |
-| Distinct count over >7 days | 280,000,000+ | ≥5.60 s | ≥$0.0067 | async, approximate above a cardinality threshold | exact distinct does not fit the budget |
-| Any range >90 days | >3,600,000,000 | >72 s | >$0.0864 | refuse, typed error | outside the declared support envelope |
+| Distinct count over >7 days | 280,000,000+ | ≥5.60 s | ≥$0.0336 | async, approximate above a cardinality threshold | exact distinct does not fit the budget |
+| Any range >90 days | >3,600,000,000 | >72 s | >$0.4320 | refuse, typed error | outside the declared support envelope |
 
 **Takeaway:** the table is the contract. Every row states an observable input, a computed consequence, and a refusal reason a caller can act on.
 
@@ -252,7 +252,7 @@ NUMERICAL EXAMPLE:
 INTERPRETATION: scan time is exactly linear in the requested range, so a range bound is a latency
                 bound. The 90-day shape costs 90 times the daily shape for the same code path.
 ```
-Note the discrepancy between the table in Section 3a and this block: 3a lists $0.0010 for one day, which treats 0.96 GB as 0.2 TB by mistake. The correct figure is 0.0048 USD, and the block above supersedes the table. That inconsistency is preserved deliberately, because publishing a price table with a unit slip is one of the most common API document defects and correcting it in place is cheaper than defending it.
+Section 3a and this block use decimal GB and TB consistently: 0.96 GB / 1,000 GB/TB × 5 USD/TB = 0.0048 USD. The stated price is a constructed planning input, not a provider quote. A contract review should recompute each displayed unit conversion before it treats a range limit as a cost limit.
 
 Now the decisive derivation, which uses the same numbers to bound the synchronous path:
 
@@ -522,24 +522,27 @@ CONSTRAINT: payload is per response, not per row; a scan response of 480 KB carr
 NUMERICAL EXAMPLE (class mix: interactive 60%, batch 30%, exploratory 10% of 1,200,000 requests;
 scan share within class: interactive 5%, batch 60%, exploratory 35%; rollup payload 40 KB,
 scan payload 480 KB):
-  interactive: 720,000 requests -> 36,000 scan, 684,000 rollup -> 45.71 GB/day -> 63.5 KB/request
-  batch      : 360,000 requests -> 216,000 scan, 144,000 rollup -> 112.07 GB/day -> 311.3 KB/req
-  exploratory: 120,000 requests ->  42,000 scan,  78,000 rollup -> 23.84 GB/day -> 198.7 KB/req
-  total = 181.62 GB/day = 16.35 USD/day at 0.09 USD/GB
-INTERPRETATION: the batch class is 30% of requests and 62% of egress, so a single per-request byte
-                cap sized on the fleet average blocks interactive callers while under-charging batch.
+  interactive: 720,000 requests -> 36,000 scan, 684,000 rollup
+               -> 36,000*480,000 + 684,000*40,000 = 17.28 GB + 27.36 GB = 44.64 GB/day
+               -> 44.64e9/720,000 = 62,000 B/request = 62.0 KB/request
+  batch:        360,000 requests -> 216,000 scan, 144,000 rollup
+               -> 216,000*480,000 + 144,000*40,000 = 103.68 GB + 5.76 GB = 109.44 GB/day
+               -> 109.44e9/360,000 = 304,000 B/request = 304.0 KB/request
+  exploratory:  120,000 requests -> 42,000 scan, 78,000 rollup
+               -> 42,000*480,000 + 78,000*40,000 = 20.16 GB + 3.12 GB = 23.28 GB/day
+               -> 23.28e9/120,000 = 194,000 B/request = 194.0 KB/request
+  fleet total = 44.64 + 109.44 + 23.28 = 177.36 GB/day
+              = 177.36*0.09 = 15.9624 USD/day at 0.09 USD/GB
+INTERPRETATION: batch is 30% of requests but 61.7% of egress (109.44/177.36), so one global
+                request cap blocks interactive callers while permitting disproportionate batch use.
 ```
-Two independent checks. First, sum the three class totals: 45.71 + 112.07 + 23.84 = 181.62 GB. Second, verify one class from its parts: batch scans 216,000 × 480,000 B = 103.68 GB and batch rollups 144,000 × 40,000 B = 5.76 GB, sum 109.44 GB, which differs from 112.07 — so one of the two routes is wrong and the block above must be recomputed.
+Independent check: class request counts sum to 720,000 + 360,000 + 120,000 = 1,200,000. Class scan counts sum to 294,000 and rollup counts to 906,000, matching a fleet scan share of 24.5%. Separately, 44.64 + 109.44 + 23.28 = 177.36 GB, and 177.36 × 0.09 = 15.9624 USD/day. Both routes use decimal bytes, so `KB` means 1,000 bytes and `GB` means 1,000,000,000 bytes in this section.
 
-Recomputed: 216,000 × 480,000 = 1.0368e11 B = 103.68 GB; 144,000 × 40,000 = 5.76e9 B = 5.76 GB; total 109.44 GB, and 109.44/360,000 = 304.0 KB/request. The first route produced 112.07 GB because it applied the 60% scan share to 360,000 requests and then subtracted to get rollups, which is arithmetically identical — 216,000 and 144,000 are exactly those numbers. So the discrepancy is in the GB conversion, not the shares: 1.0368e11 B is 103.68 GB only if GB means 1e9 B, and 103.68 + 5.76 = 109.44, confirming the second route. The 112.07 figure came from a different scan share (0.60 of 360,000 applied to a payload of 487 KB rather than 480 KB); the correct value is 109.44 GB and 304.0 KB/request. The block stands corrected, and the correction is recorded rather than silently patched, because a per-class byte budget derived from a mis-typed payload is exactly the kind of defect that silently over- or under-provisions a whole caller class.
+The design consequence is a 62.0-to-304.0 KB/request spread, a factor of 4.90. A global average allowance of 147.8 KB/request would reject a legitimate 480 KB batch page yet let an interactive credential issue more costly requests than its intended share. The contract therefore carries both a request bucket and a byte bucket per caller class; admission requires a token in both buckets.
 
-With corrected figures the class totals become: interactive 44.06 GB (684,000 × 40,000 = 27.36 GB plus 36,000 × 480,000 = 17.28 GB; total 44.64 GB, 62.0 KB/request), batch 109.44 GB (304.0 KB/request), exploratory 21.44 GB (78,000 × 40,000 = 3.12 GB plus 42,000 × 480,000 = 20.16 GB; total 23.28 GB, 194.0 KB/request). Fleet total 177.36 GB/day, 14.79 USD/day.
+Boundary where per-class budgets fail: a single class can contain heterogeneous members. If one `exploratory` credential runs scheduled ninety-day scans while the rest browse dashboard tiles, the class average hides the offender. The discriminating check is the per-credential byte distribution inside the class; a heavy tail means the budget must also be imposed per credential.
 
-The design conclusion survives the correction and is sharpened by it: the three classes differ by a factor of 4.9 in bytes per request (62.0 against 304.0), so a global per-request byte cap either starves batch or over-serves interactive. Byte budgets must be per class, and the contract therefore has one row per class rather than one global row.
-
-Boundary where per-class budgets fail: a single class with heterogeneous members. If one `exploratory` client runs scheduled ninety-day scans while the rest browse dashboard tiles, the class average is meaningless and one member consumes the class budget. The discriminating check is the per-client byte distribution inside the class — a Gini-like inequality far from uniformity means the class is the wrong unit and the budget needs to be per credential.
-
-Second boundary: payload is a page bound, not a data bound. A caller can request many pages and consume arbitrarily much egress while staying inside every per-response limit. The only control that binds total egress is a per-day byte budget per credential, and it must be enforced before the plan executes rather than after the bytes leave.
+Second boundary: payload is a page bound, not a session bound. A caller can request many pages while keeping each response below 480 KB. The only control that limits cumulative egress is a rolling per-day byte budget checked before execution, with a returned `remaining_bytes` value that lets a client stop deliberately rather than discover exhaustion after a scan.
 
 ### 6o Sensitivity and the numbers that would change the decision
 | Input changed | From | To | Effect on the decision | Effect on the arithmetic |
@@ -630,6 +633,41 @@ Two design choices deserve their reasoning. Errors carry a remedy rather than on
                                         v
                         [poll: queued | running | complete(snapshot) | failed(code)]
 ```
+
+### 8a Interface contract: canonical requests and stable response semantics
+The public request is a declarative object, not a SQL fragment. `GET /rollup` accepts `metric`, a closed-open `start` and `end`, at most two declared dimensions, optional declared filters, and an optional `snapshot_id`. `GET /events` additionally requires a selective filter, an order fixed to `(event_time,event_id)`, a `page_size` from 1 through 500, and an opaque `cursor` only after the first page. `POST /jobs` accepts the same bounded analytic shape but does not accept raw SQL, user-provided table names, arbitrary expressions, or a caller-supplied execution plan.
+
+Canonicalization is a correctness operation. The router parses timestamps to UTC, sorts filter keys and list values where order is semantically irrelevant, rejects duplicate semantic fields, inserts explicit defaults, and serializes the normalized object before hashing it. Thus `region=7&device=3` and `device=3&region=7` denote one cache key, whereas `region=7` and `region=8` cannot collide. A request has a `contract_version`; a client that requires a previous definition sends that version explicitly and receives a `409 CONTRACT_RETIRED` if it is no longer readable.
+
+Every successful response contains `request_id`, `contract_version`, `query_digest`, `snapshot_id`, `watermark_min`, `watermark_max`, `rows_scanned`, `rows_returned`, `result`, and field-level approximation metadata. A page response also contains `next_cursor` only when more rows exist. `next_cursor: null` means the pinned snapshot is exhausted; it never means that the service timed out. This distinction lets a client distinguish completion from an absent continuation.
+
+### 8b Authentication, authorization boundary, and quota identity
+Authentication establishes a credential identity before the rate limiter and planner run. An illustrative credential is a short-lived signed access token validated for issuer, audience, expiry, key identifier, and signature; its subject maps to a caller class. The API rejects absent or expired tokens with `401`, rejects a valid token lacking the endpoint scope with `403`, and returns `429` only after an authenticated caller exhausts a declared quota. Returning `429` for an invalid token would reveal that a credential form is otherwise plausible.
+
+Authorization in this case is deliberately narrow. A scope such as `analytics.rollup.read` selects the allowed endpoint and caller class; it is not evidence that the API may expose every tenant's data. The stated API is not a row-level-security boundary, so it only serves a pre-authorized single-tenant dataset or sits behind a separately verified policy-enforcing gateway. A request carrying a free-form `tenant_id` must be rejected unless that identity is bound by the upstream authorization layer.
+
+Quota identity is the credential subject plus contract version, not the source IP. IP-based limits merge a shared office into one user and let a credential rotate through addresses. Credential-based accounting makes retries, byte budgets, and abuse investigation attributable. The request log stores a keyed or truncated credential reference rather than the raw bearer token; retaining a token in a log converts observability into a credential leak.
+
+### 8c Idempotent asynchronous submission and recovery state machine
+Async job submission is idempotent within a declared ten-minute deduplication window. The server computes `job_key = SHA-256(contract_version || canonical_request || snapshot_selector || credential_subject)`; the client may supply an idempotency key, but the server verifies it maps to the same canonical payload. Reusing a client key with a changed payload returns `409 IDEMPOTENCY_CONFLICT`, because accepting it would make a network retry silently execute a different question.
+
+A job record transitions only `queued -> running -> complete`, `queued -> cancelled`, or `running -> failed`. `complete`, `cancelled`, and `failed` are terminal. The executor writes result bytes to durable storage, records their checksum and pinned snapshot, and only then commits `complete`; a polling client cannot observe `complete` before the result is readable. A worker crash after persistence but before the state transition is recovered by verifying the checksum and finishing the transition. A crash before persistence leaves the job retryable because no result has been committed.
+
+Cancellation is advisory until the executor reaches a safe cancellation point. The API returns `202` for an accepted cancellation request and exposes `cancelling` rather than promising immediate termination. Once cancelled, a job cannot be revived under the same key: a new request must have a new idempotency key, preserving a clear audit trail. Expiry removes result bytes only after the declared retrieval window; the job metadata remains long enough to return `410 JOB_EXPIRED` rather than an ambiguous `404`.
+
+### 8d Observability: evidence for contract decisions, not request diaries
+One structured event is emitted at admission, planning, execution completion, and response completion, correlated by `request_id` and `query_digest`. Required dimensions are endpoint, contract version, caller class, decision (`cache_hit`, `inline`, `async`, `refused`), error code, snapshot age bucket, estimated and actual scanned bytes, rows returned, page size, retry count, and job state. High-cardinality raw filter values and bearer tokens are excluded from metrics and sampled logs.
+
+The primary service-level indicators are: inline latency distribution by endpoint and decision; planner underestimation ratio `actual_bytes / estimated_bytes`; cache hit rate by canonical key family; refusal rate by typed code; snapshot-age distribution using the minimum watermark; deduplication rate; cursor decode failures; and byte-budget rejections. Each indicator maps to an owner and a decision. For example, a rising planner ratio changes the bound or estimate model; a rising `FILTER_REQUIRED` rate changes documentation or client integration, not warehouse capacity.
+
+Alerting separates symptoms from safety invariants. A latency alert can page only after the p99 budget is breached for a stated window, whereas any response missing `snapshot_id`, any actual scan above an admitted estimate tolerance, or any cache key collision in a canary pair is a correctness alert. The distinction avoids paging on ordinary demand while still treating provenance loss as urgent. Traces retain timings and identifiers needed to reconstruct a request, while aggregate metrics retain no row-level payload.
+
+### 8e Recovery runbook for a failed request path
+For a `503 PARTIAL_READ`, the service records the unreadable partition identifiers and does not issue a success envelope. The operator first checks whether the storage read failure is transient, then retries the partition read against the same snapshot if that snapshot remains readable; otherwise the caller receives `409 STALE_SNAPSHOT` and must choose a fresh answer. The runbook forbids blending old and new partition reads, because that creates a result with no reproducible state.
+
+For a planner underestimate, the request is stopped before serialization when actual scanned bytes cross the hard ceiling. The response is `422 BUDGET_EXCEEDED` with the observed estimate-versus-actual ratio recorded. The immediate mitigation is to disable the affected shape or lower its admitted range; the permanent correction updates statistics or clustering evidence and is evaluated through the independent harness before the bound changes.
+
+For a cache corruption or collision, the response cache namespace for the affected contract version is invalidated, cache reads are disabled for that endpoint, and constructed pair tests verify distinct canonical requests produce distinct keys. Re-enabling cache without the pair test restores performance but not correctness. For an async worker loss, lease expiry returns the job from `running` to `queued` only when no durable result checksum exists, preventing two workers from publishing competing results.
 
 ## 9. Evaluation & Validation
 Each test states numerator, denominator, population, window, comparator, guardrails, uncertainty, and status. Status is `not-executed` throughout: no endpoint described here exists. Claiming otherwise would invert the case's own argument.

@@ -956,6 +956,294 @@ Two cautions about this table. First, the theorem numbers in textbooks vary by e
 **Red flag.** Re-running the same model on the same data and calling it a test.
 **Scoring.** 3 = both tests plus the structural-signature check; 2 = one test well designed; 1 = an opinion.
 
+### Calculation clinic: audit trails before a recommendation
+
+The clinics below are ILLUSTRATIVE construction exercises, not solver results or operating observations.
+
+They deliberately change one modelling assumption at a time so that an audit can distinguish arithmetic trouble from a different model.
+
+#### Clinic A — dimension ledger catches a hidden time conversion
+
+A packaging line consumes 18 minutes per carton, and the planning horizon supplies 72 machine-hours.
+
+Let `x` be cartons per week, a non-negative integer if partial cartons cannot be shipped.
+
+The coefficient must be converted to `0.30 machine-hours/carton` because `18 / 60 = 0.30`.
+
+The capacity row is therefore `0.30 x <= 72`, whose two sides are both machine-hours per week.
+
+Dividing by `0.30 machine-hours/carton` gives `x <= 240 cartons/week`.
+
+The independent multiplication check is `240 cartons/week * 0.30 machine-hours/carton = 72 machine-hours/week`.
+
+Writing `18x <= 72` without changing the right-hand side would falsely cap output at four cartons.
+
+Writing `18x <= 4320` is equivalent only if both sides are explicitly minutes per week.
+
+A unit ledger should record coefficient unit, right-hand-side unit, conversion source, and horizon.
+
+The discriminating check is to divide available time by time per carton and compare the implied output with a physical shift plan.
+
+A result near four cartons for three staffed shifts signals a minute-hour mismatch rather than scarce capacity.
+
+The correction is not to rescale the solution after solve; convert the row before solve and rerun the feasibility replay.
+
+If cartons must be whole, `x <= 240` remains exact after declaring `x` integer because the bound is integral.
+
+If setup consumes 0.25 hours once per active week, that is a fixed term gated by a binary, not an extra 0.25 in every carton coefficient.
+
+Validity condition: the 18-minute time is a stable per-carton requirement over the stated horizon and excludes setup deliberately.
+
+**Audit conclusion:** dimensions can reject a plausible-looking feasible plan before any optimisation theorem is invoked.
+
+#### Clinic B — lower bounds can create infeasibility without a solver defect
+
+Consider two contractual minimums, `x1 >= 35 units/week` and `x2 >= 50 units/week`.
+
+Each unit requires one labour-hour, while the available labour capacity is `x1 + x2 <= 80 hours/week`.
+
+Adding the minimums gives `x1 + x2 >= 35 + 50 = 85 units/week`.
+
+Because one unit consumes one hour, the minimum plan needs at least 85 labour-hours per week.
+
+The capacity row allows at most 80 labour-hours per week.
+
+The contradiction is `85 <= x1 + x2 <= 80`, which cannot be true.
+
+No objective coefficient can repair that contradiction because feasibility is assessed before the objective is used.
+
+The shortfall is `85 - 80 = 5 labour-hours/week` under the one-hour-per-unit assumption.
+
+An IIS routine may return all three rows, but the hand certificate already explains their conflict.
+
+Competing cause one is an outdated contractual minimum; compare the contract effective date to the model horizon.
+
+Competing cause two is a labour capacity that excludes approved overtime; reconcile the calendar against payroll authorisation.
+
+Competing cause three is a coefficient stated per batch rather than per unit; inspect the production routing grain.
+
+Relaxing either minimum by five units, or adding five hours, restores feasibility only for this three-row core.
+
+Adding an artificial slack with penalty can locate the shortage, but an unboundedly cheap penalty hides the decision that must be authorised.
+
+The report should name the contradictory rows and their owners rather than saying merely that the solver found no solution.
+
+Validity condition: all quantities use the same weekly horizon and each unit really consumes exactly one labour-hour in the simplified certificate.
+
+**Audit conclusion:** an infeasibility explanation is a smaller proof, not a solver status translated into prose.
+
+#### Clinic C — choose a soft target by comparing units and slope
+
+A service target asks for at least 90 fulfilled orders, but demand may make that target costly.
+
+Let `s` be unmet target orders measured in orders per day, with `s >= 0`.
+
+The softened row is `fulfilled + s >= 90`, so a shortfall of three orders sets `s = 3 orders/day`.
+
+Suppose the objective maximises contribution in currency per day and subtracts `p s`.
+
+The penalty coefficient `p` must have units currency/order so that `p s` has currency per day.
+
+With `p = 14 currency/order`, three missing orders cost `14 * 3 = 42 currency/day` in the objective.
+
+That 42 is not a measured customer loss; it is an ILLUSTRATIVE revealed-preference weight chosen by a decision owner.
+
+If an alternative plan earns 55 additional currency/day while increasing shortfall by three orders/day, its net change is `55 - 42 = 13 currency/day`.
+
+The alternative is preferred under this chosen penalty because 13 is positive.
+
+At `p = 20 currency/order`, the same comparison becomes `55 - 20 * 3 = -5 currency/day`.
+
+The preference reverses between 14 and 20, so publishing a single plan without its penalty conceals a policy choice.
+
+The break-even penalty is `55 / 3 = 18.333... currency/order`.
+
+Multiplying `18.333... currency/order * 3 orders/day` returns 55 currency/day, independently checking the threshold.
+
+A hard service requirement is inappropriate to soften when legislation or safety makes any violation unacceptable.
+
+A lower penalty is appropriate only when the owner accepts the corresponding shortfall as an exchangeable service loss.
+
+Validity condition: the penalty is linear over the three-order range and does not double-count an existing lost-margin term.
+
+**Audit conclusion:** a slack variable makes a preference visible; it does not make the preference objective fact.
+
+#### Clinic D — a nonlinear boundary changes the certificate, not the need for checks
+
+Suppose energy use is `E(x) = 2x + 0.01x^2` kilowatt-hours per day for throughput `x` in units per day.
+
+The quadratic term has units kilowatt-hours per unit-squared so that `0.01x^2` has kilowatt-hours per day.
+
+At `x = 40 units/day`, energy is `2(40) + 0.01(40)^2 = 80 + 16 = 96 kilowatt-hours/day`.
+
+The marginal energy use is the derivative `E'(x) = 2 + 0.02x` kilowatt-hours per unit.
+
+At 40 units/day, `E'(40) = 2 + 0.8 = 2.8 kilowatt-hours/unit`.
+
+A one-unit finite difference gives `E(41) - E(40) = [82 + 16.81] - 96 = 2.81 kilowatt-hours`.
+
+The finite difference exceeds 2.8 because the convex quadratic slope increases over the increment.
+
+Treating 2.8 as a constant LP coefficient is a local approximation, not an exact formulation over a wide range.
+
+The second derivative is `0.02 kilowatt-hours per unit-squared`, which is positive and establishes convex energy use.
+
+A convex constraint `E(x) <= 100` has a convex feasible interval in this one-variable example.
+
+Maximising a linear contribution subject to that convex constraint may be handled by convex optimisation, with KKT conditions under a suitable constraint qualification.
+
+Maximising a concave reward is different from maximising a convex reward; the curvature of both objective and feasible set matters.
+
+A piecewise-linear outer approximation must state whether it overestimates or underestimates energy before it is used as a safety limit.
+
+For a capacity limit, an underestimate of energy can create a physically infeasible dispatch even when the linear model reports feasibility.
+
+The discriminating check is to replay the chosen `x` in the original nonlinear expression, not merely in its linearisation.
+
+Validity condition: the energy curve is deterministic on the stated range and the derivative units match the throughput definition.
+
+**Audit conclusion:** nonlinear structure changes the admissible solver claim, but never waives dimensional or replay checks.
+
+#### Clinic E — LP relaxation is a bound, and rounding can violate a shared row
+
+A delivery choice has binary variables `z1` and `z2`, each equal to one when a route is opened.
+
+Route costs are 7 and 5 currency units, while their capacities are 6 and 5 parcels.
+
+Demand is 8 parcels, giving the covering row `6z1 + 5z2 >= 8`.
+
+The integer choices that cover demand are `(1,1)` with cost 12, because neither route alone reaches eight parcels.
+
+The LP relaxation permits `z1 = 0.5` and `z2 = 1`, which provides `3 + 5 = 8 parcels`.
+
+Its fractional cost is `7(0.5) + 5(1) = 3.5 + 5 = 8.5 currency units`.
+
+For this minimisation model, 8.5 is a lower bound on the integer optimum 12, not an achievable opening plan.
+
+The absolute bound gap is `12 - 8.5 = 3.5 currency units`.
+
+The relative gap against the incumbent is `3.5 / 12 = 0.291666...`, or 29.17%.
+
+Rounding `z1 = 0.5` down to zero leaves capacity five, violating demand by three parcels.
+
+Rounding it up yields `(1,1)`, which is feasible but may be unnecessarily expensive on larger models.
+
+A valid MIP solve searches or cuts until it proves a suitable incumbent-bound relation; it does not assume rounding preserves rows.
+
+A stronger formulation might add cover inequalities, but their validity depends on the actual route capacity logic.
+
+The discriminating check is to evaluate every original integer row after any heuristic rounding, including linked setup and capacity rows.
+
+Validity condition: routes are indivisible and capacity is available only when the corresponding binary equals one.
+
+**Audit conclusion:** relaxation arithmetic gives a decision bound; integer feasibility must be checked on the original discrete model.
+
+#### Clinic F — a dual value changes only while its basis remains feasible
+
+Use the Section 5 continuous model with machine capacity 100 and labour capacity 80.
+
+Its stated machine shadow price is 10 currency per machine-hour over its local basis interval.
+
+Reducing machine capacity from 100 to 95 predicts an objective change of `-5 * 10 = -50 currency/week`.
+
+The predicted value is `2600 - 50 = 2550 currency/week` if the basis is unchanged.
+
+The binding equations become `2x1 + x2 = 95` and `x1 + x2 = 80`.
+
+Subtracting the second equation from the first gives `x1 = 15 units/week`.
+
+Substitution gives `x2 = 65 units/week`.
+
+The independently recomputed objective is `40(15) + 30(65) = 600 + 1950 = 2550 currency/week`.
+
+Both products stay non-negative, so this particular five-hour movement is internally consistent.
+
+Increasing machine capacity to 130 while labour stays 80 predicts 2900 only if machine remains scarce.
+
+Yet labour alone limits total output, and the product-one packaging cap may alter the active basis before that point.
+
+The test is to solve or derive the adjacent basis at the proposed right-hand side and compare the active-row set.
+
+If the machine row has positive slack, its price must become zero by complementary slackness.
+
+If two new rows become tight simultaneously, one scalar shadow price may be non-unique because of degeneracy.
+
+The report therefore states the capacity perturbation, the holding assumptions, and the first expected kink.
+
+Validity condition: coefficients and objective remain fixed, the variable domains are continuous, and the reported basis interval contains the perturbation.
+
+**Audit conclusion:** a shadow price is a local derivative with a certificate, not an exchange rate that survives arbitrary expansion.
+
+#### Clinic G — lexicographic objectives avoid an arbitrary scale conversion
+
+A dispatcher first wants to minimise late orders and only then minimise travel distance.
+
+Let `L` count late orders per shift and let `D` measure kilometres per shift.
+
+The primary solve minimises `L` and obtains `L* = 2 late orders/shift` in an ILLUSTRATIVE instance.
+
+The second solve adds `L = 2` and minimises `D` among plans that retain that best lateness count.
+
+This is lexicographic optimisation: distance cannot buy an extra late order because the first-stage result is fixed.
+
+A weighted objective such as `1000L + D` instead assumes 1000 kilometres is the value of one late order.
+
+That conversion is rarely a physical fact; it is a policy decision that requires an owner.
+
+If any feasible plan has distance differences above 1000 kilometres, the weight may fail to enforce the intended priority.
+
+A safe dominating weight needs a proven upper bound on possible distance variation, not a merely large-looking number.
+
+For example, if `D` lies between 0 and 620 kilometres per shift, weight 621 km per late order ensures one fewer late order dominates distance.
+
+Check: reducing `L` by one changes the weighted objective by 621, while any adverse distance change is at most 620.
+
+The unit of the weight is kilometres per late order, so `621L` can be added to `D` only after that conversion is named.
+
+Lexicographic solving avoids that conversion but requires two solves and an exact primary-objective constraint.
+
+The discriminating check is to find whether a proposed weighted solution has more late orders than the lexicographic solution.
+
+Validity condition: the primary objective has a well-defined attainable optimum and the second solve preserves it exactly within chosen numerical tolerance.
+
+**Audit conclusion:** priority is a modelling relation; a large coefficient is not automatically a proof of that relation.
+
+#### Clinic H — scaling changes numerical conditioning, not the underlying plan
+
+A planning model contains revenue coefficients near 1,200,000 currency units and penalty coefficients near 0.003 currency units.
+
+The coefficient ratio is `1,200,000 / 0.003 = 400,000,000`.
+
+That ratio signals a potential numerical scaling concern because solver tolerances operate on floating-point magnitudes.
+
+It does not prove the model is wrong; a real business may combine large totals and small marginal penalties.
+
+One remedy expresses currency in thousands, turning 1,200,000 into 1,200 and 0.003 into 0.000003 thousands.
+
+That conversion alone still leaves a ratio of 400,000,000, so merely changing the currency label is not sufficient here.
+
+A better formulation separates a tiny penalty into a policy constraint if it represents a threshold rather than a true trade-off.
+
+Another remedy normalises an objective component by a declared reference scale, then records the induced weight explicitly.
+
+Rows should also be scaled so typical nonzero coefficients and right-hand sides are comparable without changing their feasible set.
+
+Multiplying a constraint `0.002x + 0.004y <= 0.8` by 500 gives `x + 2y <= 400`.
+
+The two rows are algebraically equivalent because positive multiplication preserves the inequality direction.
+
+Check with `x = 100, y = 100`: original left side is `0.2 + 0.4 = 0.6 <= 0.8`; scaled left side is `100 + 200 = 300 <= 400`.
+
+Multiplying by a negative number would require flipping the inequality, so automated scaling must retain the multiplier sign.
+
+A scale audit reports original units, numerical multiplier, transformed row, and a replay in original units.
+
+Do not compare dual values from differently scaled rows without transforming them back to the original right-hand-side unit.
+
+Validity condition: scaling is exact algebraic multiplication and solver tolerances are reviewed in both numeric and business units.
+
+**Audit conclusion:** conditioning work is representation management; it must leave the original feasibility and interpretation recoverable.
+
 #### Q15 — What would make you refuse to deliver a model's recommendation?
 
 **Answer.** Four conditions. (a) A hard rule is missing or wrong and the owner will not confirm its class — the plan may be infeasible in the plant. (b) The claim exceeds the class: an integer model with a material gap presented as optimal, or duals presented as achievable marginals. (c) The objective is not the one the business is measured on and no one will authorise a change. (d) The plan's feasibility depends on a number that cannot be sourced, such as a capacity figure that exists in three systems with three values. In each case the deliverable is a bound plus the specific missing decision, which is useful, rather than a plan that will be acted on and fail.
@@ -980,3 +1268,4 @@ Two cautions about this table. First, the theorem numbers in textbooks vary by e
 | Integrality rule | LP value is a bound; report `(z_inc, z_ub, gap)` | an integer model cannot quote duals as marginals |
 | Big-M rule | `M` = tightest valid bound from the other rows | loose `M` destroys the bound, tight `M` cuts plans |
 | Section 5 anchors | optimum `(20, 60)`, value 2600, `y = (10, 20, 0)` | a hand-checkable instance for every claim above |
+

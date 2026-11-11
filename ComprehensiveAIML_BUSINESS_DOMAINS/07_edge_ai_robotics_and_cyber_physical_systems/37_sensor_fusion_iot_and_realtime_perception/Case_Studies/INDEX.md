@@ -32,7 +32,7 @@
 
 ## 4. Similarity / contrast map
 
-This collection holds 2 authored case(s) and 2 planned commitment(s). Authored cases share point-in-time decision logging and an explicit baseline; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
+This collection holds 2 case file(s), 0 passing structural lint, and 2 planned commitment(s). Cases require independent review of point-in-time decision logging and explicit baselines; they differ in decision grain, owner, and which guardrail binds. Read the catalog's primary-pattern column to find the nearest contrast: cases sharing a primary pattern differ in constraint, and cases differing in pattern share the decision shape.
 
 ## 5. Questions / future-case backlog
 

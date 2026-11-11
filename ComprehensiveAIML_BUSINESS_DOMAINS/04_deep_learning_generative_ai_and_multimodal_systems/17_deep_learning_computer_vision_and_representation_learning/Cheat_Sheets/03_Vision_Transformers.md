@@ -283,7 +283,6 @@ INTERPRETATION 98% of the parameters are in the blocks, 0.9% in the head
 ```
 
 **Validity condition for §4.1.** These results hold for a pre-norm transformer with a 4x MLP, one class token, learned absolute positions, and no registers. They are wrong for a model with a convolutional stem, with merged hierarchical stages, with Mixture-of-Experts MLPs, or with shared block weights. In each of those cases the block count, the token count or both change per stage, and the arithmetic must be summed per stage.
-
 ### 4.2 General case
 
 **Result 6 — resolution scaling of the two terms.**
@@ -589,6 +588,34 @@ The stem itself costs a forward pass over the full 224 x 224 image: two 3 x 3 co
 
 **Step 8 — the decision, restated with all four candidates.** A is the reference and fits comfortably. B is the accuracy hypothesis at 16x the quadratic cost and 4.5x the arithmetic, feasible only at reduced batch or with recomputation. C is the resolution hypothesis at 3.16x the arithmetic and 8.6x the score term. D is the sample-efficiency hypothesis at a quarter of the arithmetic. The four are not four points on one axis: D changes the prior, B changes the detail, C changes the coverage, and A is the control. The correct experiment design compares each of D, B, C against A at a matched effective batch and the same augmentation, and reports per-object-size recall rather than accuracy, because that is the slice each variant is hypothesised to move.
 
+### Step 9 — transfer boundary and evaluation cohort
+
+**ILLUSTRATIVE transfer protocol.** A pretrained 224-pixel checkpoint is adapted to a 384-pixel, 12-class target task. The training set supplies gradients; the validation set chooses the checkpoint, resize rule, and any operating threshold; a locked test set is touched once after those choices freeze. The target images, labels, and figures here are constructed teaching inputs, not a measured experiment.
+
+The transfer question has two separable boundaries. A representation boundary asks whether the pretrained patch, colour, and position conventions remain meaningful after the target resize and crop policy. An estimation boundary asks whether the reported metric remains an unbiased estimate after repeated checkpoint and augmentation choices. Passing the first does not repair a violation of the second.
+
+Validity before use: class-balanced recall is informative when every class is decision-relevant and the evaluation cohort has a fixed label protocol.
+Derivation: compute recall within each class, then average classes so frequent classes cannot dominate the estimate. The formula follows directly from the definition of a class-conditional true-positive rate.
+
+```text
+FORMULA [E-01]  R_bal = (1/K) * sum(k=1..K) TP_k / (TP_k + FN_k)
+WHERE            K is the number of evaluated classes; TP_k and FN_k are counts for class k.
+CONSTRAINT       Every denominator must be positive; this is a class-weighted diagnostic, not an estimate of deployment prevalence.
+NUMERICAL EXAMPLE ILLUSTRATIVE: K=3, recalls=(18/20, 16/20, 10/20).
+                  R_bal=(0.90+0.80+0.50)/3=2.20/3=0.7333.
+INTERPRETATION   The third class is visibly weak even though a frequent-class aggregate could look acceptable.
+```
+
+Independent arithmetic check: 18+16+10=44 correct predictions among the three equal 20-image cohorts, so ordinary accuracy is 44/60=0.7333, equal to R_bal only because the constructed cohorts are balanced.
+Sensitivity: if the third cohort had 200 images instead of 20, ordinary accuracy would be (18+16+100)/(20+20+200)=0.5583 while R_bal remains 0.7333; the two metrics answer different questions.
+Boundary: this summary hides within-class operating conditions, so retain per-camera, per-object-size, and per-class confusion rows before accepting a checkpoint.
+
+The transfer manifest must record: checkpoint identifier; original and target grids; patch and crop policy; channel order; normalization statistics; position-table operation; frozen components; learning-rate groups; and the validation decisions made before the test set is opened.
+A linear probe is a diagnostic baseline, not merely a cheaper run. If the probe succeeds while full fine-tuning fails, the pretrained representation may transfer and the optimisation schedule is the primary suspect.
+If both probe and fine-tune fail on the same class-size slice, inspect image formation and label taxonomy before modifying attention, because neither optimisation strategy repairs missing input detail.
+Resolution adaptation is complete only after the target grid, target preprocessing, and target metric slices have been evaluated together. Testing only a new position table against the old crop policy is not a transfer test.
+**Takeaway:** Freeze the representation and estimation contracts separately; a viable tensor shape is not an unbiased evaluation.
+
 ## 6. Visual / Geometric Intuition
 
 **Patchify as a tiling.** Draw the 224 image as a 14 x 14 grid of 16-pixel tiles. Each tile becomes one row of the token matrix. The tiling is exact and non-overlapping, so the token grid carries 196 samples of the image and nothing else. When a reader pictures “attention over the image”, this is the resolution at which it happens: a 4-pixel defect is a quarter of one tile, and no amount of depth recovers the sub-tile position from a single token.
@@ -648,7 +675,6 @@ fixed N, H: 224 -> 448   P: 16 -> 32       detail down, cost unchanged
 **Depth as repeated mixing.** Each block mixes the current token set, so after k blocks a token's representation depends on the k-hop neighbourhood of the original token under the attention routing. In a windowed model with shifts, that neighbourhood grows by about one window per two blocks; in a global model it grows to the whole grid after one block. Depth therefore buys different things in the two designs, and the correct depth is the mixing depth the task needs, not the largest depth that fits.
 
 **Takeaway:** Every transformer sizing question is either “how many tiles” or “how big is the matrix”; draw both and the arithmetic follows.
-
 ## 7. Comparison / Selection Table
 
 The rows are attention patterns for the same token budget. The selection procedure is to find the row whose constraint you actually have — resolution, dense prediction, data volume, memory ceiling — rather than the row whose published result is strongest.
@@ -793,6 +819,31 @@ Discriminating check: instrument the head's input shape and compare with its ass
 Correction: derive the head's grid from the actual token count, and assert divisibility at construction.
 Prevention: the token ledger is a test fixture, and each stage asserts its expected shape at model build.
 
+### Additional diagnostic boundaries
+
+**F-16 — Full fine-tuning is worse than a frozen linear probe.**
+Competing causes: body learning rate is too high; warm-up is absent; the interpolated position table is updated immediately; target normalization differs from the checkpoint contract.
+Discriminating check: run the probe, then unfreeze one block group at a time with a lower body rate. A regression beginning at the first unfreeze localises the fault to optimisation rather than representation.
+Correction: retain the probe head, use discriminative learning rates, warm up the body, and freeze positions until the target grid has a stable validation curve.
+Prevention: make probe performance a required transfer baseline and record component-wise learning rates in the run manifest.
+Verification: compare the selected fine-tune and probe on the untouched cohort by class, object-size, and camera slice; neither aggregate score alone establishes transfer.
+
+**F-17 — Validation rises after repeated crop-policy changes but the locked cohort drops.**
+Competing causes: repeated selection has adapted to validation noise; near-duplicate images span training and validation; the crop policy changes which object is labelled; threshold tuning leaks into model selection.
+Discriminating check: group splits by source asset or capture session, hash perceptual duplicates across folds, and replay the frozen policy once on the locked cohort.
+Correction: restore a grouped split, select the policy on validation only once, and reserve the locked cohort for the final predeclared comparison.
+Prevention: version the resize and crop code with its parameters, then forbid evaluation-set inspection during architecture selection.
+Verification: report the count of groups, not only images, in every split and show that no group identifier crosses the split boundary.
+
+**F-18 — A small target object vanishes after an apparently harmless resize.**
+Competing causes: downsampling erased the object before patchification; interpolation blurred contrast; a centre crop removed it; the annotation coordinates were not transformed with the image.
+Discriminating check: overlay transformed labels on the exact input tensor and measure the object side in post-resize pixels before analysing model activations.
+Correction: change acquisition resolution, crop policy, or first-stage stride so the object spans several retained input samples; do not compensate with deeper attention alone.
+Prevention: set a minimum post-transform object-size rule and test it on the smallest labelled objects before training.
+Verification: rerun recall by post-transform object size, because original-image size no longer represents what the model received.
+
+**Takeaway:** Transfer failures divide into representation mismatch, optimisation instability, and evaluation contamination; their checks must not be substituted for one another.
+
 ## 9. Complexity & Cost Analysis
 
 **Four cost axes.** Token count, arithmetic, score-matrix memory and parameter storage. They respond to different levers and bind in a fixed order as resolution grows: memory first, then arithmetic, then communication.
@@ -832,6 +883,42 @@ C         110.3           1.41 ms                 3.16
 **Cost of an evaluation grid change.** If the deployment resolution differs from the validation resolution, the evaluation must be repeated at the deployment grid, and any threshold or calibration fitted at the old grid is void. The cost is one full validation pass plus the recall-by-size analysis plus a review cycle. It is small compared with the cost of a release at an unvalidated grid, which is the failure mode F-10 describes.
 
 **Takeaway:** Compute the score term first, because it is the term that turns a plausible configuration into an impossible one.
+
+### Training-state ledger and accumulation boundary
+
+The score-matrix estimate is an activation lower bound, not a complete training-memory estimate. Parameters, gradients, optimizer state, temporary workspaces, and allocator fragmentation have separate lifetimes, so a capacity decision must name which terms are resident simultaneously.
+
+Validity before use: the following storage ledger applies to one replica with fp16 model weights, fp16 gradients, fp32 master weights, and two fp32 Adam moment tensors. Implementations may shard, fuse, or omit a listed tensor.
+Derivation: multiply the number of parameters by the bytes retained for each named copy, then sum only copies that coexist at the memory peak.
+
+```text
+FORMULA [C-01]  S_state = P*(b_model + b_grad + b_master + 2*b_moment)
+WHERE            P is parameter count; each b is bytes/parameter for a resident tensor.
+CONSTRAINT       Excludes activations, score matrices, temporary kernels, sharding, and allocator overhead.
+NUMERICAL EXAMPLE ILLUSTRATIVE: P=86,446,312; b_model=2; b_grad=2; b_master=4; b_moment=4.
+                  S_state=86,446,312*(2+2+4+8)=86,446,312*16=1,383,140,992 bytes.
+                  1,383,140,992/1,048,576=1,319.07 MiB.
+INTERPRETATION   About 1.29 GiB of stated model state can coexist before any activation or workspace is reserved.
+```
+
+Independent arithmetic check: model plus gradients use 2P+2P=345,785,248 bytes; master weights use 4P=345,785,248 bytes; moments use 8P=691,570,496 bytes; the sum is 1,383,140,992 bytes.
+Boundary: an optimizer that keeps no fp32 master copy has a different ledger, and distributed sharding changes per-device residency without changing the global state.
+
+Validity before use: gradient accumulation preserves the nominal global batch only when each microbatch contributes to the same loss normalization and optimizer update.
+Derivation: each replica accumulates a gradients from m examples; data parallel reduction combines d replicas, giving the product of these independent counts.
+
+```text
+FORMULA [C-02]  B_effective = m * a * d
+WHERE            m is microbatch images/replica; a is accumulation steps; d is data-parallel replicas.
+CONSTRAINT       Divide the loss by a; batch-normalization and random augmentation can still make the trajectory differ from a physical batch.
+NUMERICAL EXAMPLE ILLUSTRATIVE: m=8 images, a=4 steps, d=2 replicas.
+                  B_effective=8*4*2=64 images per optimizer update.
+INTERPRETATION   Peak score memory follows m=8, while gradient noise is approximately governed by the 64-image update.
+```
+
+Accumulation does not shrink model state and does not make one microbatch see another microbatch in attention. It is therefore a memory remedy for batch-driven activations, not a substitute for windowing when N squared is already infeasible at m=1.
+When comparing accumulated and physical batches, match learning-rate schedule by optimizer updates and report whether stochastic layers use independent masks. Equal B_effective is necessary for a fair comparison, not sufficient for identical optimisation.
+**Takeaway:** Separate resident model state from token-driven activations; accumulation changes the latter only through the microbatch, whereas windowing changes the exponent.
 
 ## 10. Key Theorems / Results Reference
 
