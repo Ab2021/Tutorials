@@ -192,6 +192,92 @@ Ranking by response targets the customers who would have bought anyway. Ranking 
 
 Evaluation uses the **Qini curve**: sort by predicted uplift, plot cumulative incremental conversions against population share, and compare the area under the Qini curve (AUUC) with random targeting. A model with high AUC for response can have a Qini curve no better than random.
 
+### 4.7A Quasi-Experimental Causal Inference: Difference-in-Differences & Synthetic Controls (General Mills Trade Promotion Standard)
+
+In FMCG retail analytics (such as General Mills trade spend across regional supermarket chains), randomized controlled trials (A/B testing) are frequently impossible because retailers run promotions across entire geographic divisions or retail media markets. Senior Data Scientists must use quasi-experimental methods to isolate the causal incremental lift from natural market drift.
+
+#### 1. Difference-in-Differences (DiD) & The Parallel Trends Test
+DiD compares the change in sales before and after a promotion between treated stores and matched control stores:
+$$Y_{ist} = \alpha_0 + \beta \text{Treated}_i + \gamma \text{Post}_t + \delta_{\text{DiD}} (\text{Treated}_i \times \text{Post}_t) + \epsilon_{ist}$$
+Where $\delta_{\text{DiD}}$ represents the causal Average Treatment Effect on the Treated (ATT).
+* **Mandatory Diagnostic:** The **Parallel Trends Assumption** must be formally tested on pre-treatment periods. If pre-treatment trends diverge, the DiD estimate is biased.
+
+#### 2. Synthetic Control for Single-Unit or Contaminated Markets
+When parallel trends fail or an intervention is applied to an entire region (e.g., a regional digital coupon drop), Synthetic Control constructs a data-driven counterfactual from an untreated "donor pool" of stores:
+$$\min_{W} \| Y_{1,\text{pre}} - Y_{0,\text{pre}} W \|^2 \quad \text{s.t.} \quad w_j \ge 0, \sum_{j} w_j = 1$$
+
+```python
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
+def estimate_promotional_did(df_panel: pd.DataFrame) -> dict:
+    """
+    Fits Two-Way Fixed Effects Difference-in-Differences model and evaluates parallel trends.
+    df_panel columns: store_id, date, treated (0/1), post (0/1), sales, is_pre_period (0/1)
+    """
+    # 1. Parallel Trends Pre-Test: Regress sales on time * treated during pre-treatment period
+    pre_df = df_panel[df_panel["post"] == 0]
+    trend_model = smf.ols("sales ~ treated * time_idx", data=pre_df).fit()
+    parallel_trends_pvalue = trend_model.pvalues.get("treated:time_idx", 1.0)
+    
+    # 2. Estimate DiD Treatment Effect
+    did_model = smf.ols("sales ~ treated + post + treated:post", data=df_panel).fit(cov_type="cluster", cov_kwds={"groups": df_panel["store_id"]})
+    att_estimate = did_model.params["treated:post"]
+    att_pvalue = did_model.pvalues["treated:post"]
+
+    return {
+        "att_incremental_sales": round(att_estimate, 2),
+        "att_pvalue": round(att_pvalue, 4),
+        "parallel_trends_valid": parallel_trends_pvalue > 0.05,
+        "parallel_trends_pvalue": round(parallel_trends_pvalue, 4),
+        "model_summary": did_model
+    }
+
+def fit_synthetic_control(y_treated_pre: np.ndarray, Y_donor_pre: np.ndarray) -> np.ndarray:
+    """
+    Solves optimal non-negative weights summing to 1 to match pre-treatment trajectory.
+    y_treated_pre: shape (T_pre,)
+    Y_donor_pre: shape (T_pre, J_donors)
+    """
+    n_donors = Y_donor_pre.shape[1]
+    
+    def loss(w):
+        return np.sum((y_treated_pre - Y_donor_pre @ w)**2)
+    
+    constraints = {"type": "eq", "fun": lambda w: np.sum(w) - 1.0}
+    bounds = [(0.0, 1.0) for _ in range(n_donors)]
+    w0 = np.full(n_donors, 1.0 / n_donors)
+    
+    res = minimize(loss, w0, method="SLSQP", bounds=bounds, constraints=constraints)
+    return res.x
+
+# Verification
+if __name__ == "__main__":
+    np.random.seed(42)
+    # 4 stores, 12 weeks: Store 1 treated in week 7
+    weeks = 12
+    records = []
+    for s in [1, 2, 3, 4]:
+        treated_flag = 1 if s == 1 else 0
+        for w in range(weeks):
+            post_flag = 1 if w >= 6 else 0
+            # Common baseline + store fixed effect
+            sales = 100.0 + s * 10.0 + w * 2.0
+            # Promotional lift only for store 1 in post period
+            if treated_flag and post_flag:
+                sales += 35.0  # True causal lift = +35
+            sales += np.random.normal(0, 1.5)
+            records.append({"store_id": s, "time_idx": w, "treated": treated_flag, "post": post_flag, "sales": sales})
+    
+    df_sample = pd.DataFrame(records)
+    res_did = estimate_promotional_did(df_sample)
+    print(f"DiD Estimated ATT: {res_did['att_incremental_sales']} (p={res_did['att_pvalue']})")
+    print(f"Parallel Trends Assumption Holds: {res_did['parallel_trends_valid']}")
+```
+
 ### 4.8 New product forecasting
 
 **Analogy.** Find comparable products launched into similar conditions, match on attributes and distribution, and scale their curve. The quality of the answer depends almost entirely on the quality of the comparables, and the most common failure is selecting comparables that succeeded.

@@ -328,6 +328,35 @@ Open questions:
 - **Excursion management** is a decision problem: quarantine, assess mean kinetic temperature, consult the manufacturer, release or destroy. The data needed is the logger record, the stability budget, and the disposition authority.
 - **Data integrity** rules (ALCOA+ principles) mean the analytics pipeline itself may be audited. An untraceable transformation is a compliance defect, not only a reproducibility one.
 
+### 7.8 General Mills — $1B Supply Chain Revamp: Demand Sensing, Palantir AI & Kinaxis Concurrent Planning
+
+**Context:** Multi-billion dollar FMCG enterprise producing 100+ global brands (Cheerios, Nature Valley, Pillsbury, Yoplait, Blue Buffalo) distributed across 100,000+ retail stores globally. Managing high ingredient volatility, retail partner promotional calendars, and post-pandemic freight swings.
+**Decision:** How to overhaul global demand planning and logistics routing to eliminate $1 Billion in operational waste while improving On-Time-In-Full (OTIF) retail fulfillment from the mid-80s to >95%.
+**Intervention & Tech Architecture:**
+1. **Multi-Platform Integration:** Replaced legacy SAP ECC batch planning with **SAP S/4HANA**, **Kinaxis RapidResponse** for concurrent supply-demand simulation, and **Palantir Foundry** for operational AI and control tower routing.
+2. **Hierarchical Demand Sensing:** Ingests daily Point-of-Sale (POS) EDI 852 feeds from Walmart, Target, and Kroger into an **Azure Databricks Lakehouse (Delta Lake)**. Replaced monthly statistical forecasts with daily quantile LightGBM models producing $P_{10}, P_{50}, P_{90}$ demand envelopes.
+3. **Internal Generative AI (MillsChat):** Deployed an enterprise LLM platform with strict data privacy boundaries, enabling logistics coordinators and brand managers to query unstructured supplier contracts, ingredient specs, and freight disruption logs in seconds via RAG.
+**Evidence:** Company quarterly disclosures, investor presentations, and engineering recruitment briefs (grade B/C).
+**Transfer:**
+- Concurrency beats sequential batch planning: when demand changes on Tuesday, the plant schedule and ingredient purchase orders must recalculate simultaneously.
+- Probabilistic quantile forecasting ($P_{10}/P_{90}$) is mandatory when retail penalty fines for stockouts exceed inventory holding costs.
+**Limit:** Requires substantial enterprise software licensing (Palantir/Kinaxis/Databricks) and deep organizational alignment between brand sales, manufacturing plants, and retailer EDI partners.
+
+### 7.9 London Stock Exchange Group (LSEG) — Financial Market Infrastructure & Real-Time Trade Surveillance
+
+**Context:** Tier-1 global financial market infrastructure provider operating trading venues (London Stock Exchange, Turquoise MTF) and post-trade clearing, alongside Refinitiv Workspace and StarMine quantitative analytics platforms.
+**Decision:** How to process 500M+ real-time tick and order-book events daily to detect market abuse (wash trading, layering, spoofing) with $< 5\text{ms}$ alert latency, while maintaining strict MiFID II / MAR regulatory auditability.
+**Intervention & Tech Architecture:**
+1. **Sub-Millisecond Streaming Pipeline:** FIX/ITCH market feeds ingested via Kafka/Redpanda into **Apache Flink** stateful complex event processing (CEP) clusters maintaining 30-second rolling order book states.
+2. **Zero-GC Inference Sidecar:** Machine learning anomaly scoring models compiled to **ONNX Runtime** executed within a C++ sidecar container to eliminate Java/Python garbage collection pauses.
+3. **Point-in-Time (PIT) Factor Platform:** StarMine quantitative factor research backtesting engine built on immutable, point-in-time financial databases to completely eliminate survivorship and lookahead bias.
+**Evidence:** Regulatory audit filings (UK FCA, US SEC, ESMA), public quantitative whitepapers, and engineering interview disclosures (grade A/B).
+**Transfer:**
+- Financial time series require strict point-in-time correctness: backtesting models using restated fundamentals creates illusory alpha that collapses in live production.
+- Production latency SLAs at scale require compiling high-level Python models into low-level execution runtimes (C++/ONNX/TensorRT).
+**Limit:** Market microstructure architectures are specialized to high-frequency tick regimes and require dedicated network hardware and low-latency exchange colocation.
+
+
 **Transfer:** in any regulated domain, the measurement system and the decision record are part of the product. This is the strongest counter-example to the "move fast" analytics playbook.
 **Limit:** the specific stability budgets and release rules are product- and regulator-specific and cannot be generalized from a case note.
 

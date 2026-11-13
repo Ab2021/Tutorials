@@ -30,6 +30,16 @@ All 12 modules include mathematically rigorous derivations, complete and runnabl
 | **09** | [PySpark & Big Data Operations](interview_prep/09_pyspark_big_data_operations.md) | 20 distributed data operations: Catalyst/Tungsten internals, salting data skew joins, Broadcast Hash Join, window aggregates, `pandas_udf` with Apache Arrow, Delta Lake ACID merges, and OOM debugging. |
 | **10** | [ML System Design & Architecture](interview_prep/10_ml_system_design_architecture.md) | 6 enterprise system designs with Mermaid blueprints: Demand Sensing, Retail Media RGM, Sub-millisecond Trade Surveillance, StarMine Factor Platform, Financial RAG, and Feature Stores. |
 | **11** | [Behavioral & Leadership Playbook](interview_prep/11_behavioral_leadership_case_interviews.md) | Executive STAR framework, cross-functional conflict resolution, pushing back on deadlines, 4-tier code review rubric, and India compensation negotiation strategy. |
+| **12** | [Take-Home Notebook Critique & Case Study](interview_prep/12_takehome_notebook_critique.md) | General Mills signature Take-Home challenge: 10 fatal flaws in junior ML code, refactored leak-free LightGBM quantile pipeline, and executive presentation script. |
+
+---
+
+## 🏛️ Grounded Enterprise Research in Supply Chain Course (`course/`)
+
+The 45-module supply chain curriculum in `course/` has been updated with real-world enterprise research:
+* **[course/28_domain_case_library.md](course/28_domain_case_library.md):** Deep-dive case studies added for **General Mills** ($1B supply chain revamp, Palantir Foundry AI, Kinaxis RapidResponse, SAP S/4HANA, MillsChat GenAI) and **LSEG** (Sub-millisecond trade surveillance, Flink CEP, ONNX runtime sidecar, and StarMine Point-in-Time factor platform).
+* **[course/09_demand_sensing_promotions_npi.md](course/09_demand_sensing_promotions_npi.md):** Added Section 4.7A on **Quasi-Experimental Causal Inference** (Difference-in-Differences with Parallel Trends pre-tests & Synthetic Controls via SLSQP optimization) for FMCG trade promotion evaluation.
+* **[mill/](mill/):** Sourced deep-research interview dossiers from General Mills global capability centers and official job specifications.
 
 ---
 
